@@ -1,0 +1,11 @@
+<.layout current_page={:dashboard} current_user={@current_user} type="sidebar">
+  <.container class="py-16">
+    <.h2><%= gettext("Welcome, %{name}", name: user_name(@current_user)) %> 👋</.h2>
+
+    <div class="px-4 py-8 sm:px-0">
+      <div class="flex items-center justify-center border-4 border-gray-300 border-dashed rounded-lg dark:border-gray-800 h-96">
+        <div class="text-xl">Replace me</div>
+      </div>
+    </div>
+  </.container>
+</.layout>

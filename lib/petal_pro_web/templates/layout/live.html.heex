@@ -1,0 +1,11 @@
+<main>
+  <div id="flash-notifications">
+    <%= for type <- [:info, :success, :warning, :error] do %>
+      <.notification type={type} content={live_flash(@flash, type)} />
+    <% end %>
+  </div>
+
+  <div id="inner-content">
+    <%= @inner_content %>
+  </div>
+</main>

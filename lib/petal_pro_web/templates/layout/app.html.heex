@@ -1,0 +1,9 @@
+<main>
+  <div id="flash-notifications">
+    <%= for type <- [:info, :success, :warning, :error] do %>
+      <.notification type={type} content={get_flash(@conn, type)} />
+    <% end %>
+  </div>
+
+  <%= @inner_content %>
+</main>

@@ -1,0 +1,42 @@
+<.auth_layout title="Two-factor authentication">
+  <:logo>
+    <.logo_icon class="w-20 h-20" />
+  </:logo>
+  <div class="mb-4 prose prose-slate dark:prose-invert">
+    <p>
+      Enter the six-digit code from your device or any of your eight-character backup codes to finish logging in.
+    </p>
+  </div>
+
+  <.form let={f} for={@conn} action={Routes.user_totp_path(@conn, :create)} as={:user}>
+    <.form_field
+      type="text_input"
+      form={f}
+      field={:code}
+      label="Code"
+      required
+      {alpine_autofocus()}
+    />
+
+    <%= if @error_message do %>
+      <.alert class="mb-5" color="danger" label={@error_message} />
+    <% end %>
+
+    <.form_field
+      type="checkbox"
+      form={f}
+      field={:remember_me}
+      label="Keep me logged in for 60 days"
+    />
+
+    <div class="flex items-center justify-between">
+      <.link
+        label="Sign out"
+        class="text-sm underline"
+        to={Routes.user_session_path(@conn, :delete)}
+        method={:delete}
+      />
+      <.button label="Verify code and sign in" />
+    </div>
+  </.form>
+</.auth_layout>

@@ -1,0 +1,70 @@
+<.layout current_page={:change_me} current_user={@current_user} type="sidebar">
+  <.container class="py-16">
+    <.page_header title="Listing <%= schema.human_plural %>">
+      <.button
+        link_type="live_patch"
+        label="New <%= schema.human_singular %>"
+        to={Routes.<%= schema.route_helper %>_index_path(@socket, :new)}
+      />
+    </.page_header>
+
+    <%%= if @live_action in [:new, :edit] do %>
+      <.modal title={@page_title}>
+        <.live_component
+          module={<%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.FormComponent}
+          id={@<%= schema.singular %>.id || :new}
+          action={@live_action}
+          <%= schema.singular %>={@<%= schema.singular %>}
+          return_to={Routes.<%= schema.route_helper %>_index_path(@socket, :index)}
+        />
+      </.modal>
+    <%% end %>
+
+    <.table>
+      <thead>
+        <.tr><%= for {k, _} <- schema.attrs do %>
+          <.th><%= Phoenix.Naming.humanize(Atom.to_string(k)) %></.th><% end %>
+          <.th></.th>
+        </.tr>
+      </thead>
+      <tbody id="<%= schema.plural %>">
+        <%%= for <%= schema.singular %> <- @<%= schema.collection %> do %>
+          <.tr id={"<%= schema.singular %>-#{<%= schema.singular %>.id}"}><%= for {k, _} <- schema.attrs do %>
+            <.td><%%= <%= schema.singular %>.<%= k %> %></.td><% end %>
+            <.td class="text-right whitespace-nowrap">
+              <.button
+                color="primary"
+                variant="outline"
+                size="xs"
+                link_type="live_redirect"
+                label="Show"
+                to={Routes.<%= schema.route_helper %>_show_path(@socket, :show, <%= schema.singular %>)}
+              />
+
+              <.button
+                color="white"
+                variant="outline"
+                size="xs"
+                link_type="live_patch"
+                label="Edit"
+                to={Routes.<%= schema.route_helper %>_index_path(@socket, :edit, <%= schema.singular %>)}
+              />
+
+              <.button
+                color="danger"
+                variant="outline"
+                link_type="a"
+                to="#"
+                size="xs"
+                label="Delete"
+                phx-click="delete"
+                phx-value-id={<%= schema.singular %>.id}
+                data-confirm="Are you sure?"
+              />
+            </.td>
+          </.tr>
+        <%% end %>
+      </tbody>
+    </.table>
+  </.container>
+</.layout>

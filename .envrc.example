@@ -1,0 +1,21 @@
+# Set these on any production servers (staging/production)
+# export PHX_HOST="some_domain.com"
+# export ALLOW_ROBOTS="true|false"
+
+# If using Amazon SES for emailing (recommended):
+# export AWS_ACCESS_KEY=""
+# export AWS_SECRET=""
+# export AWS_REGION=""
+
+# If using MailBluster for mass emailing (recommended):
+# export MAIL_BLUSTER_API_KEY=""
+
+# If using the Slack API (see slack.ex)
+# export SLACK_OAUTH_TOKEN=""
+
+# If using oauth providers
+# export GOOGLE_OAUTH_CLIENT_ID=""
+# export GOOGLE_OAUTH_SECRET=""
+
+# export GITHUB_OAUTH_CLIENT_ID=""
+# export GITHUB_OAUTH_SECRET=""

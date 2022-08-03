@@ -1,0 +1,158 @@
+<.admin_layout current_page={:admin_users} current_user={@current_user}>
+  <.page_header title="Users" />
+  <div class="mb-8">
+    <.form
+      let={f}
+      for={@user_filter_changeset}
+      as={:user_filter}
+      phx-change="search"
+      phx-submit="search"
+    >
+      <.search_input
+        form={f}
+        field={:text_search}
+        placeholder="Search (name, email, ID, IP)"
+        phx-debounce="200"
+        autocomplete="off"
+        {alpine_autofocus()}
+      />
+
+      <div class="flex gap-5 mt-5">
+        <.form_field type="checkbox" form={f} field={:is_suspended} label="Suspended" />
+
+        <.form_field type="checkbox" form={f} field={:is_deleted} label="Deleted" />
+      </div>
+    </.form>
+  </div>
+
+  <%= if @total_count do %>
+    <div class="mb-2 text-xs text-right text-gray-500 dark:text-gray-300">
+      Displaying <%= length(@users) %> / <%= @total_count %>
+      <%= Util.pluralize("result", @total_count) %>
+    </div>
+  <% end %>
+
+  <%= if @loading do %>
+    <.spinner />
+  <% else %>
+    <div class="flex flex-col gap-3 text-gray-600 dark:text-gray-300">
+      <%= for user <- @users do %>
+        <div
+          id={"user_#{user.id}"}
+          class="flex items-center justify-between p-3 bg-white border border-gray-300 rounded shadow-sm dark:border-gray-700 dark:bg-gray-800"
+        >
+          <div class="flex items-center gap-3">
+            <.avatar name={user.name} src={user_avatar_url(user)} />
+
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center gap-2 text-sm font-semibold">
+                <%= user.name %>
+
+                <%= if user.is_suspended do %>
+                  <.badge color="warning" label="Suspended" />
+                <% end %>
+
+                <%= if user.is_deleted do %>
+                  <.badge color="danger" label="Deleted" />
+                <% end %>
+
+                <%= if user.is_admin do %>
+                  <.badge color="success" label="Admin" />
+                <% end %>
+              </div>
+              <div class="flex items-center space-x-1">
+                <div class="text-xs text-gray-600 dark:text-gray-400">
+                  <%= user.email %>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center">
+            <.dropdown options_container_id={"user_options_#{user.id}"}>
+              <.dropdown_menu_item
+                link_type="live_patch"
+                label="Edit"
+                to={Routes.admin_users_path(@socket, :edit, user)}
+              />
+
+              <.dropdown_menu_item
+                link_type="live_redirect"
+                label="View logs"
+                to={Routes.logs_path(@socket, :index, user_id: user.id)}
+              />
+
+              <%= if user.is_suspended do %>
+                <.dropdown_menu_item
+                  label="Undo suspend"
+                  phx-click={
+                    JS.push("undo_suspend_user")
+                    |> JS.hide(to: "#user_options_#{user.id}")
+                  }
+                  phx-value-id={user.id}
+                  data-confirm="Are you sure?"
+                />
+              <% else %>
+                <.dropdown_menu_item
+                  label="Suspend"
+                  phx-click={
+                    JS.push("suspend_user")
+                    |> JS.hide(to: "#user_options_#{user.id}")
+                  }
+                  phx-value-id={user.id}
+                  data-confirm={
+                    "Are you sure? #{user.name} will be logged out and unable to sign in."
+                  }
+                />
+              <% end %>
+
+              <%= if user.is_deleted do %>
+                <.dropdown_menu_item
+                  label="Undo delete"
+                  phx-click={
+                    JS.push("undo_delete_user")
+                    |> JS.hide(to: "#user_options_#{user.id}")
+                  }
+                  phx-value-id={user.id}
+                  data-confirm="Are you sure?"
+                />
+              <% else %>
+                <.dropdown_menu_item
+                  label="Delete"
+                  phx-click={
+                    JS.hide(to: "#user_options_#{user.id}")
+                    |> JS.push("delete_user")
+                  }
+                  phx-value-id={user.id}
+                  data-confirm="Are you sure?"
+                />
+              <% end %>
+            </.dropdown>
+          </div>
+        </div>
+      <% end %>
+
+      <%= if @total_count > length(@users) do %>
+        <.button color="white" phx-click="load_more" label="Show more" />
+      <% end %>
+    </div>
+  <% end %>
+</.admin_layout>
+
+<%= if @changeset do %>
+  <.modal title={@changeset.data.name}>
+    <div class="text-sm">
+      <.form let={f} for={@changeset} phx-submit="update_user">
+        <.form_field type="text_input" form={f} field={:name} />
+        <.form_field type="email_input" form={f} field={:email} />
+        <.form_field type="checkbox" form={f} field={:is_onboarded} />
+        <.form_field type="checkbox" form={f} field={:is_admin} />
+
+        <div class="flex justify-end">
+          <.button size="sm">
+            Update
+          </.button>
+        </div>
+      </.form>
+    </div>
+  </.modal>
+<% end %>

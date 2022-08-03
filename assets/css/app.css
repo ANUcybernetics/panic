@@ -1,0 +1,63 @@
+@import "tailwindcss/base";
+@import "./live-view.css";
+@import "../_petal_framework/css/petal-framework.css";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@layer base {
+  /* Add base styles here (eg. styles that are the defaults for common elements)
+
+    Example base style:
+    h1 {
+      @apply text-2xl;
+    }
+
+  */
+}
+
+@layer components {
+  /* Add component styles here (eg. buttons or tabs or anything that uses a number of styles)
+
+    Example component:
+    .btn-blue {
+      @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded;
+    }
+  */
+}
+
+@layer utilities {
+  /* Add utility styles here (eg. classes that can be applied to any element or component - all Tailwind classes are utilties) */
+
+  /* Add this to AlpineJS elements that start off hidden. When AlpineJS is loaded it will remove all x-cloak attributes */
+  [x-cloak] {
+    display: none !important;
+  }
+
+  /* Chrome, Safari and Opera */
+  .scrollbar-none::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .scrollbar-none {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  /*
+    Animation effects (works in combination with the GSAP Javascript library - used on the landing page for fade in animations)
+    Basically the CSS describes how the element starts (opacity: 0), and GSAP animates it back to normal (opacity: 1)
+  */
+  .fade-in-animation {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  .fade-in-from-right-animation {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+
+  .scale-in {
+    transform: scale(0);
+  }
+}

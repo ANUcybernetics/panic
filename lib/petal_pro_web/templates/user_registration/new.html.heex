@@ -1,0 +1,33 @@
+<.auth_layout title="Register">
+  <:logo>
+    <.logo_icon class="w-20 h-20" />
+  </:logo>
+  <:top_links>
+    Already registered?
+    <.link
+      type="live_redirect"
+      label="Sign in"
+      class="text-blue-600 underline"
+      to={Routes.user_session_path(@conn, :new)}
+    />
+  </:top_links>
+  <.auth_providers is_registering or_location="bottom" conn_or_socket={@conn} />
+
+  <.form let={f} for={@changeset} action={Routes.user_registration_path(@conn, :create)}>
+    <%= if @changeset.action do %>
+      <.alert
+        color="danger"
+        size="sm"
+        label="Oops, something went wrong! Please check the errors below."
+        class="mb-5"
+      />
+    <% end %>
+
+    <.form_field type="text_input" form={f} field={:name} placeholder="eg. Sarah Smith" />
+    <.form_field type="text_input" form={f} field={:email} placeholder="eg. sarah@gmail.com" />
+    <.form_field type="password_input" form={f} field={:password} />
+    <div class="flex justify-end mt-6">
+      <.button label="Create account" phx-disable-with="Loading..." />
+    </div>
+  </.form>
+</.auth_layout>

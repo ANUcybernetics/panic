@@ -1,0 +1,57 @@
+<.layout current_page={:<%= schema.plural %>_index} current_user={@current_user} type="sidebar">
+  <.container class="py-16">
+    <.page_header title="Listing <%= schema.human_plural %>">
+      <.button
+        link_type="a"
+        label="New <%= schema.human_singular %>"
+        to={Routes.<%= schema.route_helper %>_path(@conn, :new)}
+      />
+    </.page_header>
+
+    <.table>
+      <thead>
+        <.tr><%= for {k, _} <- schema.attrs do %>
+          <.th><%= Phoenix.Naming.humanize(Atom.to_string(k)) %></.th><% end %>
+          <.th></.th>
+        </.tr>
+      </thead>
+      <tbody id="<%= schema.plural %>">
+        <%%= for <%= schema.singular %> <- @<%= schema.collection %> do %>
+          <.tr id={"<%= schema.singular %>-#{<%= schema.singular %>.id}"}><%= for {k, _} <- schema.attrs do %>
+            <.td><%%= <%= schema.singular %>.<%= k %> %></.td><% end %>
+            <.td class="text-right whitespace-nowrap">
+              <.button
+                color="primary"
+                variant="outline"
+                size="xs"
+                link_type="a"
+                label="Show"
+                to={Routes.<%= schema.route_helper %>_path(@conn, :show, <%= schema.singular %>)}
+              />
+
+              <.button
+                color="white"
+                variant="outline"
+                size="xs"
+                link_type="a"
+                label="Edit"
+                to={Routes.<%= schema.route_helper %>_path(@conn, :edit, <%= schema.singular %>)}
+              />
+
+              <.button
+                color="danger"
+                variant="outline"
+                link_type="a"
+                size="xs"
+                label="Delete"
+                to={Routes.<%= schema.route_helper %>_path(@conn, :delete, <%= schema.singular %>)}
+                method={:delete}
+                data-confirm="Are you sure?"
+              />
+            </.td>
+          </.tr>
+        <%% end %>
+      </tbody>
+    </.table>
+  </.container>
+</.layout>

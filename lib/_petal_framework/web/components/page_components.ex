@@ -1,0 +1,131 @@
+defmodule PetalFramework.Components.PageComponents do
+  use Phoenix.Component
+  use PetalComponents
+
+  @doc """
+  Allows you to have a heading on the left side, and some action buttons on the right (default slot)
+
+  # prop title, :string
+  # slot default
+  """
+  def page_header(assigns) do
+    assigns = assign_new(assigns, :inner_block, fn -> nil end)
+
+    ~H"""
+    <div class="mb-8 sm:flex sm:justify-between sm:items-center">
+      <div class="mb-4 sm:mb-0">
+        <.h2 class="!mb-0">
+          <%= @title %>
+        </.h2>
+      </div>
+
+      <div class="">
+        <%= if @inner_block do %>
+          <%= render_slot(@inner_block) %>
+        <% end %>
+      </div>
+    </div>
+    """
+  end
+
+  @doc """
+  Gives you a white background with shadow.
+
+  prop class, :string
+  prop padded, :boolean
+  """
+  def box(assigns) do
+    assigns =
+      assigns
+      |> assign_new(:class, fn -> "" end)
+      |> assign_new(:padded, fn -> false end)
+      |> assign_new(:extra_assigns, fn ->
+        assigns_to_attributes(assigns, ~w(
+          class
+          padded
+        )a)
+      end)
+
+    ~H"""
+    <div
+      {@extra_assigns}
+      class={
+        [
+          "bg-white dark:bg-gray-800 dark:border dark:border-gray-700 rounded-lg shadow overflow-hidden",
+          @class,
+          if(@padded, do: "spx-4 py-8 sm:px-10", else: "")
+        ]
+      }
+    >
+      <%= render_slot(@inner_block) %>
+    </div>
+    """
+  end
+
+  @doc """
+  Provides a container with a sidebar on the left and main content on the right. Useful for things like user settings.
+
+  ---------------------------------
+  | Sidebar | Main                |
+  |         |                     |
+  |         |                     |
+  |         |                     |
+  ---------------------------------
+
+  # prop current_page, :map
+  # prop menu_items, :list
+  # slot default
+  """
+  def sidebar_tabs_container(assigns) do
+    ~H"""
+    <.box class="flex flex-col divide-y divide-gray-200 dark:divide-gray-700 md:divide-y-0 md:divide-x md:flex-row">
+      <div class="flex-shrink-0 w-full py-6 md:w-72">
+        <%= for menu_item <- @menu_items do %>
+          <.sidebar_menu_item current={@current_page} {menu_item} />
+        <% end %>
+      </div>
+
+      <div class="flex-grow px-4 py-6 sm:p-6 lg:pb-8">
+        <%= render_slot(@inner_block) %>
+      </div>
+    </.box>
+    """
+  end
+
+  # prop path, :string
+  # prop label, :string
+  # prop icon, :atom
+  def sidebar_menu_item(assigns) do
+    assigns = assign_new(assigns, :is_active?, fn -> assigns.current == assigns.name end)
+
+    ~H"""
+    <%= live_redirect to: @path,
+                  class:
+                    menu_item_classes(@is_active?) <>
+                      " flex items-center px-3 py-2 text-sm font-medium border-transparent group" do %>
+      <Heroicons.Outline.render
+        icon={@icon}
+        class={menu_item_icon_classes(@is_active?) <> " flex-shrink-0 w-6 h-6 mx-3"}
+      />
+      <div>
+        <%= @label %>
+      </div>
+    <% end %>
+    """
+  end
+
+  defp menu_item_classes(true),
+    do:
+      "bg-gray-100 border-gray-500 text-gray-700 dark:bg-gray-700 dark:text-gray-100 dark:hover:text-white"
+
+  defp menu_item_classes(false),
+    do:
+      "text-gray-900 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700/70 dark:hover:text-gray-50"
+
+  defp menu_item_icon_classes(true),
+    do: "text-gray-500 group-hover:text-gray-500 dark:text-gray-100 dark:group-hover:text-white"
+
+  defp menu_item_icon_classes(false),
+    do:
+      "text-gray-500 group-hover:text-gray-500 dark:text-gray-400 dark:group-hover:text-gray-400"
+end

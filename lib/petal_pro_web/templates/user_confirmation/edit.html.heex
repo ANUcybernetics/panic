@@ -1,0 +1,35 @@
+<.auth_layout title="Confirm account">
+  <:logo>
+    <.logo_icon class="w-20 h-20" />
+  </:logo>
+  <:top_links>
+    <%= if @current_user do %>
+      <.link label="Home" class="text-blue-600 underline dark:text-blue-400" to="/" />
+
+      <.link
+        label="Settings"
+        class="ml-3 text-blue-600 underline dark:text-blue-400"
+        to={PetalProWeb.Menus.get_link(:edit_profile).path}
+      />
+    <% else %>
+      <.link
+        label="Sign in"
+        class="text-blue-600 underline dark:text-blue-400"
+        to={Routes.user_session_path(@conn, :new)}
+      />
+      <.link
+        label="Register"
+        class="ml-3 text-blue-600 underline dark:text-blue-400"
+        to={Routes.user_registration_path(@conn, :new)}
+      />
+    <% end %>
+  </:top_links>
+  <.form let={_f} for={:user} action={Routes.user_confirmation_path(@conn, :update, @token)}>
+    <.p class="text-center">
+      Touch the button below to confirm your account.
+    </.p>
+    <div class="flex justify-center mt-6">
+      <.button label="Confirm my account" />
+    </div>
+  </.form>
+</.auth_layout>

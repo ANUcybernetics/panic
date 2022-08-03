@@ -1,0 +1,44 @@
+<.layout current_page={:change_me} current_user={@current_user} type="sidebar">
+  <.container class="py-16">
+    <.page_header title="Show <%= schema.human_singular %>">
+      <.button
+        link_type="live_patch"
+        label="Edit <%= schema.human_singular %>"
+        to={Routes.<%= schema.route_helper %>_show_path(@socket, :edit, @<%= schema.singular %>)}
+      />
+
+      <.button
+        link_type="live_patch"
+        label="Back"
+        to={Routes.<%= schema.route_helper %>_index_path(@socket, :index)}
+      />
+    </.page_header>
+
+    <%%= if @live_action in [:new, :edit] do %>
+      <.modal title={@page_title}>
+        <.live_component
+          module={<%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.FormComponent}
+          id={@<%= schema.singular %>.id || :new}
+          action={@live_action}
+          <%= schema.singular %>={@<%= schema.singular %>}
+          return_to={Routes.<%= schema.route_helper %>_show_path(@socket, :show, @<%= schema.singular %>)}
+        />
+      </.modal>
+    <%% end %>
+
+    <div class="max-w-lg">
+      <div class="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
+      <%= for {k, _} <- schema.attrs do %>
+        <div class="sm:col-span-1">
+          <div class="text-sm font-medium text-gray-500 dark:text-gray-400">
+            <%= Phoenix.Naming.humanize(Atom.to_string(k)) %>
+          </div>
+          <div class="mt-1 text-sm text-gray-900 dark:text-gray-100">
+            <%%= @<%= schema.singular %>.<%= k %> %>
+          </div>
+        </div>
+      <% end %>
+      </div>
+    </div>
+  </.container>
+</.layout>

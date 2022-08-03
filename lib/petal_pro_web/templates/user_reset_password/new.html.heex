@@ -1,0 +1,24 @@
+<.auth_layout title="Forgot your password?">
+  <:logo>
+    <.logo_icon class="w-20 h-20" />
+  </:logo>
+  <:top_links>
+    <.link
+      label="Sign in"
+      class="text-blue-600 underline"
+      to={Routes.user_session_path(@conn, :new)}
+    />
+    <.link
+      label="Register"
+      class="ml-3 text-blue-600 underline"
+      to={Routes.user_registration_path(@conn, :new)}
+    />
+  </:top_links>
+  <.form let={f} for={:user} action={Routes.user_reset_password_path(@conn, :create)}>
+    <.form_field type="email_input" form={f} field={:email} placeholder="eg. sarah@gmail.com" />
+
+    <div class="flex justify-end mt-6">
+      <.button label="Send instructions to reset password" phx-disable-with="Loading..." />
+    </div>
+  </.form>
+</.auth_layout>

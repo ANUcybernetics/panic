@@ -1,0 +1,13 @@
+<.layout current_page={:<%= schema.plural %>_new} current_user={@current_user} type="sidebar">
+  <.container class="py-16">
+    <.page_header title="New <%= schema.human_singular %>">
+      <.button
+        link_type="a"
+        label="Back"
+        to={Routes.<%= schema.route_helper %>_path(@conn, :index)}
+      />
+    </.page_header>
+
+    <%%= render "form.html", Map.put(assigns, :action, Routes.<%= schema.route_helper %>_path(@conn, :create)) %>
+  </.container>
+</.layout>

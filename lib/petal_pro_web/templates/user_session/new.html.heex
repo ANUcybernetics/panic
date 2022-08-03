@@ -1,0 +1,36 @@
+<.auth_layout title="Sign in">
+  <:logo>
+    <.logo_icon class="w-20 h-20" />
+  </:logo>
+  <:top_links>
+    Not yet registered?
+    <.link
+      type="live_redirect"
+      label="Register"
+      class="text-blue-600 underline dark:text-blue-400"
+      to={Routes.user_registration_path(@conn, :new)}
+    />
+  </:top_links>
+  <.auth_providers or_location="bottom" conn_or_socket={@conn} />
+
+  <.form let={f} for={:user} action={Routes.user_session_path(@conn, :create)}>
+    <%= if @error_message do %>
+      <.alert color="danger" size="sm" label={@error_message} class="mb-5" />
+    <% end %>
+
+    <.form_field type="text_input" form={f} field={:email} placeholder="eg. sarah@gmail.com" />
+    <.form_field type="password_input" form={f} field={:password} />
+    <.form_field type="checkbox" form={f} field={:remember_me} />
+
+    <div class="flex justify-end mt-6">
+      <.button label="Sign in" phx-disable-with="Loading..." />
+    </div>
+  </.form>
+  <:bottom_links>
+    <.link
+      class="text-sm text-gray-500 underline dark:text-gray-400"
+      label="Forgot your password?"
+      to={Routes.user_reset_password_path(@conn, :new)}
+    />
+  </:bottom_links>
+</.auth_layout>
