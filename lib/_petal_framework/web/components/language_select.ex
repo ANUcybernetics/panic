@@ -9,8 +9,8 @@ defmodule PetalFramework.Components.LanguageSelect do
   @doc """
   Usage:
   <.language_select
-    current_locale={Gettext.get_locale(PetalProWeb.Gettext)}
-    language_options={PetalPro.config(:language_options)}
+    current_locale={Gettext.get_locale(PanicWeb.Gettext)}
+    language_options={Panic.config(:language_options)}
   />
   """
   def language_select(assigns) do

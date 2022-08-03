@@ -1,5 +1,5 @@
-defmodule PetalProWeb.<%= @module_name %> do
-  use PetalProWeb, :live_view
+defmodule PanicWeb.<%= @module_name %> do
+  use PanicWeb, :live_view
 
   @impl true
   def mount(_params, _session, socket) do

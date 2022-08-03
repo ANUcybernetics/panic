@@ -1,5 +1,5 @@
-defmodule PetalPro.OrgsFixtures do
-  alias PetalPro.{
+defmodule Panic.OrgsFixtures do
+  alias Panic.{
     AccountsFixtures,
     Orgs,
     Orgs.Membership,
@@ -22,7 +22,7 @@ defmodule PetalPro.OrgsFixtures do
   end
 
   def membership_fixture(org, user, role \\ "member") do
-    PetalPro.Repo.insert!(Membership.insert_changeset(org, user, role))
+    Panic.Repo.insert!(Membership.insert_changeset(org, user, role))
   end
 
   def org_member_fixture(org, user_attrs \\ %{}) do

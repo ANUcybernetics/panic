@@ -1,5 +1,5 @@
 ExUnit.configure(exclude: :feature)
 ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(PetalPro.Repo, :manual)
+Ecto.Adapters.SQL.Sandbox.mode(Panic.Repo, :manual)
 {:ok, _} = Application.ensure_all_started(:wallaby)
-Application.put_env(:wallaby, :base_url, PetalProWeb.Endpoint.url())
+Application.put_env(:wallaby, :base_url, PanicWeb.Endpoint.url())

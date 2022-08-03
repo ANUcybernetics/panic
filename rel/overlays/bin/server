@@ -1,3 +1,3 @@
 #!/bin/sh
 cd -P -- "$(dirname -- "$0")"
-PHX_SERVER=true exec ./petal_pro start
+PHX_SERVER=true exec ./panic start

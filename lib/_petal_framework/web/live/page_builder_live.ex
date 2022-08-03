@@ -1,10 +1,10 @@
-defmodule PetalProWeb.PageBuilderLive do
+defmodule PanicWeb.PageBuilderLive do
   @moduledoc """
   A dev-only live view that builds new pages by copying templates and modifying the router.
   """
-  use PetalProWeb, :live_view
+  use PanicWeb, :live_view
   alias PetalFramework.PageBuilder
-  alias PetalPro.PageChangeset
+  alias Panic.PageChangeset
 
   @impl true
   def mount(params, _session, socket) do
@@ -148,7 +148,7 @@ defmodule PetalProWeb.PageBuilderLive do
     PageBuilder.make_changes([
       [
         action: :inject_after_target_line,
-        file_path: "lib/petal_pro_web/router.ex",
+        file_path: "lib/panic_web/router.ex",
         target_line: page.route_section,
         code: """
         get "#{page.route_path}", PageController, :#{page.controller_function_name}
@@ -158,7 +158,7 @@ defmodule PetalProWeb.PageBuilderLive do
         action: :copy_template,
         template: "page_template.html.heex",
         destination_file_path:
-          "lib/petal_pro_web/templates/page/#{page.controller_function_name}.html.heex",
+          "lib/panic_web/templates/page/#{page.controller_function_name}.html.heex",
         assigns: %{
           title: page.page_title,
           layout: page.layout,
@@ -167,7 +167,7 @@ defmodule PetalProWeb.PageBuilderLive do
       ],
       [
         action: :inject_before_final_end,
-        file_path: "lib/petal_pro_web/controllers/page_controller.ex",
+        file_path: "lib/panic_web/controllers/page_controller.ex",
         code: """
 
           def #{page.controller_function_name}(conn, _params) do
@@ -182,7 +182,7 @@ defmodule PetalProWeb.PageBuilderLive do
     PageBuilder.make_changes([
       [
         action: :inject_after_target_line,
-        file_path: "lib/petal_pro_web/router.ex",
+        file_path: "lib/panic_web/router.ex",
         target_line: page.route_section,
         code: """
         live "#{page.route_path}", #{page.live_view_module_name}
@@ -192,7 +192,7 @@ defmodule PetalProWeb.PageBuilderLive do
         action: :copy_template,
         template: "live_view_template.ex",
         destination_file_path:
-          "lib/petal_pro_web/live/#{Macro.underscore(page.live_view_module_name)}.ex",
+          "lib/panic_web/live/#{Macro.underscore(page.live_view_module_name)}.ex",
         assigns: %{
           title: page.page_title,
           layout: page.layout,
@@ -204,7 +204,7 @@ defmodule PetalProWeb.PageBuilderLive do
   end
 
   defp get_route_sections(changeset) do
-    router = File.read!("lib/petal_pro_web/router.ex")
+    router = File.read!("lib/panic_web/router.ex")
 
     case changeset.changes.type do
       "live" ->

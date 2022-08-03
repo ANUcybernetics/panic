@@ -1,0 +1,13 @@
+<PanicWeb.DevLayoutComponent.dev_layout
+  current_page={:dev_sent_emails}
+  current_user={@current_user}
+>
+  <div class="bg-white">
+    <.alert
+      color="info"
+      with_icon
+      label="To see emails here, you must peform an action e.g change email"
+    />
+    <iframe class="w-full h-screen px-12 pt-10 overflow-auto" src="/dev/mailbox"></iframe>
+  </div>
+</PanicWeb.DevLayoutComponent.dev_layout>

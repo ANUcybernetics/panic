@@ -1,11 +1,11 @@
-defmodule PetalPro.MixProject do
+defmodule Panic.MixProject do
   use Mix.Project
 
   @version "1.3.0"
 
   def project do
     [
-      app: :petal_pro,
+      app: :panic,
       version: @version,
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -21,7 +21,7 @@ defmodule PetalPro.MixProject do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {PetalPro.Application, []},
+      mod: {Panic.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
   end

@@ -1,4 +1,4 @@
-defmodule PetalPro.Repo.Migrations.AddUserTotps do
+defmodule Panic.Repo.Migrations.AddUserTotps do
   use Ecto.Migration
 
   def change do

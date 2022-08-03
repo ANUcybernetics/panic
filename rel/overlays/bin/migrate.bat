@@ -1,1 +1,1 @@
-call "%~dp0\petal_pro" eval PetalPro.Release.migrate
+call "%~dp0\panic" eval Panic.Release.migrate

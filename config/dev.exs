@@ -1,10 +1,10 @@
 import Config
 
 # Configure your database
-config :petal_pro, PetalPro.Repo,
+config :panic, Panic.Repo,
   username: "postgres",
   password: "postgres",
-  database: "petal_pro_dev",
+  database: "panic_dev",
   hostname: "localhost",
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
@@ -15,7 +15,7 @@ config :petal_pro, PetalPro.Repo,
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with esbuild to bundle .js and .css sources.
-config :petal_pro, PetalProWeb.Endpoint,
+config :panic, PanicWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
   http: [ip: {127, 0, 0, 1}, port: 4000],
@@ -54,13 +54,13 @@ config :petal_pro, PetalProWeb.Endpoint,
 # different ports.
 
 # Watch static and templates for browser reloading.
-config :petal_pro, PetalProWeb.Endpoint,
+config :panic, PanicWeb.Endpoint,
   live_reload: [
     patterns: [
       ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
-      ~r"lib/petal_pro_web/(live|views)/.*(ex)$",
-      ~r"lib/petal_pro_web/templates/.*(eex)$"
+      ~r"lib/panic_web/(live|views)/.*(ex)$",
+      ~r"lib/panic_web/templates/.*(eex)$"
     ]
   ]
 
@@ -86,10 +86,10 @@ config :email_checker,
 
 # Uncomment when you want to send test emails:
 # Also ensure in config.exs that mailer_default_from_email is set to an email that is whitelisted on Amazon SES
-# config :petal_pro, PetalPro.Mailer,
+# config :panic, Panic.Mailer,
 #   adapter: Swoosh.Adapters.AmazonSES,
 #   region: System.get_env("AWS_REGION"),
 #   access_key: System.get_env("AWS_ACCESS_KEY"),
 #   secret: System.get_env("AWS_SECRET")
 
-config :petal_pro, :env, :dev
+config :panic, :env, :dev

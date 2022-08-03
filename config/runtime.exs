@@ -23,7 +23,7 @@ if config_env() == :prod do
       For example: ecto://USER:PASS@HOST/DATABASE
       """
 
-  config :petal_pro, PetalPro.Repo,
+  config :panic, Panic.Repo,
     ssl: false,
     socket_options: [:inet6],
     url: database_url,
@@ -51,7 +51,7 @@ if config_env() == :prod do
 
   port = String.to_integer(System.get_env("PORT") || "4000")
 
-  config :petal_pro, PetalProWeb.Endpoint,
+  config :panic, PanicWeb.Endpoint,
     server: true,
     url: [host: host, port: 80],
     http: [
@@ -64,7 +64,7 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
-  config :petal_pro, PetalPro.Mailer,
+  config :panic, Panic.Mailer,
     adapter: Swoosh.Adapters.AmazonSES,
     region: System.get_env("AWS_REGION"),
     access_key: System.get_env("AWS_ACCESS_KEY"),

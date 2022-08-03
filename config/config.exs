@@ -7,7 +7,6 @@
 # General application configuration
 import Config
 
-# SETUP_TODO - ensure these details are correct
 # Option descriptions:
 # app_name: This appears in your email layout and also your meta title tag
 # business_name: This appears in your landing page footer next to the copyright symbol
@@ -19,27 +18,26 @@ import Config
 # twitter_url: (deletable) The URL to your Twitter account (used in the landing page footer)
 # github_url: (deletable) The URL to your Github account (used in the landing page footer)
 # discord_url: (deletable) The URL to your Discord invititation (used in the landing page footer)
-config :petal_pro,
-  app_name: "Petal",
-  business_name: "Petal Pty Ltd",
-  support_email: "support@example.com",
-  mailer_default_from_name: "Support",
-  mailer_default_from_email: "support@example.com",
+config :panic,
+  app_name: "Panic",
+  business_name: "ANU School of Cybernetics",
+  support_email: "ben.swift@anu.edu.au",
+  mailer_default_from_name: "Ben Swift",
+  mailer_default_from_email: "ben.swift@anu.edu.au",
   logo_url_for_emails:
     "https://res.cloudinary.com/wickedsites/image/upload/v1643336799/petal/petal_logo_light_w5jvlg.png",
-  seo_description: "SaaS boilerplate template powered by Elixir's Phoenix and TailwindCSS",
-  twitter_url: "https://twitter.com/PetalFramework",
-  github_url: "https://github.com/petalframework",
-  discord_url: "https://discord.gg/exbwVbjAct"
+  seo_description: "PANIC: Playground Ai Network for Interactive Creativity",
+  twitter_url: "https://twitter.com/benswift",
+  github_url: "https://github.com/benswift"
 
-config :petal_pro,
-  ecto_repos: [PetalPro.Repo]
+config :panic,
+  ecto_repos: [Panic.Repo]
 
 # Configures the endpoint
-config :petal_pro, PetalProWeb.Endpoint,
+config :panic, PanicWeb.Endpoint,
   url: [host: "localhost"],
-  render_errors: [view: PetalProWeb.ErrorView, accepts: ~w(html json), layout: false],
-  pubsub_server: PetalPro.PubSub,
+  render_errors: [view: PanicWeb.ErrorView, accepts: ~w(html json), layout: false],
+  pubsub_server: Panic.PubSub,
   live_view: [signing_salt: "Fd8SWPu3"]
 
 # Configures the mailer
@@ -49,7 +47,7 @@ config :petal_pro, PetalProWeb.Endpoint,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :petal_pro, PetalPro.Mailer, adapter: Swoosh.Adapters.Local
+config :panic, Panic.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configure esbuild (the version is required)
 config :esbuild,
@@ -69,7 +67,7 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-config :petal_components, :error_translator_function, {PetalProWeb.ErrorHelpers, :translate_error}
+config :petal_components, :error_translator_function, {PanicWeb.ErrorHelpers, :translate_error}
 
 config :tailwind,
   version: "3.1.2",
@@ -87,18 +85,18 @@ config :tailwind,
 # The following configuration would start four queues with concurrency ranging from 5 to 50: [default: 10, mailers: 20, events: 50, media: 5]
 # For now we just have one default queue with up to 5 concurrent jobs (as our database only accepts up to 10 connections so we don't want to overload it)
 # Oban provides active pruning of completed, cancelled and discarded jobs - we retain jobs for 24 hours
-config :petal_pro, Oban,
-  repo: PetalPro.Repo,
+config :panic, Oban,
+  repo: Panic.Repo,
   queues: [default: 5],
   plugins: [
     {Oban.Plugins.Pruner, max_age: 3600 * 24},
     {Oban.Plugins.Cron,
      crontab: [
-       {"@daily", PetalPro.Workers.ExampleWorker}
-       # {"* * * * *", PetalPro.EveryMinuteWorker},
-       # {"0 * * * *", PetalPro.EveryHourWorker},
-       # {"0 */6 * * *", PetalPro.EverySixHoursWorker},
-       # {"0 0 * * SUN", PetalPro.EverySundayWorker},
+       {"@daily", Panic.Workers.ExampleWorker}
+       # {"* * * * *", Panic.EveryMinuteWorker},
+       # {"0 * * * *", Panic.EveryHourWorker},
+       # {"0 */6 * * *", Panic.EverySixHoursWorker},
+       # {"0 0 * * SUN", Panic.EverySundayWorker},
        # More examples: https://crontab.guru/examples.html
      ]}
   ]
@@ -106,9 +104,9 @@ config :petal_pro, Oban,
 # Specify which languages you support
 # To create .po files for a language run `mix gettext.merge priv/gettext --locale fr`
 # (fr is France, change to whatever language you want - make sure it's included in the locales config below)
-config :petal_pro, PetalProWeb.Gettext, allowed_locales: ~w(en fr)
+config :panic, PanicWeb.Gettext, allowed_locales: ~w(en fr)
 
-config :petal_pro, :language_options, [
+config :panic, :language_options, [
   %{locale: "en", flag: "🇬🇧", label: "English"},
   %{locale: "fr", flag: "🇫🇷", label: "French"}
 ]
@@ -121,7 +119,7 @@ config :ueberauth, Ueberauth,
     github: {Ueberauth.Strategy.Github, [default_scope: "user:email"]}
   ]
 
-config :petal_pro, :passwordless_enabled, true
+config :panic, :passwordless_enabled, true
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

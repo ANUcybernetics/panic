@@ -12,677 +12,677 @@ msgstr ""
 "Plural-Forms: nplurals=2\n"
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/templates/page/landing_page.html.heex:34
+#: lib/panic_web/templates/page/landing_page.html.heex:34
 msgid "Adapt this landing page template to your own web application. Now you can make your next great web app in record time."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/templates/page/landing_page.html.heex:10
+#: lib/panic_web/templates/page/landing_page.html.heex:10
 msgid "The secret of"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/templates/page/landing_page.html.heex:12
+#: lib/panic_web/templates/page/landing_page.html.heex:12
 msgid "getting ahead"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/templates/page/landing_page.html.heex:14
+#: lib/panic_web/templates/page/landing_page.html.heex:14
 msgid "is getting started"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/templates/page/landing_page.html.heex:17
+#: lib/panic_web/templates/page/landing_page.html.heex:17
 msgid "Get started"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/templates/page/landing_page.html.heex:25
+#: lib/panic_web/templates/page/landing_page.html.heex:25
 msgid "Guide"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/menus.ex:13
-#: lib/petal_pro_web/templates/page/landing_page.html.heex:207
+#: lib/panic_web/menus.ex:13
+#: lib/panic_web/templates/page/landing_page.html.heex:207
 msgid "Features"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/menus.ex:15
-#: lib/petal_pro_web/templates/page/landing_page.html.heex:278
+#: lib/panic_web/menus.ex:15
+#: lib/panic_web/templates/page/landing_page.html.heex:278
 msgid "Pricing"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/components/landing_page.ex:187
-#: lib/petal_pro_web/menus.ex:14
+#: lib/panic_web/components/landing_page.ex:187
+#: lib/panic_web/menus.ex:14
 msgid "Testimonials"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/templates/page/landing_page.html.heex:6
+#: lib/panic_web/templates/page/landing_page.html.heex:6
 msgid "Trusted by brands all over the world"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/edit_email_live.ex:27
-#: lib/petal_pro_web/menus.ex:125
+#: lib/panic_web/live/user_settings/edit_email_live.ex:27
+#: lib/panic_web/menus.ex:125
 msgid "Change email"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/menus.ex:161
+#: lib/panic_web/menus.ex:161
 msgid "Dashboard"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/menus.ex:134
+#: lib/panic_web/menus.ex:134
 msgid "Edit notifications"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/menus.ex:143
+#: lib/panic_web/menus.ex:143
 msgid "Edit password"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/menus.ex:116
+#: lib/panic_web/menus.ex:116
 msgid "Edit profile"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_live.html.heex:46
-#: lib/petal_pro_web/live/user_settings/edit_profile_live.ex:22
+#: lib/panic_web/live/orgs/team/org_team_live.html.heex:46
+#: lib/panic_web/live/user_settings/edit_profile_live.ex:22
 msgid "Name"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/menus.ex:107
+#: lib/panic_web/menus.ex:107
 msgid "Settings"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/edit_profile_live.ex:27
+#: lib/panic_web/live/user_settings/edit_profile_live.ex:27
 msgid "Update profile"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/edit_profile_live.ex:23
+#: lib/panic_web/live/user_settings/edit_profile_live.ex:23
 msgid "eg. John Smith"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/edit_email_live.ex:53
+#: lib/panic_web/live/user_settings/edit_email_live.ex:53
 msgid "A link to confirm your e-mail change has been sent to the new address."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/edit_notifications.ex:22
-#: lib/petal_pro_web/live/user_settings/user_onboarding_live.ex:59
+#: lib/panic_web/live/user_settings/edit_notifications.ex:22
+#: lib/panic_web/live/user_settings/user_onboarding_live.ex:59
 msgid "Allow marketing notifications"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/edit_password_live.ex:47
+#: lib/panic_web/live/user_settings/edit_password_live.ex:47
 msgid "Change password"
 msgstr ""
 
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/petal_pro_web/live/user_settings/edit_email_live.ex:22
+#: lib/panic_web/live/user_settings/edit_email_live.ex:22
 msgid "Change your email"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/edit_password_live.ex:23
+#: lib/panic_web/live/user_settings/edit_password_live.ex:23
 msgid "Current password"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/controllers/user_confirmation_controller.ex:22
+#: lib/panic_web/controllers/user_confirmation_controller.ex:22
 msgid "If your email is in our system and it has not been confirmed yet, you will receive an email with instructions shortly."
 msgstr ""
 
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/petal_pro_web/live/user_settings/edit_password_live.ex:26
+#: lib/panic_web/live/user_settings/edit_password_live.ex:26
 msgid "New password"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/edit_password_live.ex:32
+#: lib/panic_web/live/user_settings/edit_password_live.ex:32
 msgid "New password confirmation"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/edit_notifications.ex:36
-#: lib/petal_pro_web/live/user_settings/edit_profile_live.ex:41
+#: lib/panic_web/live/user_settings/edit_notifications.ex:36
+#: lib/panic_web/live/user_settings/edit_profile_live.ex:41
 msgid "Profile updated"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/user_onboarding_live.ex:63
+#: lib/panic_web/live/user_settings/user_onboarding_live.ex:63
 msgid "Submit"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/user_onboarding_live.ex:83
+#: lib/panic_web/live/user_settings/user_onboarding_live.ex:83
 msgid "Thank you!"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/user_onboarding_live.ex:39
+#: lib/panic_web/live/user_settings/user_onboarding_live.ex:39
 msgid "To join our community, help us improve by completing your profile."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/edit_notifications.ex:44
-#: lib/petal_pro_web/live/user_settings/edit_profile_live.ex:49
+#: lib/panic_web/live/user_settings/edit_notifications.ex:44
+#: lib/panic_web/live/user_settings/edit_profile_live.ex:49
 msgid "Update failed. Please check the form for issues"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/controllers/user_confirmation_controller.ex:61
+#: lib/panic_web/controllers/user_confirmation_controller.ex:61
 msgid "User confirmation link is invalid or it has expired."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/controllers/user_confirmation_controller.ex:42
-#: lib/petal_pro_web/controllers/user_confirmation_controller.ex:46
+#: lib/panic_web/controllers/user_confirmation_controller.ex:42
+#: lib/panic_web/controllers/user_confirmation_controller.ex:46
 msgid "User confirmed successfully."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/controllers/user_registration_controller.ex:25
+#: lib/panic_web/controllers/user_registration_controller.ex:25
 msgid "User created successfully."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/user_onboarding_live.ex:35
+#: lib/panic_web/live/user_settings/user_onboarding_live.ex:35
 msgid "Welcome!"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/user_onboarding_live.ex:50
+#: lib/panic_web/live/user_settings/user_onboarding_live.ex:50
 msgid "What is your name?*"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/controllers/user_auth.ex:222
+#: lib/panic_web/controllers/user_auth.ex:222
 msgid "You do not have access to this page."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/controllers/user_auth.ex:193
-#: lib/petal_pro_web/live/user_on_mount_hooks.ex:17
+#: lib/panic_web/controllers/user_auth.ex:193
+#: lib/panic_web/live/user_on_mount_hooks.ex:17
 msgid "You must log in to access this page."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/controllers/user_auth.ex:235
+#: lib/panic_web/controllers/user_auth.ex:235
 msgid "Your account is not accessible."
 msgstr ""
 
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/petal_pro_web/live/user_settings/user_onboarding_live.ex:51
+#: lib/panic_web/live/user_settings/user_onboarding_live.ex:51
 msgid "eg. John"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_invite_form_component.ex:23
-#: lib/petal_pro_web/live/user_settings/edit_email_live.ex:23
+#: lib/panic_web/live/orgs/team/org_team_invite_form_component.ex:23
+#: lib/panic_web/live/user_settings/edit_email_live.ex:23
 msgid "eg. john@gmail.com"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/org_settings_layout_component.ex:23
+#: lib/panic_web/live/orgs/org_settings_layout_component.ex:23
 msgid "%{org_name} settings"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/user_org_invitations_live.ex:58
+#: lib/panic_web/live/user_settings/user_org_invitations_live.ex:58
 msgid "Accept"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_live.html.heex:71
+#: lib/panic_web/live/orgs/team/org_team_live.html.heex:71
 msgid "Are you sure you want to leave this team?"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/user_org_invitations_live.ex:51
+#: lib/panic_web/live/user_settings/user_org_invitations_live.ex:51
 msgid "Are you sure you want to reject this invitation?"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_live.html.heex:108
+#: lib/panic_web/live/orgs/team/org_team_live.html.heex:108
 msgid "Are yous ure you want to remove this invitation?"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_membership_form_component.ex:26
+#: lib/panic_web/live/orgs/team/org_membership_form_component.ex:26
 msgid "Be careful"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_membership_form_component.ex:27
+#: lib/panic_web/live/orgs/team/org_membership_form_component.ex:27
 msgid "By removing yourself from admin you won't be able to regain access."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/auth/passwordless_auth_live.html.heex:47
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:47
 msgid "Can't find it? Check your spam folder."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/auth/passwordless_auth_live.html.heex:31
-#: lib/petal_pro_web/live/auth/passwordless_auth_live.html.heex:96
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:31
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:96
 msgid "Cancel"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/components/auth_providers.ex:33
-#: lib/petal_pro_web/live/auth/passwordless_auth_live.html.heex:2
+#: lib/panic_web/components/auth_providers.ex:33
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:2
 msgid "Continue with passwordless"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/orgs_live.ex:102
+#: lib/panic_web/live/orgs/orgs_live.ex:102
 msgid "Create a new organization"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/orgs_live.ex:73
+#: lib/panic_web/live/orgs/orgs_live.ex:73
 msgid "Create your first organization by clicking the button below."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_live.html.heex:107
+#: lib/panic_web/live/orgs/team/org_team_live.html.heex:107
 msgid "Delete"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_live.html.heex:93
+#: lib/panic_web/live/orgs/team/org_team_live.html.heex:93
 msgid "E-mail"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/org_settings_layout_component.ex:42
-#: lib/petal_pro_web/live/orgs/team/org_team_live.html.heex:77
+#: lib/panic_web/live/orgs/org_settings_layout_component.ex:42
+#: lib/panic_web/live/orgs/team/org_team_live.html.heex:77
 msgid "Edit"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_invite_form_component.ex:22
-#: lib/petal_pro_web/live/orgs/team/org_team_live.html.heex:48
+#: lib/panic_web/live/orgs/team/org_team_invite_form_component.ex:22
+#: lib/panic_web/live/orgs/team/org_team_live.html.heex:48
 msgid "Email"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/controllers/user_settings_controller.ex:46
+#: lib/panic_web/controllers/user_settings_controller.ex:46
 msgid "Email change link is invalid or it has expired."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/controllers/user_settings_controller.ex:41
+#: lib/panic_web/controllers/user_settings_controller.ex:41
 msgid "Email changed successfully."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/auth/passwordless_auth_live.html.heex:16
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:16
 msgid "Enter the email with to register or sign in with and we'll email you a pin code."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/auth/passwordless_auth_live.html.heex:33
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:33
 msgid "Get pin code"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/templates/page/landing_page.html.heex:208
+#: lib/panic_web/templates/page/landing_page.html.heex:208
 msgid "Here are some features you can use to get started with your web app."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/controllers/user_reset_password_controller.ex:24
+#: lib/panic_web/controllers/user_reset_password_controller.ex:24
 msgid "If your email is in our system, you will receive instructions to reset your password shortly."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/controllers/user_session_controller.ex:19
+#: lib/panic_web/controllers/user_session_controller.ex:19
 msgid "Invalid email or password"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/controllers/user_settings_controller.ex:100
+#: lib/panic_web/controllers/user_settings_controller.ex:100
 msgid "Invalid link"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/user_org_invitations_live.ex:34
+#: lib/panic_web/live/user_settings/user_org_invitations_live.ex:34
 msgid "Invitation"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_invite_form_component.ex:79
+#: lib/panic_web/live/orgs/team/org_team_invite_form_component.ex:79
 msgid "Invitation sent successfully"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/user_org_invitations_live.ex:95
+#: lib/panic_web/live/user_settings/user_org_invitations_live.ex:95
 msgid "Invitation was accepted"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/user_org_invitations_live.ex:110
+#: lib/panic_web/live/user_settings/user_org_invitations_live.ex:110
 msgid "Invitation was rejected"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_live.html.heex:87
-#: lib/petal_pro_web/menus.ex:152
+#: lib/panic_web/live/orgs/team/org_team_live.html.heex:87
+#: lib/panic_web/menus.ex:152
 msgid "Invitations"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_invite_form_component.ex:28
+#: lib/panic_web/live/orgs/team/org_team_invite_form_component.ex:28
 msgid "Invite"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_live.ex:29
-#: lib/petal_pro_web/live/orgs/team/org_team_live.html.heex:39
+#: lib/panic_web/live/orgs/team/org_team_live.ex:29
+#: lib/panic_web/live/orgs/team/org_team_live.html.heex:39
 msgid "Invite new member"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_invite_form_component.ex:28
+#: lib/panic_web/live/orgs/team/org_team_invite_form_component.ex:28
 msgid "Inviting..."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_live.html.heex:65
+#: lib/panic_web/live/orgs/team/org_team_live.html.heex:65
 msgid "Leave"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_live.ex:62
+#: lib/panic_web/live/orgs/team/org_team_live.ex:62
 msgid "Member deleted successfully"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_live.html.heex:32
+#: lib/panic_web/live/orgs/team/org_team_live.html.heex:32
 msgid "Members"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_membership_form_component.ex:79
+#: lib/panic_web/live/orgs/team/org_membership_form_component.ex:79
 msgid "Membership updated successfully"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/orgs_live.ex:65
+#: lib/panic_web/live/orgs/orgs_live.ex:65
 msgid "My organizations"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/orgs_live.ex:50
+#: lib/panic_web/live/orgs/orgs_live.ex:50
 msgid "New invitations"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_live.html.heex:118
+#: lib/panic_web/live/orgs/team/org_team_live.html.heex:118
 msgid "No pending invitations."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/auth/passwordless_auth_live.ex:103
+#: lib/panic_web/live/auth/passwordless_auth_live.ex:103
 msgid "Not a valid pin. Sure you typed it correctly?"
 msgstr ""
 
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/petal_pro_web/controllers/user_reset_password_controller.ex:41
+#: lib/panic_web/controllers/user_reset_password_controller.ex:41
 msgid "Password reset successfully."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/controllers/user_settings_controller.ex:21
+#: lib/panic_web/controllers/user_settings_controller.ex:21
 msgid "Password updated successfully."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/user_org_invitations_live.ex:50
+#: lib/panic_web/live/user_settings/user_org_invitations_live.ex:50
 msgid "Reject"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_live.html.heex:66
+#: lib/panic_web/live/orgs/team/org_team_live.html.heex:66
 msgid "Remove"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/auth/passwordless_auth_live.html.heex:107
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:107
 msgid "Resend pin code"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/auth/passwordless_auth_live.html.heex:103
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:103
 msgid "Resending new pin code..."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/controllers/user_reset_password_controller.ex:56
+#: lib/panic_web/controllers/user_reset_password_controller.ex:56
 msgid "Reset password link is invalid or it has expired."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_membership_form_component.ex:21
-#: lib/petal_pro_web/live/orgs/team/org_team_live.html.heex:47
+#: lib/panic_web/live/orgs/team/org_membership_form_component.ex:21
+#: lib/panic_web/live/orgs/team/org_team_live.html.heex:47
 msgid "Role"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_membership_form_component.ex:32
+#: lib/panic_web/live/orgs/team/org_membership_form_component.ex:32
 msgid "Save"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/org_form_component.ex:14
-#: lib/petal_pro_web/live/orgs/team/org_membership_form_component.ex:32
+#: lib/panic_web/live/orgs/org_form_component.ex:14
+#: lib/panic_web/live/orgs/team/org_membership_form_component.ex:32
 msgid "Saving..."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/auth/passwordless_auth_live.html.heex:33
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:33
 msgid "Sending..."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/controllers/user_session_controller.ex:62
+#: lib/panic_web/controllers/user_session_controller.ex:62
 msgid "Sign in failed."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/auth/passwordless_auth_live.html.heex:53
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:53
 msgid "Signing in..."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/templates/page/landing_page.html.heex:279
+#: lib/panic_web/templates/page/landing_page.html.heex:279
 msgid "Simple, transparent pricing that adapts to the size of your company."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_live.ex:71
+#: lib/panic_web/live/orgs/team/org_team_live.ex:71
 msgid "Something went wrong. Please try again or contact support if it keeps happening."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/controllers/user_auth.ex:62
+#: lib/panic_web/controllers/user_auth.ex:62
 msgid "There is a problem with your account. Please contact support."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/auth/passwordless_auth_live.ex:97
+#: lib/panic_web/live/auth/passwordless_auth_live.ex:97
 msgid "Too many incorrect attempts."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/orgs_live.ex:107
-#: lib/petal_pro_web/live/user_settings/user_org_invitations_live.ex:68
+#: lib/panic_web/live/orgs/orgs_live.ex:107
+#: lib/panic_web/live/user_settings/user_org_invitations_live.ex:68
 msgid "Unconfirmed account"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/auth/passwordless_auth_live.ex:175
+#: lib/panic_web/live/auth/passwordless_auth_live.ex:175
 msgid "Unknown error."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/orgs_live.ex:60
+#: lib/panic_web/live/orgs/orgs_live.ex:60
 msgid "View invitations"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/auth/passwordless_auth_live.html.heex:45
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:45
 msgid "We've sent a 6 digit sign in pin code to"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/dashboard_live.html.heex:3
+#: lib/panic_web/live/dashboard_live.html.heex:3
 msgid "Welcome, %{name}"
 msgstr ""
 
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/petal_pro_web/controllers/org_plugs.ex:27
-#: lib/petal_pro_web/controllers/org_plugs.ex:41
-#: lib/petal_pro_web/live/orgs/org_on_mount_hooks.ex:25
-#: lib/petal_pro_web/live/orgs/org_on_mount_hooks.ex:36
+#: lib/panic_web/controllers/org_plugs.ex:27
+#: lib/panic_web/controllers/org_plugs.ex:41
+#: lib/panic_web/live/orgs/org_on_mount_hooks.ex:25
+#: lib/panic_web/live/orgs/org_on_mount_hooks.ex:36
 msgid "You do not have permission to access this page."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/orgs_live.ex:71
+#: lib/panic_web/live/orgs/orgs_live.ex:71
 msgid "You don't belong to any organizations"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/user_org_invitations_live.ex:38
+#: lib/panic_web/live/user_settings/user_org_invitations_live.ex:38
 msgid "You have been invited to join %{org_name}"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_live.ex:55
+#: lib/panic_web/live/orgs/team/org_team_live.ex:55
 msgid "You have left %{org_name}"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/user_org_invitations_live.ex:22
+#: lib/panic_web/live/user_settings/user_org_invitations_live.ex:22
 msgid "You have no pending invitations."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/orgs_live.ex:52
+#: lib/panic_web/live/orgs/orgs_live.ex:52
 msgid "You have pending invitations."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/user_org_invitations_live.ex:69
+#: lib/panic_web/live/user_settings/user_org_invitations_live.ex:69
 msgid "You may have pending invitations. To see them please confirm your account by clicking the link in the e-mail we sent you. If you didn't receive an e-mail,"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_on_mount_hooks.ex:29
+#: lib/panic_web/live/user_on_mount_hooks.ex:29
 msgid "You must confirm your email to access this page."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/dashboard_live.ex:23
-#: lib/petal_pro_web/live/user_settings/user_org_invitations_live.ex:123
+#: lib/panic_web/live/dashboard_live.ex:23
+#: lib/panic_web/live/user_settings/user_org_invitations_live.ex:123
 msgid "You will receive an e-mail with instructions shortly."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/edit_password_live.ex:64
+#: lib/panic_web/live/user_settings/edit_password_live.ex:64
 msgid "You will receive instructions to reset your password shortly."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/auth/passwordless_auth_live.html.heex:66
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:66
 msgid "Your sign in pin code"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro/orgs/membership.ex:84
+#: lib/panic/orgs/membership.ex:84
 msgid "cannot remove last admin of the organization"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/user_settings/user_org_invitations_live.ex:73
+#: lib/panic_web/live/user_settings/user_org_invitations_live.ex:73
 msgid "click here to resend it"
 msgstr ""
 
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/petal_pro_web/live/auth/passwordless_auth_live.html.heex:10
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:10
 msgid "eg. sarah@gmail.com"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/orgs_live.ex:46
+#: lib/panic_web/live/orgs/orgs_live.ex:46
 msgid "Listing organizations for %{name}"
 msgstr ""
 
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/petal_pro_web/live/orgs/orgs_live.ex:24
-#: lib/petal_pro_web/menus.ex:170
+#: lib/panic_web/live/orgs/orgs_live.ex:24
+#: lib/panic_web/menus.ex:170
 msgid "Organizations"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/orgs_live.ex:116
+#: lib/panic_web/live/orgs/orgs_live.ex:116
 msgid "Please confirm your account to create an organization."
 msgstr ""
 
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/petal_pro_web/live/orgs/orgs_live.ex:110
+#: lib/panic_web/live/orgs/orgs_live.ex:110
 msgid "You have been invited to join %{org_names}. To create an organization or accept any invitations, please confirm your account first."
 msgstr ""
 
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/petal_pro_web/controllers/user_auth.ex:208
+#: lib/panic_web/controllers/user_auth.ex:208
 msgid "You must be confirmed to access this page."
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/team/org_team_live.ex:34
+#: lib/panic_web/live/orgs/team/org_team_live.ex:34
 msgid "Edit member"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/edit_org_live.ex:11
+#: lib/panic_web/live/orgs/edit_org_live.ex:11
 msgid "Editing %{org_name"
 msgstr ""
 
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/petal_pro_web/live/orgs/team/org_team_live.ex:95
+#: lib/panic_web/live/orgs/team/org_team_live.ex:95
 msgid "Invitation deleted successfully"
 msgstr ""
 
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/petal_pro_web/live/orgs/orgs_live.ex:18
+#: lib/panic_web/live/orgs/orgs_live.ex:18
 msgid "New organization"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/org_form_component.ex:63
+#: lib/panic_web/live/orgs/org_form_component.ex:63
 msgid "Organization created successfully"
 msgstr ""
 
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/petal_pro_web/live/orgs/org_form_component.ex:50
+#: lib/panic_web/live/orgs/org_form_component.ex:50
 msgid "Organization updated successfully"
 msgstr ""
 
 #, elixir-autogen, elixir-format
-#: lib/petal_pro_web/live/orgs/org_settings_layout_component.ex:48
-#: lib/petal_pro_web/live/orgs/team/org_team_live.ex:24
+#: lib/panic_web/live/orgs/org_settings_layout_component.ex:48
+#: lib/panic_web/live/orgs/team/org_team_live.ex:24
 msgid "Team"
 msgstr ""

@@ -27,7 +27,7 @@
 - Hooks can now be run in dead views if compatible (see color-scheme-hook.js as an example)
 
 ### Changed
-- Simpler config access (`PetalPro.config(:app_name)` instead of `Application.get_env(:petal_pro, :app_name)`)
+- Simpler config access (`Panic.config(:app_name)` instead of `Application.get_env(:panic, :app_name)`)
 - Refactor <.layout> to take less props
 - Refactor dark/light mode system. Much simpler now and no longer needs cookies
 - Put Petal Pro Components in their own folder for easier future upgrades (can duplicate if you want to modify them)

@@ -1,4 +1,4 @@
-defmodule PetalPro.Repo.Migrations.AddObanJobsTable do
+defmodule Panic.Repo.Migrations.AddObanJobsTable do
   use Ecto.Migration
 
   def up do

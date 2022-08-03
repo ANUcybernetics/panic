@@ -5,7 +5,7 @@ defmodule PetalFramework.Components.PublicLayout do
   use Phoenix.Component
   use PetalComponents
   import PetalFramework.Components.UserDropdownMenu
-  import PetalProWeb.Helpers
+  import PanicWeb.Helpers
 
   def public_layout(assigns) do
     assigns =

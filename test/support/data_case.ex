@@ -1,4 +1,4 @@
-defmodule PetalPro.DataCase do
+defmodule Panic.DataCase do
   @moduledoc """
   This module defines the setup for tests requiring
   access to the application's data layer.
@@ -10,7 +10,7 @@ defmodule PetalPro.DataCase do
   we enable the SQL sandbox, so changes done to the database
   are reverted at the end of every test. If you are using
   PostgreSQL, you can even run database tests asynchronously
-  by setting `use PetalPro.DataCase, async: true`, although
+  by setting `use Panic.DataCase, async: true`, although
   this option is not recommended for other databases.
   """
 
@@ -18,17 +18,17 @@ defmodule PetalPro.DataCase do
 
   using do
     quote do
-      alias PetalPro.Repo
+      alias Panic.Repo
 
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
-      import PetalPro.DataCase
+      import Panic.DataCase
     end
   end
 
   setup tags do
-    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(PetalPro.Repo, shared: not tags[:async])
+    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Panic.Repo, shared: not tags[:async])
     on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
     :ok
   end

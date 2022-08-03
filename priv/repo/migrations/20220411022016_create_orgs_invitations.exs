@@ -1,4 +1,4 @@
-defmodule PetalPro.Repo.Migrations.CreateOrgsInvitations do
+defmodule Panic.Repo.Migrations.CreateOrgsInvitations do
   use Ecto.Migration
 
   def change do

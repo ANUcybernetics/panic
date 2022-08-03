@@ -5,7 +5,7 @@ defmodule PetalFramework.SetLocalePlugPlugTest do
   alias PetalFramework.SetLocalePlug
 
   defmodule MyGettext do
-    use Gettext, otp_app: :petal_pro
+    use Gettext, otp_app: :panic
   end
 
   @default_options %SetLocalePlug.Config{

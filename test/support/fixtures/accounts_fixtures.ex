@@ -1,13 +1,13 @@
-defmodule PetalPro.AccountsFixtures do
+defmodule Panic.AccountsFixtures do
   @totp_secret Base.decode32!("PTEPUGZ7DUWTBGMW4WLKB6U63MGKKMCA")
 
   @moduledoc """
   This module defines test helpers for creating
-  entities via the `PetalPro.Accounts` context.
+  entities via the `Panic.Accounts` context.
   """
-  alias PetalPro.Repo
-  alias PetalPro.Accounts
-  alias PetalPro.Accounts.User
+  alias Panic.Repo
+  alias Panic.Accounts
+  alias Panic.Accounts.User
 
   def valid_totp_secret, do: @totp_secret
   def unique_user_email, do: "user#{System.unique_integer()}@example.com"

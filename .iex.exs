@@ -1,4 +1,4 @@
-alias PetalPro.{
+alias Panic.{
   Repo,
   Accounts,
   Accounts.User,

@@ -2,15 +2,14 @@
 export LC_CTYPE=C
 export LANG=C
 
-# SETUP_TODO:
 # This will rename your project to whatever you like.
 # *Warning*: if you plan to merge in future Petal Pro commits (eg if you're waiting for an upcoming feature), then perhaps hold off renaming as it makes merging harder.
 
 # 0. If you don't have ack installed on Mac - run `brew install ack` in your terminal
 # 1. Ensure you've checked your files into a git repo (`git init .`, `git add -A`, `git commit -m 'first'`)
 # 2. Modify these two values to your new app name
-NEW_NAME="YourAppName"
-NEW_OTP="your_app_name"
+NEW_NAME="Panic"
+NEW_OTP="panic"
 # 3. LINUX USERS ONLY - Scroll down and comment out lines 25/25 and uncomment lines 29/30
 # 4. Execute the script in terminal: `sh rename_phoenix_project.sh`
 

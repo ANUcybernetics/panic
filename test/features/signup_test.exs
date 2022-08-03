@@ -1,4 +1,4 @@
-defmodule PetalPro.Features.SignupTest do
+defmodule Panic.Features.SignupTest do
   use ExUnit.Case
   use Wallaby.Feature
   alias Wallaby.Query
