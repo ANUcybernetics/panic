@@ -9,10 +9,8 @@
     
     <.form_field type="text_input" form={f} field={:name} />
     
-    <.form_field type="checkbox_group" form={f} field={:models} options={["1": 1, "2": 2]} />
-    
-    <.form_field type="checkbox" form={f} field={:loop} />
-    
+    <.form_field type="checkbox" form={f} field={:loop} label="loop network?" />
+
     <div class="flex justify-end">
       <.button
         type="submit"
