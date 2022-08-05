@@ -14,7 +14,8 @@ defmodule Panic.Networks.Network do
   @doc false
   def changeset(network, attrs) do
     network
-    |> cast(attrs, [:name, :models, :loop])
-    |> validate_required([:name, :models, :loop])
+    |> cast(attrs, [:name, :loop])
+    |> validate_required([:name, :loop])
   end
+
 end
