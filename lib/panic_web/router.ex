@@ -166,6 +166,13 @@ defmodule PanicWeb.Router do
       ] do
       live "/orgs/new", OrgsLive, :new
       # page_builder:live:protected
+
+      live "/networks", NetworkLive.Index, :index
+      live "/networks/new", NetworkLive.Index, :new
+      live "/networks/:id/edit", NetworkLive.Index, :edit
+
+      live "/networks/:id", NetworkLive.Show, :show
+      live "/networks/:id/show/edit", NetworkLive.Show, :edit
     end
 
     # For org members only

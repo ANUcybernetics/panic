@@ -1,0 +1,24 @@
+<div>
+  <.form
+    let={f}
+    for={@changeset}
+    id="network-form"
+    phx-target={@myself}
+    phx-change="validate"
+    phx-submit="save">
+    
+    <.form_field type="text_input" form={f} field={:name} />
+    
+    <.form_field type="checkbox_group" form={f} field={:models} options={["1": 1, "2": 2]} />
+    
+    <.form_field type="checkbox" form={f} field={:loop} />
+    
+    <div class="flex justify-end">
+      <.button
+        type="submit"
+        phx_disable_with="Saving..."
+        label="Save"
+      />
+    </div>
+  </.form>
+</div>

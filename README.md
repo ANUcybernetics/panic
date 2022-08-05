@@ -88,6 +88,13 @@ The file `.tool-version` tells asdf which versions we use.
 
 Run `asdf install` to install those versions.
 
+### Other Setup notes
+
+```
+mix phx.gen.context Models Run runs platform:enum:replicate:huggingface:openai model_name:string input:string output:string metadata:map
+mix petal.gen.live Networks Network networks owner_id:references:users name:string models:array:integer loop:boolean
+``````
+
 ## Licence
 
 (c) Ben Swift, Adrian Schmidt

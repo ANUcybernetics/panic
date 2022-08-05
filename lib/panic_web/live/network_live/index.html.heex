@@ -1,0 +1,74 @@
+<.layout current_page={:change_me} current_user={@current_user} type="sidebar">
+  <.container class="py-16">
+    <.page_header title="Listing Networks">
+      <.button
+        link_type="live_patch"
+        label="New Network"
+        to={Routes.network_index_path(@socket, :new)}
+      />
+    </.page_header>
+
+    <%= if @live_action in [:new, :edit] do %>
+      <.modal title={@page_title}>
+        <.live_component
+          module={PanicWeb.NetworkLive.FormComponent}
+          id={@network.id || :new}
+          action={@live_action}
+          network={@network}
+          return_to={Routes.network_index_path(@socket, :index)}
+        />
+      </.modal>
+    <% end %>
+
+    <.table>
+      <thead>
+        <.tr>
+          <.th>Name</.th>
+          <.th>Models</.th>
+          <.th>Loop</.th>
+          <.th></.th>
+        </.tr>
+      </thead>
+      <tbody id="networks">
+        <%= for network <- @networks do %>
+          <.tr id={"network-#{network.id}"}>
+            <.td><%= network.name %></.td>
+            <.td><%= network.models %></.td>
+            <.td><%= network.loop %></.td>
+            <.td class="text-right whitespace-nowrap">
+              <.button
+                color="primary"
+                variant="outline"
+                size="xs"
+                link_type="live_redirect"
+                label="Show"
+                to={Routes.network_show_path(@socket, :show, network)}
+              />
+
+              <.button
+                color="white"
+                variant="outline"
+                size="xs"
+                link_type="live_patch"
+                label="Edit"
+                to={Routes.network_index_path(@socket, :edit, network)}
+              />
+
+              <.button
+                color="danger"
+                variant="outline"
+                link_type="a"
+                to="#"
+                size="xs"
+                label="Delete"
+                phx-click="delete"
+                phx-value-id={network.id}
+                data-confirm="Are you sure?"
+              />
+            </.td>
+          </.tr>
+        <% end %>
+      </tbody>
+    </.table>
+  </.container>
+</.layout>
