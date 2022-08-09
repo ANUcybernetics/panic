@@ -3,7 +3,7 @@ defmodule Panic.Networks.Network do
   import Ecto.Changeset
 
   schema "networks" do
-    field :loop, :boolean, default: false
+    field :loop, :boolean, default: true
     field :models, {:array, :integer}
     field :name, :string
     field :owner_id, :id
