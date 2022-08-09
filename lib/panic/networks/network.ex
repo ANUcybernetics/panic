@@ -4,7 +4,7 @@ defmodule Panic.Networks.Network do
 
   schema "networks" do
     field :loop, :boolean, default: true
-    field :models, {:array, :string}
+    field :models, {:array, :string}, default: []
     field :name, :string
     field :owner_id, :id
 
@@ -15,6 +15,6 @@ defmodule Panic.Networks.Network do
   def changeset(network, attrs) do
     network
     |> cast(attrs, [:name, :loop])
-    |> validate_required([:name, :loop])
+    |> validate_required([:name, :loop, :models])
   end
 end
