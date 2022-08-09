@@ -10,10 +10,13 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
+    network = Networks.get_network!(id)
+
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:network, Networks.get_network!(id))}
+     |> assign(:network, network)
+     |> assign(:models, network.models)}
   end
 
   @impl true
