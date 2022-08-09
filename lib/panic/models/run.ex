@@ -4,7 +4,8 @@ defmodule Panic.Models.Run do
   # alias Panic.Models.Platforms.Replicate
 
   @models [
-    "replicate:kuprel/min-dalle"
+    "replicate:kuprel/min-dalle",
+    "rmokady/clip_prefix_caption"
   ]
 
   schema "runs" do
