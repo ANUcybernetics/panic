@@ -10,7 +10,7 @@ defmodule Panic.Models.Run do
   schema "runs" do
     field :input, :string
     field :metadata, :map
-    field :model_name, :string
+    field :model, :string
     field :output, :string
 
     timestamps()
@@ -19,9 +19,9 @@ defmodule Panic.Models.Run do
   @doc false
   def changeset(run, attrs) do
     run
-    |> cast(attrs, [:model_name, :input, :output, :metadata])
-    |> validate_required([:model_name, :input])
-    |> validate_inclusion(:model_name, @models)
+    |> cast(attrs, [:model, :input, :output, :metadata])
+    |> validate_required([:model, :input])
+    |> validate_inclusion(:model, @models)
   end
 
   def models, do: @models
