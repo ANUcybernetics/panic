@@ -12,7 +12,6 @@ defmodule Panic.Models.Run do
     field :metadata, :map
     field :model_name, :string
     field :output, :string
-    field :platform, Ecto.Enum, values: [:replicate, :huggingface, :openai]
 
     timestamps()
   end
@@ -20,8 +19,8 @@ defmodule Panic.Models.Run do
   @doc false
   def changeset(run, attrs) do
     run
-    |> cast(attrs, [:platform, :model_name, :input, :output, :metadata])
-    |> validate_required([:platform, :model_name, :input])
+    |> cast(attrs, [:model_name, :input, :output, :metadata])
+    |> validate_required([:model_name, :input])
     |> validate_inclusion(:model_name, @models)
   end
 
