@@ -268,9 +268,7 @@ defmodule PanicWeb.Router do
       conn
       |> redirect(
         to:
-          Routes.live_path(conn, PanicWeb.UserOnboardingLive,
-            user_return_to: current_path(conn)
-          )
+          Routes.live_path(conn, PanicWeb.UserOnboardingLive, user_return_to: current_path(conn))
       )
       |> halt()
     else

@@ -11,8 +11,7 @@ defmodule PanicWeb.OrgDashboardLiveTest do
       org = org_fixture()
       membership_fixture(org, user, "admin")
 
-      {:ok, view, html} =
-        live(conn, Routes.live_path(conn, PanicWeb.OrgDashboardLive, org.slug))
+      {:ok, view, html} = live(conn, Routes.live_path(conn, PanicWeb.OrgDashboardLive, org.slug))
 
       assert html =~ org.name
       assert has_element?(view, "#sidebar span", "Settings")
@@ -24,8 +23,7 @@ defmodule PanicWeb.OrgDashboardLiveTest do
       org = org_fixture()
       membership_fixture(org, user, "member")
 
-      {:ok, view, html} =
-        live(conn, Routes.live_path(conn, PanicWeb.OrgDashboardLive, org.slug))
+      {:ok, view, html} = live(conn, Routes.live_path(conn, PanicWeb.OrgDashboardLive, org.slug))
 
       assert html =~ org.name
       refute has_element?(view, "#sidebar span", "Settings")

@@ -21,7 +21,13 @@ defmodule Panic.ModelsTest do
     end
 
     test "create_run/1 with valid data creates a run" do
-      valid_attrs = %{input: "some input", metadata: %{}, model_name: "some model_name", output: "some output", platform: :replicate}
+      valid_attrs = %{
+        input: "some input",
+        metadata: %{},
+        model_name: "some model_name",
+        output: "some output",
+        platform: :replicate
+      }
 
       assert {:ok, %Run{} = run} = Models.create_run(valid_attrs)
       assert run.input == "some input"
@@ -37,7 +43,14 @@ defmodule Panic.ModelsTest do
 
     test "update_run/2 with valid data updates the run" do
       run = run_fixture()
-      update_attrs = %{input: "some updated input", metadata: %{}, model_name: "some updated model_name", output: "some updated output", platform: :huggingface}
+
+      update_attrs = %{
+        input: "some updated input",
+        metadata: %{},
+        model_name: "some updated model_name",
+        output: "some updated output",
+        platform: :huggingface
+      }
 
       assert {:ok, %Run{} = run} = Models.update_run(run, update_attrs)
       assert run.input == "some updated input"
