@@ -9,8 +9,8 @@ defmodule Panic.Models.Platforms.Replicate do
   def get_model_versions(model) do
     url = "#{@url}/models/#{model}/versions"
     case HTTPoison.get(url, @headers) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        {:ok, %{"results" => results}} = Jason.decode(body)
+      {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} ->
+        {:ok, %{"results" => results}} = Jason.decode(response_body)
         results
     end
   end
