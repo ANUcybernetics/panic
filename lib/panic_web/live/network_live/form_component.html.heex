@@ -5,18 +5,12 @@
     id="network-form"
     phx-target={@myself}
     phx-change="validate"
-    phx-submit="save">
-    
+    phx-submit="save"
+  >
     <.form_field type="text_input" form={f} field={:name} />
-    
-    <.form_field type="checkbox" form={f} field={:loop} label="loop network?" />
 
     <div class="flex justify-end">
-      <.button
-        type="submit"
-        phx_disable_with="Saving..."
-        label="Save"
-      />
+      <.button type="submit" phx_disable_with="Saving..." label="Save" />
     </div>
   </.form>
 </div>
