@@ -21,7 +21,7 @@ defmodule Panic.Models do
   def list_models do
     [
       "replicate:kuprel/min-dalle",
-      "rmokady/clip_prefix_caption"
+      "replicate:rmokady/clip_prefix_caption"
     ]
   end
 
@@ -34,7 +34,7 @@ defmodule Panic.Models do
       {[:text], [:image]}
   """
   def model_io("replicate:kuprel/min-dalle"), do: {[:text], [:image]}
-  def model_io("rmokady/clip_prefix_caption"), do: {[[:image], [:text]]}
+  def model_io("replicate:rmokady/clip_prefix_caption"), do: {[[:image], [:text]]}
 
   @doc """
   Returns the list of runs.
