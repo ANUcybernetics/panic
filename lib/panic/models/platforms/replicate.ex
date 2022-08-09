@@ -60,4 +60,9 @@ defmodule Panic.Models.Platforms.Replicate do
     %{"output" => output_url} = create_prediction("kuprel/min-dalle", %{prompt: prompt, grid_size: 1})
     output_url
   end
+
+  def clip_prefix_caption(image_url) do
+    %{"output" => %{"text" => text}} = create_prediction("rmokady/clip_prefix_caption", %{image: image_url})
+    text
+  end
 end
