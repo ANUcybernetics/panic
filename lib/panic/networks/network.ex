@@ -4,7 +4,7 @@ defmodule Panic.Networks.Network do
 
   schema "networks" do
     field :loop, :boolean, default: true
-    field :models, {:array, :integer}
+    field :models, {:array, :string}
     field :name, :string
     field :owner_id, :id
 
