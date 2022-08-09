@@ -62,7 +62,7 @@ defmodule Panic.Models.Platforms.Replicate do
   end
 
   def clip_prefix_caption(image_url) do
-    %{"output" => %{"text" => text}} = create_prediction("rmokady/clip_prefix_caption", %{image: image_url})
+    %{"output" => [%{"text" => text} | _]} = create_prediction("rmokady/clip_prefix_caption", %{image: image_url})
     text
   end
 end
