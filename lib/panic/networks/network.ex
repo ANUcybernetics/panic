@@ -17,5 +17,4 @@ defmodule Panic.Networks.Network do
     |> cast(attrs, [:name, :loop])
     |> validate_required([:name, :loop])
   end
-
 end
