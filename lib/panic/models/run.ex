@@ -1,11 +1,10 @@
 defmodule Panic.Models.Run do
   use Ecto.Schema
   import Ecto.Changeset
+  # alias Panic.Models.Platforms.Replicate
 
-  @model_names [
-    "kuprel/min-dalle",
-    "annahung31/emopia",
-    "nightmareai/disco-diffusion"
+  @models [
+    "replicate:kuprel/min-dalle"
   ]
 
   schema "runs" do
@@ -23,8 +22,8 @@ defmodule Panic.Models.Run do
     run
     |> cast(attrs, [:platform, :model_name, :input, :output, :metadata])
     |> validate_required([:platform, :model_name, :input])
-    |> validate_inclusion(:model_name, @model_names)
+    |> validate_inclusion(:model_name, @models)
   end
 
-  def model_names, do: @model_names
+  def models, do: @models
 end
