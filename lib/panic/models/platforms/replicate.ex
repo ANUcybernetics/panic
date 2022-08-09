@@ -1,6 +1,6 @@
 defmodule Panic.Models.Platforms.Replicate do
   @api_token System.get_env("REPLICATE_API_TOKEN")
-  @url "https://api.replicate.com/v1/"
+  @url "https://api.replicate.com/v1"
   @headers %{
     "Authorization" => "Token #{@api_token}",
     "Content-Type" => "application/json"
@@ -11,11 +11,15 @@ defmodule Panic.Models.Platforms.Replicate do
     case HTTPoison.get(url, @headers) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         {:ok, %{"results" => results}} = Jason.decode(body)
-        IO.puts results
-      {:ok, %HTTPoison.Response{status_code: 404}} ->
-        IO.puts "Not found :("
-      {:error, %HTTPoison.Error{reason: reason}} ->
-        IO.inspect reason
+        results
+      # {:ok, %HTTPoison.Response{status_code: 404}} = resp ->
+      #   IO.puts resp
+      # {:error, %HTTPoison.Error{reason: reason}} ->
+      #   IO.inspect reason
     end
+  end
+
+  def get_latest_model_version(model) do
+    get_model_versions(model) |> List.last |> Map.get("id")
   end
 end
