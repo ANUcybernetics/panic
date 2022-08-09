@@ -8,6 +8,23 @@ defmodule Panic.Models do
 
   alias Panic.Models.Run
 
+
+  @doc """
+  Returns the list of models.
+
+  Each is a string of the form PLATFORM:USERNAME/MODEL
+
+  The models don't live in the DB anywhere, and for now we'll just keep this
+  list up-to-date by hand
+
+  """
+  def list_models do
+    [
+      "replicate:kuprel/min-dalle",
+      "rmokady/clip_prefix_caption"
+    ]
+  end
+
   @doc """
   Returns the list of runs.
 

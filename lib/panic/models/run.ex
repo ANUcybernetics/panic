@@ -1,12 +1,7 @@
 defmodule Panic.Models.Run do
   use Ecto.Schema
   import Ecto.Changeset
-  # alias Panic.Models.Platforms.Replicate
-
-  @models [
-    "replicate:kuprel/min-dalle",
-    "rmokady/clip_prefix_caption"
-  ]
+  alias Panic.Models
 
   schema "runs" do
     field :input, :string
@@ -22,8 +17,6 @@ defmodule Panic.Models.Run do
     run
     |> cast(attrs, [:model, :input, :output, :metadata])
     |> validate_required([:model, :input])
-    |> validate_inclusion(:model, @models)
+    |> validate_inclusion(:model, Models.list_models)
   end
-
-  def models, do: @models
 end
