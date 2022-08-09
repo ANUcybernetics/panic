@@ -26,6 +26,17 @@ defmodule Panic.Models do
   end
 
   @doc """
+  Map model name to input/output modalities
+
+  ## Examples
+
+      iex> model_io("replicate:kuprel/min-dalle")
+      {[:text], [:image]}
+  """
+  def model_io("replicate:kuprel/min-dalle"), do: {[:text], [:image]}
+  def model_io("rmokady/clip_prefix_caption"), do: {[[:image], [:text]]}
+
+  @doc """
   Returns the list of runs.
 
   ## Examples
