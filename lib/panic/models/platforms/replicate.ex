@@ -55,4 +55,9 @@ defmodule Panic.Models.Platforms.Replicate do
         end
     end
   end
+
+  def create_dalle_mini(prompt) do
+    %{"output" => output_url} = create_prediction("kuprel/min-dalle", %{prompt: prompt, grid_size: 1})
+    output_url
+  end
 end
