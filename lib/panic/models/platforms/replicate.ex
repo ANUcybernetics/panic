@@ -12,10 +12,6 @@ defmodule Panic.Models.Platforms.Replicate do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         {:ok, %{"results" => results}} = Jason.decode(body)
         results
-      # {:ok, %HTTPoison.Response{status_code: 404}} = resp ->
-      #   IO.puts resp
-      # {:error, %HTTPoison.Error{reason: reason}} ->
-      #   IO.inspect reason
     end
   end
 
