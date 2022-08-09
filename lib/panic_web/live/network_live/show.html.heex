@@ -3,12 +3,6 @@
     <.page_header title="Show Network">
       <.button
         link_type="live_patch"
-        label="Edit Network"
-        to={Routes.network_show_path(@socket, :edit, @network)}
-      />
-
-      <.button
-        link_type="live_patch"
         label="Back"
         to={Routes.network_index_path(@socket, :index)}
       />
