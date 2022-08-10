@@ -124,6 +124,13 @@ defmodule Panic.Networks do
   end
 
   @doc """
+  Remove network model at index
+  """
+  def remove_model(%Network{} = network, index) do
+    network
+    |> update_network(%{models: List.delete_at(network.models, index)})
+  end
+  @doc """
   Reset network model array back to the empty list
   """
   def reset_models(%Network{} = network) do

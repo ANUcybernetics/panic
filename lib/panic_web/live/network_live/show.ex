@@ -31,6 +31,31 @@ defmodule PanicWeb.NetworkLive.Show do
     {:noreply, assign(socket, :models, network.models)}
   end
 
+  @impl true
+  def handle_event("remove_model", %{"pos" => pos}, socket) do
+    {:ok, network} = Networks.remove_model(socket.assigns.network, String.to_integer(pos))
+
+    {:noreply, assign(socket, :models, network.models)}
+  end
+
+  @impl true
+  def handle_event("move_model_up", %{"pos" => pos}, socket) do
+    initial_index = String.to_integer(pos)
+    final_index = initial_index - 1
+    {:ok, network} = Networks.reorder_models(socket.assigns.network, initial_index, final_index)
+
+    {:noreply, assign(socket, :models, network.models)}
+  end
+
+  @impl true
+  def handle_event("move_model_down", %{"pos" => pos}, socket) do
+    initial_index = String.to_integer(pos)
+    final_index = initial_index + 1
+    {:ok, network} = Networks.reorder_models(socket.assigns.network, initial_index, final_index)
+
+    {:noreply, assign(socket, :models, network.models)}
+  end
+
   def models_dropdown(assigns) do
     ~H"""
     <.dropdown label="Add model">
