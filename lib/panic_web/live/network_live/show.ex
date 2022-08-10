@@ -1,7 +1,7 @@
 defmodule PanicWeb.NetworkLive.Show do
   use PanicWeb, :live_view
 
-  alias Panic.Networks
+  alias Panic.{Networks, Models}
 
   @impl true
   def mount(_params, _session, socket) do
@@ -22,6 +22,16 @@ defmodule PanicWeb.NetworkLive.Show do
   @impl true
   def handle_event("close_modal", _, socket) do
     {:noreply, push_patch(socket, to: Routes.network_show_path(socket, :show, socket.assigns.network))}
+  end
+
+  def models_dropdown(assigns) do
+    ~H"""
+    <.dropdown label="Add model">
+      <%= for model <- Models.list_models() do %>
+        <.dropdown_menu_item link_type="button" label={String.split(model, "/") |> List.last} />
+      <% end %>
+    </.dropdown>
+    """
   end
 
   defp page_title(:show), do: "Show Network"
