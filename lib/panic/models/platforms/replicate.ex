@@ -28,19 +28,6 @@ defmodule Panic.Models.Platforms.Replicate do
     end
   end
 
-  def create_prediction(model, input_params) do
-    url = "#{@url}/predictions"
-    model_version = get_latest_model_version(model)
-
-    {:ok, request_body} = Jason.encode(%{version: model_version, input: input_params})
-
-    case HTTPoison.post(url, request_body, @headers, hackney: [pool: :default]) do
-      {:ok, %HTTPoison.Response{status_code: 201, body: response_body}} ->
-        {:ok, body} = Jason.decode(response_body)
-        return_prediction(body["id"])
-    end
-  end
-
   def return_prediction(prediction_id) do
     url = "#{@url}/predictions/#{prediction_id}"
 
@@ -56,19 +43,32 @@ defmodule Panic.Models.Platforms.Replicate do
     end
   end
 
-  def create_dalle_mini(prompt) do
-    %{"output" => output_url} = create_prediction("kuprel/min-dalle", %{prompt: prompt, grid_size: 1})
+  def create("kuprel/min-dalle" = model, prompt) do
+    %{"output" => output_url} = create(model, %{prompt: prompt, grid_size: 1})
     output_url
   end
 
-  def clip_prefix_caption(image_url) do
-    %{"output" => [%{"text" => text} | _]} = create_prediction("rmokady/clip_prefix_caption", %{image: image_url})
+  def create("rmokady/clip_prefix_caption" = model, image_url) do
+    %{"output" => [%{"text" => text} | _]} = create(model, %{image: image_url})
     text
+  end
+
+  def create(model, input_params) do
+    url = "#{@url}/predictions"
+    model_version = get_latest_model_version(model)
+
+    {:ok, request_body} = Jason.encode(%{version: model_version, input: input_params})
+
+    case HTTPoison.post(url, request_body, @headers, hackney: [pool: :default]) do
+      {:ok, %HTTPoison.Response{status_code: 201, body: response_body}} ->
+        {:ok, body} = Jason.decode(response_body)
+        return_prediction(body["id"])
+    end
   end
 
   # def run_long_job(prompt) do
   #   PetalPro.BackgroundTask.run(fn prompt ->
-  #     {:ok, image_url} = Replicate.create_dalle_mini "two white dudes having a video call"
+  #     {:ok, image_url} = Replicate.create "two white dudes having a video call"
   #     ## use the jobs table (Oban) with a whole new table
   #     ## experiment row with ID, then pubsub -> job done, update assigns
   #   end)
