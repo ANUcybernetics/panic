@@ -24,11 +24,18 @@ defmodule PanicWeb.NetworkLive.Show do
     {:noreply, push_patch(socket, to: Routes.network_show_path(socket, :show, socket.assigns.network))}
   end
 
+  @impl true
+  def handle_event("add_model", %{"value" => model}, socket) do
+    {:ok, network} = Networks.append_model(socket.assigns.network, model)
+
+    {:noreply, assign(socket, :models, network.models)}
+  end
+
   def models_dropdown(assigns) do
     ~H"""
     <.dropdown label="Add model">
       <%= for model <- Models.list_models() do %>
-        <.dropdown_menu_item link_type="button" label={String.split(model, "/") |> List.last} />
+        <.dropdown_menu_item link_type="button" phx_click="add_model" value={model} label={String.split(model, "/") |> List.last} />
       <% end %>
     </.dropdown>
     """

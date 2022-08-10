@@ -28,9 +28,9 @@
         </.tr>
       </thead>
       <tbody id="networks">
-        <%= for {idx, model} <- Enum.with_index(@models) do %>
+        <%= for {model, idx} <- Enum.with_index(@models) do %>
           <.tr id={"model-#{model}"}>
-            <.td><%= model.name %></.td>
+            <.td><%= model %></.td>
             <.td class="text-right whitespace-nowrap">
               <.button
                 color="primary"

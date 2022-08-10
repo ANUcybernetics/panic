@@ -101,4 +101,33 @@ defmodule Panic.Networks do
   def change_network(%Network{} = network, attrs \\ %{}) do
     Network.changeset(network, attrs)
   end
+
+  @doc """
+  Add a model to the end of a network's model array
+  """
+  def append_model(%Network{} = network, model) do
+    models = network.models ++ [model]
+
+    network
+    |> update_network(%{models: models})
+  end
+
+  @doc """
+  Reorder models within a network
+  """
+  def reorder_models(%Network{} = network, initial_index, final_index) do
+    {model_to_move, models} = List.pop_at(network.models, initial_index)
+    models = List.insert_at(models, final_index, model_to_move)
+
+    network
+    |> update_network(%{models: models})
+  end
+
+  @doc """
+  Reset network model array back to the empty list
+  """
+  def reset_models(%Network{} = network) do
+    network
+    |> update_network(%{models: []})
+  end
 end
