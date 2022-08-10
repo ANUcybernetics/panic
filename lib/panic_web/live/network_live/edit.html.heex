@@ -1,0 +1,56 @@
+<.layout current_page={:change_me} current_user={@current_user} type="sidebar">
+  <.container class="py-16">
+    <.page_header title="Edit Network">
+      <.button
+        link_type="live_patch"
+        label="Back"
+        to={Routes.network_index_path(@socket, :index)}
+      />
+    </.page_header>
+
+    <.table>
+      <thead>
+        <.tr>
+          <.th>Models</.th>
+          <.th></.th>
+        </.tr>
+      </thead>
+      <tbody id="networks">
+        <%= for {model, idx} <- Enum.with_index(@models) do %>
+          <.tr id={"model-#{model}"}>
+            <.td><%= model %></.td>
+            <.td class="text-right whitespace-nowrap">
+              <.button
+                color="primary"
+                variant="outline"
+                size="xs"
+                label="move up"
+                phx-click="move_model_up"
+                phx-value-pos={idx}
+              />
+              <.button
+                color="primary"
+                variant="outline"
+                size="xs"
+                label="move down"
+                phx-click="move_model_down"
+                phx-value-pos={idx}
+              />
+              <.button
+                color="primary"
+                variant="outline"
+                size="xs"
+                label="delete"
+                phx-click="remove_model"
+                phx-value-pos={idx}
+              />
+            </.td>
+          </.tr>
+        <% end %>
+      </tbody>
+    </.table>
+    <div class="mt-4 flex justify-end">
+      <.models_dropdown />
+    </div>
+  </.container>
+</.layout>

@@ -5,18 +5,20 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, assign(socket, :cycle_status, :stopped)}
   end
 
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
     network = Networks.get_network!(id)
+    models = network.models
+    cycle = List.duplicate(nil, Enum.count(models))
 
     {:noreply,
      socket
-     |> assign(:page_title, page_title(socket.assigns.live_action))
+     |> assign(:page_title, "Show network")
      |> assign(:network, network)
-     |> assign(:models, network.models)}
+     |> assign(:cycle, cycle)}
   end
 
   @impl true
@@ -25,47 +27,14 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   @impl true
-  def handle_event("append_model", %{"value" => model}, socket) do
-    {:ok, network} = Networks.append_model(socket.assigns.network, model)
-
-    {:noreply, assign(socket, :models, network.models)}
+  def handle_event("start_cycle", _, socket) do
+    IO.puts "starting..."
+    {:noreply, assign(socket, :cycle_status, :running)}
   end
 
   @impl true
-  def handle_event("remove_model", %{"pos" => pos}, socket) do
-    {:ok, network} = Networks.remove_model(socket.assigns.network, String.to_integer(pos))
-
-    {:noreply, assign(socket, :models, network.models)}
+  def handle_event("stop_cycle", _, socket) do
+    IO.puts "stopping..."
+    {:noreply, assign(socket, :cycle_status, :stopped)}
   end
-
-  @impl true
-  def handle_event("move_model_up", %{"pos" => pos}, socket) do
-    initial_index = String.to_integer(pos)
-    final_index = initial_index - 1
-    {:ok, network} = Networks.reorder_models(socket.assigns.network, initial_index, final_index)
-
-    {:noreply, assign(socket, :models, network.models)}
-  end
-
-  @impl true
-  def handle_event("move_model_down", %{"pos" => pos}, socket) do
-    initial_index = String.to_integer(pos)
-    final_index = initial_index + 1
-    {:ok, network} = Networks.reorder_models(socket.assigns.network, initial_index, final_index)
-
-    {:noreply, assign(socket, :models, network.models)}
-  end
-
-  def models_dropdown(assigns) do
-    ~H"""
-    <.dropdown label="Add model">
-      <%= for model <- Models.list_models() do %>
-        <.dropdown_menu_item link_type="button" phx_click="append_model" value={model} label={String.split(model, "/") |> List.last} />
-      <% end %>
-    </.dropdown>
-    """
-  end
-
-  defp page_title(:show), do: "Show Network"
-  defp page_title(:edit), do: "Edit Network"
 end
