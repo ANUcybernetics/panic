@@ -25,7 +25,7 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   @impl true
-  def handle_event("add_model", %{"value" => model}, socket) do
+  def handle_event("append_model", %{"value" => model}, socket) do
     {:ok, network} = Networks.append_model(socket.assigns.network, model)
 
     {:noreply, assign(socket, :models, network.models)}
@@ -35,7 +35,7 @@ defmodule PanicWeb.NetworkLive.Show do
     ~H"""
     <.dropdown label="Add model">
       <%= for model <- Models.list_models() do %>
-        <.dropdown_menu_item link_type="button" phx_click="add_model" value={model} label={String.split(model, "/") |> List.last} />
+        <.dropdown_menu_item link_type="button" phx_click="append_model" value={model} label={String.split(model, "/") |> List.last} />
       <% end %>
     </.dropdown>
     """
