@@ -8,7 +8,6 @@ defmodule Panic.Models do
 
   alias Panic.Models.Run
 
-
   @doc """
   Returns the list of models.
 

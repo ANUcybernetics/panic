@@ -9,15 +9,28 @@
     </.page_header>
 
     <%= if @cycle_status == :running do %>
-      <.icon_button to="/" link_type="button" phx_click="stop_cycle" size="lg" color="danger" icon={:stop} />
+      <.icon_button
+        to="/"
+        link_type="button"
+        phx_click="stop_cycle"
+        size="lg"
+        color="danger"
+        icon={:stop}
+      />
     <% else %>
-      <.icon_button to="/" link_type="button" phx_click="start_cycle" size="lg" color="success" icon={:play} />
+      <.icon_button
+        to="/"
+        link_type="button"
+        phx_click="start_cycle"
+        size="lg"
+        color="success"
+        icon={:play}
+      />
     <% end %>
 
     <div class="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-4">
       <%= for {run, idx} <- Enum.with_index(@cycle) do %>
         <div class="relative block w-full p-12 text-center text-gray-800 bg-gray-200 rounded-lg shadow-lg dark:bg-gray-800 hover:bg-gray-300 dark:text-gray-400 dark:group-hover:text-gray-100">
-
           <span class="block my-4 font-medium ">
             <%= if run do %>
               <%= run.model %>
@@ -28,6 +41,5 @@
         </div>
       <% end %>
     </div>
-
   </.container>
 </.layout>

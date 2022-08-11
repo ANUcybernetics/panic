@@ -21,7 +21,8 @@ defmodule PanicWeb.NetworkLive.Edit do
 
   @impl true
   def handle_event("close_modal", _, socket) do
-    {:noreply, push_patch(socket, to: Routes.network_edit_path(socket, :edit, socket.assigns.network))}
+    {:noreply,
+     push_patch(socket, to: Routes.network_edit_path(socket, :edit, socket.assigns.network))}
   end
 
   @impl true
@@ -60,7 +61,12 @@ defmodule PanicWeb.NetworkLive.Edit do
     ~H"""
     <.dropdown label="Add model">
       <%= for model <- Models.list_models() do %>
-        <.dropdown_menu_item link_type="button" phx_click="append_model" value={model} label={String.split(model, "/") |> List.last} />
+        <.dropdown_menu_item
+          link_type="button"
+          phx_click="append_model"
+          value={model}
+          label={String.split(model, "/") |> List.last()}
+        />
       <% end %>
     </.dropdown>
     """

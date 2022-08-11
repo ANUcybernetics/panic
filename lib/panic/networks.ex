@@ -130,6 +130,7 @@ defmodule Panic.Networks do
     network
     |> update_network(%{models: List.delete_at(network.models, index)})
   end
+
   @doc """
   Reset network model array back to the empty list
   """

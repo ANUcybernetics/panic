@@ -17,6 +17,6 @@ defmodule Panic.Models.Run do
     run
     |> cast(attrs, [:model, :input, :output, :metadata])
     |> validate_required([:model, :input])
-    |> validate_inclusion(:model, Models.list_models)
+    |> validate_inclusion(:model, Models.list_models())
   end
 end

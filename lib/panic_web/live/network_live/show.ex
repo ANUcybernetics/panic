@@ -23,18 +23,19 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_event("close_modal", _, socket) do
-    {:noreply, push_patch(socket, to: Routes.network_show_path(socket, :show, socket.assigns.network))}
+    {:noreply,
+     push_patch(socket, to: Routes.network_show_path(socket, :show, socket.assigns.network))}
   end
 
   @impl true
   def handle_event("start_cycle", _, socket) do
-    IO.puts "starting..."
+    IO.puts("starting...")
     {:noreply, assign(socket, :cycle_status, :running)}
   end
 
   @impl true
   def handle_event("stop_cycle", _, socket) do
-    IO.puts "stopping..."
+    IO.puts("stopping...")
     {:noreply, assign(socket, :cycle_status, :stopped)}
   end
 end
