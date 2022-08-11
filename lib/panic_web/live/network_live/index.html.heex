@@ -30,17 +30,19 @@
       <tbody id="networks">
         <%= for network <- @networks do %>
           <.tr id={"network-#{network.id}"}>
-            <.td><%= network.name %></.td>
-            <.td class="text-right whitespace-nowrap">
-              <.button
+            <.td>
+              <.link
                 color="primary"
                 variant="outline"
                 size="xs"
                 link_type="live_redirect"
                 label="Show"
                 to={Routes.network_show_path(@socket, :show, network)}
-              />
-
+              >
+                <%= network.name %>
+              </.link>
+            </.td>
+            <.td class="text-right whitespace-nowrap">
               <.button
                 color="danger"
                 variant="outline"
