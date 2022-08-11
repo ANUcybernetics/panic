@@ -19,7 +19,7 @@ defmodule Panic.Models.Platforms.Replicate do
     get_model_versions(model) |> List.last |> Map.get("id")
   end
 
-  def get_prediction_status(prediction_id) do
+  def get_status(prediction_id) do
     url = "#{@url}/predictions/#{prediction_id}"
     case HTTPoison.get(url, @headers, hackney: [pool: :default]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} ->
@@ -28,7 +28,7 @@ defmodule Panic.Models.Platforms.Replicate do
     end
   end
 
-  def return_prediction(prediction_id) do
+  def get(prediction_id) do
     url = "#{@url}/predictions/#{prediction_id}"
 
     case HTTPoison.get(url, @headers, hackney: [pool: :default]) do
@@ -38,7 +38,7 @@ defmodule Panic.Models.Platforms.Replicate do
           %{"status" => "succeeded"} ->
             body
           %{"status" => status} when status in ~w(starting processing) ->
-            return_prediction(prediction_id)
+            get(prediction_id)
         end
     end
   end
@@ -62,7 +62,7 @@ defmodule Panic.Models.Platforms.Replicate do
     case HTTPoison.post(url, request_body, @headers, hackney: [pool: :default]) do
       {:ok, %HTTPoison.Response{status_code: 201, body: response_body}} ->
         {:ok, body} = Jason.decode(response_body)
-        return_prediction(body["id"])
+        get(body["id"])
     end
   end
 
