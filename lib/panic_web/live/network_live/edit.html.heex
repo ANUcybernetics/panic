@@ -20,22 +20,26 @@
           <.tr id={"model-#{model}"}>
             <.td><%= model %></.td>
             <.td class="text-right whitespace-nowrap">
-              <.button
+              <%= unless idx == 0 do %>
+              <.icon_button
                 color="primary"
                 variant="outline"
                 size="xs"
-                label="move up"
+                icon={:arrow_circle_up}
                 phx-click="move_model_up"
                 phx-value-pos={idx}
               />
-              <.button
+              <% end %>
+              <%= unless idx == Enum.count(@models) - 1 do %>
+              <.icon_button
                 color="primary"
                 variant="outline"
                 size="xs"
-                label="move down"
+                icon={:arrow_circle_down}
                 phx-click="move_model_down"
                 phx-value-pos={idx}
               />
+              <% end %>
               <.button
                 color="primary"
                 variant="outline"
