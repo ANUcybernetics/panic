@@ -61,6 +61,42 @@ defmodule Panic.NetworksTest do
   end
 
   describe "models" do
-    true
+    test "check append_models/2" do
+      {:ok, network} = network_fixture() |> Networks.append_model("kuprel/min-dalle")
+      assert Enum.count(network.models) == 1
+    end
+
+    test "check remove_model/2" do
+      {:ok, network} = network_fixture() |> Networks.append_model("kuprel/min-dalle")
+      assert Enum.count(network.models) == 1
+
+      {:ok, network} = Networks.remove_model(network, 0)
+      assert Enum.empty?(network.models)
+    end
+
+    test "check reset_models/1" do
+      {:ok, network} = network_fixture() |> Networks.append_model("kuprel:/min-dalle")
+      {:ok, network} = network |> Networks.append_model("kuprel/min-dalle")
+      assert Enum.count(network.models) == 2
+
+      {:ok, network} = Networks.reset_models(network)
+      assert Enum.empty?(network.models)
+    end
+
+    test "check reorder_models/3" do
+      {:ok, network} = network_fixture() |> Networks.append_model("zero")
+      {:ok, network} = network |> Networks.append_model("one")
+      {:ok, network} = network |> Networks.append_model("two")
+      assert Enum.count(network.models) == 3
+
+      {:ok, network} = Networks.reorder_models(network, 0, 1)
+      assert network.models == ["one", "zero", "two"]
+
+      {:ok, network} = Networks.reorder_models(network, 1, 0)
+      assert network.models == ["zero", "one", "two"]
+
+      {:ok, network} = Networks.reorder_models(network, 2, 1)
+      assert network.models == ["zero", "two", "one"]
+    end
   end
 end
