@@ -2,11 +2,10 @@ defmodule Panic.NetworksTest do
   use Panic.DataCase
 
   alias Panic.Networks
+  alias Panic.Networks.Network
+  import Panic.NetworksFixtures
 
   describe "networks" do
-    alias Panic.Networks.Network
-
-    import Panic.NetworksFixtures
 
     @invalid_attrs %{loop: nil, models: nil, name: nil}
 
@@ -59,5 +58,9 @@ defmodule Panic.NetworksTest do
       network = network_fixture()
       assert %Ecto.Changeset{} = Networks.change_network(network)
     end
+  end
+
+  describe "models" do
+    true
   end
 end

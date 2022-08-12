@@ -13,7 +13,7 @@ defmodule Panic.NetworksFixtures do
       |> Enum.into(%{
         loop: true,
         models: [],
-        name: "some name"
+        name: "some network name"
       })
       |> Panic.Networks.create_network()
 
