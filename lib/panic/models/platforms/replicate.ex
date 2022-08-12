@@ -1,15 +1,11 @@
 defmodule Panic.Models.Platforms.Replicate do
-  @api_token System.get_env("REPLICATE_API_TOKEN")
   @url "https://api.replicate.com/v1"
-  @headers %{
-    "Authorization" => "Token #{@api_token}",
-    "Content-Type" => "application/json"
-  }
+
 
   def get_model_versions(model) do
     url = "#{@url}/models/#{model}/versions"
 
-    case HTTPoison.get(url, @headers, hackney: [pool: :default]) do
+    case HTTPoison.get(url, headers(), hackney: [pool: :default]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} ->
         {:ok, %{"results" => results}} = Jason.decode(response_body)
         results
@@ -23,7 +19,7 @@ defmodule Panic.Models.Platforms.Replicate do
   def get_status(prediction_id) do
     url = "#{@url}/predictions/#{prediction_id}"
 
-    case HTTPoison.get(url, @headers, hackney: [pool: :default]) do
+    case HTTPoison.get(url, headers(), hackney: [pool: :default]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} ->
         {:ok, body} = Jason.decode(response_body)
         body
@@ -33,7 +29,7 @@ defmodule Panic.Models.Platforms.Replicate do
   def get(prediction_id) do
     url = "#{@url}/predictions/#{prediction_id}"
 
-    case HTTPoison.get(url, @headers, hackney: [pool: :default]) do
+    case HTTPoison.get(url, headers(), hackney: [pool: :default]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} ->
         {:ok, body} = Jason.decode(response_body)
 
@@ -48,27 +44,37 @@ defmodule Panic.Models.Platforms.Replicate do
   end
 
   def create("kuprel/min-dalle" = model, prompt) do
-    %{"output" => output_url} = create(model, %{prompt: prompt, grid_size: 1})
+    %{"output" => output_url} = create_and_wait(model, %{prompt: prompt, grid_size: 1})
     output_url
   end
 
   def create("rmokady/clip_prefix_caption" = model, image_url) do
-    %{"output" => [%{"text" => text} | _]} = create(model, %{image: image_url})
+    %{"output" => [%{"text" => text} | _]} = create_and_wait(model, %{image: image_url})
     text
   end
 
-  def create(model, input_params) do
+  def create_and_wait(model, input_params) do
     url = "#{@url}/predictions"
     model_version = get_latest_model_version(model)
 
     {:ok, request_body} = Jason.encode(%{version: model_version, input: input_params})
 
-    case HTTPoison.post(url, request_body, @headers, hackney: [pool: :default]) do
+    case HTTPoison.post(url, request_body, headers(), hackney: [pool: :default]) do
       {:ok, %HTTPoison.Response{status_code: 201, body: response_body}} ->
         {:ok, body} = Jason.decode(response_body)
         get(body["id"])
     end
   end
+
+  defp headers do
+    api_token = Application.fetch_env!(:panic, :replicate_api_token)
+
+    %{
+      "Authorization" => "Token #{api_token}",
+      "Content-Type" => "application/json"
+    }
+  end
+
 
   # def run_long_job(prompt) do
   #   PetalPro.BackgroundTask.run(fn prompt ->

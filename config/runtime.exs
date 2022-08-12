@@ -7,6 +7,12 @@ import Config
 # any compile-time configuration in here, as it won't be applied.
 # The block below contains prod specific runtime configuration.
 
+config :panic,
+  replicate_api_token: System.get_env("REPLICATE_API_TOKEN") ||
+  raise("""
+  environment variable REPLICATE_API_TOKEN is missing.
+  """)
+
 config :ueberauth, Ueberauth.Strategy.Google.OAuth,
   client_id: System.get_env("GOOGLE_OAUTH_CLIENT_ID"),
   client_secret: System.get_env("GOOGLE_OAUTH_SECRET")
