@@ -33,7 +33,6 @@
           <.tr id={"model-#{idx}"}>
             <.td><%= model_display_string(model) %></.td>
             <.td class="text-right whitespace-nowrap">
-              <%= unless idx == Enum.count(@network.models) - 1 do %>
               <.icon_button
                 color="primary"
                 variant="outline"
@@ -41,9 +40,8 @@
                 icon={:arrow_circle_down}
                 phx-click="move_model_down"
                 phx-value-pos={idx}
+                disabled={idx == Enum.count(@network.models) - 1}
               />
-              <% end %>
-              <%= unless idx == 0 do %>
               <.icon_button
                 color="primary"
                 variant="outline"
@@ -51,8 +49,8 @@
                 icon={:arrow_circle_up}
                 phx-click="move_model_up"
                 phx-value-pos={idx}
+                disabled={idx == 0}
               />
-              <% end %>
               <.icon_button
                 color="primary"
                 variant="outline"
