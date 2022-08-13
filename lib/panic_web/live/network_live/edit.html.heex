@@ -15,7 +15,7 @@
           link_type="button"
           phx_click="append_model"
           value={model}
-          label={model_dropdown_label(model)}
+          label={model_display_string(model)}
         />
       <% end %>
     </.dropdown>
@@ -31,7 +31,7 @@
       <tbody id="networks">
         <%= for {model, idx} <- Enum.with_index(@network.models) do %>
           <.tr id={"model-#{model}"}>
-            <.td><%= "#{model} (#{idx})" %></.td>
+            <.td><%= model_display_string(model) %></.td>
             <.td class="text-right whitespace-nowrap">
               <%= unless idx == Enum.count(@network.models) - 1 do %>
               <.icon_button

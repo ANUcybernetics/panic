@@ -57,7 +57,7 @@ defmodule PanicWeb.NetworkLive.Edit do
     {:noreply, assign(socket, :network, network)}
   end
 
-  defp model_dropdown_label(model) do
+  defp model_display_string(model) do
     model |> String.split("/") |> List.last()
   end
 end
