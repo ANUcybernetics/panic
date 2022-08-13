@@ -8,6 +8,7 @@ defmodule Panic.Models.Run do
     field :input, :string
     field :output, :string
     field :metadata, :map
+    field :first_run_id, :id
 
     timestamps()
   end
