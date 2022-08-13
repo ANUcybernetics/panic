@@ -36,8 +36,6 @@ defmodule PanicWeb.NetworkLive.Edit do
     index = String.to_integer(pos)
     {:ok, network} = Networks.remove_model(socket.assigns.network, index)
 
-    IO.inspect network
-
     {:noreply, assign(socket, :network, network)}
   end
 
