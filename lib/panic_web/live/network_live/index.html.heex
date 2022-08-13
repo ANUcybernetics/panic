@@ -37,7 +37,7 @@
                 size="xs"
                 link_type="live_redirect"
                 label="Show"
-                to={Routes.network_show_path(@socket, :show, network)}
+                to={Routes.network_edit_path(@socket, :edit, network.id)}
               >
                 <%= network.name %>
               </.link>
