@@ -30,7 +30,7 @@
       </thead>
       <tbody id="networks">
         <%= for {model, idx} <- Enum.with_index(@network.models) do %>
-          <.tr id={"model-#{model}"}>
+          <.tr id={"model-#{idx}"}>
             <.td><%= model_display_string(model) %></.td>
             <.td class="text-right whitespace-nowrap">
               <%= unless idx == Enum.count(@network.models) - 1 do %>
