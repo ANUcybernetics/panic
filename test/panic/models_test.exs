@@ -25,7 +25,7 @@ defmodule Panic.ModelsTest do
         input: "some input",
         metadata: %{},
         model: "replicate:kuprel/min-dalle",
-        output: "some output",
+        output: "some output"
       }
 
       assert {:ok, %Run{} = run} = Models.create_run(valid_attrs)
@@ -40,7 +40,7 @@ defmodule Panic.ModelsTest do
         input: "some input",
         metadata: %{},
         model: "replicate:kuprel/min-dalle",
-        output: "some output",
+        output: "some output"
       }
 
       assert {:ok, %Run{} = parent_run} = Models.create_run(valid_attrs)
@@ -61,7 +61,7 @@ defmodule Panic.ModelsTest do
         input: "some updated input",
         metadata: %{},
         model: "replicate:rmokady/clip_prefix_caption",
-        output: "some updated output",
+        output: "some updated output"
       }
 
       assert {:ok, %Run{} = run} = Models.update_run(run, update_attrs)

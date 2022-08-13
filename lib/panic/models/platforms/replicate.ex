@@ -1,7 +1,6 @@
 defmodule Panic.Models.Platforms.Replicate do
   @url "https://api.replicate.com/v1"
 
-
   def get_model_versions(model) do
     url = "#{@url}/models/#{model}/versions"
 

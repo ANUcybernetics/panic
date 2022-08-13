@@ -6,7 +6,6 @@ defmodule Panic.NetworksTest do
   import Panic.NetworksFixtures
 
   describe "networks" do
-
     @invalid_attrs %{loop: nil, models: nil, name: nil}
 
     test "list_networks/0 returns all networks" do

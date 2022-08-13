@@ -14,16 +14,16 @@
     </.page_header>
 
     <div class="mb-4 flex justify-end">
-    <.dropdown class="w-48" label="Add model">
-      <%= for model <- Models.list_models() do %>
-        <.dropdown_menu_item
-          link_type="button"
-          phx_click="append_model"
-          value={model}
-          label={model_display_string(model)}
-        />
-      <% end %>
-    </.dropdown>
+      <.dropdown class="w-48" label="Add model">
+        <%= for model <- Models.list_models() do %>
+          <.dropdown_menu_item
+            link_type="button"
+            phx_click="append_model"
+            value={model}
+            label={model_display_string(model)}
+          />
+        <% end %>
+      </.dropdown>
     </div>
 
     <.table>

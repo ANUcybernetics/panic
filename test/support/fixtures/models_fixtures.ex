@@ -14,7 +14,7 @@ defmodule Panic.ModelsFixtures do
         input: "some input",
         metadata: %{},
         model: "replicate:kuprel/min-dalle",
-        output: "some output",
+        output: "some output"
       })
       |> Panic.Models.create_run()
 
@@ -27,18 +27,20 @@ defmodule Panic.ModelsFixtures do
   def multi_run_fixture(attrs \\ %{}) do
     models = ["replicate:kuprel/min-dalle", "replicate:rmokady/clip_prefix_caption"]
 
-    runs = models
-    |> Enum.map(fn model ->
-      attrs
-      |> Enum.into(%{
-            input: "some input",
-            metadata: %{},
-            model: model,
-            output: "some output"})
-            |> Panic.Models.create_run()
-       end)
-       |> Enum.map(fn {:ok, run} -> run end)
+    runs =
+      models
+      |> Enum.map(fn model ->
+        attrs
+        |> Enum.into(%{
+          input: "some input",
+          metadata: %{},
+          model: model,
+          output: "some output"
+        })
+        |> Panic.Models.create_run()
+      end)
+      |> Enum.map(fn {:ok, run} -> run end)
 
-      runs
+    runs
   end
 end
