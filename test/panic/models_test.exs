@@ -8,7 +8,7 @@ defmodule Panic.ModelsTest do
 
     import Panic.ModelsFixtures
 
-    @invalid_attrs %{input: nil, metadata: nil, model_name: nil, output: nil, platform: nil}
+    @invalid_attrs %{input: nil, metadata: nil, model: nil, output: nil}
 
     test "list_runs/0 returns all runs" do
       run = run_fixture()
@@ -24,17 +24,30 @@ defmodule Panic.ModelsTest do
       valid_attrs = %{
         input: "some input",
         metadata: %{},
-        model_name: "some model_name",
+        model: "replicate:kuprel/min-dalle",
         output: "some output",
-        platform: :replicate
       }
 
       assert {:ok, %Run{} = run} = Models.create_run(valid_attrs)
       assert run.input == "some input"
       assert run.metadata == %{}
-      assert run.model_name == "some model_name"
+      assert run.model == "replicate:kuprel/min-dalle"
       assert run.output == "some output"
-      assert run.platform == :replicate
+    end
+
+    test "create_run/1 with can create a run with a parent run" do
+      valid_attrs = %{
+        input: "some input",
+        metadata: %{},
+        model: "replicate:kuprel/min-dalle",
+        output: "some output",
+      }
+
+      assert {:ok, %Run{} = parent_run} = Models.create_run(valid_attrs)
+
+      valid_attrs_with_parent = Map.put(valid_attrs, :parent_id, parent_run.id)
+      assert {:ok, %Run{} = run} = Models.create_run(valid_attrs_with_parent)
+      assert run.parent_id == parent_run.id
     end
 
     test "create_run/1 with invalid data returns error changeset" do
@@ -47,17 +60,15 @@ defmodule Panic.ModelsTest do
       update_attrs = %{
         input: "some updated input",
         metadata: %{},
-        model_name: "some updated model_name",
+        model: "replicate:rmokady/clip_prefix_caption",
         output: "some updated output",
-        platform: :huggingface
       }
 
       assert {:ok, %Run{} = run} = Models.update_run(run, update_attrs)
       assert run.input == "some updated input"
       assert run.metadata == %{}
-      assert run.model_name == "some updated model_name"
+      assert run.model == "replicate:rmokady/clip_prefix_caption"
       assert run.output == "some updated output"
-      assert run.platform == :huggingface
     end
 
     test "update_run/2 with invalid data returns error changeset" do
