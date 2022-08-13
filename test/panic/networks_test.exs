@@ -62,12 +62,12 @@ defmodule Panic.NetworksTest do
 
   describe "models" do
     test "check append_models/2" do
-      {:ok, network} = network_fixture() |> Networks.append_model("kuprel/min-dalle")
+      {:ok, network} = network_fixture() |> Networks.append_model("one")
       assert Enum.count(network.models) == 1
     end
 
     test "check remove_model/2" do
-      {:ok, network} = network_fixture() |> Networks.append_model("kuprel/min-dalle")
+      {:ok, network} = network_fixture() |> Networks.append_model("one")
       assert Enum.count(network.models) == 1
 
       {:ok, network} = Networks.remove_model(network, 0)
@@ -75,8 +75,8 @@ defmodule Panic.NetworksTest do
     end
 
     test "check reset_models/1" do
-      {:ok, network} = network_fixture() |> Networks.append_model("kuprel:/min-dalle")
-      {:ok, network} = network |> Networks.append_model("kuprel/min-dalle")
+      {:ok, network} = network_fixture() |> Networks.append_model("one")
+      {:ok, network} = network |> Networks.append_model("two")
       assert Enum.count(network.models) == 2
 
       {:ok, network} = Networks.reset_models(network)
