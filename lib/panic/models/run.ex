@@ -8,7 +8,7 @@ defmodule Panic.Models.Run do
     field :input, :string
     field :output, :string
     field :metadata, :map
-    field :first_run_id, :id
+    belongs_to :first_run, Models.Run
 
     timestamps()
   end
@@ -16,8 +16,8 @@ defmodule Panic.Models.Run do
   @doc false
   def changeset(run, attrs) do
     run
-    |> cast(attrs, [:model, :input, :output, :metadata])
-    |> validate_required([:model, :input])
+    |> cast(attrs, [:model, :input, :output, :metadata, :first_run_id])
+    |> validate_required([:model, :input, :first_run_id])
     |> validate_inclusion(:model, Models.list_models())
   end
 end
