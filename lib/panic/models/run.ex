@@ -8,7 +8,7 @@ defmodule Panic.Models.Run do
     field :input, :string
     field :output, :string
     field :metadata, :map
-    belongs_to :first_run, Models.Run
+    belongs_to :parent, Models.Run
 
     timestamps()
   end
@@ -16,8 +16,9 @@ defmodule Panic.Models.Run do
   @doc false
   def changeset(run, attrs) do
     run
-    |> cast(attrs, [:model, :input, :output, :metadata, :first_run_id])
-    |> validate_required([:model, :input, :first_run_id])
+    |> cast(attrs, [:model, :input, :output, :metadata, :parent_id])
+    |> validate_required([:model, :input])
     |> validate_inclusion(:model, Models.list_models())
+    |> foreign_key_constraint(:parent_id, message: "no parent run with that name")
   end
 end
