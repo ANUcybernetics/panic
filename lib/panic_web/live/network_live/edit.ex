@@ -60,4 +60,16 @@ defmodule PanicWeb.NetworkLive.Edit do
   defp model_display_string(model) do
     model |> String.split("/") |> List.last()
   end
+
+  defp model_input_color(model) do
+    colors = %{text: "violet-500", image: "orange-500", audio: "emerald-500"}
+    {input, _output} = Models.model_io(model)
+    colors[input]
+  end
+
+  defp model_output_color(model) do
+    colors = %{text: "violet-500", image: "orange-500", audio: "emerald-500"}
+    {_input, output} = Models.model_io(model)
+    colors[output]
+  end
 end

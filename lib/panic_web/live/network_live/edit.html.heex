@@ -60,6 +60,10 @@
                 phx-click="remove_model"
                 phx-value-pos={idx}
               />
+              <span class="inline-block">
+                <span class={"block h-2 w-2 rounded-full bg-#{model_input_color(model)}"}></span>
+                <span class={"block h-2 w-2 rounded-full bg-#{model_output_color(model)}"}></span>
+              </span>
             </.td>
           </.tr>
         <% end %>
