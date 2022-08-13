@@ -1,4 +1,4 @@
-<.layout current_page={:change_me} current_user={@current_user} type="sidebar">
+<.layout current_page={:edit_network} current_user={@current_user} type="stacked">
   <.container class="py-16">
     <.page_header title="Edit Network">
       <.button
@@ -8,6 +8,19 @@
       />
     </.page_header>
 
+    <div class="mb-4 flex justify-end">
+    <.dropdown class="w-48" label="Add model">
+      <%= for model <- Models.list_models() do %>
+        <.dropdown_menu_item
+          link_type="button"
+          phx_click="append_model"
+          value={model}
+          label={model_dropdown_label(model)}
+        />
+      <% end %>
+    </.dropdown>
+    </div>
+
     <.table>
       <thead>
         <.tr>
@@ -16,10 +29,20 @@
         </.tr>
       </thead>
       <tbody id="networks">
-        <%= for {model, idx} <- Enum.with_index(@models) do %>
+        <%= for {model, idx} <- Enum.with_index(@network.models) do %>
           <.tr id={"model-#{model}"}>
-            <.td><%= model %></.td>
+            <.td><%= "#{model} (#{idx})" %></.td>
             <.td class="text-right whitespace-nowrap">
+              <%= unless idx == Enum.count(@network.models) - 1 do %>
+              <.icon_button
+                color="primary"
+                variant="outline"
+                size="xs"
+                icon={:arrow_circle_down}
+                phx-click="move_model_down"
+                phx-value-pos={idx}
+              />
+              <% end %>
               <%= unless idx == 0 do %>
               <.icon_button
                 color="primary"
@@ -30,21 +53,12 @@
                 phx-value-pos={idx}
               />
               <% end %>
-              <%= unless idx == Enum.count(@models) - 1 do %>
               <.icon_button
                 color="primary"
                 variant="outline"
                 size="xs"
-                icon={:arrow_circle_down}
-                phx-click="move_model_down"
-                phx-value-pos={idx}
-              />
-              <% end %>
-              <.button
-                color="primary"
-                variant="outline"
-                size="xs"
-                label="delete"
+                icon={:trash}
+                color="danger"
                 phx-click="remove_model"
                 phx-value-pos={idx}
               />
@@ -53,8 +67,5 @@
         <% end %>
       </tbody>
     </.table>
-    <div class="mt-4 flex justify-end">
-      <.models_dropdown />
-    </div>
   </.container>
 </.layout>

@@ -15,8 +15,7 @@ defmodule PanicWeb.NetworkLive.Edit do
     {:noreply,
      socket
      |> assign(:page_title, "Edit network")
-     |> assign(:network, network)
-     |> assign(:models, network.models)}
+     |> assign(:network, network)}
   end
 
   @impl true
@@ -29,14 +28,17 @@ defmodule PanicWeb.NetworkLive.Edit do
   def handle_event("append_model", %{"value" => model}, socket) do
     {:ok, network} = Networks.append_model(socket.assigns.network, model)
 
-    {:noreply, assign(socket, :models, network.models)}
+    {:noreply, assign(socket, :network, network)}
   end
 
   @impl true
   def handle_event("remove_model", %{"pos" => pos}, socket) do
-    {:ok, network} = Networks.remove_model(socket.assigns.network, String.to_integer(pos))
+    index = String.to_integer(pos)
+    {:ok, network} = Networks.remove_model(socket.assigns.network, index)
 
-    {:noreply, assign(socket, :models, network.models)}
+    IO.inspect network
+
+    {:noreply, assign(socket, :network, network)}
   end
 
   @impl true
@@ -45,7 +47,7 @@ defmodule PanicWeb.NetworkLive.Edit do
     final_index = initial_index - 1
     {:ok, network} = Networks.reorder_models(socket.assigns.network, initial_index, final_index)
 
-    {:noreply, assign(socket, :models, network.models)}
+    {:noreply, assign(socket, :network, network)}
   end
 
   @impl true
@@ -54,21 +56,10 @@ defmodule PanicWeb.NetworkLive.Edit do
     final_index = initial_index + 1
     {:ok, network} = Networks.reorder_models(socket.assigns.network, initial_index, final_index)
 
-    {:noreply, assign(socket, :models, network.models)}
+    {:noreply, assign(socket, :network, network)}
   end
 
-  def models_dropdown(assigns) do
-    ~H"""
-    <.dropdown label="Add model">
-      <%= for model <- Models.list_models() do %>
-        <.dropdown_menu_item
-          link_type="button"
-          phx_click="append_model"
-          value={model}
-          label={String.split(model, "/") |> List.last()}
-        />
-      <% end %>
-    </.dropdown>
-    """
+  defp model_dropdown_label(model) do
+    model |> String.split("/") |> List.last()
   end
 end
