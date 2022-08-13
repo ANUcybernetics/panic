@@ -4,10 +4,10 @@ defmodule Panic.Models.Run do
   alias Panic.Models
 
   schema "runs" do
-    field :input, :string
-    field :metadata, :map
     field :model, :string
+    field :input, :string
     field :output, :string
+    field :metadata, :map
 
     timestamps()
   end
