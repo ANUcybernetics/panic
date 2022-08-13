@@ -74,13 +74,4 @@ defmodule Panic.Models.Platforms.Replicate do
       "Content-Type" => "application/json"
     }
   end
-
-
-  # def run_long_job(prompt) do
-  #   PetalPro.BackgroundTask.run(fn prompt ->
-  #     {:ok, image_url} = Replicate.create "two white dudes having a video call"
-  #     ## use the jobs table (Oban) with a whole new table
-  #     ## experiment row with ID, then pubsub -> job done, update assigns
-  #   end)
-  # end
 end
