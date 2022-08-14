@@ -1,7 +1,10 @@
 defmodule PanicWeb.NetworkLive.Show do
   use PanicWeb, :live_view
 
-  alias Panic.{Networks, Models}
+  alias Panic.Networks
+  alias Panic.Models.Run
+
+  @num_slots 8
 
   @impl true
   def mount(_params, _session, socket) do
@@ -11,14 +14,15 @@ defmodule PanicWeb.NetworkLive.Show do
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
     network = Networks.get_network!(id)
-    models = network.models
-    cycle = List.duplicate(nil, Enum.count(models))
+
+    Networks.subscribe(id)
 
     {:noreply,
      socket
      |> assign(:page_title, "Show network")
      |> assign(:network, network)
-     |> assign(:cycle, cycle)}
+     |> assign_new(:cycle, fn -> List.duplicate(nil, @num_slots) end)
+    }
   end
 
   @impl true
