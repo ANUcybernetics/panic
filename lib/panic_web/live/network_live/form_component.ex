@@ -1,11 +1,11 @@
 defmodule PanicWeb.NetworkLive.FormComponent do
   use PanicWeb, :live_component
 
-  alias Panic.Networks
+  alias Panic.Models
 
   @impl true
-  def update(%{network: network} = assigns, socket) do
-    changeset = Networks.change_network(network)
+  def update(%{run: run} = assigns, socket) do
+    changeset = Models.change_run(run)
 
     {:ok,
      socket
@@ -14,41 +14,28 @@ defmodule PanicWeb.NetworkLive.FormComponent do
   end
 
   @impl true
-  def handle_event("validate", %{"network" => network_params}, socket) do
+  def handle_event("validate", %{"run" => run_params}, socket) do
     changeset =
-      socket.assigns.network
-      |> Networks.change_network(network_params)
+      socket.assigns.run
+      |> Models.change_run(run_params)
       |> Map.put(:action, :validate)
 
     {:noreply, assign(socket, :changeset, changeset)}
   end
 
-  def handle_event("save", %{"network" => network_params}, socket) do
-    save_network(socket, socket.assigns.action, network_params)
-  end
+  def handle_event("create_run", %{"run" => run_params}, socket) do
+    attrs = run_params
+    |> Map.put("model", socket.assigns.run.model)
+    |> Map.put("network_id", socket.assigns.run.network_id)
 
-  defp save_network(socket, :edit, network_params) do
-    case Networks.update_network(socket.assigns.network, network_params) do
-      {:ok, _network} ->
+    case Models.create_run(attrs) do
+      {:ok, run} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Network updated successfully")
-         |> push_redirect(to: socket.assigns.return_to)}
+         |> put_flash(:info, "Started run of #{run.model}")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, :changeset, changeset)}
-    end
-  end
-
-  defp save_network(socket, :new, network_params) do
-    case Networks.create_network(network_params) do
-      {:ok, _network} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Network created successfully")
-         |> push_redirect(to: socket.assigns.return_to)}
-
-      {:error, %Ecto.Changeset{} = changeset} ->
+        IO.inspect changeset
         {:noreply, assign(socket, changeset: changeset)}
     end
   end

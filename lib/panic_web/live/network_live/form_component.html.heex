@@ -2,15 +2,15 @@
   <.form
     let={f}
     for={@changeset}
-    id="network-form"
+    id="starting-input"
     phx-target={@myself}
     phx-change="validate"
-    phx-submit="save"
+    phx-submit="create_run"
   >
-    <.form_field type="text_input" form={f} field={:name} />
 
-    <div class="flex justify-end">
-      <.button type="submit" phx_disable_with="Saving..." label="Save" />
+    <div>
+      <.form_field class="w-48" type="text_input" form={f} field={:input} />
+      <.button class="inline-block" type="submit" phx_disable_with="Saving..." label="Save" />
     </div>
   </.form>
 </div>
