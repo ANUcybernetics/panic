@@ -8,9 +8,7 @@
     phx-submit="create_run"
   >
 
-    <div>
-      <.form_field class="w-48" type="text_input" form={f} field={:input} />
-      <.button class="inline-block" type="submit" phx_disable_with="Saving..." label="Save" />
-    </div>
+    <.form_field type="text_input" form={f} field={:input} />
+    <.button class="mb-8" type="submit" phx_disable_with="Saving..." label="Save" />
   </.form>
 </div>

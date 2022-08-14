@@ -13,31 +13,33 @@
       />
     </.page_header>
 
-    <%= if @cycle_status == :running do %>
-      <.icon_button
-        to="/"
-        link_type="button"
-        phx_click="stop_cycle"
-        size="lg"
-        color="danger"
-        icon={:stop}
-      />
-    <% else %>
-      <.icon_button
-        to="/"
-        link_type="button"
-        phx_click="start_cycle"
-        size="lg"
-        color="success"
-        icon={:play}
-      />
-    <% end %>
-
    <.live_component
      module={PanicWeb.NetworkLive.FormComponent}
      id={@network.id}
      run={%Run{model: List.first(@network.models), network_id: @network.id}}
    />
+
+   <div class="mb-8">
+    <%= if @cycle_status == :running do %>
+      <.icon_button
+        class="bg-red-300"
+        to="/"
+        link_type="button"
+        phx_click="stop_cycle"
+        size="lg"
+        icon={:stop}
+      />
+    <% else %>
+      <.icon_button
+        class="bg-green-300"
+        to="/"
+        link_type="button"
+        phx_click="start_cycle"
+        size="lg"
+        icon={:play}
+      />
+    <% end %>
+    </div>
 
     <div class="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-4">
       <%= for {run, idx} <- Enum.with_index(@cycle) do %>
