@@ -42,4 +42,10 @@ defmodule PanicWeb.NetworkLive.Show do
     IO.puts("stopping...")
     {:noreply, assign(socket, :cycle_status, :stopped)}
   end
+
+  @impl true
+  def handle_info({"run_complete", image_url}, socket) do
+    IO.inspect "from the handler it's #{image_url}"
+    {:noreply, socket}
+  end
 end
