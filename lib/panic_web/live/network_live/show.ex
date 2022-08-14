@@ -120,11 +120,13 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   def find_run_index(cycle, run_id) do
-    Enum.find_index(cycle, fn run -> run && run.id == run_id  end)
+    idx = Enum.find_index(cycle, fn run -> run && run.id == run_id  end)
+    Integer.mod(idx, Enum.count(cycle))
   end
 
   def find_parent_index(cycle, parent_id) do
-    Enum.find_index(cycle, fn run -> run && run.id == parent_id  end)
+    idx = Enum.find_index(cycle, fn run -> run && run.id == parent_id  end)
+    Integer.mod(idx, Enum.count(cycle))
   end
 
   defp rotate([head | tail]), do: tail ++ [head]
