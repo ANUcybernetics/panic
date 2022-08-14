@@ -8,6 +8,8 @@ defmodule Panic.Networks.Network do
     field :name, :string
     field :owner_id, :id
 
+    has_many :runs, Panic.Models.Run
+
     timestamps()
   end
 
