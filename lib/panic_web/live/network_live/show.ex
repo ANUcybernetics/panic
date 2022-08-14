@@ -41,13 +41,11 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_event("start_cycle", _, socket) do
-    IO.puts("starting...")
     {:noreply, assign(socket, :cycle_status, :running)}
   end
 
   @impl true
   def handle_event("stop_cycle", _, socket) do
-    IO.puts("stopping...")
     {:noreply, assign(socket, :cycle_status, :stopped)}
   end
 
@@ -104,8 +102,12 @@ defmodule PanicWeb.NetworkLive.Show do
           <% :running -> %>
             <.spinner class="mx-auto" size="md" />
           <% :succeeded -> %>
-            <Heroicons.Outline.check_circle class="w-12 h-12 mx-auto" />
-            <%= @run.output %>
+            <%= case Models.model_io(@run.model) do %>
+              <% {_, :text} -> %>
+                <%= @run.output %>
+              <% {_, :image} -> %>
+                <img src={@run.output}>
+            <% end %>
           <% :failed -> %>
             <Heroicons.Outline.x_circle class="w-12 h-12 mx-auto" />
           <% nil -> %>
