@@ -119,19 +119,6 @@ defmodule PanicWeb.NetworkLive.Show do
     """
   end
 
-  @doc """
-  Return the index of the next free "slot" in the cycle
-
-  The logic is, either find the first nil, or if they're all full find the first
-  slot which isn't preceded by a parent (including looping back to the start,
-  ring-buffer style)
-
-  """
-  defp next_slot(cycle) do
-    pairs = Enum.chunk_every(cycle, 2, 1, [List.first(cycle)])
-    Enum.find_index(pairs, fn [first, second] -> is_nil(first) || is_nil(second) || first.id != second.parent_id end)
-  end
-
   def find_run_index(cycle, run_id) do
     Enum.find_index(cycle, fn run -> run && run.id == run_id  end)
   end
