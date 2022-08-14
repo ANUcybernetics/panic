@@ -43,8 +43,8 @@ defmodule Panic.Models.Platforms.Replicate do
   end
 
   def create("kuprel/min-dalle" = model, prompt) do
-    %{"output" => output_url} = create_and_wait(model, %{text: prompt, grid_size: 1})
-    output_url
+    %{"output" => image_url} = create_and_wait(model, %{text: prompt, grid_size: 1})
+    image_url
   end
 
   def create("rmokady/clip_prefix_caption" = model, image_url) do
