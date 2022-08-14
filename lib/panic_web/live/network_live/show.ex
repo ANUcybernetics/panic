@@ -53,10 +53,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_info({"run_created", run}, socket) do
-    is_first_run? = is_nil(run.parent_id)
-
-    idx = if is_first_run?, do: 0, else: find_parent_index(socket.assigns.cycle, run.parent_id)
-    cycle = List.replace_at(socket.assigns.cycle, idx, %{run | status: :running})
+    idx = cycle_index(socket.assigns.cycle, run)
 
     # now run the thing...
     Panic.BackgroundTask.run(fn ->
@@ -67,21 +64,20 @@ defmodule PanicWeb.NetworkLive.Show do
         end
 
       {:ok, run} = Models.update_run(run, %{output: output})
-      Networks.broadcast(run.network_id, {"run_succeeded", run})
+      Networks.broadcast(run.network_id, {"run_succeeded", %{run | status: :succeeded}})
     end)
 
-    ## there's probably a more idiomatic way to do this...
-    first_run = if is_first_run?, do: socket.assigns.first_run, else: run
-
+    cycle = List.replace_at(socket.assigns.cycle, idx, %{run | status: :running})
+    first_run = if is_nil(run.parent_id), do: run, else: socket.assigns.first_run
     {:noreply, assign(socket, cycle: cycle, first_run: first_run)}
   end
 
   @impl true
   def handle_info({"run_succeeded", run}, socket) do
-    idx = find_run_index(socket.assigns.cycle, run.id)
-    cycle = List.replace_at(socket.assigns.cycle, idx + 1, %{run | status: :succeeded})
+    idx = cycle_index(socket.assigns.cycle, run)
+    cycle = List.replace_at(socket.assigns.cycle, idx, run)
 
-    IO.inspect {run, idx}
+    IO.inspect {socket.assigns.cycle, cycle, run, idx}
 
     if socket.assigns.cycle_status == :running do
       attrs = %{
@@ -119,14 +115,11 @@ defmodule PanicWeb.NetworkLive.Show do
     """
   end
 
-  def find_run_index(cycle, run_id) do
-    idx = Enum.find_index(cycle, fn run -> run && run.id == run_id  end)
-    Integer.mod(idx, Enum.count(cycle))
-  end
+  defp cycle_index(cycle, %Run{status: status, parent_id: nil} = run), do: 0
 
-  def find_parent_index(cycle, parent_id) do
+  defp cycle_index(cycle, %Run{status: status, parent_id: parent_id} = run) do
     idx = Enum.find_index(cycle, fn run -> run && run.id == parent_id  end)
-    Integer.mod(idx, Enum.count(cycle))
+    Integer.mod(idx + 1, Enum.count(cycle))
   end
 
   defp rotate([head | tail]), do: tail ++ [head]
