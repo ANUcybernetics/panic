@@ -1,7 +1,7 @@
 defmodule PanicWeb.NetworkLive.FormComponent do
   use PanicWeb, :live_component
 
-  alias Panic.Models
+  alias Panic.{Models, Networks}
 
   @impl true
   def update(%{run: run} = assigns, socket) do
@@ -24,18 +24,14 @@ defmodule PanicWeb.NetworkLive.FormComponent do
   end
 
   def handle_event("create_run", %{"run" => run_params}, socket) do
-    attrs = run_params
-    |> Map.put("model", socket.assigns.run.model)
-    |> Map.put("network_id", socket.assigns.run.network_id)
-
-    case Models.create_run(attrs) do
+    case Models.create_run(socket.assigns.run, run_params) do
       {:ok, run} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Started run of #{run.model}")}
+
+        Networks.broadcast(run.network_id, {"run_created", %{run | status: :created}})
+
+        {:noreply, socket}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        IO.inspect changeset
         {:noreply, assign(socket, changeset: changeset)}
     end
   end

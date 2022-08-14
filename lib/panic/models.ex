@@ -83,6 +83,18 @@ defmodule Panic.Models do
   end
 
   @doc """
+  Creates a run.
+
+  This time with an existing %Run{}, but one which hasn't ever hit the DB.
+
+  """
+  def create_run(%Run{} = run, attrs) do
+    run
+    |> Run.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
   Updates a run.
 
   ## Examples
