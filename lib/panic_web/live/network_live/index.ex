@@ -15,9 +15,11 @@ defmodule PanicWeb.NetworkLive.Index do
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
+    network = Networks.get_network!(id)
+
     socket
-    |> assign(:page_title, "Edit Network")
-    |> assign(:network, Networks.get_network!(id))
+    |> assign(:page_title, network.title)
+    |> assign(:network, network)
   end
 
   defp apply_action(socket, :new, _params) do
@@ -28,7 +30,7 @@ defmodule PanicWeb.NetworkLive.Index do
 
   defp apply_action(socket, :index, _params) do
     socket
-    |> assign(:page_title, "Listing Networks")
+    |> assign(:page_title, "My Networks")
     |> assign(:network, nil)
   end
 
