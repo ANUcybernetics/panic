@@ -138,4 +138,12 @@ defmodule Panic.Networks do
     network
     |> update_network(%{models: []})
   end
+
+  def subscribe(network_id) do
+    Phoenix.PubSub.subscribe(Panic.PubSub, "network:#{network_id}")
+  end
+
+  def broadcast(network_id, message) do
+    Phoenix.PubSub.broadcast(Panic.PubSub, "network:#{network_id}", message)
+  end
 end
