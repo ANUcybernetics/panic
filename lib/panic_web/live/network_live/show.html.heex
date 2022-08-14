@@ -15,8 +15,8 @@
 
    <.live_component
      module={PanicWeb.NetworkLive.FormComponent}
-     id={@network.id}
-     run={%Run{model: List.first(@network.models), network_id: @network.id}}
+     id="first-run-form"
+     run={@first_run}
    />
 
    <div class="mb-8">

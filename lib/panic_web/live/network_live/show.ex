@@ -12,15 +12,19 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   @impl true
-  def handle_params(%{"id" => id}, _, socket) do
-    network = Networks.get_network!(id)
+  def handle_params(%{"id" => network_id}, _, socket) do
+    network = Networks.get_network!(network_id)
 
-    Networks.subscribe(id)
+    # create, but don't persist to the db until it starts (it's not valid, anyway)
+    first_run = %Run{model: List.first(network.models), network_id: network_id}
+
+    Networks.subscribe(network_id)
 
     {:noreply,
      socket
      |> assign(:page_title, "Show network")
      |> assign(:network, network)
+     |> assign(:first_run, first_run)
      |> assign_new(:cycle, fn -> List.duplicate(nil, @num_slots) end)
     }
   end
