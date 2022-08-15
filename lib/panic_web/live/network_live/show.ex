@@ -140,6 +140,9 @@ defmodule PanicWeb.NetworkLive.Show do
                 <span class="p-4 text-left"><%= @run.output %></span>
               <% {_, :image} -> %>
                 <img class="object-cover" src={@run.output} />
+              <% {_, :audio} -> %>
+                <audio autoplay controls={false} src={@run.output} />
+                <Heroicons.Outline.volume_up class="w-12 h-12 mx-auto" />
             <% end %>
           <% :failed -> %>
             <Heroicons.Outline.x_circle class="w-12 h-12 mx-auto" />
