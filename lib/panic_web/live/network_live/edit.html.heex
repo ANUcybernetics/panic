@@ -65,14 +65,19 @@
                 phx-click="remove_model"
                 phx-value-pos={idx}
               />
-              <span class="inline-block">
-                <span class={"block h-2 w-2 rounded-full bg-#{model_input_color(model)}"}></span>
-                <span class={"block h-2 w-2 rounded-full bg-#{model_output_color(model)}"}></span>
-              </span>
+              <div class="inline-block">
+                <span class={"block h-2 w-2 rounded-t-full bg-#{model_input_color(model)}"}></span>
+                <span class={"block h-2 w-2 rounded-b-full bg-#{model_output_color(model)}"}></span>
+              </div>
             </.td>
           </.tr>
         <% end %>
       </tbody>
     </.table>
+    <div class="flex justify-end mt-4">
+      <span class="rounded-full w-6 bg-violet-500 mr-2"></span> text
+      <span class="rounded-full w-6 bg-orange-500 ml-4 mr-2"></span> image
+      <span class="rounded-full w-6 bg-emerald-500 ml-4 mr-2"></span> audio
+    </div>
   </.container>
 </.layout>
