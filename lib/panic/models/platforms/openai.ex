@@ -1,7 +1,7 @@
 defmodule Panic.Models.Platforms.OpenAI do
   @url "https://api.openai.com/v1/engines"
   @temperature 0.7
-  @max_response_length 64
+  @max_response_length 32
   @recv_timeout 30_000
 
   def list_engines() do
