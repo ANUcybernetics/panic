@@ -35,9 +35,9 @@
         </.tr>
       </thead>
       <tbody id="networks">
-        <%= for {model, idx} <- Enum.with_index(@network.models) do %>
+        <%= for {model, idx, valid} <- models_with_validation(@network.models) do %>
           <.tr class="py-4" id={"model-#{idx}"}>
-            <.td class="text-gray-800"><%= model_display_string(model) %></.td>
+            <.td class="text-gray-800" class={!valid && "bg-red-200"}><%= model_display_string(model) %></.td>
             <.td class="text-right whitespace-nowrap">
               <.icon_button
                 color="primary"

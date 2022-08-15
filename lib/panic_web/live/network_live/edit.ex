@@ -57,6 +57,17 @@ defmodule PanicWeb.NetworkLive.Edit do
     {:noreply, assign(socket, :network, network)}
   end
 
+  defp models_with_validation([]), do: []
+  defp models_with_validation(models) do
+    n = Enum.count(models)
+    for i <- 0..(n - 1) do
+      {_, prev_output} = Models.model_io(Enum.at(models, Integer.mod(i - 1, n)))
+      {next_input, _} = Models.model_io(Enum.at(models, Integer.mod(i + 1, n)))
+      {input, output} = Models.model_io(Enum.at(models, i))
+      {Enum.at(models, i), i, prev_output == input && output == next_input}
+    end
+  end
+
   defp model_display_string(model) do
     model |> String.split(~r/[:\/]/) |> List.last()
   end
