@@ -54,7 +54,11 @@ defmodule PanicWeb.NetworkLive.Show do
       {:ok, run} ->
         Networks.broadcast(run.network_id, {"run_created", run})
 
-        {:noreply, socket}
+        changeset =
+          socket.assigns.first_run_changeset
+          |> Run.changeset(%{input: ""})
+
+        {:noreply, assign(socket, first_run_changeset: changeset)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, first_run_changeset: changeset)}
