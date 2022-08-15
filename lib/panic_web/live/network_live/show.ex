@@ -137,7 +137,7 @@ defmodule PanicWeb.NetworkLive.Show do
           <% :succeeded -> %>
             <%= case Models.model_io(@run.model) do %>
               <% {_, :text} -> %>
-                <pre class="p-4 text-xs text-left"><%= @run.output %></pre>
+                <pre class="p-2 text-xs text-left"><%= @run.output %></pre>
               <% {_, :image} -> %>
                 <img class="object-cover" src={@run.output} />
               <% {_, :audio} -> %>
