@@ -30,7 +30,7 @@ defmodule Panic.Models.Platforms.OpenAI do
 
         {:ok, %{"choices" => [first_choice | _choices]}} = Jason.decode(response_body)
 
-        prompt <> first_choice["text"]
+        first_choice["text"]
     end
   end
 
