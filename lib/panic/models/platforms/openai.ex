@@ -22,7 +22,7 @@ defmodule Panic.Models.Platforms.OpenAI do
     {:ok, request_body} =
       Jason.encode(%{
         prompt: prompt,
-        max_tokens: String.length(prompt) + @max_response_length,
+        max_tokens: @max_response_length,
         temperature: @temperature
       })
 
