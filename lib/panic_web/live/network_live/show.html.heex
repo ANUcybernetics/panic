@@ -14,11 +14,18 @@
       />
     </.page_header>
 
-    <.live_component
-      module={PanicWeb.NetworkLive.FormComponent}
-      id="first-run-form"
-      run={@first_run}
-    />
+    <div>
+      <.form
+        let={f}
+        for={@first_run_changeset}
+        id="first-run-input"
+        phx-change="validate_first_run"
+        phx-submit="create_first_run"
+      >
+        <.form_field type="text_input" form={f} field={:input} />
+        <.button class="mb-8 bg-green-600" type="submit" phx_disable_with="Saving..." label="Go!" />
+      </.form>
+    </div>
 
     <div class="mb-4">
       Prompt: <span class="font-bold"><%= @first_run.input %></span>

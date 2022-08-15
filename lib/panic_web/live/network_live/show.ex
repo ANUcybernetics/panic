@@ -24,6 +24,7 @@ defmodule PanicWeb.NetworkLive.Show do
       network_id: String.to_integer(network_id),
       status: :created
     }
+    first_run_changeset = Models.change_run(first_run)
 
     Networks.subscribe(network_id)
 
@@ -33,7 +34,30 @@ defmodule PanicWeb.NetworkLive.Show do
      |> assign(:network, network)
      |> assign(:models, rotate(models))
      |> assign(:first_run, first_run)
+     |> assign(:first_run_changeset, first_run_changeset)
      |> assign_new(:cycle, fn -> List.duplicate(nil, @num_slots) end)}
+  end
+
+  @impl true
+  def handle_event("validate_first_run", %{"run" => run_params}, socket) do
+    changeset =
+      socket.assigns.first_run
+      |> Models.change_run(run_params)
+      |> Map.put(:action, :validate)
+
+    {:noreply, assign(socket, :first_run_changeset, changeset)}
+  end
+
+  def handle_event("create_first_run", %{"run" => run_params}, socket) do
+    case Models.create_run(socket.assigns.first_run, run_params) do
+      {:ok, run} ->
+        Networks.broadcast(run.network_id, {"run_created", run})
+
+        {:noreply, socket}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, assign(socket, first_run_changeset: changeset)}
+    end
   end
 
   @impl true
