@@ -7,6 +7,7 @@ defmodule Panic.Models do
   alias Panic.Repo
 
   alias Panic.Models.Run
+  alias Panic.Networks.Network
 
   @doc """
   Returns the list of models.
@@ -47,19 +48,27 @@ defmodule Panic.Models do
   def model_io("replicate:annahung31/emopia"), do: {:text, :audio}
   def model_io("openai:text-davinci-002"), do: {:text, :text}
 
+  def list_runs(%Network{id: network_id}) do
+    Repo.all(from r in Run, where: r.network_id == ^network_id, order_by: [desc: r.id])
+  end
+
+  def list_runs(first_run_id) do
+    Repo.all(from r in Run, where: r.first_run_id == ^first_run_id, order_by: [desc: r.id])
+  end
+
   @doc """
   Returns the list of runs.
 
   ## Examples
 
-      iex> list_runs()
-      [%Run{}, ...]
+  iex> list_runs()
+  [%Run{}, ...]
 
   """
+
   def list_runs do
     Repo.all(Run)
   end
-
   @doc """
   Gets a single run.
 
