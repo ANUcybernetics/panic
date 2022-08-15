@@ -1,12 +1,7 @@
 <.layout current_page={:show_network} current_user={@current_user} type="stacked">
   <.container class="py-16">
     <.page_header title={@network.name}>
-      <.button
-        class="bg-red-600"
-        link_type="button"
-        phx_click="stop_cycle"
-        label="Stop"
-      />
+      <.button class="bg-red-600" link_type="button" phx_click="stop_cycle" label="Stop" />
       <.button
         link_type="live_patch"
         label="Edit"
@@ -19,15 +14,15 @@
       />
     </.page_header>
 
-   <.live_component
-     module={PanicWeb.NetworkLive.FormComponent}
-     id="first-run-form"
-     run={@first_run}
-   />
+    <.live_component
+      module={PanicWeb.NetworkLive.FormComponent}
+      id="first-run-form"
+      run={@first_run}
+    />
 
-   <div class="mb-4">
-     Prompt: <span class="font-bold"><%= @first_run.input %></span>
-   </div>
+    <div class="mb-4">
+      Prompt: <span class="font-bold"><%= @first_run.input %></span>
+    </div>
 
     <div class="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-4">
       <%= for {run, _idx} <- Enum.with_index(@cycle) do %>

@@ -26,7 +26,6 @@ defmodule PanicWeb.NetworkLive.FormComponent do
   def handle_event("create_run", %{"run" => run_params}, socket) do
     case Models.create_run(socket.assigns.run, run_params) do
       {:ok, run} ->
-
         Networks.broadcast(run.network_id, {"run_created", %{run | status: :created}})
 
         {:noreply, socket}

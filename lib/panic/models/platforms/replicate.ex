@@ -59,9 +59,13 @@ defmodule Panic.Models.Platforms.Replicate do
       "High valence, low arousal",
       "Low valence, low arousal"
     ]
+
     emotion = Enum.max_by(emotion_opts, fn emotion -> String.bag_distance(emotion, prompt) end)
     seed = string_to_seed(prompt)
-    %{"output" => [%{"file" => audio_url} | _]} = create_and_wait(model, %{emotion: emotion, seed: seed})
+
+    %{"output" => [%{"file" => audio_url} | _]} =
+      create_and_wait(model, %{emotion: emotion, seed: seed})
+
     audio_url
   end
 
@@ -89,7 +93,7 @@ defmodule Panic.Models.Platforms.Replicate do
 
   defp string_to_seed(string) do
     :crypto.hash(:md5, string)
-    |> :binary.decode_unsigned
+    |> :binary.decode_unsigned()
     |> Integer.mod(65_536)
   end
 end

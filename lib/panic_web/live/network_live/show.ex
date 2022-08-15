@@ -19,7 +19,11 @@ defmodule PanicWeb.NetworkLive.Show do
     models = network.models
 
     # create, but don't persist to the db until it starts (it's not valid, anyway)
-    first_run = %Run{model: List.first(models), network_id: String.to_integer(network_id), status: :created}
+    first_run = %Run{
+      model: List.first(models),
+      network_id: String.to_integer(network_id),
+      status: :created
+    }
 
     Networks.subscribe(network_id)
 
@@ -29,8 +33,7 @@ defmodule PanicWeb.NetworkLive.Show do
      |> assign(:network, network)
      |> assign(:models, rotate(models))
      |> assign(:first_run, first_run)
-     |> assign_new(:cycle, fn -> List.duplicate(nil, @num_slots) end)
-    }
+     |> assign_new(:cycle, fn -> List.duplicate(nil, @num_slots) end)}
   end
 
   @impl true
@@ -56,6 +59,7 @@ defmodule PanicWeb.NetworkLive.Show do
     # now run the thing...
     Panic.BackgroundTask.run(fn ->
       [platform, model_name] = String.split(run.model, ":")
+
       output =
         case platform do
           "replicate" -> Replicate.create(model_name, run.input)
@@ -84,6 +88,7 @@ defmodule PanicWeb.NetworkLive.Show do
         network_id: run.network_id,
         status: :created
       }
+
       {:ok, next_run} = Models.create_run(attrs)
       Networks.broadcast(run.network_id, {"run_created", next_run})
     end
@@ -105,7 +110,7 @@ defmodule PanicWeb.NetworkLive.Show do
               <% {_, :text} -> %>
                 <%= @run.output %>
               <% {_, :image} -> %>
-                <img class="object-cover" src={@run.output}>
+                <img class="object-cover" src={@run.output} />
             <% end %>
           <% :failed -> %>
             <Heroicons.Outline.x_circle class="w-12 h-12 mx-auto" />
@@ -120,7 +125,7 @@ defmodule PanicWeb.NetworkLive.Show do
   defp cycle_index(_cycle, %Run{parent_id: nil}), do: 0
 
   defp cycle_index(cycle, %Run{parent_id: parent_id}) do
-    idx = Enum.find_index(cycle, fn run -> run && run.id == parent_id  end)
+    idx = Enum.find_index(cycle, fn run -> run && run.id == parent_id end)
     Integer.mod(idx + 1, Enum.count(cycle))
   end
 
