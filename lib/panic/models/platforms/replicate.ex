@@ -52,6 +52,19 @@ defmodule Panic.Models.Platforms.Replicate do
     text
   end
 
+  def create("annahung31/emopia" = model, prompt) do
+    emotion_opts = [
+      "High valence, high arousal",
+      "Low valence, high arousal",
+      "High valence, low arousal",
+      "Low valence, low arousal"
+    ]
+    emotion = Enum.max_by(emotion_opts, fn emotion -> String.bag_distance(emotion, prompt) end)
+    seed = string_to_seed(prompt)
+    %{"output" => [%{"file" => audio_url} | _]} = create_and_wait(model, %{emotion: emotion, seed: seed})
+    audio_url
+  end
+
   def create_and_wait(model, input_params) do
     url = "#{@url}/predictions"
     model_version = get_latest_model_version(model)
@@ -72,5 +85,11 @@ defmodule Panic.Models.Platforms.Replicate do
       "Authorization" => "Token #{api_token}",
       "Content-Type" => "application/json"
     }
+  end
+
+  defp string_to_seed(string) do
+    :crypto.hash(:md5, string)
+    |> :binary.decode_unsigned
+    |> Integer.mod(65_536)
   end
 end
