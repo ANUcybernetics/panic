@@ -72,15 +72,18 @@ defmodule PanicWeb.NetworkLive.Edit do
     model |> String.split(~r/[:\/]/) |> List.last()
   end
 
+  def model_io_color(io, prefix \\ "") do
+    color = Map.get(%{text: "violet-500", image: "orange-500", audio: "emerald-500"}, io, "")
+    prefix <> color
+  end
+
   defp model_input_color(model) do
-    colors = %{text: "violet-500", image: "orange-500", audio: "emerald-500"}
     {input, _output} = Models.model_io(model)
-    colors[input]
+    model_io_color(input, "bg-")
   end
 
   defp model_output_color(model) do
-    colors = %{text: "violet-500", image: "orange-500", audio: "emerald-500"}
     {_input, output} = Models.model_io(model)
-    colors[output]
+    model_io_color(output, "bg-")
   end
 end

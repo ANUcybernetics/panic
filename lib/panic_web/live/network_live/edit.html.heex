@@ -37,7 +37,7 @@
       <tbody id="networks">
         <%= for {model, idx, valid} <- models_with_validation(@network.models) do %>
           <.tr class="py-4" id={"model-#{idx}"}>
-            <.td class="text-gray-800" class={!valid && "bg-red-200"}><%= model_display_string(model) %></.td>
+            <.td class={"text-gray-800 #{if valid, do: 'bg-red-200'}"}><%= model_display_string(model) %></.td>
             <.td class="text-right whitespace-nowrap">
               <.icon_button
                 color="primary"
@@ -66,8 +66,8 @@
                 phx-value-pos={idx}
               />
               <div class="ml-4 inline-block">
-                <span class={"block h-3 w-3 mb-1 rounded-t-full bg-#{model_input_color(model)}"}></span>
-                <span class={"block h-3 w-3 mt-1 rounded-b-full bg-#{model_output_color(model)}"}></span>
+                <span class={"block h-3 w-3 mb-1 rounded-t-full #{model_input_color(model)}"}></span>
+                <span class={"block h-3 w-3 mt-1 rounded-b-full #{model_output_color(model)}"}></span>
               </div>
             </.td>
           </.tr>
@@ -75,9 +75,9 @@
       </tbody>
     </.table>
     <div class="flex justify-end mt-4">
-      <span class="rounded-full w-6 bg-violet-500 mr-2"></span> text
-      <span class="rounded-full w-6 bg-orange-500 ml-4 mr-2"></span> image
-      <span class="rounded-full w-6 bg-emerald-500 ml-4 mr-2"></span> audio
+      <span class={"rounded-full w-6 bg-#{model_io_color(:text)} ml-4 mr-2"}></span> text
+      <span class={"rounded-full w-6 bg-#{model_io_color(:image)} ml-4 mr-2"}></span> image
+      <span class={"rounded-full w-6 bg-#{model_io_color(:audio)} ml-4 mr-2"}></span> audio
     </div>
   </.container>
 </.layout>
