@@ -92,8 +92,8 @@ defmodule PanicWeb.NetworkLive.Show do
 
   def run_widget(assigns) do
     ~H"""
-    <div class="relative block w-full p-12 text-center text-gray-800 bg-gray-200 rounded-lg shadow-lg dark:bg-gray-800 hover:bg-gray-300 dark:text-gray-400 dark:group-hover:text-gray-100">
-      <span class="block my-4 font-medium ">
+    <div class="relative block w-full text-center text-gray-800 bg-gray-200 rounded-lg shadow-lg dark:bg-gray-800 hover:bg-gray-300 dark:text-gray-400 dark:group-hover:text-gray-100">
+      <div class="h-48 grid place-items-center overflow-hidden">
         <%= case @run && @run.status do %>
           <% :created -> %>
             <Heroicons.Outline.minus_circle class="w-12 h-12 mx-auto" />
@@ -104,13 +104,14 @@ defmodule PanicWeb.NetworkLive.Show do
               <% {_, :text} -> %>
                 <%= @run.output %>
               <% {_, :image} -> %>
-                <img src={@run.output}>
+                <img class="object-cover" src={@run.output}>
             <% end %>
           <% :failed -> %>
             <Heroicons.Outline.x_circle class="w-12 h-12 mx-auto" />
           <% nil -> %>
+            <span class="text-gray-400 italic">blank</span>
         <% end %>
-      </span>
+      </div>
     </div>
     """
   end
