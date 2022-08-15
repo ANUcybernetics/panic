@@ -20,7 +20,7 @@ defmodule Panic.Models.Run do
   def changeset(run, attrs) do
     run
     |> cast(attrs, [:model, :input, :output, :metadata, :parent_id, :first_run_id, :network_id])
-    |> validate_required([:model, :input, :first_run_id, :network_id])
+    |> validate_required([:model, :input, :network_id])
     |> validate_inclusion(:model, Models.list_models())
     |> foreign_key_constraint(:network_id)
     |> foreign_key_constraint(:parent_id)
