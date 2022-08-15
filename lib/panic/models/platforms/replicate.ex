@@ -69,6 +69,11 @@ defmodule Panic.Models.Platforms.Replicate do
     audio_url
   end
 
+  def create("afiaka87/tortoise-tts" = model, prompt) do
+    %{"output" => output} = create_and_wait(model, %{text: prompt})
+    output
+  end
+
   def create_and_wait(model, input_params) do
     url = "#{@url}/predictions"
     model_version = get_latest_model_version(model)
