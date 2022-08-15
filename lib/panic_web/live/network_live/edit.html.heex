@@ -36,13 +36,13 @@
       </thead>
       <tbody id="networks">
         <%= for {model, idx} <- Enum.with_index(@network.models) do %>
-          <.tr id={"model-#{idx}"}>
+          <.tr class="py-4" id={"model-#{idx}"}>
             <.td class="text-gray-800"><%= model_display_string(model) %></.td>
             <.td class="text-right whitespace-nowrap">
               <.icon_button
                 color="primary"
                 variant="outline"
-                size="xs"
+                size="sm"
                 icon={:arrow_circle_down}
                 phx-click="move_model_down"
                 phx-value-pos={idx}
@@ -51,7 +51,7 @@
               <.icon_button
                 color="primary"
                 variant="outline"
-                size="xs"
+                size="sm"
                 icon={:arrow_circle_up}
                 phx-click="move_model_up"
                 phx-value-pos={idx}
@@ -59,15 +59,15 @@
               />
               <.icon_button
                 variant="outline"
-                size="xs"
+                size="sm"
                 icon={:trash}
                 color="danger"
                 phx-click="remove_model"
                 phx-value-pos={idx}
               />
-              <div class="inline-block">
-                <span class={"block h-2 w-2 rounded-t-full bg-#{model_input_color(model)}"}></span>
-                <span class={"block h-2 w-2 rounded-b-full bg-#{model_output_color(model)}"}></span>
+              <div class="ml-4 inline-block">
+                <span class={"block h-3 w-3 mb-1 rounded-t-full bg-#{model_input_color(model)}"}></span>
+                <span class={"block h-3 w-3 mt-1 rounded-b-full bg-#{model_output_color(model)}"}></span>
               </div>
             </.td>
           </.tr>
