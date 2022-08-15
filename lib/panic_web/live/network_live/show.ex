@@ -75,8 +75,6 @@ defmodule PanicWeb.NetworkLive.Show do
     idx = cycle_index(socket.assigns.cycle, run)
     cycle = List.replace_at(socket.assigns.cycle, idx, run)
 
-    IO.inspect {socket.assigns.cycle, cycle, run, idx}
-
     if socket.assigns.cycle_status == :running do
       attrs = %{
         model: List.first(socket.assigns.models),
