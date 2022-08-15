@@ -42,16 +42,41 @@ defmodule Panic.Models.Platforms.Replicate do
     end
   end
 
+  ## text to image
   def create("kuprel/min-dalle" = model, prompt) do
     %{"output" => image_url} = create_and_wait(model, %{text: prompt, grid_size: 1})
     image_url
   end
 
+  def create("laion-ai/ongo" = model, prompt) do
+    %{"output" => image_urls} = create_and_wait(model,
+      %{text: prompt,
+        batch_size: 1,
+        height: 256,
+        width: 256,
+        intermediate_outputs: 0
+      })
+    List.last(image_urls)
+  end
+
+  ## image to text
   def create("rmokady/clip_prefix_caption" = model, image_url) do
     %{"output" => [%{"text" => text} | _]} = create_and_wait(model, %{image: image_url})
     text
   end
 
+  def create("j-min/clip-caption-reward" = model, image_url) do
+    %{"output" => text} = create_and_wait(model, %{image: image_url})
+    text
+  end
+
+  ## image to image
+  def create("netease-gameai/spatchgan-selfie2anime" = model, image_url) do
+    %{"output" => [%{"file" => image_url} | _]} = create_and_wait(model, %{image: image_url})
+    image_url
+  end
+
+  ## text to audio
   def create("annahung31/emopia" = model, prompt) do
     emotion_opts = [
       "High valence, high arousal",
