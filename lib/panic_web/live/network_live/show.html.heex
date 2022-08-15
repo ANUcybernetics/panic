@@ -2,6 +2,12 @@
   <.container class="py-16">
     <.page_header title={@network.name}>
       <.button
+        class="bg-red-600"
+        link_type="button"
+        phx_click="stop_cycle"
+        label="Stop"
+      />
+      <.button
         link_type="live_patch"
         label="Edit"
         to={Routes.network_edit_path(@socket, :edit, @network.id)}

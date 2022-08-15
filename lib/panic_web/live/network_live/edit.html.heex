@@ -2,6 +2,7 @@
   <.container class="py-16">
     <.page_header title={"Editing #{@network.name} network"}>
       <.button
+        class="bg-green-600"
         link_type="live_patch"
         label="Run"
         to={Routes.network_show_path(@socket, :show, @network.id)}
