@@ -12,5 +12,4 @@ defmodule PanicWeb.NetworkLive.FormComponent do
      |> assign(assigns)
      |> assign(:changeset, changeset)}
   end
-
 end

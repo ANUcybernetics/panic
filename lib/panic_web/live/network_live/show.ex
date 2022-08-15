@@ -24,6 +24,7 @@ defmodule PanicWeb.NetworkLive.Show do
       network_id: String.to_integer(network_id),
       status: :created
     }
+
     first_run_changeset = Models.change_run(first_run)
 
     Networks.subscribe(network_id)

@@ -1,6 +1,7 @@
 <.layout current_page={:show_network} current_user={@current_user} type="stacked">
   <.container class="py-16">
     <.page_header title={@network.name}>
+      <.button class="mb-8 bg-green-600" type="submit" phx_disable_with="Saving..." label="Go!" />
       <.button class="bg-red-600" link_type="button" phx_click="stop_cycle" label="Stop" />
       <.button
         link_type="live_patch"
@@ -23,7 +24,6 @@
         phx-submit="create_first_run"
       >
         <.form_field type="text_input" form={f} field={:input} />
-        <.button class="mb-8 bg-green-600" type="submit" phx_disable_with="Saving..." label="Go!" />
       </.form>
     </div>
 
