@@ -115,9 +115,9 @@ defmodule PanicWeb.NetworkLive.Show do
     """
   end
 
-  defp cycle_index(cycle, %Run{status: status, parent_id: nil} = run), do: 0
+  defp cycle_index(_cycle, %Run{parent_id: nil}), do: 0
 
-  defp cycle_index(cycle, %Run{status: status, parent_id: parent_id} = run) do
+  defp cycle_index(cycle, %Run{parent_id: parent_id}) do
     idx = Enum.find_index(cycle, fn run -> run && run.id == parent_id  end)
     Integer.mod(idx + 1, Enum.count(cycle))
   end
