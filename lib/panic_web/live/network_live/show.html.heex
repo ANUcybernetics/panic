@@ -26,28 +26,6 @@
    />
 
    <div class="mb-4">
-    <%= if @cycle_status == :running do %>
-      <.icon_button
-        class="bg-red-300"
-        to="/"
-        link_type="button"
-        phx_click="stop_cycle"
-        size="lg"
-        icon={:stop}
-      />
-    <% else %>
-      <.icon_button
-        class="bg-green-300"
-        to="/"
-        link_type="button"
-        phx_click="start_cycle"
-        size="lg"
-        icon={:play}
-      />
-    <% end %>
-    </div>
-
-   <div class="mb-4">
      Prompt: <span class="font-bold"><%= @first_run.input %></span>
    </div>
 
