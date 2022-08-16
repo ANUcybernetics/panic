@@ -151,7 +151,7 @@ defmodule PanicWeb.NetworkLive.Show do
               <% {_, :image} -> %>
                 <img class="object-cover" src={@run.output} />
               <% {_, :audio} -> %>
-                <audio autoplay controls={false} src={@run.output} />
+                <audio autoplay controls={false} src={local_or_remote_url(@socket, @run.output)} />
                 <Heroicons.Outline.volume_up class="w-12 h-12 mx-auto" />
             <% end %>
           <% :failed -> %>
@@ -162,6 +162,14 @@ defmodule PanicWeb.NetworkLive.Show do
       </div>
     </div>
     """
+  end
+
+  def local_or_remote_url(socket, url) do
+    if String.match?(url, ~r/https?:\/\//) do
+      url
+    else
+      Routes.static_path(socket, "/model_outputs/" <> Path.basename(url))
+    end
   end
 
   defp cycle_index(_cycle, %Run{parent_id: nil}), do: 0
