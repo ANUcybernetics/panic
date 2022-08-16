@@ -52,7 +52,7 @@ defmodule PanicWeb.NetworkLive.Show do
         ## reset changeset
         {:error, changeset} = Models.create_run(%{"model" => List.first(socket.assigns.models), "network_id" => socket.assigns.network.id, "first_run_id" => run.id})
 
-        {:noreply, assign(socket, first_run_changeset: changeset)}
+        {:noreply, assign(socket, first_run_changeset: changeset, cycle_status: :running)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, first_run_changeset: changeset)}
