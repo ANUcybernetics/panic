@@ -1,6 +1,5 @@
 defmodule Panic.Models.Platforms.HuggingFace do
   @url "https://api-inference.huggingface.co/models"
-  @recv_timeout 30_000
 
 
   def create_and_wait(model, input_params) do
