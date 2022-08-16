@@ -155,7 +155,7 @@ defmodule Panic.Models do
       [] -> false
       runs -> runs |> Enum.reduce_while([],
         fn x, acc ->
-          if x in acc, do: {:halt, false}, else: {:cont, [x.output | acc]}
+          if x.output in acc, do: {:halt, []}, else: {:cont, [x.output | acc]}
         end)
         |> Enum.empty?
     end
