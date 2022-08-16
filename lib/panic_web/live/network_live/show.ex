@@ -106,10 +106,10 @@ defmodule PanicWeb.NetworkLive.Show do
     if socket.assigns.cycle_status == :running do
       attrs = %{
         model: List.first(socket.assigns.models),
-        parent_id: run.id,
         input: run.output,
-        network_id: run.network_id,
-        status: :created
+        parent_id: run.id,
+        first_run_id: run.first_run_id,
+        network_id: run.network_id
       }
 
       {:ok, next_run} = Models.create_run(attrs)
