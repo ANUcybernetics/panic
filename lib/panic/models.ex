@@ -149,4 +149,15 @@ defmodule Panic.Models do
   def change_run(%Run{} = run, attrs \\ %{}) do
     Run.changeset(run, attrs)
   end
+
+  def cycle_has_converged?(first_run_id) do
+    case list_runs(first_run_id) do
+      [] -> false
+      runs -> runs |> Enum.reduce_while([],
+        fn x, acc ->
+          if x in acc, do: {:halt, false}, else: {:cont, [x.output | acc]}
+        end)
+        |> Enum.empty?
+    end
+  end
 end
