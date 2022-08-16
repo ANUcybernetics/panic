@@ -23,7 +23,8 @@ defmodule Panic.Models.Platforms.HuggingFace do
   def create("facebook/wav2vec2-base-960h" = model, audio_file) do
     input_file = sox_convert_file(audio_file, "flac", 16000)
     {:ok, data} = File.read(input_file)
-    create_and_wait(model, data)
+    {:ok, %{"text" => text}} = Jason.decode(create_and_wait(model, data))
+    text
   end
 
   defp headers do
