@@ -17,6 +17,11 @@ config :panic,
     System.get_env("OPENAI_API_TOKEN") ||
       raise("""
       environment variable OPENAI_API_TOKEN is missing.
+      """),
+  huggingface_api_token:
+    System.get_env("HUGGINGFACE_API_TOKEN") ||
+      raise("""
+      environment variable HUGGINGFACE_API_TOKEN is missing.
       """)
 
 config :ueberauth, Ueberauth.Strategy.Google.OAuth,
