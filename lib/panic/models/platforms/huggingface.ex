@@ -1,7 +1,6 @@
 defmodule Panic.Models.Platforms.HuggingFace do
   @url "https://api-inference.huggingface.co/models"
 
-
   def create_and_wait(model, input_params) do
     url = "#{@url}/#{model}"
 
@@ -9,7 +8,6 @@ defmodule Panic.Models.Platforms.HuggingFace do
 
     case HTTPoison.post(url, request_body, headers(), hackney: [pool: :default]) do
       {:ok, %HTTPoison.Response{status_code: 503}} ->
-        IO.inspect "waiting"
         create_and_wait(model, input_params)
 
       {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} ->
