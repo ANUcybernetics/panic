@@ -10,7 +10,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :cycle_status, :running)}
+    {:ok, assign(socket, :cycle_status, :waiting)}
   end
 
   @impl true
@@ -77,7 +77,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_event("stop_cycle", _, socket) do
-    {:noreply, assign(socket, :cycle_status, :stopped)}
+    {:noreply, assign(socket, :cycle_status, :waiting)}
   end
 
   @impl true
@@ -108,7 +108,13 @@ defmodule PanicWeb.NetworkLive.Show do
     idx = cycle_index(socket.assigns.cycle, run)
     cycle = List.replace_at(socket.assigns.cycle, idx, run)
 
-    if socket.assigns.cycle_status == :running && not Models.cycle_has_converged?(run.first_run_id) do
+    cycle_status = if Models.cycle_has_converged?(run.first_run_id) do
+      :converged
+    else
+      socket.assigns.cycle_status
+    end
+
+    if cycle_status == :running do
       attrs = %{
         model: List.first(socket.assigns.models),
         input: run.output,
@@ -121,7 +127,11 @@ defmodule PanicWeb.NetworkLive.Show do
       Networks.broadcast(run.network_id, {"run_created", next_run})
     end
 
-    {:noreply, assign(socket, cycle: cycle, models: rotate(socket.assigns.models))}
+    {:noreply,
+     socket
+     |> assign(:cycle, cycle)
+     |> assign(:cycle_status, cycle_status)
+     |> assign(:models, rotate(socket.assigns.models))}
   end
 
   def run_widget(assigns) do
