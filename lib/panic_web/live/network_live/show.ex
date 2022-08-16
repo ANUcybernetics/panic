@@ -18,15 +18,7 @@ defmodule PanicWeb.NetworkLive.Show do
     network = Networks.get_network!(network_id)
     models = network.models
 
-    # create, but don't persist to the db until it starts (it's not valid, anyway)
-    first_run = %Run{
-      model: List.first(models),
-      network_id: String.to_integer(network_id),
-      status: :created
-    }
-
-    first_run_changeset = Models.change_run(first_run)
-
+    {:error, changeset} = Models.create_run(%{"model" => List.first(models), "network_id" => network.id})
     Networks.subscribe(network_id)
 
     {:noreply,
@@ -34,29 +26,31 @@ defmodule PanicWeb.NetworkLive.Show do
      |> assign(:page_title, "Show network")
      |> assign(:network, network)
      |> assign(:models, rotate(models))
-     |> assign(:first_run, first_run)
-     |> assign(:first_run_changeset, first_run_changeset)
+     |> assign(:first_run, nil)
+     |> assign(:first_run_changeset, changeset)
      |> assign_new(:cycle, fn -> List.duplicate(nil, @num_slots) end)}
   end
 
   @impl true
   def handle_event("validate_first_run", %{"run" => run_params}, socket) do
+    attrs = Map.merge(%{"model" => List.first(socket.assigns.models), "network_id" => socket.assigns.network.id}, run_params)
     changeset =
-      socket.assigns.first_run
-      |> Models.change_run(run_params)
+      Models.change_run(%Run{}, attrs)
       |> Map.put(:action, :validate)
 
     {:noreply, assign(socket, :first_run_changeset, changeset)}
   end
 
   def handle_event("create_first_run", %{"run" => run_params}, socket) do
-    case Models.create_run(socket.assigns.first_run, run_params) do
+    attrs = Map.merge(%{"model" => List.first(socket.assigns.models), "network_id" => socket.assigns.network.id}, run_params)
+    case Models.create_run(attrs) do
       {:ok, run} ->
-        Networks.broadcast(run.network_id, {"run_created", run})
+        ## this is a first run, so populate the first_run_id accordingly
+        {:ok, run_with_fr_id} = Models.update_run(run, %{first_run_id: run.id})
+        Networks.broadcast(run.network_id, {"run_created", run_with_fr_id})
 
-        changeset =
-          socket.assigns.first_run_changeset
-          |> Run.changeset(%{input: ""})
+        ## reset changeset
+        {:error, changeset} = Models.create_run(%{"model" => List.first(socket.assigns.models), "network_id" => socket.assigns.network.id, "first_run_id" => run.id})
 
         {:noreply, assign(socket, first_run_changeset: changeset)}
 
