@@ -131,7 +131,7 @@ defmodule PanicWeb.NetworkLive.Show do
      socket
      |> assign(:cycle, cycle)
      |> assign(:cycle_status, cycle_status)
-     |> assign(:models, rotate(socket.assigns.models))}
+     |> assign(:models, (if cycle_status == :running, do: rotate(socket.assigns.models), else: socket.assigns.models))}
   end
 
   def run_widget(assigns) do
