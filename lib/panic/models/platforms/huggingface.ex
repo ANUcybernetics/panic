@@ -19,7 +19,7 @@ defmodule Panic.Models.Platforms.HuggingFace do
   end
 
   def create("facebook/fastspeech2-en-ljspeech" = model, prompt) do
-    filename = "/tmp/fastspeech.mp3"
+    filename = "priv/static/model_outputs/#{Slug.slugify(prompt)}.mp3"
     File.write(filename, create_and_wait(model, prompt))
   end
 
