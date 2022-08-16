@@ -28,7 +28,8 @@ defmodule Panic.Models do
       "replicate:annahung31/emopia",
       "replicate:afiaka87/tortoise-tts",
       "openai:text-davinci-002",
-      "huggingface:facebook/fastspeech2-en-ljspeech"
+      "huggingface:facebook/fastspeech2-en-ljspeech",
+      "huggingface:facebook/wav2vec2-base-960h"
     ]
   end
 
@@ -49,6 +50,7 @@ defmodule Panic.Models do
   def model_io("replicate:annahung31/emopia"), do: {:text, :audio}
   def model_io("openai:text-davinci-002"), do: {:text, :text}
   def model_io("huggingface:facebook/fastspeech2-en-ljspeech"), do: {:audio, :text}
+  def model_io("huggingface:facebook/wav2vec2-base-960h"), do: {:text, :audio}
 
   def list_runs(%Network{id: network_id}) do
     Repo.all(from r in Run, where: r.network_id == ^network_id, order_by: [asc: r.id])

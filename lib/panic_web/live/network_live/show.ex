@@ -4,7 +4,7 @@ defmodule PanicWeb.NetworkLive.Show do
   alias Panic.Networks
   alias Panic.Models
   alias Panic.Models.Run
-  alias Panic.Models.Platforms.{Replicate, OpenAI}
+  alias Panic.Models.Platforms.{Replicate, OpenAI, HuggingFace}
 
   @num_slots 8
 

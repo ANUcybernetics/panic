@@ -1,14 +1,13 @@
 defmodule Panic.Models.Platforms.HuggingFace do
   @url "https://api-inference.huggingface.co/models"
+  @local_file_path "priv/static/model_outputs"
 
-  def create_and_wait(model, input_params) do
+  def create_and_wait(model, data) do
     url = "#{@url}/#{model}"
 
-    {:ok, request_body} = Jason.encode(input_params)
-
-    case HTTPoison.post(url, request_body, headers(), hackney: [pool: :default]) do
+    case HTTPoison.post(url, data, headers(), hackney: [pool: :default]) do
       {:ok, %HTTPoison.Response{status_code: 503}} ->
-        create_and_wait(model, input_params)
+        create_and_wait(model, data)
 
       {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} ->
         response_body
@@ -16,9 +15,15 @@ defmodule Panic.Models.Platforms.HuggingFace do
   end
 
   def create("facebook/fastspeech2-en-ljspeech" = model, prompt) do
-    filename = "priv/static/model_outputs/#{Slug.slugify(prompt)}.mp3"
-    File.write(filename, create_and_wait(model, prompt))
-    filename
+    audio_file = "#{@local_file_path}/#{Slug.slugify(prompt)}.mp3"
+    :ok = File.write(audio_file, create_and_wait(model, prompt))
+    audio_file
+  end
+
+  def create("facebook/wav2vec2-base-960h" = model, audio_file) do
+    input_file = sox_convert_file(audio_file, "flac", 16000)
+    {:ok, data} = File.read(input_file)
+    create_and_wait(model, data)
   end
 
   defp headers do
@@ -28,5 +33,11 @@ defmodule Panic.Models.Platforms.HuggingFace do
       "Authorization" => "Bearer #{api_token}",
       "Content-Type" => "application/json"
     }
+  end
+
+  def sox_convert_file(input_file, output_extension, sample_rate) do
+    output_file = "#{Path.rootname(input_file)}.#{output_extension}"
+    System.cmd("sox", [input_file, "#{output_file}", "rate", to_string(sample_rate)])
+    output_file
   end
 end
