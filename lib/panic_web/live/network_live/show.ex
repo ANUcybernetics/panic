@@ -92,6 +92,7 @@ defmodule PanicWeb.NetworkLive.Show do
         case platform do
           "replicate" -> Replicate.create(model_name, run.input)
           "openai" -> OpenAI.create(model_name, run.input)
+          "huggingface" -> HuggingFace.create(model_name, run.input)
         end
 
       {:ok, run} = Models.update_run(run, %{output: output})

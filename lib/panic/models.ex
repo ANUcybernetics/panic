@@ -27,7 +27,8 @@ defmodule Panic.Models do
       "replicate:netease-gameai/spatchgan-selfie2anime",
       "replicate:annahung31/emopia",
       "replicate:afiaka87/tortoise-tts",
-      "openai:text-davinci-002"
+      "openai:text-davinci-002",
+      "huggingface:facebook/fastspeech2-en-ljspeech"
     ]
   end
 
@@ -47,6 +48,7 @@ defmodule Panic.Models do
   def model_io("replicate:afiaka87/tortoise-tts"), do: {:text, :audio}
   def model_io("replicate:annahung31/emopia"), do: {:text, :audio}
   def model_io("openai:text-davinci-002"), do: {:text, :text}
+  def model_io("huggingface:facebook/fastspeech2-en-ljspeech"), do: {:audio, :text}
 
   def list_runs(%Network{id: network_id}) do
     Repo.all(from r in Run, where: r.network_id == ^network_id, order_by: [asc: r.id])
