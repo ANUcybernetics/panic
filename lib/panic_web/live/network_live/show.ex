@@ -25,7 +25,7 @@ defmodule PanicWeb.NetworkLive.Show do
      socket
      |> assign(:page_title, "Show network")
      |> assign(:network, network)
-     |> assign(:models, rotate(models))
+     |> assign(:models, models)
      |> assign(:first_run, nil)
      |> assign(:first_run_changeset, changeset)
      |> assign_new(:cycle, fn -> List.duplicate(nil, @num_slots) end)}
@@ -49,10 +49,15 @@ defmodule PanicWeb.NetworkLive.Show do
         {:ok, run_with_fr_id} = Models.update_run(run, %{first_run_id: run.id})
         Networks.broadcast(run.network_id, {"run_created", run_with_fr_id})
 
+        models = rotate(socket.assigns.models)
         ## reset changeset
-        {:error, changeset} = Models.create_run(%{"model" => List.first(socket.assigns.models), "network_id" => socket.assigns.network.id, "first_run_id" => run.id})
+        {:error, changeset} = Models.create_run(%{"model" => List.first(models), "network_id" => socket.assigns.network.id, "first_run_id" => run.id})
 
-        {:noreply, assign(socket, first_run_changeset: changeset, cycle_status: :running)}
+        {:noreply,
+         socket
+         |> assign(:models, models)
+         |> assign(:first_run_changeset, changeset)
+         |> assign(:cycle_status, :running)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, first_run_changeset: changeset)}
