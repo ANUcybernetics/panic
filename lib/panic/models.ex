@@ -49,11 +49,11 @@ defmodule Panic.Models do
   def model_io("openai:text-davinci-002"), do: {:text, :text}
 
   def list_runs(%Network{id: network_id}) do
-    Repo.all(from r in Run, where: r.network_id == ^network_id, order_by: [desc: r.id])
+    Repo.all(from r in Run, where: r.network_id == ^network_id, order_by: [asc: r.id])
   end
 
   def list_runs(first_run_id) do
-    Repo.all(from r in Run, where: r.first_run_id == ^first_run_id, order_by: [desc: r.id])
+    Repo.all(from r in Run, where: r.first_run_id == ^first_run_id, order_by: [asc: r.id])
   end
 
   @doc """
@@ -67,7 +67,7 @@ defmodule Panic.Models do
   """
 
   def list_runs do
-    Repo.all(Run)
+    Repo.all(from r in Run, order_by: [asc: r.id])
   end
   @doc """
   Gets a single run.
