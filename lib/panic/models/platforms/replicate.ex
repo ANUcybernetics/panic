@@ -53,6 +53,10 @@ defmodule Panic.Models.Platforms.Replicate do
     image_url
   end
 
+  def create("afiaka87/retrieval-augmented-diffusion" = model, prompt) do
+    create_and_wait(model, %{prompt: prompt, width: 256, height: 256})
+  end
+
   def create("laion-ai/ongo" = model, prompt) do
     %{"output" => image_urls} =
       create_and_wait(
