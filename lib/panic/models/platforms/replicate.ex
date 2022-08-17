@@ -49,7 +49,7 @@ defmodule Panic.Models.Platforms.Replicate do
   end
 
   def create("benswift/min-dalle" = model, prompt) do
-    %{"output" => [image_url]} = create_and_wait(model, %{text: prompt, grid_size: 1, progressive_outputs: 0})
+    %{"output" => [image_url]} = create_and_wait(model, %{text: prompt, grid_size: 1, progressive_outputs: 0, save_as_png: 1})
     image_url
   end
 
