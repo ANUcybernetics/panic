@@ -36,6 +36,7 @@ defmodule PanicWeb.NetworkLive.FormComponent do
     end
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <div>
