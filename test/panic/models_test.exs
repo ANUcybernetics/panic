@@ -24,14 +24,14 @@ defmodule Panic.ModelsTest do
       valid_attrs = %{
         input: "some input",
         metadata: %{},
-        model: "replicate:kuprel/min-dalle",
+        model: "replicate:benswift/min-dalle",
         output: "some output"
       }
 
       assert {:ok, %Run{} = run} = Models.create_run(valid_attrs)
       assert run.input == "some input"
       assert run.metadata == %{}
-      assert run.model == "replicate:kuprel/min-dalle"
+      assert run.model == "replicate:benswift/min-dalle"
       assert run.output == "some output"
     end
 
@@ -39,7 +39,7 @@ defmodule Panic.ModelsTest do
       valid_attrs = %{
         input: "some input",
         metadata: %{},
-        model: "replicate:kuprel/min-dalle",
+        model: "replicate:benswift/min-dalle",
         output: "some output"
       }
 

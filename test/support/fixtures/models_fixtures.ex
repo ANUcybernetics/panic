@@ -13,7 +13,7 @@ defmodule Panic.ModelsFixtures do
       |> Enum.into(%{
         input: "some input",
         metadata: %{},
-        model: "replicate:kuprel/min-dalle",
+        model: "replicate:benswift/min-dalle",
         output: "some output"
       })
       |> Panic.Models.create_run()
@@ -25,7 +25,7 @@ defmodule Panic.ModelsFixtures do
   Generate multiple runs (each one being the parent of subsequent ones)
   """
   def multi_run_fixture(attrs \\ %{}) do
-    models = ["replicate:kuprel/min-dalle", "replicate:rmokady/clip_prefix_caption"]
+    models = ["replicate:benswift/min-dalle", "replicate:rmokady/clip_prefix_caption"]
 
     runs =
       models
