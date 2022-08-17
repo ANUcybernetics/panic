@@ -71,7 +71,7 @@ defmodule PanicWeb.NetworkLive.Edit do
   end
 
   defp model_display_string(model) do
-    model |> String.split(~r/[:\/]/) |> List.last()
+    model |> String.split(~r/[:]/) |> List.last()
   end
 
   def model_io_color(io, prefix \\ "") do
