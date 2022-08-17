@@ -43,7 +43,7 @@ defmodule Panic.Models.Platforms.Replicate do
   end
 
   ## text to image
-  def create("benswift/min-dalle" = model, prompt) do
+  def create("kuprel/min-dalle" = model, prompt) do
     %{"output" => image_url} = create_and_wait(model, %{text: prompt, grid_size: 1})
     image_url
   end
