@@ -21,6 +21,7 @@ defmodule Panic.Models do
   def list_models do
     [
       "replicate:benswift/min-dalle",
+      "replicate:kuprel/min-dalle",
       "replicate:laion-ai/ongo",
       "replicate:rmokady/clip_prefix_caption",
       "replicate:j-min/clip-caption-reward",
@@ -38,9 +39,10 @@ defmodule Panic.Models do
 
   ## Examples
 
-      iex> model_io("replicate:benswift/min-dalle")
+      iex> model_io("replicate:kuprel/min-dalle")
       {:text, :image}
   """
+  def model_io("replicate:kuprel/min-dalle"), do: {:text, :image}
   def model_io("replicate:benswift/min-dalle"), do: {:text, :image}
   def model_io("replicate:laion-ai/ongo"), do: {:text, :image}
   def model_io("replicate:rmokady/clip_prefix_caption"), do: {:image, :text}
