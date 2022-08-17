@@ -8,13 +8,13 @@
       />
     </.page_header>
 
-    <%= if @live_action in [:new, :edit] do %>
+    <%= if @live_action == :new do %>
       <.modal title={@page_title}>
         <.live_component
           module={PanicWeb.NetworkLive.FormComponent}
-          id={@network.id || :new}
+          id={:new}
           action={@live_action}
-          network={@network}
+          network={%Network{}}
           return_to={Routes.network_index_path(@socket, :index)}
         />
       </.modal>
