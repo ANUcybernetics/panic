@@ -27,11 +27,9 @@
       </.form>
     </div>
 
-    <div class="mb-4">
-      Prompt: <span class="font-bold"><%= @first_run && @first_run.input %></span>
-    </div>
-    <div class="mb-4">
-      Status: <span class="italic"><%= @cycle_status %></span>
+    <div class="mb-4 flex justify-between">
+      <span>Starting prompt: <span class="font-bold"><%= @first_run && @first_run.input
+      %></span></span> <span>(status: <span class="italic"><%= @cycle_status %></span>)</span>
     </div>
 
     <div class="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-4">
