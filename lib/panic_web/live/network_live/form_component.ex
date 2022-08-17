@@ -1,7 +1,7 @@
 defmodule PanicWeb.NetworkLive.FormComponent do
   use PanicWeb, :live_component
 
-  alias Panic.{Models, Networks}
+  alias Panic.Networks
 
   @impl true
   def update(%{network: network} = assigns, socket) do
