@@ -18,7 +18,9 @@ defmodule PanicWeb.NetworkLive.Show do
     network = Networks.get_network!(network_id)
     models = network.models
 
-    {:error, changeset} = Models.create_run(%{"model" => List.first(models), "network_id" => network.id})
+    {:error, changeset} =
+      Models.create_run(%{"model" => List.first(models), "network_id" => network.id})
+
     Networks.subscribe(network_id)
 
     {:noreply,
@@ -33,7 +35,15 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_event("validate_first_run", %{"run" => run_params}, socket) do
-    attrs = Map.merge(%{"model" => List.first(socket.assigns.models), "network_id" => socket.assigns.network.id}, run_params)
+    attrs =
+      Map.merge(
+        %{
+          "model" => List.first(socket.assigns.models),
+          "network_id" => socket.assigns.network.id
+        },
+        run_params
+      )
+
     changeset =
       Models.change_run(%Run{}, attrs)
       |> Map.put(:action, :validate)
@@ -42,7 +52,15 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   def handle_event("create_first_run", %{"run" => run_params}, socket) do
-    attrs = Map.merge(%{"model" => List.first(socket.assigns.models), "network_id" => socket.assigns.network.id}, run_params)
+    attrs =
+      Map.merge(
+        %{
+          "model" => List.first(socket.assigns.models),
+          "network_id" => socket.assigns.network.id
+        },
+        run_params
+      )
+
     case Models.create_run(attrs) do
       {:ok, run} ->
         ## this is a first run, so populate the first_run_id accordingly
@@ -51,7 +69,12 @@ defmodule PanicWeb.NetworkLive.Show do
 
         models = rotate(socket.assigns.models)
         ## reset changeset
-        {:error, changeset} = Models.create_run(%{"model" => List.first(models), "network_id" => socket.assigns.network.id, "first_run_id" => run.id})
+        {:error, changeset} =
+          Models.create_run(%{
+            "model" => List.first(models),
+            "network_id" => socket.assigns.network.id,
+            "first_run_id" => run.id
+          })
 
         {:noreply,
          socket
@@ -109,11 +132,12 @@ defmodule PanicWeb.NetworkLive.Show do
     idx = cycle_index(socket.assigns.cycle, run)
     cycle = List.replace_at(socket.assigns.cycle, idx, run)
 
-    cycle_status = if Models.cycle_has_converged?(run.first_run_id) do
-      :converged
-    else
-      socket.assigns.cycle_status
-    end
+    cycle_status =
+      if Models.cycle_has_converged?(run.first_run_id) do
+        :converged
+      else
+        socket.assigns.cycle_status
+      end
 
     if cycle_status == :running do
       attrs = %{
@@ -132,7 +156,10 @@ defmodule PanicWeb.NetworkLive.Show do
      socket
      |> assign(:cycle, cycle)
      |> assign(:cycle_status, cycle_status)
-     |> assign(:models, (if cycle_status == :running, do: rotate(socket.assigns.models), else: socket.assigns.models))}
+     |> assign(
+       :models,
+       if(cycle_status == :running, do: rotate(socket.assigns.models), else: socket.assigns.models)
+     )}
   end
 
   def run_widget(assigns) do
@@ -149,7 +176,9 @@ defmodule PanicWeb.NetworkLive.Show do
               <% {_, :text} -> %>
                 <div class="p-2 text-xs text-left">
                   <%= for line <- String.split(@run.output, "\n\n") do %>
-                    <%= unless line == "" do %><p><%= line %></p><% end %>
+                    <%= unless line == "" do %>
+                      <p><%= line %></p>
+                    <% end %>
                   <% end %>
                 </div>
               <% {_, :image} -> %>

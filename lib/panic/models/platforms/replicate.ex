@@ -49,13 +49,12 @@ defmodule Panic.Models.Platforms.Replicate do
   end
 
   def create("laion-ai/ongo" = model, prompt) do
-    %{"output" => image_urls} = create_and_wait(model,
-      %{text: prompt,
-        batch_size: 1,
-        height: 256,
-        width: 256,
-        intermediate_outputs: 0
-      })
+    %{"output" => image_urls} =
+      create_and_wait(
+        model,
+        %{text: prompt, batch_size: 1, height: 256, width: 256, intermediate_outputs: 0}
+      )
+
     List.last(image_urls)
   end
 

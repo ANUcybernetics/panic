@@ -8,9 +8,15 @@ defmodule Panic.Models.Run do
     field :input, :string
     field :output, :string
     field :metadata, :map
-    field :status, Ecto.Enum, values: [:created, :running, :succeeded, :failed], virtual: true, default: :created
+
+    field :status, Ecto.Enum,
+      values: [:created, :running, :succeeded, :failed],
+      virtual: true,
+      default: :created
+
     belongs_to :parent, Models.Run
-    belongs_to :first_run, Models.Run ## useful for grouping related runs
+    ## useful for grouping related runs
+    belongs_to :first_run, Models.Run
     belongs_to :network, Panic.Networks.Network
 
     timestamps()

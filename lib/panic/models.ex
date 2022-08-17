@@ -73,6 +73,7 @@ defmodule Panic.Models do
   def list_runs do
     Repo.all(from r in Run, order_by: [asc: r.id])
   end
+
   @doc """
   Gets a single run.
 
@@ -156,12 +157,18 @@ defmodule Panic.Models do
 
   def cycle_has_converged?(first_run_id) do
     case list_runs(first_run_id) do
-      [] -> false
-      runs -> runs |> Enum.reduce_while([],
-        fn x, acc ->
-          if x.output in acc, do: {:halt, []}, else: {:cont, [x.output | acc]}
-        end)
-        |> Enum.empty?
+      [] ->
+        false
+
+      runs ->
+        runs
+        |> Enum.reduce_while(
+          [],
+          fn x, acc ->
+            if x.output in acc, do: {:halt, []}, else: {:cont, [x.output | acc]}
+          end
+        )
+        |> Enum.empty?()
     end
   end
 end

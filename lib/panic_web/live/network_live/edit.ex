@@ -58,8 +58,10 @@ defmodule PanicWeb.NetworkLive.Edit do
   end
 
   defp models_with_validation([]), do: []
+
   defp models_with_validation(models) do
     n = Enum.count(models)
+
     for {model, i} <- Enum.with_index(models) do
       {_, prev_output} = Models.model_io(Enum.at(models, Integer.mod(i - 1, n)))
       {next_input, _} = Models.model_io(Enum.at(models, Integer.mod(i + 1, n)))

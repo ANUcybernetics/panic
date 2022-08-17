@@ -37,7 +37,9 @@
       <tbody id="networks">
         <%= for {model, idx, valid} <- models_with_validation(@network.models) do %>
           <.tr class="py-4" id={"model-#{idx}"}>
-            <.td class={"text-gray-800 #{if !valid, do: 'bg-red-200'}"}><%= model_display_string(model) %></.td>
+            <.td class={"text-gray-800 #{if !valid, do: 'bg-red-200'}"}>
+              <%= model_display_string(model) %>
+            </.td>
             <.td class="text-right whitespace-nowrap">
               <.icon_button
                 color="primary"
@@ -66,8 +68,10 @@
                 phx-value-pos={idx}
               />
               <div class="ml-4 inline-block">
-                <span class={"block h-3 w-3 mb-1 rounded-t-full #{model_input_color(model)}"}></span>
-                <span class={"block h-3 w-3 mt-1 rounded-b-full #{model_output_color(model)}"}></span>
+                <span class={"block h-3 w-3 mb-1 rounded-t-full #{model_input_color(model)}"}>
+                </span>
+                <span class={"block h-3 w-3 mt-1 rounded-b-full #{model_output_color(model)}"}>
+                </span>
               </div>
             </.td>
           </.tr>

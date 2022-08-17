@@ -10,6 +10,7 @@ defmodule Panic.Repo.Migrations.AddFirstRunIdToRun do
       ## to make it easier to group chains of runs from a given staring point
       add :first_run_id, references(:runs, on_delete: :nothing)
     end
+
     create index(:runs, [:first_run_id])
   end
 end

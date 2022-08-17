@@ -39,19 +39,18 @@ defmodule PanicWeb.NetworkLive.FormComponent do
   def render(assigns) do
     ~H"""
     <div>
-    <.form
-    let={f}
-    for={@changeset}
-    id="new-network-form"
-    phx-target={@myself}
-    phx-change="validate"
-    phx-submit="save"
-    >
-    <.form_field type="text_input" form={f} field={:name} />
-    <.button type="submit" phx_disable_with="Saving..." label="Save" />
-    </.form>
+      <.form
+        let={f}
+        for={@changeset}
+        id="new-network-form"
+        phx-target={@myself}
+        phx-change="validate"
+        phx-submit="save"
+      >
+        <.form_field type="text_input" form={f} field={:name} />
+        <.button type="submit" phx_disable_with="Saving..." label="Save" />
+      </.form>
     </div>
-
     """
   end
 end
