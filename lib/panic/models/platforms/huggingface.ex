@@ -25,7 +25,7 @@ defmodule Panic.Models.Platforms.HuggingFace do
     input_file = sox_convert_file(audio_file, "flac", 16_000)
     {:ok, data} = File.read(input_file)
     {:ok, %{"text" => text}} = Jason.decode(create_and_wait(model, data))
-    String.downcase(text)
+    if text == "", do: "text-to-speech detected no speech", else: String.downcase(text)
   end
 
   defp headers do
