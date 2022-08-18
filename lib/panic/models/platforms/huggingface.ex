@@ -1,11 +1,12 @@
 defmodule Panic.Models.Platforms.HuggingFace do
   @url "https://api-inference.huggingface.co/models"
   @local_file_path "priv/static/model_outputs"
+  @recv_timeout 30_000
 
   def create_and_wait(model, data) do
     url = "#{@url}/#{model}"
 
-    case HTTPoison.post(url, data, headers(), hackney: [pool: :default]) do
+    case HTTPoison.post(url, data, headers(), recv_timeout: @recv_timeout, hackney: [pool: :default]) do
       {:ok, %HTTPoison.Response{status_code: 503}} ->
         create_and_wait(model, data)
 
