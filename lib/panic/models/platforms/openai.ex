@@ -28,9 +28,9 @@ defmodule Panic.Models.Platforms.OpenAI do
 
     case HTTPoison.post(url, request_body, headers(), recv_timeout: @recv_timeout) do
       {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} ->
-        {:ok, %{"choices" => [first_choice | _choices]}} = Jason.decode(response_body)
+        {:ok, %{"choices" => [%{"text" => text} | _choices]}} = Jason.decode(response_body)
 
-        first_choice["text"]
+        if text == "", do: "GPT-3 could not complete the prompt.", else: String.downcase(text)
     end
   end
 
