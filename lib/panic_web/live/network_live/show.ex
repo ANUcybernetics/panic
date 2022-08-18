@@ -67,7 +67,7 @@ defmodule PanicWeb.NetworkLive.Show do
         {:ok, run_with_fr_id} = Models.update_run(run, %{first_run_id: run.id})
         Networks.broadcast(run.network_id, {"run_created", run_with_fr_id})
 
-        models = rotate(socket.assigns.models)
+        models = rotate(socket.assigns.network.models)
         ## reset changeset
         {:error, changeset} =
           Models.create_run(%{
