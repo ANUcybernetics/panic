@@ -40,7 +40,7 @@ defmodule Panic.Models.Platforms.HuggingFace do
   def sox_convert_file(input_file, output_extension, sample_rate) do
     output_file = if String.match?(input_file, ~r/https?:\/\//) do
       file = "#{@local_file_path}/#{Path.basename(input_file, Path.extname(input_file))}.#{output_extension}"
-      System.cmd("curl", ["--silent", "--output", file, input_file])
+      System.cmd("curl", ["--output", file, input_file])
       file
     else
       "#{Path.rootname(input_file)}.#{output_extension}"
