@@ -30,7 +30,8 @@ defmodule PanicWeb.NetworkLive.Show do
      |> assign(:models, models)
      |> assign(:first_run, nil)
      |> assign(:first_run_changeset, changeset)
-     |> assign_new(:cycle, fn -> List.duplicate(nil, @num_slots) end)}
+     |> assign(:cycle, List.duplicate(nil, @num_slots))
+     |> assign(:cycle_length, 0)}
   end
 
   @impl true
@@ -80,7 +81,8 @@ defmodule PanicWeb.NetworkLive.Show do
          socket
          |> assign(:models, models)
          |> assign(:first_run_changeset, changeset)
-         |> assign(:cycle_status, :running)}
+         |> assign(:cycle_status, :running)
+         |> assign(:cycle_length, 0)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, first_run_changeset: changeset)}
@@ -124,7 +126,11 @@ defmodule PanicWeb.NetworkLive.Show do
 
     cycle = List.replace_at(socket.assigns.cycle, idx, %{run | status: :running})
     first_run = if is_nil(run.parent_id), do: run, else: socket.assigns.first_run
-    {:noreply, assign(socket, cycle: cycle, first_run: first_run)}
+    {:noreply,
+     socket
+     |> assign(:cycle, cycle)
+     |> assign(:first_run, first_run)
+     |> update(:cycle_length, fn length -> length + 1 end)}
   end
 
   @impl true
