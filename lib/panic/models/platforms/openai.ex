@@ -21,7 +21,7 @@ defmodule Panic.Models.Platforms.OpenAI do
 
     {:ok, request_body} =
       Jason.encode(%{
-        prompt: prompt,
+        prompt: "Reword the following sentence:\n\n" <> prompt,
         max_tokens: @max_response_length,
         temperature: @temperature
       })
