@@ -53,10 +53,12 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   def handle_event("create_first_run", %{"run" => run_params}, socket) do
+    models = socket.assigns.network.models
+
     attrs =
       Map.merge(
         %{
-          "model" => List.first(socket.assigns.models),
+          "model" => List.first(models),
           "network_id" => socket.assigns.network.id
         },
         run_params
@@ -68,7 +70,6 @@ defmodule PanicWeb.NetworkLive.Show do
         {:ok, run_with_fr_id} = Models.update_run(run, %{first_run_id: run.id})
         Networks.broadcast(run.network_id, {"run_created", run_with_fr_id})
 
-        models = rotate(socket.assigns.network.models)
         ## reset changeset
         {:error, changeset} =
           Models.create_run(%{
@@ -79,7 +80,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
         {:noreply,
          socket
-         |> assign(:models, models)
+         |> assign(:models, rotate(models))
          |> assign(:first_run_changeset, changeset)
          |> assign(:cycle_status, :running)
          |> assign(:cycle_length, 0)}
