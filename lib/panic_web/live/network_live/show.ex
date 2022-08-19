@@ -199,8 +199,8 @@ defmodule PanicWeb.NetworkLive.Show do
             <% :failed -> %>
               <Heroicons.Outline.x_circle class="w-12 h-12 mx-auto" />
           <% end %>
-          <div class="absolute left-2 bottom-2">
-            <%= @run.model %>
+          <div class="absolute left-2 -bottom-6">
+            <%= @run.model |> String.split(~r/[:\/]/) |> List.last %>
           </div>
         <% else %>
           <span class="text-gray-400 italic">blank</span>
