@@ -12,17 +12,18 @@ defmodule PanicWeb.NetworkLive.Archive do
   @impl true
   def handle_params(%{"id" => network_id}, _, socket) do
     network = Networks.get_network!(network_id)
-    grouped_runs = network
-    |> Models.list_runs
-    |> Enum.group_by(fn r -> r.first_run_id end)
-    |> Enum.into([])
+
+    grouped_runs =
+      network
+      |> Models.list_runs()
+      |> Enum.group_by(fn r -> r.first_run_id end)
+      |> Enum.into([])
 
     {:noreply,
      socket
      |> assign(:page_title, "Network archive")
      |> assign(:network, network)
-     |> assign(:grouped_runs, grouped_runs)
-    }
+     |> assign(:grouped_runs, grouped_runs)}
   end
 
   def run_widget(assigns) do
@@ -41,7 +42,7 @@ defmodule PanicWeb.NetworkLive.Archive do
             <Heroicons.Outline.volume_up class="w-12 h-12 mx-auto" />
         <% end %>
         <div class="absolute left-2 -bottom-6 text-xs">
-          <%= @run.model |> String.split(~r/[:\/]/) |> List.last %>
+          <%= @run.model |> String.split(~r/[:\/]/) |> List.last() %>
         </div>
       </div>
     </div>
