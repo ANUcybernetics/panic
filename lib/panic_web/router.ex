@@ -172,6 +172,7 @@ defmodule PanicWeb.Router do
 
       live "/networks/:id", NetworkLive.Show, :show
       live "/networks/:id/edit", NetworkLive.Edit, :edit
+      live "/networks/:id/archive", NetworkLive.Archive, :show
     end
 
     # For org members only
