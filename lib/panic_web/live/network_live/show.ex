@@ -172,7 +172,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   def run_widget(assigns) do
     ~H"""
-    <div class="relative block w-full text-center text-gray-800 bg-gray-200 rounded-lg shadow-lg dark:bg-gray-800 hover:bg-gray-300 dark:text-gray-400 dark:group-hover:text-gray-100">
+    <div class="relative block w-full text-center text-gray-800 bg-gray-200 shadow-lg dark:bg-gray-800 hover:bg-gray-300 dark:text-gray-400 dark:group-hover:text-gray-100">
       <div class="h-48 grid place-items-center overflow-hidden">
         <%= if @run do %>
           <%= case @run.status do %>
@@ -191,7 +191,7 @@ defmodule PanicWeb.NetworkLive.Show do
                     <% end %>
                   </div>
                 <% {_, :image} -> %>
-                  <img class="object-cover" src={@run.output} />
+                  <img class="w-full object-cover" src={@run.output} />
                 <% {_, :audio} -> %>
                   <audio autoplay controls={false} src={local_or_remote_url(@socket, @run.output)} />
                   <Heroicons.Outline.volume_up class="w-12 h-12 mx-auto" />
