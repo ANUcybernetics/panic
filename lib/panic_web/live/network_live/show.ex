@@ -173,7 +173,8 @@ defmodule PanicWeb.NetworkLive.Show do
     ~H"""
     <div class="relative block w-full text-center text-gray-800 bg-gray-200 rounded-lg shadow-lg dark:bg-gray-800 hover:bg-gray-300 dark:text-gray-400 dark:group-hover:text-gray-100">
       <div class="h-48 grid place-items-center overflow-hidden">
-        <%= case @run && @run.status do %>
+        <%= if @run do %>
+        <%= case @run.status do %>
           <% :created -> %>
             <Heroicons.Outline.minus_circle class="w-12 h-12 mx-auto" />
           <% :running -> %>
@@ -181,7 +182,7 @@ defmodule PanicWeb.NetworkLive.Show do
           <% :succeeded -> %>
             <%= case Models.model_io(@run.model) do %>
               <% {_, :text} -> %>
-                <div class="p-2 text-xs text-left">
+                <div class="p-2 text-md text-left">
                   <%= for line <- String.split(@run.output, "\n\n") do %>
                     <%= unless line == "" do %>
                       <p><%= line %></p>
@@ -196,8 +197,12 @@ defmodule PanicWeb.NetworkLive.Show do
             <% end %>
           <% :failed -> %>
             <Heroicons.Outline.x_circle class="w-12 h-12 mx-auto" />
-          <% nil -> %>
-            <span class="text-gray-400 italic">blank</span>
+        <% end %>
+        <div class="absolute left-2 bottom-2">
+        <%= @run.model %>
+        </div>
+        <% else %>
+           <span class="text-gray-400 italic">blank</span>
         <% end %>
       </div>
     </div>
