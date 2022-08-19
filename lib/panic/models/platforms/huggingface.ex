@@ -6,7 +6,10 @@ defmodule Panic.Models.Platforms.HuggingFace do
   def create_and_wait(model, data) do
     url = "#{@url}/#{model}"
 
-    case HTTPoison.post(url, data, headers(), recv_timeout: @recv_timeout, hackney: [pool: :default]) do
+    case HTTPoison.post(url, data, headers(),
+           recv_timeout: @recv_timeout,
+           hackney: [pool: :default]
+         ) do
       {:ok, %HTTPoison.Response{status_code: 503}} ->
         create_and_wait(model, data)
 
@@ -38,13 +41,16 @@ defmodule Panic.Models.Platforms.HuggingFace do
   end
 
   def sox_convert_file(input_file, output_extension, sample_rate) do
-    output_file = if String.match?(input_file, ~r/https?:\/\//) do
-      file = "#{@local_file_path}/#{Path.basename(input_file, Path.extname(input_file))}.#{output_extension}"
-      System.cmd("curl", ["--output", file, input_file])
-      file
-    else
-      "#{Path.rootname(input_file)}.#{output_extension}"
-    end
+    output_file =
+      if String.match?(input_file, ~r/https?:\/\//) do
+        file =
+          "#{@local_file_path}/#{Path.basename(input_file, Path.extname(input_file))}.#{output_extension}"
+
+        System.cmd("curl", ["--output", file, input_file])
+        file
+      else
+        "#{Path.rootname(input_file)}.#{output_extension}"
+      end
 
     System.cmd("sox", [input_file, "#{output_file}", "rate", to_string(sample_rate)])
     output_file

@@ -63,17 +63,20 @@ defmodule PanicWeb.NetworkLive.Edit do
     n = Enum.count(models)
 
     for {model, i} <- Enum.with_index(models) do
-      valid? = io_valid?(
-        Models.model_io(Enum.at(models, Integer.mod(i - 1, n))),
-        Models.model_io(model),
-        Models.model_io(Enum.at(models, Integer.mod(i + 1, n))),
-        i
-      )
+      valid? =
+        io_valid?(
+          Models.model_io(Enum.at(models, Integer.mod(i - 1, n))),
+          Models.model_io(model),
+          Models.model_io(Enum.at(models, Integer.mod(i + 1, n))),
+          i
+        )
+
       {model, i, valid?}
     end
   end
 
   defp io_valid?(_, {input, _}, _, 0), do: input == :text
+
   defp io_valid?({_, prev_output}, {input, output}, {next_input, _}, index) do
     prev_output == input && output == next_input
   end

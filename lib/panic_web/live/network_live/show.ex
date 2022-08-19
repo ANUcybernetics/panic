@@ -127,6 +127,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
     cycle = List.replace_at(socket.assigns.cycle, idx, %{run | status: :running})
     first_run = if is_nil(run.parent_id), do: run, else: socket.assigns.first_run
+
     {:noreply,
      socket
      |> assign(:cycle, cycle)
@@ -174,35 +175,35 @@ defmodule PanicWeb.NetworkLive.Show do
     <div class="relative block w-full text-center text-gray-800 bg-gray-200 rounded-lg shadow-lg dark:bg-gray-800 hover:bg-gray-300 dark:text-gray-400 dark:group-hover:text-gray-100">
       <div class="h-48 grid place-items-center overflow-hidden">
         <%= if @run do %>
-        <%= case @run.status do %>
-          <% :created -> %>
-            <Heroicons.Outline.minus_circle class="w-12 h-12 mx-auto" />
-          <% :running -> %>
-            <.spinner class="mx-auto" size="md" />
-          <% :succeeded -> %>
-            <%= case Models.model_io(@run.model) do %>
-              <% {_, :text} -> %>
-                <div class="p-2 text-md text-left">
-                  <%= for line <- String.split(@run.output, "\n\n") do %>
-                    <%= unless line == "" do %>
-                      <p><%= line %></p>
+          <%= case @run.status do %>
+            <% :created -> %>
+              <Heroicons.Outline.minus_circle class="w-12 h-12 mx-auto" />
+            <% :running -> %>
+              <.spinner class="mx-auto" size="md" />
+            <% :succeeded -> %>
+              <%= case Models.model_io(@run.model) do %>
+                <% {_, :text} -> %>
+                  <div class="p-2 text-md text-left">
+                    <%= for line <- String.split(@run.output, "\n\n") do %>
+                      <%= unless line == "" do %>
+                        <p><%= line %></p>
+                      <% end %>
                     <% end %>
-                  <% end %>
-                </div>
-              <% {_, :image} -> %>
-                <img class="object-cover" src={@run.output} />
-              <% {_, :audio} -> %>
-                <audio autoplay controls={false} src={local_or_remote_url(@socket, @run.output)} />
-                <Heroicons.Outline.volume_up class="w-12 h-12 mx-auto" />
-            <% end %>
-          <% :failed -> %>
-            <Heroicons.Outline.x_circle class="w-12 h-12 mx-auto" />
-        <% end %>
-        <div class="absolute left-2 bottom-2">
-        <%= @run.model %>
-        </div>
+                  </div>
+                <% {_, :image} -> %>
+                  <img class="object-cover" src={@run.output} />
+                <% {_, :audio} -> %>
+                  <audio autoplay controls={false} src={local_or_remote_url(@socket, @run.output)} />
+                  <Heroicons.Outline.volume_up class="w-12 h-12 mx-auto" />
+              <% end %>
+            <% :failed -> %>
+              <Heroicons.Outline.x_circle class="w-12 h-12 mx-auto" />
+          <% end %>
+          <div class="absolute left-2 bottom-2">
+            <%= @run.model %>
+          </div>
         <% else %>
-           <span class="text-gray-400 italic">blank</span>
+          <span class="text-gray-400 italic">blank</span>
         <% end %>
       </div>
     </div>
