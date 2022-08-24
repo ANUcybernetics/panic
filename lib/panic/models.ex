@@ -20,6 +20,7 @@ defmodule Panic.Models do
   """
   def list_models do
     [
+      "replicate:stability-ai/stable-diffusion",
       "replicate:kuprel/min-dalle",
       "replicate:laion-ai/ongo",
       "replicate:rmokady/clip_prefix_caption",
@@ -42,6 +43,7 @@ defmodule Panic.Models do
       {:text, :image}
   """
   def model_io("replicate:kuprel/min-dalle"), do: {:text, :image}
+  def model_io("replicate:stability-ai/stable-diffusion"), do: {:text, :image}
   def model_io("replicate:laion-ai/ongo"), do: {:text, :image}
   def model_io("replicate:rmokady/clip_prefix_caption"), do: {:image, :text}
   def model_io("replicate:j-min/clip-caption-reward"), do: {:image, :text}
