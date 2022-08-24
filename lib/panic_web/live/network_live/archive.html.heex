@@ -2,7 +2,7 @@
   <.container class="py-16">
     <.page_header title={"#{@network.name} archive"}></.page_header>
 
-    <%= for {first_run_id, runs} <- @grouped_runs do %>
+    <%= for {_first_run_id, runs} <- @grouped_runs do %>
       <%= if not Enum.empty?(runs) do %>
         <h2 class="text-2xl font-bold mt-16 mb-4"><%= runs |> List.first |> Map.get(:input) %></h2>
       <% end %>
