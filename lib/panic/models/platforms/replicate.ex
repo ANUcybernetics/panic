@@ -12,7 +12,7 @@ defmodule Panic.Models.Platforms.Replicate do
   end
 
   def get_latest_model_version(model) do
-    get_model_versions(model) |> List.last() |> Map.get("id")
+    get_model_versions(model) |> List.first() |> Map.get("id")
   end
 
   def get_status(prediction_id) do
