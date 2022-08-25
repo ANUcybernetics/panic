@@ -57,7 +57,7 @@ defmodule Panic.Models.Platforms.Replicate do
       height: 256
     }
 
-    %{"output" => image_url} = create_and_wait(model, input_params)
+    %{"output" => [image_url]} = create_and_wait(model, input_params)
     image_url
   end
 
