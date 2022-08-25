@@ -51,8 +51,8 @@ defmodule Panic.Models.Platforms.Replicate do
   def create("stability-ai/stable-diffusion" = model, prompt) do
     input_params = %{
       prompt: prompt,
-      # num_inference_steps: 50,
-      # guidance_scale: 7.5,
+      num_inference_steps: 50,
+      guidance_scale: 7.5,
       width: 256,
       height: 256
     }
