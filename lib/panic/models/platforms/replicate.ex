@@ -42,6 +42,11 @@ defmodule Panic.Models.Platforms.Replicate do
     end
   end
 
+  def cancel(prediction_id) do
+    url = "#{@url}/predictions/#{prediction_id}/cancel"
+    HTTPoison.post(url, [], headers(), hackney: [pool: :default])
+  end
+
   ## text to image
   def create("stability-ai/stable-diffusion" = model, prompt) do
     input_params = %{
