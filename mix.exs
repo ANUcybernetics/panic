@@ -79,7 +79,8 @@ defmodule Panic.MixProject do
       {:html_sanitize_ex, "~> 1.4"},
       {:nimble_totp, "~> 0.2.0"},
       {:eqrcode, "~> 0.1.10"},
-      {:httpoison, "~> 1.8"}
+      {:httpoison, "~> 1.8"},
+      {:csv, "~> 2.4"}
     ]
   end
 
