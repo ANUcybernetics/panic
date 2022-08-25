@@ -91,7 +91,7 @@ defmodule Panic.Models.Platforms.Replicate do
 
   ## image to text
   def create("methexis-inc/img2prompt" = model, image_url) do
-    %{"output" => [%{"text" => text} | _]} = create_and_wait(model, %{image: image_url})
+    %{"output" => text} = create_and_wait(model, %{image: image_url})
     text
   end
 
