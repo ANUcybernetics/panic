@@ -121,8 +121,12 @@ defmodule PanicWeb.NetworkLive.Show do
           "huggingface" -> HuggingFace.create(model_name, run.input)
         end
 
-      {:ok, run} = Models.update_run(run, %{output: output})
-      Networks.broadcast(run.network_id, {"run_succeeded", %{run | status: :succeeded}})
+      case Models.update_run(run, %{output: output}) do
+        {:ok, run} ->
+          Networks.broadcast(run.network_id, {"run_succeeded", %{run | status: :succeeded}})
+        {:error, changeset} ->
+          IO.inspect {changeset, output}
+      end
     end)
 
     cycle = List.replace_at(socket.assigns.cycle, idx, %{run | status: :running})
