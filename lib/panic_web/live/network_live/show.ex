@@ -4,7 +4,6 @@ defmodule PanicWeb.NetworkLive.Show do
   alias Panic.Networks
   alias Panic.Models
   alias Panic.Models.Run
-  alias Panic.Models.Platforms.{Replicate, OpenAI, HuggingFace}
 
   @num_slots 8
 
@@ -112,14 +111,8 @@ defmodule PanicWeb.NetworkLive.Show do
 
     # now run the thing...
     Panic.BackgroundTask.run(fn ->
-      [platform, model_name] = String.split(run.model, ":")
 
-      output =
-        case platform do
-          "replicate" -> Replicate.create(model_name, run.input)
-          "openai" -> OpenAI.create(model_name, run.input)
-          "huggingface" -> HuggingFace.create(model_name, run.input)
-        end
+      output = Models.dispatch(run.model, run.input)
 
       case Models.update_run(run, %{output: output}) do
         {:ok, run} ->

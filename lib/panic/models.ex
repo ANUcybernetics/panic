@@ -8,6 +8,7 @@ defmodule Panic.Models do
 
   alias Panic.Models.Run
   alias Panic.Networks.Network
+  alias Panic.Models.Platforms.{Replicate, OpenAI, HuggingFace}
 
   @doc """
   Returns the list of models.
@@ -157,6 +158,16 @@ defmodule Panic.Models do
   """
   def change_run(%Run{} = run, attrs \\ %{}) do
     Run.changeset(run, attrs)
+  end
+
+  def dispatch(model, input) do
+    [platform, model_name] = String.split(model, ":")
+
+    case platform do
+      "replicate" -> Replicate.create(model_name, input)
+      "openai" -> OpenAI.create(model_name, input)
+      "huggingface" -> HuggingFace.create(model_name, input)
+    end
   end
 
   def cycle_has_converged?(first_run_id) do
