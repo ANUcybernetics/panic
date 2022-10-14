@@ -115,7 +115,7 @@ defmodule Panic.Models.Platforms.Replicate do
   end
 
   def create("rmokady/clip_prefix_caption" = model, image_url) do
-    %{"output" => [%{"text" => text} | _]} = create_and_wait(model, %{image: image_url})
+    %{"output" => text} = create_and_wait(model, %{image: image_url})
     text
   end
 
