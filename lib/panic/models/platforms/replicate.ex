@@ -61,6 +61,20 @@ defmodule Panic.Models.Platforms.Replicate do
     image_url
   end
 
+  ## text to image
+  def create("cjwbw/stable-diffusion-high-resolution" = model, prompt) do
+    input_params = %{
+      prompt: prompt,
+      steps: 50,
+      scale: 7.5,
+      ori_width: 256,
+      ori_height: 256
+    }
+
+    %{"output" => image_url} = create_and_wait(model, input_params)
+    image_url
+  end
+
   def create("kuprel/min-dalle" = model, prompt) do
     %{"output" => [image_url]} =
       create_and_wait(model, %{text: prompt, grid_size: 1, progressive_outputs: 0})
