@@ -24,12 +24,9 @@ defmodule Panic.Models do
       "replicate:stability-ai/stable-diffusion",
       "replicate:methexis-inc/img2prompt",
       "replicate:kuprel/min-dalle",
-      "replicate:laion-ai/ongo",
       "replicate:rmokady/clip_prefix_caption",
-      "replicate:j-min/clip-caption-reward",
-      "replicate:netease-gameai/spatchgan-selfie2anime",
-      "replicate:annahung31/emopia",
-      "replicate:afiaka87/tortoise-tts",
+      "replicate:charlesfrye/text-recognizer-gpu",
+      "replicate:kyrick/prompt-parrot",
       "openai:text-davinci-002",
       "huggingface:facebook/fastspeech2-en-ljspeech",
       "huggingface:facebook/wav2vec2-base-960h"
@@ -46,14 +43,11 @@ defmodule Panic.Models do
   """
   def model_io("replicate:kuprel/min-dalle"), do: {:text, :image}
   def model_io("replicate:stability-ai/stable-diffusion"), do: {:text, :image}
-  def model_io("replicate:laion-ai/ongo"), do: {:text, :image}
   def model_io("replicate:methexis-inc/img2prompt"), do: {:image, :text}
+  def model_io("replicate:charlesfrye/text-recognizer-gpu"), do: {:image, :text}
   def model_io("replicate:rmokady/clip_prefix_caption"), do: {:image, :text}
-  def model_io("replicate:j-min/clip-caption-reward"), do: {:image, :text}
-  def model_io("replicate:netease-gameai/spatchgan-selfie2anime"), do: {:image, :image}
-  def model_io("replicate:afiaka87/tortoise-tts"), do: {:text, :audio}
-  def model_io("replicate:annahung31/emopia"), do: {:text, :audio}
   def model_io("openai:text-davinci-002"), do: {:text, :text}
+  def model_io("replicate:kyrick/prompt-parrot"), do: {:text, :text}
   def model_io("huggingface:facebook/fastspeech2-en-ljspeech"), do: {:text, :audio}
   def model_io("huggingface:facebook/wav2vec2-base-960h"), do: {:audio, :text}
 
