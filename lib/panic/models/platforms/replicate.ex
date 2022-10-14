@@ -95,6 +95,11 @@ defmodule Panic.Models.Platforms.Replicate do
     text
   end
 
+  def create("charlesfrye/text-recognizer-gpu" = model, image_url) do
+    %{"output" => text} = create_and_wait(model, %{image: image_url})
+    text
+  end
+
   def create("rmokady/clip_prefix_caption" = model, image_url) do
     %{"output" => [%{"text" => text} | _]} = create_and_wait(model, %{image: image_url})
     text
@@ -103,6 +108,18 @@ defmodule Panic.Models.Platforms.Replicate do
   def create("j-min/clip-caption-reward" = model, image_url) do
     %{"output" => text} = create_and_wait(model, %{image: image_url})
     text
+  end
+
+  ## text to text
+  def create("kyrick/prompt-parrot" = model, prompt) do
+    %{"output" => text} = create_and_wait(model, %{prompt: prompt})
+
+    ## for some reason this model returns multiple prompts, but separated by a
+    ## "separator" string rather than in a list, so we split it here and choose
+    ## one at random
+    text
+    |> String.split("\n------------------------------------------\n")
+    |> Enum.random
   end
 
   ## image to image
