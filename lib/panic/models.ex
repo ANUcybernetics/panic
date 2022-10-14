@@ -21,15 +21,15 @@ defmodule Panic.Models do
   """
   def list_models do
     [
-      "replicate:stability-ai/stable-diffusion",
-      "replicate:methexis-inc/img2prompt",
-      "replicate:kuprel/min-dalle",
-      "replicate:rmokady/clip_prefix_caption",
-      "replicate:charlesfrye/text-recognizer-gpu",
-      "replicate:kyrick/prompt-parrot",
-      "openai:text-davinci-002",
       "huggingface:facebook/fastspeech2-en-ljspeech",
-      "huggingface:facebook/wav2vec2-base-960h"
+      "huggingface:facebook/wav2vec2-base-960h",
+      "openai:text-davinci-002",
+      "replicate:charlesfrye/text-recognizer-gpu",
+      "replicate:kuprel/min-dalle",
+      "replicate:kyrick/prompt-parrot",
+      "replicate:methexis-inc/img2prompt",
+      "replicate:rmokady/clip_prefix_caption",
+      "replicate:stability-ai/stable-diffusion"
     ]
   end
 
@@ -41,15 +41,15 @@ defmodule Panic.Models do
       iex> model_io("replicate:kuprel/min-dalle")
       {:text, :image}
   """
-  def model_io("replicate:kuprel/min-dalle"), do: {:text, :image}
-  def model_io("replicate:stability-ai/stable-diffusion"), do: {:text, :image}
-  def model_io("replicate:methexis-inc/img2prompt"), do: {:image, :text}
-  def model_io("replicate:charlesfrye/text-recognizer-gpu"), do: {:image, :text}
-  def model_io("replicate:rmokady/clip_prefix_caption"), do: {:image, :text}
-  def model_io("openai:text-davinci-002"), do: {:text, :text}
-  def model_io("replicate:kyrick/prompt-parrot"), do: {:text, :text}
   def model_io("huggingface:facebook/fastspeech2-en-ljspeech"), do: {:text, :audio}
   def model_io("huggingface:facebook/wav2vec2-base-960h"), do: {:audio, :text}
+  def model_io("openai:text-davinci-002"), do: {:text, :text}
+  def model_io("replicate:charlesfrye/text-recognizer-gpu"), do: {:image, :text}
+  def model_io("replicate:kuprel/min-dalle"), do: {:text, :image}
+  def model_io("replicate:kyrick/prompt-parrot"), do: {:text, :text}
+  def model_io("replicate:methexis-inc/img2prompt"), do: {:image, :text}
+  def model_io("replicate:rmokady/clip_prefix_caption"), do: {:image, :text}
+  def model_io("replicate:stability-ai/stable-diffusion"), do: {:text, :image}
 
   def list_runs(%Network{id: network_id}) do
     Repo.all(from r in Run, where: r.network_id == ^network_id, order_by: [asc: r.id])
