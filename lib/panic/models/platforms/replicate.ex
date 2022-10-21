@@ -1,5 +1,6 @@
 defmodule Panic.Models.Platforms.Replicate do
   @url "https://api.replicate.com/v1"
+  @nsfw_placeholder "https://res.cloudinary.com/teepublic/image/private/s--XZyAQb6t--/t_Preview/b_rgb:191919,c_lpad,f_jpg,h_630,q_90,w_1200/v1532173190/production/designs/2918923_0.jpg"
 
   def get_model_versions(model) do
     url = "#{@url}/models/#{model}/versions"
@@ -34,9 +35,16 @@ defmodule Panic.Models.Platforms.Replicate do
 
         case body do
           %{"status" => "succeeded"} ->
-            body
+            {:ok, body}
+
+          %{"status" => "failed", "error" => "NSFW" <> _} ->
+            {:error, :nsfw}
+
+          %{"status" => "failed", "error" => error} ->
+            {:error, error}
 
           %{"status" => status} when status in ~w(starting processing) ->
+            ## recursion case; doesn't need a tuple
             get(prediction_id)
         end
     end
@@ -171,10 +179,13 @@ defmodule Panic.Models.Platforms.Replicate do
 
     {:ok, request_body} = Jason.encode(%{version: model_version, input: input_params})
 
-    case HTTPoison.post(url, request_body, headers(), hackney: [pool: :default]) do
-      {:ok, %HTTPoison.Response{status_code: 201, body: response_body}} ->
-        {:ok, body} = Jason.decode(response_body)
-        get(body["id"])
+    {:ok, %HTTPoison.Response{status_code: 201, body: response_body}} = HTTPoison.post(url, request_body, headers(), hackney: [pool: :default])
+
+    {:ok, %{"id" => id}} = Jason.decode(response_body)
+
+    case get(id) do
+      {:ok, body} -> body
+      {:error, :nsfw} -> %{"output" => [@nsfw_placeholder]}
     end
   end
 
