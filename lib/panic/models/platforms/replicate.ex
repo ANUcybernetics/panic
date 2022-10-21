@@ -186,6 +186,7 @@ defmodule Panic.Models.Platforms.Replicate do
     case get(id) do
       {:ok, body} -> body
       {:error, :nsfw} -> %{"output" => [@nsfw_placeholder]}
+      {:error, error} -> {:error, error}
     end
   end
 
