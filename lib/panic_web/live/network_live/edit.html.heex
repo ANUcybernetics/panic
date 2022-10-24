@@ -1,0 +1,87 @@
+<.layout current_page={:edit_network} current_user={@current_user} type="stacked">
+  <.container class="py-16">
+    <.page_header title={@network.name}>
+      <.button
+        class="bg-green-600"
+        link_type="live_patch"
+        label="Run"
+        to={Routes.network_show_path(@socket, :show, @network.id)}
+      />
+      <.button
+        link_type="live_patch"
+        label="Back"
+        to={Routes.network_index_path(@socket, :index)}
+      />
+    </.page_header>
+
+    <div class="mb-4 flex justify-end">
+      <.dropdown class="w-48" label="Add model">
+        <%= for model <- Models.list_models() do %>
+          <.dropdown_menu_item
+            link_type="button"
+            phx_click="append_model"
+            value={model}
+            label={model_display_string(model)}
+          />
+        <% end %>
+      </.dropdown>
+    </div>
+
+    <.table>
+      <thead>
+        <.tr>
+          <.th>Models</.th>
+          <.th></.th>
+        </.tr>
+      </thead>
+      <tbody id="networks">
+        <%= for {model, idx, valid} <- models_with_validation(@network.models) do %>
+          <.tr class="py-4" id={"model-#{idx}"}>
+            <.td class={"text-gray-800 #{if !valid, do: 'bg-red-200'}"}>
+              <%= model_display_string(model) %>
+            </.td>
+            <.td class="text-right whitespace-nowrap">
+              <.icon_button
+                color="primary"
+                variant="outline"
+                size="sm"
+                icon={:arrow_circle_down}
+                phx-click="move_model_down"
+                phx-value-pos={idx}
+                disabled={idx == Enum.count(@network.models) - 1}
+              />
+              <.icon_button
+                color="primary"
+                variant="outline"
+                size="sm"
+                icon={:arrow_circle_up}
+                phx-click="move_model_up"
+                phx-value-pos={idx}
+                disabled={idx == 0}
+              />
+              <.icon_button
+                variant="outline"
+                size="sm"
+                icon={:trash}
+                color="danger"
+                phx-click="remove_model"
+                phx-value-pos={idx}
+              />
+              <div class="ml-4 inline-block">
+                <span class={"block h-3 w-3 mb-1 rounded-t-full #{model_input_color(model)}"}>
+                </span>
+                <span class={"block h-3 w-3 mt-1 rounded-b-full #{model_output_color(model)}"}>
+                </span>
+              </div>
+            </.td>
+          </.tr>
+        <% end %>
+      </tbody>
+    </.table>
+    <div class="flex justify-end mt-4">
+      <span class="rounded-full w-6 bg-violet-500 mr-2"></span> text
+      <span class="rounded-full w-6 bg-orange-500 ml-4 mr-2"></span> image
+      <span class="rounded-full w-6 bg-emerald-500 ml-4 mr-2"></span> audio
+    </div>
+  </.container>
+</.layout>

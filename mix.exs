@@ -120,7 +120,10 @@ defmodule Panic.MixProject do
       # Code quality
       {:sobelow, "~> 0.8", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
-      {:excoveralls, "~> 0.10", only: [:dev, :test], runtime: false}
+      {:excoveralls, "~> 0.10", only: [:dev, :test], runtime: false},
+
+      # Panic-specific (i.e. not PetalPro) additions
+      {:httpoison, "~> 1.8"}
     ]
   end
 

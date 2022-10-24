@@ -79,6 +79,14 @@ defmodule PanicWeb.Router do
         live "/team/invite", OrgTeamLive, :invite
         live "/team/memberships/:id/edit", OrgTeamLive, :edit_membership
       end
+
+      # Panic-specific stuff from here
+      live "/networks", NetworkLive.Index, :index
+      live "/networks/new", NetworkLive.Index, :new
+
+      live "/networks/:id", NetworkLive.Show, :show
+      live "/networks/:id/edit", NetworkLive.Edit, :edit
+      live "/networks/:id/archive", NetworkLive.Archive, :show
     end
   end
 
