@@ -72,7 +72,8 @@ defmodule Panic.Accounts.UserSeeder do
   def random_user_attributes(attrs \\ %{}) do
     Enum.into(attrs, %{
       name: Faker.Person.En.first_name() <> " " <> Faker.Person.En.last_name(),
-      email: unique_user_email()
+      email: unique_user_email(),
+      password: "password"
     })
   end
 end

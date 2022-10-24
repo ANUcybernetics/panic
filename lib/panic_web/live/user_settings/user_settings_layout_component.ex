@@ -4,18 +4,19 @@ defmodule PanicWeb.UserSettingsLayoutComponent do
   """
   use PanicWeb, :component
 
-  # prop current_user, :map
-  # prop current, :atom
-  # slot default
+  attr :current_user, :map
+  attr :current_page, :atom
+  slot(:inner_block)
+
   def settings_layout(assigns) do
     ~H"""
-    <.layout current_page={@current} current_user={@current_user} type="sidebar">
+    <.layout current_page={@current_page} current_user={@current_user} type="sidebar">
       <.container max_width="xl">
         <.h2 class="py-8">
-          Settings
+          <%= gettext("Settings") %>
         </.h2>
 
-        <.sidebar_tabs_container current_page={@current} menu_items={menu_items(@current_user)}>
+        <.sidebar_tabs_container current_page={@current_page} menu_items={menu_items(@current_user)}>
           <%= render_slot(@inner_block) %>
         </.sidebar_tabs_container>
       </.container>

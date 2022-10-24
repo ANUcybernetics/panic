@@ -2,7 +2,7 @@
   current_page={:dev_email_templates}
   current_user={@current_user}
 >
-  <div class="flex h-screen overflow-hidden bg-gray-100 dark:bg-gray-900">
+  <div class="flex h-screen overflow-hidden bg-white dark:bg-gray-900">
     <div class="hidden md:flex md:flex-shrink-0">
       <div class="flex flex-col w-64">
         <div class="flex flex-col flex-1 h-0 border-r border-gray-200 dark:border-gray-800">
@@ -13,10 +13,11 @@
             <nav class="flex-1 px-2 mt-2 space-y-1">
               <%= for option <- @email_options do %>
                 <.link
-                  to={Routes.email_testing_path(@conn, :preview, option)}
+                  href={Routes.email_testing_path(@conn, :preview, option)}
                   class={menu_item_classes(@email_name == option)}
-                  label={option}
-                />
+                >
+                  <%= option %>
+                </.link>
               <% end %>
             </nav>
           </div>

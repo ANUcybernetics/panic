@@ -13,8 +13,8 @@ defmodule PanicWeb.EditProfileLive do
 
   def render(assigns) do
     ~H"""
-    <.settings_layout current={:edit_profile} current_user={@current_user}>
-      <.form id="update_profile_form" let={f} for={@changeset} phx-submit="update_profile">
+    <.settings_layout current_page={:edit_profile} current_user={@current_user}>
+      <.form :let={f} id="update_profile_form" for={@changeset} phx-submit="update_profile">
         <.form_field
           type="text_input"
           form={f}

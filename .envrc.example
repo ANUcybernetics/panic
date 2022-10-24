@@ -1,13 +1,18 @@
-# Set these on any production servers (staging/production)
+# ----- REQUIRED IN PRODUCTION -----
 # export PHX_HOST="some_domain.com"
+
+# Allow search engines in or not. You usually only want this on in production
 # export ALLOW_ROBOTS="true|false"
 
-# If using Amazon SES for emailing (recommended):
+# If using Amazon SES for emailing you'll need these
 # export AWS_ACCESS_KEY=""
 # export AWS_SECRET=""
 # export AWS_REGION=""
 
-# If using MailBluster for mass emailing (recommended):
+# ----- OPTIONAL -----
+# export POOL_SIZE="10"
+
+# If using MailBluster for marketing emails:
 # export MAIL_BLUSTER_API_KEY=""
 
 # If using the Slack API (see slack.ex)

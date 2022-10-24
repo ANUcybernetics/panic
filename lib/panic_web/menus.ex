@@ -8,18 +8,27 @@ defmodule PanicWeb.Menus do
   alias PanicWeb.Helpers
 
   # Public menu (marketing related pages)
-  def public_menu_items(_) do
-    [
-      # %{label: gettext("Pricing"), path: "/#pricing"}
+  def public_menu_items(_user \\ nil),
+    do: [
+      %{label: gettext("Features"), path: "/#features"},
+      %{label: gettext("Testimonials"), path: "/#testimonials"},
+      %{label: gettext("Pricing"), path: "/#pricing"}
     ]
-  end
 
   # Signed out main menu
   def main_menu_items(nil),
     do: []
 
   # Signed in main menu
-  def main_menu_items(current_user), do: build_menu([], current_user)
+  def main_menu_items(current_user),
+    do:
+      build_menu(
+        [
+          :dashboard,
+          :orgs
+        ],
+        current_user
+      )
 
   # Signed out user menu
   def user_menu_items(nil),
@@ -180,8 +189,6 @@ defmodule PanicWeb.Menus do
       link
       |> Map.put(:label, "Admin")
       |> Map.put(:icon, :lock_closed)
-    else
-      nil
     end
   end
 
@@ -193,34 +200,6 @@ defmodule PanicWeb.Menus do
         path: Routes.admin_users_path(Endpoint, :index),
         icon: :users
       }
-    else
-      nil
-    end
-  end
-
-  def get_link(:logs = name, current_user) do
-    if Helpers.is_admin?(current_user) do
-      %{
-        name: name,
-        label: "Logs",
-        path: Routes.logs_path(Endpoint, :index),
-        icon: :eye
-      }
-    else
-      nil
-    end
-  end
-
-  def get_link(:server = name, current_user) do
-    if Helpers.is_admin?(current_user) do
-      %{
-        name: name,
-        label: "Server",
-        path: Routes.live_dashboard_path(Endpoint, :home),
-        icon: :chart_square_bar
-      }
-    else
-      nil
     end
   end
 
@@ -232,8 +211,6 @@ defmodule PanicWeb.Menus do
         path: "/dev",
         icon: :code
       }
-    else
-      nil
     end
   end
 
@@ -245,8 +222,6 @@ defmodule PanicWeb.Menus do
         path: "/dev/emails",
         icon: :template
       }
-    else
-      nil
     end
   end
 
@@ -258,8 +233,6 @@ defmodule PanicWeb.Menus do
         path: "/dev/emails/sent",
         icon: :at_symbol
       }
-    else
-      nil
     end
   end
 end

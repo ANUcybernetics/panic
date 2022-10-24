@@ -13,7 +13,7 @@ defmodule PanicWeb.UserAuthTest do
       |> Map.replace!(:secret_key_base, PanicWeb.Endpoint.config(:secret_key_base))
       |> init_test_session(%{})
 
-    %{user: user_fixture(), conn: conn}
+    %{user: confirmed_user_fixture(), conn: conn}
   end
 
   describe "log_in_user/3" do
@@ -195,6 +195,19 @@ defmodule PanicWeb.UserAuthTest do
       conn = conn |> assign(:current_user, user) |> UserAuth.require_authenticated_user([])
       refute conn.halted
       refute conn.status
+    end
+
+    test "it redirects if user is authenticated but not confirmed", %{conn: conn} do
+      unconfirmed_user = user_fixture()
+
+      conn =
+        conn
+        |> fetch_flash()
+        |> assign(:current_user, unconfirmed_user)
+        |> UserAuth.require_authenticated_user([])
+
+      assert conn.halted
+      assert redirected_to(conn) == Routes.user_confirmation_path(conn, :unconfirmed)
     end
   end
 end

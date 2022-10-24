@@ -33,15 +33,15 @@
         </div>
         <div class="mt-3 text-center sm:mt-5">
           <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-headline">
-            Unsubscribed successfully
+            <%= gettext("Unsubscribed successfully") %>
           </h3>
           <div class="mt-2 text-sm prose-sm text-gray-500">
-            You will no longer recieve marketing related notifications.
+            <%= gettext("You will no longer recieve marketing related notifications.") %>
           </div>
         </div>
 
         <div class="flex items-center justify-center gap-5 mt-10">
-          <.button to="/" link_type="a" label="Continue" />
+          <.button to="/" link_type="a" label={gettext("Continue")} />
         </div>
       </div>
     </div>

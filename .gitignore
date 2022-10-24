@@ -32,7 +32,13 @@ panic-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# Not everyone uses vscode
 .vscode
+
 .elixir_ls
+
+# Env vars used by direnv
 .envrc
-/priv/static/model_outputs/
+
+# Sobelow
+.sobelow

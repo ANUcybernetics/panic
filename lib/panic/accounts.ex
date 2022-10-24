@@ -616,7 +616,7 @@ defmodule Panic.Accounts do
 
     Panic.Slack.message("""
     :bust_in_silhouette: *A new user joined!*
-    *Name*: #{user.name}
+    *Name*: #{PanicWeb.Helpers.user_name(user)}
 
     #{PanicWeb.Router.Helpers.admin_users_url(PanicWeb.Endpoint, :edit, user)}
     """)

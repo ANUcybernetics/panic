@@ -1,4 +1,4 @@
-defmodule Panic.PageChangeset do
+defmodule PetalFramework.PageChangeset do
   @moduledoc """
   Used in the PageBuilderLive form.
   """

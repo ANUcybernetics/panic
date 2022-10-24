@@ -3,32 +3,45 @@
     <.logo_icon class="w-20 h-20" />
   </:logo>
   <:top_links>
-    <.link
-      label="Sign in"
-      class="text-blue-600 underline"
-      to={Routes.user_session_path(@conn, :new)}
-    />
-    <.link
-      label="Register"
-      class="ml-3 text-blue-600 underline"
-      to={Routes.user_registration_path(@conn, :new)}
-    />
+    <.link class="text-blue-600 underline" href={Routes.user_session_path(@conn, :new)}>
+      <%= gettext("Sign in") %>
+    </.link>
+
+    <.link class="ml-3 text-blue-600 underline" href={Routes.user_registration_path(@conn, :new)}>
+      <%= gettext("Register") %>
+    </.link>
   </:top_links>
-  <.form let={f} for={@changeset} action={Routes.user_reset_password_path(@conn, :update, @token)}>
+  <.form
+    :let={f}
+    for={@changeset}
+    action={Routes.user_reset_password_path(@conn, :update, @token)}
+  >
     <%= if @changeset.action do %>
       <.alert
         color="danger"
         size="sm"
-        label="Oops, something went wrong! Please check the errors below."
+        label={gettext("Oops, something went wrong! Please check the errors below.")}
         class="mb-5"
       />
     <% end %>
 
-    <.form_field type="password_input" form={f} field={:password} required />
-    <.form_field type="password_input" form={f} field={:password_confirmation} required />
+    <.form_field
+      type="password_input"
+      form={f}
+      field={:password}
+      autocomplete="new-password"
+      required
+    />
+    <.form_field
+      type="password_input"
+      form={f}
+      field={:password_confirmation}
+      autocomplete="new-password"
+      required
+    />
 
     <div class="flex justify-end mt-6">
-      <.button label="Reset password" phx-disable-with="Loading..." />
+      <.button label={gettext("Reset password")} phx-disable-with={gettext("Loading...")} />
     </div>
   </.form>
 </.auth_layout>

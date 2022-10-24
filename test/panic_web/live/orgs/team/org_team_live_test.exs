@@ -121,7 +121,7 @@ defmodule PanicWeb.OrgTeamLiveTest do
 
     {:ok, team_live, html} =
       team_live
-      |> form("#form-membership", membership: [role: "admin"])
+      |> form("#form-membership", membership: [role: :admin])
       |> render_submit()
       |> follow_redirect(conn, Routes.org_team_path(conn, :index, org.slug))
 
@@ -146,7 +146,7 @@ defmodule PanicWeb.OrgTeamLiveTest do
     assert html =~ "Be careful"
 
     assert team_live
-           |> form("#form-membership", membership: [role: "member"])
+           |> form("#form-membership", membership: [role: :member])
            |> render_submit() =~ "cannot remove last admin"
   end
 end

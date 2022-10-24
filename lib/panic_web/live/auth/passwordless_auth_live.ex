@@ -23,6 +23,7 @@ defmodule PanicWeb.PasswordlessAuthLive do
   def mount(params, _session, socket) do
     socket =
       assign(socket,
+        page_title: gettext("Sign in"),
         changeset: Accounts.change_user_passwordless_registration(%User{}, %{}),
         user_return_to: Map.get(params, "user_return_to", nil),
         error_message: nil,
@@ -177,9 +178,9 @@ defmodule PanicWeb.PasswordlessAuthLive do
   end
 
   defp decode_user_id(hashed_user_id),
-    do: HashId.decode(hashed_user_id, salt_addition: @hash_salt)
+    do: Util.HashId.decode(hashed_user_id, salt_addition: @hash_salt)
 
-  defp encode_user_id(user_id), do: HashId.encode(user_id, salt_addition: @hash_salt)
+  defp encode_user_id(user_id), do: Util.HashId.encode(user_id, salt_addition: @hash_salt)
 
   defp build_token_changeset(params) do
     types = %{

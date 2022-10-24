@@ -7,11 +7,12 @@ defmodule Panic.Orgs.Membership do
   alias Panic.Orgs.Org
   alias Panic.Accounts.User
 
-  @default_role "member"
-  @admin_role "admin"
+  @role_options ~w(admin member)a
+  @default_role :member
+  @admin_role :admin
 
   schema "orgs_memberships" do
-    field :role, :string
+    field :role, Ecto.Enum, values: @role_options
 
     belongs_to :user, User
     belongs_to :org, Org
@@ -43,13 +44,13 @@ defmodule Panic.Orgs.Membership do
       role: role
     })
     |> unique_constraint([:org_id, :user_id])
+    |> validate_inclusion(:role, @role_options)
   end
 
   def update_changeset(membership, attrs) do
     membership
     |> cast(attrs, [:role])
     |> validate_required([:role])
-    |> validate_inclusion(:role, ~w[admin member])
     |> prepare_changes(fn changeset ->
       current_role = membership.role
       new_role = get_change(changeset, :role)

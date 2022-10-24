@@ -1,18 +1,20 @@
 defmodule PetalFramework.Components.LanguageSelect do
   use Phoenix.Component
-  alias PetalComponents.Heroicons
+  alias PetalComponents.HeroiconsV1
   import PetalComponents.Dropdown
 
-  # prop :current_path, :string
-  # prop :current_locale, :string
-  # prop :language_options, :list
   @doc """
   Usage:
   <.language_select
-    current_locale={Gettext.get_locale(PanicWeb.Gettext)}
-    language_options={Panic.config(:language_options)}
+    current_locale={Gettext.get_locale(YourAppWeb.Gettext)}
+    language_options={YourApp.config(:language_options)}
   />
   """
+
+  attr :current_path, :string
+  attr :current_locale, :string
+  attr :language_options, :list, doc: "list of maps with keys :locale, :flag (emoji), :label"
+
   def language_select(assigns) do
     assigns =
       assigns
@@ -25,7 +27,7 @@ defmodule PetalFramework.Components.LanguageSelect do
           <div class="text-2xl">
             <%= Enum.find(@language_options, &(&1.locale == @current_locale)).flag %>
           </div>
-          <Heroicons.Solid.chevron_down class="w-4 h-4 text-gray-400 dark:text-gray-100" />
+          <HeroiconsV1.Solid.chevron_down class="w-4 h-4 text-gray-400 dark:text-gray-100" />
         </div>
       </:trigger_element>
       <%= for language <- @language_options do %>

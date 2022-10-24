@@ -60,7 +60,7 @@ defmodule PanicWeb.UserSettingsController do
         "code" => code,
         "notification_subscription" => notification_subscription
       }) do
-    user = Accounts.get_user!(HashId.decode(code))
+    user = Accounts.get_user!(Util.HashId.decode(code))
 
     case NotificationSubscriptions.get(notification_subscription) do
       nil ->
@@ -80,7 +80,7 @@ defmodule PanicWeb.UserSettingsController do
         "code" => code,
         "notification_subscription" => notification_subscription
       }) do
-    user = Accounts.get_user!(HashId.decode(code))
+    user = Accounts.get_user!(Util.HashId.decode(code))
 
     case NotificationSubscriptions.toggle_user_subscription(user, notification_subscription) do
       true ->

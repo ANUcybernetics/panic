@@ -18,16 +18,16 @@ defmodule PanicWeb.EditTotpLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <.settings_layout current={:edit_totp} current_user={@current_user}>
+    <.settings_layout current_page={:edit_totp} current_user={@current_user}>
       <div class="mx-auto max-w-prose">
-        <.h3>Two-factor authentication</.h3>
+        <.h3><%= gettext("Two-factor authentication") %></.h3>
 
         <%= if @current_totp do %>
           <div class="flex items-center gap-2 mb-6">
-            <Heroicons.Solid.badge_check class="w-10 h-10 text-green-600 dark:text-green-400" />
+            <HeroiconsV1.Solid.badge_check class="w-10 h-10 text-green-600 dark:text-green-400" />
 
             <div class="font-semibold dark:text-gray-100">
-              2FA Enabled
+              <%= gettext("2FA Enabled") %>
             </div>
           </div>
         <% end %>
@@ -97,14 +97,14 @@ defmodule PanicWeb.EditTotpLive do
       <% end %>
     </div>
 
-    <.form let={f} for={@totp_changeset} id="form-update-totp" phx-submit="update_totp">
+    <.form :let={f} for={@totp_changeset} id="form-update-totp" phx-submit="update_totp">
       <.form_field
         type="text_input"
         form={f}
         field={:code}
         label="Authentication code"
         placeholder="eg. 123456"
-        autocomplete="off"
+        autocomplete="one-time-code"
       />
 
       <div class="flex justify-end gap-2">
@@ -143,8 +143,8 @@ defmodule PanicWeb.EditTotpLive do
   def enable_form(assigns) do
     ~H"""
     <.form
+      :let={f}
       id="form-submit-totp"
-      let={f}
       for={@user_changeset}
       phx-submit="submit_totp"
       phx-change="change_totp"
@@ -159,6 +159,7 @@ defmodule PanicWeb.EditTotpLive do
           "Enter your current password to #{if @current_totp, do: "change 2FA or view your backup codes", else: "enable 2FA"}"
         }
         placeholder="Enter your password"
+        autocomplete="current-password"
         {alpine_autofocus()}
       />
 

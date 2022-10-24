@@ -4,15 +4,15 @@ defmodule PanicWeb.Components.LandingPage do
   """
   use Phoenix.Component
   use PetalComponents
-  import PanicWeb.Gettext
+
+  attr :image_src, :string, required: true
+  attr :logo_cloud_title, :string, default: nil
+  attr :max_width, :string, default: "lg", values: ["sm", "md", "lg", "xl", "full"]
+  attr :cloud_logo, :list, default: []
+  slot(:title)
+  slot(:description)
 
   def hero(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:logo_cloud_title, fn -> nil end)
-      |> assign_new(:cloud_logo, fn -> nil end)
-      |> assign_new(:max_width, fn -> "lg" end)
-
     ~H"""
     <section
       id="hero"
@@ -48,7 +48,7 @@ defmodule PanicWeb.Components.LandingPage do
           </div>
         </div>
 
-        <%= if @cloud_logo do %>
+        <%= if length(@cloud_logo) > 0 do %>
           <div class="mt-40">
             <.logo_cloud title={@logo_cloud_title} cloud_logo={@cloud_logo} />
           </div>
@@ -58,12 +58,10 @@ defmodule PanicWeb.Components.LandingPage do
     """
   end
 
-  def logo_cloud(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:title, fn -> nil end)
-      |> assign_new(:cloud_logo, fn -> nil end)
+  attr :title, :string
+  attr :cloud_logo, :list, default: [], doc: "List of slots"
 
+  def logo_cloud(assigns) do
     ~H"""
     <div id="logo-cloud" class="container px-4 mx-auto">
       <%= if @title do %>
@@ -85,13 +83,18 @@ defmodule PanicWeb.Components.LandingPage do
     """
   end
 
-  def features(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:features, fn -> [] end)
-      |> assign_new(:grid_classes, fn -> "md:grid-cols-3" end)
-      |> assign_new(:max_width, fn -> "lg" end)
+  attr :features, :list,
+    default: [],
+    doc:
+      "A list of features, which are maps with the keys :icon (a HeroiconV1), :title and :description"
 
+  attr :grid_classes, :string,
+    default: "md:grid-cols-3",
+    doc: "Tailwind grid cols class to specify how many columns you want"
+
+  attr :max_width, :string, default: "lg", values: ["sm", "md", "lg", "xl", "full"]
+
+  def features(assigns) do
     ~H"""
     <section
       id="features"
@@ -112,7 +115,7 @@ defmodule PanicWeb.Components.LandingPage do
             <div class="px-8 mb-10 border-slate-200 md:px-16 fade-in-animation last:border-0">
               <div class="flex justify-center mb-4 md:mb-6">
                 <span class="flex items-center justify-center w-12 h-12 rounded-md bg-primary-600">
-                  <Heroicons.Outline.render icon={feature.icon} class="w-6 h-6 text-white" />
+                  <HeroiconsV1.Outline.render icon={feature.icon} class="w-6 h-6 text-white" />
                 </span>
               </div>
               <div class="mb-2 text-lg font-medium md:text-2xl">
@@ -129,14 +132,15 @@ defmodule PanicWeb.Components.LandingPage do
     """
   end
 
-  def solo_feature(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:inverted, fn -> false end)
-      |> assign_new(:background_color, fn -> "primary" end)
-      |> assign_new(:inner_block, fn -> nil end)
-      |> assign_new(:max_width, fn -> "lg" end)
+  attr :title, :string, required: true
+  attr :description, :string, required: true
+  attr :image_src, :string, required: true
+  attr :inverted, :boolean, default: false
+  attr :background_color, :string, default: "primary"
+  attr :max_width, :string, default: "lg", values: ["sm", "md", "lg", "xl", "full"]
+  slot(:inner_block)
 
+  def solo_feature(assigns) do
     ~H"""
     <section
       id="benefits"
@@ -157,7 +161,7 @@ defmodule PanicWeb.Components.LandingPage do
                 <%= @description %>
               </p>
             </div>
-            <%= if @inner_block do %>
+            <%= if render_slot(@inner_block) do %>
               <div class="fade-in-animation">
                 <%= render_slot(@inner_block) %>
               </div>
@@ -181,13 +185,11 @@ defmodule PanicWeb.Components.LandingPage do
     """
   end
 
-  def testimonials(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:title, fn -> gettext("Testimonials") end)
-      |> assign_new(:testimonials, fn -> [] end)
-      |> assign_new(:max_width, fn -> "lg" end)
+  attr :title, :string, default: "Testimonials"
+  attr :testimonials, :list, doc: "A list of maps with the keys: content, image_src, name, title"
+  attr :max_width, :string, default: "lg", values: ["sm", "md", "lg", "xl", "full"]
 
+  def testimonials(assigns) do
     ~H"""
     <section
       id="testimonials"
@@ -226,7 +228,13 @@ defmodule PanicWeb.Components.LandingPage do
       }
     </script>
 
-    <link rel="stylesheet" href="https://unpkg.com/flickity@2/dist/flickity.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/flickity/2.3.0/flickity.min.css"
+      integrity="sha512-B0mpFwHOmRf8OK4U2MBOhv9W1nbPw/i3W1nBERvMZaTWd3+j+blGbOyv3w1vJgcy3cYhzwgw1ny+TzWICN35Xg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
     <style>
       /* Modify the testimonial slider to go off the page */
       #testimonials .flickity-viewport {
@@ -258,6 +266,11 @@ defmodule PanicWeb.Components.LandingPage do
     </style>
     """
   end
+
+  attr :content, :string, required: true
+  attr :image_src, :string, required: true
+  attr :name, :string, required: true
+  attr :title, :string, required: true
 
   def testimonial_panel(assigns) do
     ~H"""
@@ -293,12 +306,15 @@ defmodule PanicWeb.Components.LandingPage do
     """
   end
 
-  def pricing(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:plans, fn -> [] end)
-      |> assign_new(:max_width, fn -> "lg" end)
+  attr :title, :string, required: true
+  attr :description, :string, required: true
+  attr :max_width, :string, default: "lg", values: ["sm", "md", "lg", "xl", "full"]
 
+  attr :plans, :list,
+    doc:
+      "List of maps with keys: :most_popular (bool), :name, :currency, :price, :unit, :description, :features (list of strings)"
+
+  def pricing(assigns) do
     ~H"""
     <section
       id="pricing"
@@ -324,13 +340,15 @@ defmodule PanicWeb.Components.LandingPage do
     """
   end
 
-  def pricing_table(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:most_popular, fn -> false end)
-      |> assign_new(:currency, fn -> "$" end)
-      |> assign_new(:unit, fn -> "/m" end)
+  attr :most_popular, :boolean, default: false
+  attr :currency, :string, default: "$"
+  attr :unit, :string, default: "/m"
+  attr :name, :string, required: true
+  attr :price, :string, required: true
+  attr :description, :string, required: true
+  attr :features, :list, default: []
 
+  def pricing_table(assigns) do
     ~H"""
     <div class="relative flex flex-col h-full p-6 transition duration-500 ease-in-out rounded-lg bg-slate-200 dark:bg-slate-900 fade-in-animation">
       <%= if @most_popular do %>
@@ -368,7 +386,7 @@ defmodule PanicWeb.Components.LandingPage do
       <ul class="-mb-3 text-slate-600 dark:text-slate-400 grow">
         <%= for feature <- @features do %>
           <li class="flex items-center mb-3">
-            <Heroicons.Solid.check class="w-3 h-3 mr-3 text-green-500 fill-current shrink-0" />
+            <HeroiconsV1.Solid.check class="w-3 h-3 mr-3 text-green-500 fill-current shrink-0" />
             <span><%= feature %></span>
           </li>
         <% end %>
@@ -386,13 +404,13 @@ defmodule PanicWeb.Components.LandingPage do
     <script type="module">
       // Use GSAP for animations
       // https://greensock.com/gsap/
-      import gsap from 'https://cdn.skypack.dev/gsap';
+      import gsap from 'https://cdn.skypack.dev/gsap@3.10.4';
 
       // Put it on the window for when you want to try out animations in the console
       window.gsap = gsap;
 
       // A plugin for GSAP that detects when an element enters the viewport - this helps with timing the animation
-      import ScrollTrigger from "https://cdn.skypack.dev/gsap/ScrollTrigger";
+      import ScrollTrigger from "https://cdn.skypack.dev/gsap@3.10.4/ScrollTrigger";
       gsap.registerPlugin(ScrollTrigger);
 
       animateHero();
@@ -465,32 +483,6 @@ defmodule PanicWeb.Components.LandingPage do
         });
       }
     </script>
-    """
-  end
-
-  def render_pricing_feature(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:icon_class, fn -> "" end)
-
-    ~H"""
-    <li class="flex items-center w-full py-2 fade-in-animation">
-      <svg
-        class={"#{@icon_class} flex-shrink-0 mr-3"}
-        width="16"
-        height="16"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M8 0a8 8 0 100 16A8 8 0 008 0zm4.471 6.471l-5.04 5.04a.666.666 0 01-.942 0L4.187 9.21a.666.666 0 11.942-.942l1.831 1.83 4.569-4.568a.666.666 0 11.942.942z"
-          fill="#FFF"
-          class="fill-current"
-          fill-rule="nonzero"
-        />
-      </svg>
-
-      <div class="text-left"><%= @text %></div>
-    </li>
     """
   end
 end

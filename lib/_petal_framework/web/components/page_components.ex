@@ -4,10 +4,11 @@ defmodule PetalFramework.Components.PageComponents do
 
   @doc """
   Allows you to have a heading on the left side, and some action buttons on the right (default slot)
-
-  # prop title, :string
-  # slot default
   """
+
+  attr :title, :string, required: true
+  slot(:inner_block)
+
   def page_header(assigns) do
     assigns = assign_new(assigns, :inner_block, fn -> nil end)
 
@@ -28,34 +29,21 @@ defmodule PetalFramework.Components.PageComponents do
     """
   end
 
-  @doc """
-  Gives you a white background with shadow.
+  @doc "Gives you a white background with shadow."
+  attr :class, :string, default: ""
+  attr :padded, :boolean, default: false
+  attr :rest, :global
+  slot(:inner_block)
 
-  prop class, :string
-  prop padded, :boolean
-  """
   def box(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:class, fn -> "" end)
-      |> assign_new(:padded, fn -> false end)
-      |> assign_new(:extra_assigns, fn ->
-        assigns_to_attributes(assigns, ~w(
-          class
-          padded
-        )a)
-      end)
-
     ~H"""
     <div
-      {@extra_assigns}
-      class={
-        [
-          "bg-white dark:bg-gray-800 dark:border dark:border-gray-700 rounded-lg shadow overflow-hidden",
-          @class,
-          if(@padded, do: "spx-4 py-8 sm:px-10", else: "")
-        ]
-      }
+      {@rest}
+      class={[
+        "bg-white dark:bg-gray-800 dark:border dark:border-gray-700 rounded-lg shadow overflow-hidden",
+        @class,
+        if(@padded, do: "spx-4 py-8 sm:px-10", else: "")
+      ]}
     >
       <%= render_slot(@inner_block) %>
     </div>
@@ -71,14 +59,19 @@ defmodule PetalFramework.Components.PageComponents do
   |         |                     |
   |         |                     |
   ---------------------------------
-
-  # prop current_page, :map
-  # prop menu_items, :list
-  # slot default
   """
+
+  attr :current_page, :atom
+
+  attr :menu_items, :list,
+    required: true,
+    doc: "list of maps with keys :name, :path, :label, :icon (atom)"
+
+  slot(:inner_block)
+
   def sidebar_tabs_container(assigns) do
     ~H"""
-    <.box class="flex flex-col divide-y divide-gray-200 dark:divide-gray-700 md:divide-y-0 md:divide-x md:flex-row">
+    <.box class="flex flex-col border border-gray-200 divide-y divide-gray-200 dark:border-none dark:divide-gray-700 md:divide-y-0 md:divide-x md:flex-row">
       <div class="flex-shrink-0 w-full py-6 md:w-72">
         <%= for menu_item <- @menu_items do %>
           <.sidebar_menu_item current={@current_page} {menu_item} />
@@ -92,18 +85,21 @@ defmodule PetalFramework.Components.PageComponents do
     """
   end
 
-  # prop path, :string
-  # prop label, :string
-  # prop icon, :atom
+  attr :current, :atom
+  attr :name, :string
+  attr :path, :string
+  attr :label, :string
+  attr :icon, :atom
+
   def sidebar_menu_item(assigns) do
-    assigns = assign_new(assigns, :is_active?, fn -> assigns.current == assigns.name end)
+    assigns = assign(assigns, :is_active?, assigns.current == assigns.name)
 
     ~H"""
     <%= live_redirect to: @path,
                   class:
                     menu_item_classes(@is_active?) <>
                       " flex items-center px-3 py-2 text-sm font-medium border-transparent group" do %>
-      <Heroicons.Outline.render
+      <HeroiconsV1.Outline.render
         icon={@icon}
         class={menu_item_icon_classes(@is_active?) <> " flex-shrink-0 w-6 h-6 mx-3"}
       />

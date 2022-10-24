@@ -13,14 +13,15 @@ defmodule PanicWeb.EditEmailLive do
 
   def render(assigns) do
     ~H"""
-    <.settings_layout current={:edit_email} current_user={@current_user}>
-      <.form id="change_email_form" let={f} for={@changeset} phx-submit="update_email">
+    <.settings_layout current_page={:edit_email} current_user={@current_user}>
+      <.form :let={f} id="change_email_form" for={@changeset} phx-submit="update_email">
         <.form_field
           type="email_input"
           form={f}
           field={:email}
           label={gettext("Change your email")}
           placeholder={gettext("eg. john@gmail.com")}
+          autocomplete="username"
         />
 
         <div class="flex justify-end">

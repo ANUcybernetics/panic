@@ -31,14 +31,17 @@ defmodule PanicWeb.UserTOTPController do
         |> delete_session(@pending)
         |> put_flash(
           :info,
-          "You have #{remaining} #{plural} left. " <>
-            "You can generate new ones under the Two-factor authentication section in the Settings page"
+          gettext(
+            "You have %{remaining} %{plural} left. You can generate new ones under the Two-factor authentication section in the Settings page",
+            remaining: remaining,
+            plural: plural
+          )
         )
         |> UserAuth.redirect_user_after_login_with_remember_me(current_user, user_params)
 
       :invalid ->
         Panic.Logs.log("totp.invalid_code_used", %{user: current_user})
-        render(conn, "new.html", error_message: "Invalid two-factor authentication code")
+        render(conn, "new.html", error_message: gettext("Invalid two-factor authentication code"))
     end
   end
 

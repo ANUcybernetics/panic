@@ -9,48 +9,44 @@ defmodule PanicWeb.UserConfirmationControllerTest do
     %{user: user_fixture()}
   end
 
-  describe "GET /users/confirm" do
-    test "renders the resend confirmation page", %{conn: conn} do
-      conn = get(conn, Routes.user_confirmation_path(conn, :new))
+  describe "GET /users/unconfirmed" do
+    test "renders the unconfirmed page", %{conn: conn, user: user} do
+      conn = log_in_user(conn, user)
+      conn = get(conn, Routes.user_confirmation_path(conn, :unconfirmed))
       response = html_response(conn, 200)
-      assert response =~ "<h1>Resend confirmation instructions</h1>"
+      assert response =~ "Resend confirmation instructions"
     end
   end
 
-  describe "POST /users/confirm" do
+  describe "POST /users/resend_confirm_email" do
     @tag :capture_log
     test "sends a new confirmation token", %{conn: conn, user: user} do
-      conn =
-        post(conn, Routes.user_confirmation_path(conn, :create), %{
-          "user" => %{"email" => user.email}
-        })
+      conn = log_in_user(conn, user)
+      conn = post(conn, Routes.user_confirmation_path(conn, :resend_confirm_email), %{})
 
-      assert redirected_to(conn) == "/"
-      assert get_flash(conn, :info) =~ "If your email is in our system"
-      assert Repo.get_by!(Accounts.UserToken, user_id: user.id).context == "confirm"
+      assert redirected_to(conn) == Routes.user_confirmation_path(conn, :unconfirmed)
+      assert get_flash(conn, :info) =~ "A new email has been sent"
+
+      assert Panic.Accounts.UserToken.user_and_contexts_query(user, ["confirm"])
+             |> Repo.all()
+             |> List.first()
     end
 
     test "does not send confirmation token if User is confirmed", %{conn: conn, user: user} do
       Repo.update!(Accounts.User.confirm_changeset(user))
+      conn = log_in_user(conn, user)
+      conn = post(conn, Routes.user_confirmation_path(conn, :resend_confirm_email), %{})
 
-      conn =
-        post(conn, Routes.user_confirmation_path(conn, :create), %{
-          "user" => %{"email" => user.email}
-        })
-
-      assert redirected_to(conn) == "/"
-      assert get_flash(conn, :info) =~ "If your email is in our system"
-      refute Repo.get_by(Accounts.UserToken, user_id: user.id)
+      assert redirected_to(conn) == PanicWeb.Helpers.home_path(user)
+      assert get_flash(conn, :info) =~ "You are already confirmed"
+      assert html_response(conn, 302)
     end
 
-    test "does not send confirmation token if email is invalid", %{conn: conn} do
-      conn =
-        post(conn, Routes.user_confirmation_path(conn, :create), %{
-          "user" => %{"email" => "unknown@example.com"}
-        })
+    test "does not send confirmation token if user is not signed in", %{conn: conn} do
+      conn = post(conn, Routes.user_confirmation_path(conn, :resend_confirm_email), %{})
 
       assert redirected_to(conn) == "/"
-      assert get_flash(conn, :info) =~ "If your email is in our system"
+      assert get_flash(conn, :error) =~ "You must be signed in"
       assert Repo.all(Accounts.UserToken) == []
     end
   end

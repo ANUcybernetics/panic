@@ -25,8 +25,8 @@ CURRENT_NAME="PetalPro"
 CURRENT_OTP="petal_pro"
 
 # Mac users only
-ack -l $CURRENT_NAME --ignore-file=is:rename_phoenix_project.sh | xargs sed -i '' -e "s/$CURRENT_NAME/$NEW_NAME/g"
-ack -l $CURRENT_OTP --ignore-file=is:rename_phoenix_project.sh | xargs sed -i '' -e "s/$CURRENT_OTP/$NEW_OTP/g"
+# ack -l $CURRENT_NAME --ignore-file=is:rename_phoenix_project.sh | xargs sed -i '' -e "s/$CURRENT_NAME/$NEW_NAME/g"
+# ack -l $CURRENT_OTP --ignore-file=is:rename_phoenix_project.sh | xargs sed -i '' -e "s/$CURRENT_OTP/$NEW_OTP/g"
 
 # Linux users only
 # ack -l $CURRENT_NAME --ignore-file=is:rename_phoenix_project.sh | xargs sed -i -e "s/$CURRENT_NAME/$NEW_NAME/g"

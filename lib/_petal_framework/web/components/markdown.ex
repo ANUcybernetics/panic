@@ -8,27 +8,21 @@ defmodule PetalFramework.Components.Markdown do
   @doc """
   Renders markdown beautifully using Tailwind Typography classes.
 
-      <.pretty_markdown content="# My markdown">
+      <.pretty_markdown content="# My markdown" />
   """
-  def pretty_markdown(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:class, fn -> "" end)
-      |> assign_new(:extra_assigns, fn ->
-        assigns_to_attributes(assigns, ~w(
-          class
-        )a)
-      end)
 
+  attr :content, :string, required: true
+  attr :class, :string, default: ""
+  attr :rest, :global
+
+  def pretty_markdown(assigns) do
     ~H"""
     <div
-      {@extra_assigns}
-      class={
-        [
-          "prose lg:prose-lg dark:prose-invert prose-img:rounded-xl prose-img:mx-auto prose-a:text-primary-600 prose-a:dark:text-primary-300",
-          @class
-        ]
-      }
+      {@rest}
+      class={[
+        "prose dark:prose-invert prose-img:rounded-xl prose-img:mx-auto prose-a:text-primary-600 prose-a:dark:text-primary-300",
+        @class
+      ]}
     >
       <.markdown content={@content} />
     </div>
@@ -38,6 +32,9 @@ defmodule PetalFramework.Components.Markdown do
   @doc """
   Renders markdown to html.
   """
+
+  attr :content, :string, required: true
+
   def markdown(assigns) do
     ~H"""
     <%= PetalFramework.MarkdownRenderer.to_html(@content) |> Phoenix.HTML.raw() %>

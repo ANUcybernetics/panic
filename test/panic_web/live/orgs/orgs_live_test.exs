@@ -10,13 +10,6 @@ defmodule PanicWeb.OrgsLiveTest do
       {:ok, _view, html} = live(conn, Routes.orgs_path(conn, :index))
       assert html =~ org.name
     end
-
-    test "shows warning to unconfirmed users", %{conn: conn, user: user, org: org} do
-      Repo.update(Ecto.Changeset.change(user, %{confirmed_at: nil}))
-      {:ok, _view, html} = live(conn, Routes.orgs_path(conn, :index))
-      assert html =~ "confirm your account"
-      refute html =~ org.name
-    end
   end
 
   describe ":new action" do

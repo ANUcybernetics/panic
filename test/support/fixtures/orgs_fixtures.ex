@@ -21,7 +21,7 @@ defmodule Panic.OrgsFixtures do
     org
   end
 
-  def membership_fixture(org, user, role \\ "member") do
+  def membership_fixture(org, user, role \\ :member) do
     Panic.Repo.insert!(Membership.insert_changeset(org, user, role))
   end
 
@@ -33,7 +33,7 @@ defmodule Panic.OrgsFixtures do
 
   def org_admin_fixture(org, user_attrs \\ %{}) do
     user = AccountsFixtures.confirmed_user_fixture(user_attrs)
-    membership_fixture(org, user, "admin")
+    membership_fixture(org, user, :admin)
     user
   end
 

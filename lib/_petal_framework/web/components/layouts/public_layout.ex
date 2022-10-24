@@ -5,58 +5,23 @@ defmodule PetalFramework.Components.PublicLayout do
   use Phoenix.Component
   use PetalComponents
   import PetalFramework.Components.UserDropdownMenu
-  import PanicWeb.Helpers
+
+  attr :current_page, :atom, required: true
+  attr :public_menu_items, :list, default: []
+  attr :user_menu_items, :list, default: []
+  attr :avatar_src, :string, default: nil
+  attr :current_user_name, :string, default: nil
+  attr :copyright_text, :string, default: ""
+  attr :max_width, :string, default: "lg", values: ["sm", "md", "lg", "xl", "full"]
+  attr :header_class, :string, default: ""
+  attr :twitter_url, :string, default: nil
+  attr :github_url, :string, default: nil
+  attr :discord_url, :string, default: nil
+  slot(:inner_block)
+  slot(:top_right)
+  slot(:logo)
 
   def public_layout(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:public_menu_items, fn -> [] end)
-      |> assign_new(:user_menu_items, fn -> [] end)
-      |> assign_new(:twitter_url, fn -> nil end)
-      |> assign_new(:github_url, fn -> nil end)
-      |> assign_new(:discord_url, fn -> nil end)
-      |> assign_new(:top_right, fn -> nil end)
-      |> assign_new(:max_width, fn -> "lg" end)
-      |> assign_new(:header_class, fn -> "" end)
-
-    ~H"""
-    <.public_layout_header
-      current_user={@current_user}
-      current_page={@current_page}
-      public_menu_items={@public_menu_items}
-      user_menu_items={@user_menu_items}
-      avatar_src={@avatar_src}
-      logo={@logo}
-      top_right={@top_right}
-      max_width={@max_width}
-      header_class={@header_class}
-    />
-
-    <div class="pt-[64px] md:pt-0">
-      <%= render_slot(@inner_block) %>
-    </div>
-
-    <.public_layout_footer
-      public_menu_items={@public_menu_items}
-      twitter_url={@twitter_url}
-      github_url={@github_url}
-      discord_url={@discord_url}
-      logo={@logo}
-      max_width={@max_width}
-    />
-    """
-  end
-
-  def public_layout_header(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:user_menu_items, fn -> [] end)
-      |> assign_new(:public_menu_items, fn -> [] end)
-      |> assign_new(:avatar_src, fn -> nil end)
-      |> assign_new(:top_right, fn -> nil end)
-      |> assign_new(:max_width, fn -> "lg" end)
-      |> assign_new(:header_class, fn -> "" end)
-
     ~H"""
     <script>
       // When you scroll down, you will notice the navbar becomes translucent.
@@ -123,22 +88,20 @@ defmodule PetalFramework.Components.PublicLayout do
     <header
       x-data="{mobile: false}"
       x-init="window.addEventListener('scroll', makeHeaderTranslucentOnScroll)"
-      class={
-        [
-          "fixed top-0 left-0 z-30 w-full transition duration-500 ease-in-out md:sticky semi-translucent",
-          @header_class
-        ]
-      }
+      class={[
+        "fixed top-0 left-0 z-30 w-full transition duration-500 ease-in-out md:sticky semi-translucent dark:bg-[#0B1120] bg-slate-50",
+        @header_class
+      ]}
     >
       <.container max_width={@max_width}>
         <div class="flex flex-wrap items-center h-16 md:h-18">
           <div class="lg:w-3/12">
             <div class="flex items-center">
-              <.link class="inline-block ml-1 text-2xl font-bold leading-none" to="/">
+              <.link class="inline-block ml-1 text-2xl font-bold leading-none" href="/">
                 <%= render_slot(@logo) %>
               </.link>
 
-              <.link class="hidden ml-3 lg:block" to="/" />
+              <.link class="hidden ml-3 lg:block" href="/"></.link>
             </div>
           </div>
 
@@ -154,16 +117,14 @@ defmodule PetalFramework.Components.PublicLayout do
 
           <div class="flex items-center justify-end ml-auto lg:w-3/12">
             <div class="flex items-center gap-3 mr-4">
-              <%= if @top_right do %>
-                <%= render_slot(@top_right) %>
-              <% end %>
+              <%= render_slot(@top_right) %>
             </div>
 
             <div class="hidden md:block">
               <.user_menu_dropdown
                 user_menu_items={@user_menu_items}
                 avatar_src={@avatar_src}
-                current_user_name={if @current_user, do: user_name(@current_user), else: nil}
+                current_user_name={@current_user_name}
               />
             </div>
 
@@ -172,7 +133,7 @@ defmodule PetalFramework.Components.PublicLayout do
               class="relative inline-block w-5 h-5 cursor-pointer md:hidden"
             >
               <svg
-                :class="{ 'opacity-1' : !mobile, 'opacity-0' : mobile }"
+                x-bind:class="{ 'opacity-1' : !mobile, 'opacity-0' : mobile }"
                 width="24"
                 height="24"
                 fill="none"
@@ -188,7 +149,7 @@ defmodule PetalFramework.Components.PublicLayout do
               </svg>
 
               <svg
-                :class="{ 'opacity-0' : !mobile }"
+                x-bind:class="{ 'opacity-0' : !mobile }"
                 width="24"
                 height="24"
                 fill="none"
@@ -206,7 +167,7 @@ defmodule PetalFramework.Components.PublicLayout do
           </div>
         </div>
 
-        <div :class="{ 'block' : mobile, 'hidden' : !mobile }" class="md:hidden">
+        <div x-bind:class="{ 'block' : mobile, 'hidden' : !mobile }" class="md:hidden">
           <hr class="border-primary-900 border-opacity-10 dark:border-slate-700" />
           <ul class="py-6">
             <.list_menu_items
@@ -215,19 +176,19 @@ defmodule PetalFramework.Components.PublicLayout do
               menu_items={@public_menu_items}
             />
 
-            <%= if @current_user do %>
+            <%= if @current_user_name do %>
               <div class="pt-4 pb-3">
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
-                    <%= if @current_user.name do %>
-                      <.avatar name={@current_user.name} size="sm" random_color />
+                    <%= if @current_user_name do %>
+                      <.avatar name={@current_user_name} size="sm" random_color />
                     <% else %>
                       <.avatar size="sm" />
                     <% end %>
                   </div>
                   <div class="ml-3">
                     <div class="text-base font-medium text-slate-800 dark:text-slate-300">
-                      <%= @current_user.name %>
+                      <%= @current_user_name %>
                     </div>
                   </div>
                 </div>
@@ -243,33 +204,11 @@ defmodule PetalFramework.Components.PublicLayout do
         </div>
       </.container>
     </header>
-    """
-  end
 
-  defp list_menu_items(assigns) do
-    ~H"""
-    <%= for menu_item <- @menu_items do %>
-      <li class={@li_class}>
-        <.link
-          to={menu_item.path}
-          class={@a_class}
-          link_type="a"
-          method={if menu_item[:method], do: menu_item[:method], else: nil}
-        >
-          <%= menu_item.label %>
-        </.link>
-      </li>
-    <% end %>
-    """
-  end
+    <div class="pt-[64px] md:pt-0">
+      <%= render_slot(@inner_block) %>
+    </div>
 
-  def public_layout_footer(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:public_menu_items, fn -> [] end)
-      |> assign_new(:max_width, fn -> "lg" end)
-
-    ~H"""
     <section>
       <div class="py-20">
         <.container max_width={@max_width}>
@@ -291,19 +230,15 @@ defmodule PetalFramework.Components.PublicLayout do
           </div>
           <div class="flex flex-wrap items-center justify-between mt-8">
             <div class="order-last text-sm text-slate-600 dark:text-slate-400">
-              <div>© <%= Timex.now().year %> Everfree Pty Ltd. All rights reserved.</div>
+              <div>© <%= Timex.now().year %> <%= @copyright_text %></div>
 
               <div class="mt-2 divide-x divide-slate-500 dark:divide-slate-400">
-                <.link
-                  to="/privacy"
-                  label="Privacy Policy"
-                  class="pr-3 hover:text-slate-900 dark:hover:text-slate-300"
-                />
-                <.link
-                  to="/license"
-                  label="License"
-                  class="px-3 hover:text-slate-900 dark:hover:text-slate-300"
-                />
+                <.link href="/privacy" class="pr-3 hover:text-slate-900 dark:hover:text-slate-300">
+                  Privacy Policy
+                </.link>
+                <.link href="/license" class="px-3 hover:text-slate-900 dark:hover:text-slate-300">
+                  License
+                </.link>
               </div>
             </div>
             <div class="order-first mb-4 md:mb-0 md:order-last">
@@ -350,6 +285,26 @@ defmodule PetalFramework.Components.PublicLayout do
         </.container>
       </div>
     </section>
+    """
+  end
+
+  attr :li_class, :string, default: ""
+  attr :a_class, :string, default: ""
+  attr :menu_items, :list, default: [], doc: "list of maps with keys :method, :path, :label"
+
+  defp list_menu_items(assigns) do
+    ~H"""
+    <%= for menu_item <- @menu_items do %>
+      <li class={@li_class}>
+        <.link
+          href={menu_item.path}
+          class={@a_class}
+          method={if menu_item[:method], do: menu_item[:method], else: nil}
+        >
+          <%= menu_item.label %>
+        </.link>
+      </li>
+    <% end %>
     """
   end
 

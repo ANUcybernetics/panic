@@ -23,7 +23,18 @@
   <.button label="Submit" class="hide-if-loading" />
   <.spinner class="show-if-loading" />
 */
-.show-if-loading, .show-if-loading-flex { display: none; }
-.phx-click-loading .hide-if-loading, .phx-change-loading .hide-if-loading { display: none; }
-.phx-click-loading .show-if-loading, .phx-change-loading .show-if-loading { display: initial; }
-.phx-click-loading .show-if-loading-flex, .phx-show-loading .show-if-loading-flex { display: flex; }
+.show-if-loading, .show-if-loading-flex {
+  display: none !important;
+}
+
+.phx-click-loading .hide-if-loading, .phx-change-loading .hide-if-loading {
+  display: none !important;
+}
+
+.phx-click-loading .show-if-loading, .phx-change-loading .show-if-loading {
+  display: initial !important;
+}
+
+.phx-click-loading .show-if-loading-flex, .phx-show-loading .show-if-loading-flex {
+  display: flex !important;
+}

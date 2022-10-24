@@ -15,7 +15,7 @@ defmodule PanicWeb.UserOrgInvitationsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <.settings_layout current={:org_invitations} current_user={@current_user}>
+    <.settings_layout current_page={:org_invitations} current_user={@current_user}>
       <%= if @current_user.confirmed_at do %>
         <%= if Util.blank?(@invitations) do %>
           <.p>
@@ -27,7 +27,7 @@ defmodule PanicWeb.UserOrgInvitationsLive do
               <.box padded id={"invitation-#{invitation.id}"}>
                 <div>
                   <div class="flex items-center justify-center w-12 h-12 mx-auto bg-blue-100 rounded-full">
-                    <Heroicons.Outline.mail class="w-6 h-6 text-blue-600" />
+                    <HeroiconsV1.Outline.mail class="w-6 h-6 text-blue-600" />
                   </div>
                   <div class="mt-3 text-center sm:mt-5">
                     <div class="text-lg font-medium leading-6 text-gray-900 dark:text-white">

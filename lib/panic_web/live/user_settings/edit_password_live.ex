@@ -13,23 +13,31 @@ defmodule PanicWeb.EditPasswordLive do
 
   def render(assigns) do
     ~H"""
-    <.settings_layout current={:edit_password} current_user={@current_user}>
-      <.form let={f} for={@changeset} action={Routes.user_settings_path(@socket, :update_password)}>
+    <.settings_layout current_page={:edit_password} current_user={@current_user}>
+      <.form :let={f} for={@changeset} action={Routes.user_settings_path(@socket, :update_password)}>
         <.form_field
           type="password_input"
           form={f}
           field={:current_password}
           name="current_password"
           label={gettext("Current password")}
+          autocomplete="current-password"
         />
 
-        <.form_field type="password_input" form={f} field={:password} label={gettext("New password")} />
+        <.form_field
+          type="password_input"
+          form={f}
+          field={:password}
+          label={gettext("New password")}
+          autocomplete="new-password"
+        />
 
         <.form_field
           type="password_input"
           form={f}
           field={:password_confirmation}
           label={gettext("New password confirmation")}
+          autocomplete="new-password"
         />
 
         <div class="flex justify-between">
@@ -37,11 +45,13 @@ defmodule PanicWeb.EditPasswordLive do
             type="button"
             phx-click="send_password_reset_email"
             data-confirm={
-              "This will send a reset password link to the email '#{@current_user.email}'. Continue?"
+              gettext("This will send a reset password link to the email '%{email}'. Continue?",
+                email: @current_user.email
+              )
             }
             class="text-sm text-gray-500 underline dark:text-gray-400"
           >
-            Forgot your password?
+            <%= gettext("Forgot your password?") %>
           </button>
 
           <.button><%= gettext("Change password") %></.button>

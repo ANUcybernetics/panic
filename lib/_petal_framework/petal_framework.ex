@@ -7,12 +7,14 @@ defmodule PetalFramework do
         UserDropdownMenu,
         ColorSchemeSwitch,
         LanguageSelect,
+        LocalTime,
         SocialButton,
         AuthLayout,
         Navbar,
         SidebarLayout,
         StackedLayout,
-        Markdown
+        Markdown,
+        RouteTree
       }
     end
   end

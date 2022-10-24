@@ -26,13 +26,7 @@ defmodule PetalFramework.Extensions.StringExt do
   end
 
   defp rindex(text, str, offset) do
-    text =
-      if offset do
-        String.slice(text, 0, offset)
-      else
-        text
-      end
-
+    text = String.slice(text, 0, offset)
     reversed = text |> String.reverse()
     matchword = String.reverse(str)
 

@@ -9,9 +9,10 @@ defmodule PanicWeb.OrgDashboardLiveTest do
   describe "has role 'admin'" do
     test "can access and see name and settings", %{conn: conn, user: user} do
       org = org_fixture()
-      membership_fixture(org, user, "admin")
+      membership_fixture(org, user, :admin)
 
-      {:ok, view, html} = live(conn, Routes.live_path(conn, PanicWeb.OrgDashboardLive, org.slug))
+      {:ok, view, html} =
+        live(conn, Routes.live_path(conn, PanicWeb.OrgDashboardLive, org.slug))
 
       assert html =~ org.name
       assert has_element?(view, "#sidebar span", "Settings")
@@ -21,9 +22,10 @@ defmodule PanicWeb.OrgDashboardLiveTest do
   describe "has role 'member'" do
     test "can access but doesn't see settings", %{conn: conn, user: user} do
       org = org_fixture()
-      membership_fixture(org, user, "member")
+      membership_fixture(org, user, :member)
 
-      {:ok, view, html} = live(conn, Routes.live_path(conn, PanicWeb.OrgDashboardLive, org.slug))
+      {:ok, view, html} =
+        live(conn, Routes.live_path(conn, PanicWeb.OrgDashboardLive, org.slug))
 
       assert html =~ org.name
       refute has_element?(view, "#sidebar span", "Settings")
@@ -33,7 +35,7 @@ defmodule PanicWeb.OrgDashboardLiveTest do
   describe "is not a member" do
     test "redirects", %{conn: conn, user: user} do
       org = org_fixture()
-      membership_fixture(org, user, "member")
+      membership_fixture(org, user, :member)
 
       assert {:error,
               {:redirect,

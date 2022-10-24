@@ -1,0 +1,15 @@
+[
+  verbose: true,
+  private: false,
+  skip: false,
+  router: "",
+  exit: "false",
+  format: "txt",
+  out: "",
+  threshold: "medium",
+  ignore: ["Config.HTTPS"],
+  ignore_files: [
+    "lib/_petal_framework/core/page_builder/page_builder.ex",
+    "lib/panic_web/controllers/email_testing_controller.ex"
+  ]
+]

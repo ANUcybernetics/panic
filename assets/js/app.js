@@ -44,7 +44,7 @@ onDocReady(() => {
       let hookName = hookEl.getAttribute("phx-hook");
       let hook = Hooks[hookName];
 
-      if (hook.deadViewCompatible) {
+      if (hook && hook.deadViewCompatible) {
         let mountedFn = hook.mounted.bind({ ...hook, el: hookEl });
         mountedFn();
       }

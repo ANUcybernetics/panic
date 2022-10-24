@@ -18,7 +18,7 @@ defmodule PanicWeb.UserSessionControllerTest do
 
     test "redirects if already logged in", %{conn: conn, user: user} do
       conn = conn |> log_in_user(user) |> get(Routes.user_session_path(conn, :new))
-      assert redirected_to(conn) == Routes.live_path(conn, PanicWeb.DashboardLive)
+      assert redirected_to(conn) == PanicWeb.Helpers.home_path(user)
     end
   end
 
@@ -30,11 +30,11 @@ defmodule PanicWeb.UserSessionControllerTest do
         })
 
       assert get_session(conn, :user_token)
-      assert redirected_to(conn) == Routes.live_path(conn, PanicWeb.DashboardLive)
+      assert redirected_to(conn) == PanicWeb.Helpers.home_path(user)
       assert_log("sign_in", user_id: user.id)
 
       # Now do a logged in request
-      conn = get(conn, "/")
+      conn = get(conn, Routes.user_session_path(conn, :new))
       html_response(conn, 302)
     end
 
@@ -49,7 +49,7 @@ defmodule PanicWeb.UserSessionControllerTest do
         })
 
       assert conn.resp_cookies["_panic_web_user_remember_me"]
-      assert redirected_to(conn) == Routes.live_path(conn, PanicWeb.DashboardLive)
+      assert redirected_to(conn) == PanicWeb.Helpers.home_path(user)
     end
 
     test "logs the user in with return to", %{conn: conn, user: user} do

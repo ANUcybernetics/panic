@@ -14,7 +14,9 @@ defmodule PetalFramework.Components.EmailComponents do
 
   # Use this to center something like a button.
   # <.centered><button /></.centered>
-  # slot default
+
+  slot(:inner_block)
+
   def centered(assigns) do
     ~H"""
     <table
@@ -40,7 +42,8 @@ defmodule PetalFramework.Components.EmailComponents do
     """
   end
 
-  # slot default
+  slot(:inner_block)
+
   def gray_box(assigns) do
     ~H"""
     <table class="attributes" width="100%" cellpadding="0" cellspacing="0" role="presentation">
@@ -53,7 +56,8 @@ defmodule PetalFramework.Components.EmailComponents do
     """
   end
 
-  # slot default
+  slot(:inner_block)
+
   def dotted_gray_box(assigns) do
     ~H"""
     <table
@@ -73,6 +77,8 @@ defmodule PetalFramework.Components.EmailComponents do
     """
   end
 
+  slot(:inner_block)
+
   def top_border(assigns) do
     ~H"""
     <table class="top-border" width="100%" role="presentation">
@@ -85,6 +91,8 @@ defmodule PetalFramework.Components.EmailComponents do
     """
   end
 
+  slot(:inner_block)
+
   def small_text(assigns) do
     ~H"""
     <p class="sub">
@@ -93,20 +101,23 @@ defmodule PetalFramework.Components.EmailComponents do
     """
   end
 
-  # prop to, :string, required: true
-  # prop label, :string, required: true
-  # prop color, :string, options: ["blue", "green", "red"]
-  # prop size, :string, options: ["sm", "md", "lg"]
-  def button(assigns) do
-    assigns = assign_new(assigns, :color, fn -> "blue" end)
-    assigns = assign_new(assigns, :size, fn -> "md" end)
+  attr :to, :string, required: true
+  attr :color, :string, default: "blue", values: ["blue", "green", "red"]
+  attr :size, :string, default: "md", values: ["sm", "md", "lg"]
+  slot(:inner_block)
 
+  def button(assigns) do
     ~H"""
     <a href={@to} class={"f-fallback button button--#{@color} button--#{@size}"} target="_blank">
       <%= render_slot(@inner_block) %>
     </a>
     """
   end
+
+  attr :to, :string, required: true
+  attr :color, :string, default: "blue", values: ["blue", "green", "red"]
+  attr :size, :string, default: "md", values: ["sm", "md", "lg"]
+  slot(:inner_block)
 
   def button_centered(assigns) do
     ~H"""

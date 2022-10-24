@@ -27,12 +27,14 @@ defmodule PanicWeb.UserRegistrationControllerTest do
           "user" => valid_user_attributes(email: email)
         })
 
+      user = Panic.Repo.last(Panic.Accounts.User)
+      assert user.email == email
       assert get_session(conn, :user_token)
-      assert redirected_to(conn) == Routes.live_path(conn, PanicWeb.DashboardLive)
+      assert redirected_to(conn) == PanicWeb.Helpers.home_path(user)
       assert_log("register")
 
       # Now do a logged in request
-      conn = get(conn, "/")
+      conn = get(conn, Routes.user_registration_path(conn, :new))
       html_response(conn, 302)
     end
 

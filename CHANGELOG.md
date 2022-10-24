@@ -1,8 +1,33 @@
 # Changelog
+### 1.4.0 - 2022-10-12 23:44:20
+### Added
+- Updated to LiveView 0.18 + Petal Components 0.18
+- All components updated with declarative assigns (attr / slot)
+- Data table component
+- Local time component
+- Sobelow for security checking
+- Coveralls for code test coverage
+- test.yml Github action for code quality
+- Easily modifiable content security policy to help prevent XSS
+- Added a docker-compose.yaml that adds Postgres so you don't need to install it
+
+### Changed
+- Router significantly more streamlined
+- Some routes have been moved into their own files: AdminRoutes, AuthRoutes, DevRoutes, MailblusterRoutes
+- Users are forced to be confirmed to access /app routes (easily configurable)
+- Use Ecto enums for org roles
+
+### Fixes
+- Fix reset password failing when signed in
+- Clean up dashboard_live.ex - some old code unused was left in there
+- Improved SEO meta tags in _head.html.eex
+- Show a warning in the logs when no title/meta_desciprion is set on a public page
+- Added `open-graph.png` (to be replaced by dev)
+- Fix require_confirmed_user plug
+- Fix landing page GSAP not working
 ### 1.3.0 - 2022-06-17 02:43:55
 ### Added
 - Two-factor authentication using time-based one time passwords (paired with something like Google Authenticator)
-
 ### Changed
 - Decoupled DashboardLive from Orgs so you can get started quicker if you don't want orgs
 - Can pass a custom header class to the public layout
@@ -14,6 +39,7 @@
 - Onboarding now remembers user_return_to
 - Fixed nav dropdown bug after modal toggle
 - Fixed gettext in live views
+
 ### 1.2.0 - 2022-05-31 07:34:11
 ### Added
 - Login with Google & Github - easy to add more auth providers
@@ -25,14 +51,12 @@
 - Added License and Privacy pages (with some content from a template to get you started)
 - New layout: <.layout type="public">, for public marketing related pages like landing, about us, privacy, etc
 - Hooks can now be run in dead views if compatible (see color-scheme-hook.js as an example)
-
 ### Changed
 - Simpler config access (`Panic.config(:app_name)` instead of `Application.get_env(:panic, :app_name)`)
 - Refactor <.layout> to take less props
 - Refactor dark/light mode system. Much simpler now and no longer needs cookies
 - Put Petal Pro Components in their own folder for easier future upgrades (can duplicate if you want to modify them)
 - Sidebar and stacked layout have a new slot for the top right corner (if you want to add something like a notifications bell)
-
 ### Fixed
 - Log metadata wasn't being cast
 - More user actions are logged

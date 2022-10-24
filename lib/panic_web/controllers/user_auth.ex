@@ -199,11 +199,8 @@ defmodule PanicWeb.UserAuth do
 
   @doc """
   Used for routes that require the user to be authenticated.
-
-  If you want to enforce the user email is confirmed before
-  they use the application at all, here would be a good place.
   """
-  def require_authenticated_user(conn, _opts) do
+  def require_authenticated_user(conn, opts) do
     cond do
       is_nil(conn.assigns[:current_user]) ->
         conn
@@ -220,7 +217,11 @@ defmodule PanicWeb.UserAuth do
         |> halt()
 
       true ->
-        conn
+        # SETUP_TODO: this function `require_authenticated_user` is a plug that you use in your router to protect routes to only authorized users.
+        # One question is, if a user signs up with an email/pw are they then authenticated? Or is only after they confirm their email?
+        # By default we force every user to confirm their email before they can access protected routes. They are redirected to a page telling them to confirm their email.
+        # If you don't mind unconfirmed email users accessing your protected routes, then replace the next line with just `conn`:
+        require_confirmed_user(conn, opts)
     end
   end
 
@@ -228,12 +229,11 @@ defmodule PanicWeb.UserAuth do
   Used for routes that require the user to be confirmed.
   """
   def require_confirmed_user(conn, _opts) do
-    if conn.assigns[:current_user] do
+    if conn.assigns[:current_user] && conn.assigns[:current_user].confirmed_at do
       conn
     else
       conn
-      |> put_flash(:error, gettext("You must be confirmed to access this page."))
-      |> redirect(to: signed_in_path(conn.assigns[:current_user]))
+      |> redirect(to: Routes.user_confirmation_path(conn, :unconfirmed))
       |> halt()
     end
   end

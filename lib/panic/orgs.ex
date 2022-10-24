@@ -36,7 +36,7 @@ defmodule Panic.Orgs do
       Ecto.Multi.new()
       |> Ecto.Multi.insert(:org, changeset)
       |> Ecto.Multi.insert(:membership, fn %{org: org} ->
-        Membership.insert_changeset(org, user, "admin")
+        Membership.insert_changeset(org, user, :admin)
       end)
 
     case Repo.transaction(multi) do

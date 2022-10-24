@@ -4,17 +4,11 @@ defmodule PetalFramework.Components.ColorSchemeSwitch do
   @doc """
   A button that switches between light and dark modes.
   Pairs with css-theme-switch.js
-
-  prop js_lib, :string, options: ["alpine_js", "live_view_js"]
   """
   def color_scheme_switch(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:js_lib, fn -> "live_view_js" end)
-
     ~H"""
     <button
-      {get_js_attributes(@js_lib)}
+      phx-hook="ColorSchemeHook"
       type="button"
       id={Ecto.UUID.generate()}
       class="color-scheme text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5"
@@ -43,16 +37,4 @@ defmodule PetalFramework.Components.ColorSchemeSwitch do
     </button>
     """
   end
-
-  defp get_js_attributes("live_view_js"),
-    do: %{
-      "phx-hook" => "ColorSchemeHook"
-    }
-
-  defp get_js_attributes("alpine_js"),
-    do: %{
-      "x-data" => "{}",
-      "x-init" => "$nextTick(() => { window.initScheme() })",
-      "x-on:click" => "window.toggleScheme()"
-    }
 end

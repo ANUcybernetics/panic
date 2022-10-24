@@ -1,24 +1,26 @@
 defmodule PetalFramework.Components.SocialButton do
   use Phoenix.Component
   import PetalComponents.Link
-  import PetalComponents.Class
+  import PetalComponents.Helpers
 
-  # prop class, :string
-  # prop color, :string, options: ["primary", "secondary", "info", "success", "warning", "danger", "gray"]
-  # prop link_type, :string, options: ["button", "a", "live_patch", "live_redirect"]
-  # prop size, :string
-  # prop to, :string
+  attr :class, :string, default: ""
+
+  attr :color, :string,
+    values: ["primary", "secondary", "info", "success", "warning", "danger", "gray"]
+
+  attr :link_type, :string, default: "a", values: ["button", "a", "live_patch", "live_redirect"]
+  attr :size, :string
+  attr :to, :string, default: nil
+
+  attr :logo, :string,
+    required: true,
+    values: ["google", "github", "facebook", "twitter", "apple", "linkedin"]
+
+  attr :variant, :string, default: "solid", values: ["solid", "outline"]
+
   def social_button(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:link_type, fn -> "a" end)
-      |> assign_new(:class, fn -> "" end)
-      |> assign_new(:to, fn -> nil end)
-      |> assign_new(:logo, fn -> "" end)
-      |> assign_new(:variant, fn -> "solid" end)
-
     ~H"""
-    <.link
+    <.a
       link_type={@link_type}
       to={@to}
       class={
@@ -126,7 +128,7 @@ defmodule PetalFramework.Components.SocialButton do
         </svg>
         <p>Continue with LinkedIn</p>
       <% end %>
-    </.link>
+    </.a>
     """
   end
 

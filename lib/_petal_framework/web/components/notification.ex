@@ -4,8 +4,9 @@ defmodule PetalFramework.Components.Notification do
   @doc """
   Renders a notification from a flash. Pairs with RemoveFlashHook
   """
-  # prop content, :string
-  # prop type, :string
+  attr :content, :string
+  attr :type, :atom, values: [:success, :warning, :info, :error]
+
   def notification(assigns) do
     ~H"""
     <%= if @content do %>
@@ -49,7 +50,7 @@ defmodule PetalFramework.Components.Notification do
           <div
             class={"#{progress_css(@type)} h-2 progress ease-linear w-0"}
             style="transition-property:width; transition-duration: 10s"
-            :style="progress && {width: '100%'}"
+            x-bind:style="progress && {width: '100%'}"
           >
           </div>
           <div class="flex items-start p-4">

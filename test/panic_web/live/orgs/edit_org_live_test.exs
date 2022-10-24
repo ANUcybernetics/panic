@@ -44,7 +44,7 @@ defmodule PanicWeb.EditOrgLiveTest do
   describe "not admin" do
     test "it redirects", %{conn: conn, org: _org, user: user} do
       new_org = org_fixture()
-      membership_fixture(new_org, user, "member")
+      membership_fixture(new_org, user, :member)
 
       assert {:error,
               {:redirect,

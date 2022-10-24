@@ -11,678 +11,923 @@ msgstr ""
 "Language: en\n"
 "Plural-Forms: nplurals=2\n"
 
+#: lib/panic_web/templates/page/landing_page.html.heex:39
 #, elixir-autogen, elixir-format
-#: lib/panic_web/templates/page/landing_page.html.heex:34
 msgid "Adapt this landing page template to your own web application. Now you can make your next great web app in record time."
 msgstr ""
 
+#: lib/panic_web/templates/page/landing_page.html.heex:15
 #, elixir-autogen, elixir-format
-#: lib/panic_web/templates/page/landing_page.html.heex:10
 msgid "The secret of"
 msgstr ""
 
+#: lib/panic_web/templates/page/landing_page.html.heex:17
 #, elixir-autogen, elixir-format
-#: lib/panic_web/templates/page/landing_page.html.heex:12
 msgid "getting ahead"
 msgstr ""
 
+#: lib/panic_web/templates/page/landing_page.html.heex:19
 #, elixir-autogen, elixir-format
-#: lib/panic_web/templates/page/landing_page.html.heex:14
 msgid "is getting started"
 msgstr ""
 
+#: lib/panic_web/templates/page/landing_page.html.heex:22
 #, elixir-autogen, elixir-format
-#: lib/panic_web/templates/page/landing_page.html.heex:17
 msgid "Get started"
 msgstr ""
 
+#: lib/panic_web/templates/page/landing_page.html.heex:30
 #, elixir-autogen, elixir-format
-#: lib/panic_web/templates/page/landing_page.html.heex:25
 msgid "Guide"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/menus.ex:13
-#: lib/panic_web/templates/page/landing_page.html.heex:207
+#: lib/panic_web/templates/page/landing_page.html.heex:212
+#, elixir-autogen, elixir-format
 msgid "Features"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/menus.ex:15
-#: lib/panic_web/templates/page/landing_page.html.heex:278
+#: lib/panic_web/templates/page/landing_page.html.heex:283
+#, elixir-autogen, elixir-format
 msgid "Pricing"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/components/landing_page.ex:187
 #: lib/panic_web/menus.ex:14
+#, elixir-autogen, elixir-format
 msgid "Testimonials"
 msgstr ""
 
+#: lib/panic_web/templates/page/landing_page.html.heex:11
 #, elixir-autogen, elixir-format
-#: lib/panic_web/templates/page/landing_page.html.heex:6
 msgid "Trusted by brands all over the world"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/user_settings/edit_email_live.ex:27
 #: lib/panic_web/menus.ex:125
+#, elixir-autogen, elixir-format
 msgid "Change email"
 msgstr ""
 
+#: lib/panic_web/menus.ex:170
 #, elixir-autogen, elixir-format
-#: lib/panic_web/menus.ex:161
 msgid "Dashboard"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/menus.ex:134
+#, elixir-autogen, elixir-format
 msgid "Edit notifications"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/menus.ex:143
+#, elixir-autogen, elixir-format
 msgid "Edit password"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/menus.ex:116
+#, elixir-autogen, elixir-format
 msgid "Edit profile"
 msgstr ""
 
-#, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_live.html.heex:46
+#: lib/panic_web/live/orgs/org/org_team_live.html.heex:23
 #: lib/panic_web/live/user_settings/edit_profile_live.ex:22
+#, elixir-autogen, elixir-format
 msgid "Name"
 msgstr ""
 
-#, elixir-autogen, elixir-format
+#: lib/panic_web/live/user_settings/user_settings_layout_component.ex:15
 #: lib/panic_web/menus.ex:107
+#: lib/panic_web/templates/user_confirmation/edit.html.heex:10
+#, elixir-autogen, elixir-format
 msgid "Settings"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/user_settings/edit_profile_live.ex:27
+#, elixir-autogen, elixir-format
 msgid "Update profile"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/user_settings/edit_profile_live.ex:23
+#, elixir-autogen, elixir-format
 msgid "eg. John Smith"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/user_settings/edit_email_live.ex:53
+#, elixir-autogen, elixir-format
 msgid "A link to confirm your e-mail change has been sent to the new address."
 msgstr ""
 
+#: lib/panic_web/live/user_settings/edit_notifications_live.ex:22
+#: lib/panic_web/live/user_settings/user_onboarding_live.ex:63
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/user_settings/edit_notifications.ex:22
-#: lib/panic_web/live/user_settings/user_onboarding_live.ex:59
 msgid "Allow marketing notifications"
 msgstr ""
 
+#: lib/panic_web/live/user_settings/edit_password_live.ex:46
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/user_settings/edit_password_live.ex:47
 msgid "Change password"
 msgstr ""
 
-#, elixir-autogen, elixir-format, fuzzy
 #: lib/panic_web/live/user_settings/edit_email_live.ex:22
+#, elixir-autogen, elixir-format, fuzzy
 msgid "Change your email"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/user_settings/edit_password_live.ex:23
+#, elixir-autogen, elixir-format
 msgid "Current password"
 msgstr ""
 
-#, elixir-autogen, elixir-format
-#: lib/panic_web/controllers/user_confirmation_controller.ex:22
-msgid "If your email is in our system and it has not been confirmed yet, you will receive an email with instructions shortly."
-msgstr ""
-
-#, elixir-autogen, elixir-format, fuzzy
 #: lib/panic_web/live/user_settings/edit_password_live.ex:26
+#, elixir-autogen, elixir-format, fuzzy
 msgid "New password"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/user_settings/edit_password_live.ex:32
+#, elixir-autogen, elixir-format
 msgid "New password confirmation"
 msgstr ""
 
-#, elixir-autogen, elixir-format
-#: lib/panic_web/live/user_settings/edit_notifications.ex:36
+#: lib/panic_web/live/user_settings/edit_notifications_live.ex:36
 #: lib/panic_web/live/user_settings/edit_profile_live.ex:41
+#, elixir-autogen, elixir-format
 msgid "Profile updated"
 msgstr ""
 
+#: lib/panic_web/live/user_settings/user_onboarding_live.ex:67
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/user_settings/user_onboarding_live.ex:63
 msgid "Submit"
 msgstr ""
 
+#: lib/panic_web/live/user_settings/user_onboarding_live.ex:87
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/user_settings/user_onboarding_live.ex:83
 msgid "Thank you!"
 msgstr ""
 
+#: lib/panic_web/live/user_settings/user_onboarding_live.ex:43
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/user_settings/user_onboarding_live.ex:39
 msgid "To join our community, help us improve by completing your profile."
 msgstr ""
 
-#, elixir-autogen, elixir-format
-#: lib/panic_web/live/user_settings/edit_notifications.ex:44
+#: lib/panic_web/live/user_settings/edit_notifications_live.ex:44
 #: lib/panic_web/live/user_settings/edit_profile_live.ex:49
+#, elixir-autogen, elixir-format
 msgid "Update failed. Please check the form for issues"
 msgstr ""
 
+#: lib/panic_web/controllers/user_confirmation_controller.ex:70
 #, elixir-autogen, elixir-format
-#: lib/panic_web/controllers/user_confirmation_controller.ex:61
 msgid "User confirmation link is invalid or it has expired."
 msgstr ""
 
+#: lib/panic_web/controllers/user_confirmation_controller.ex:51
+#: lib/panic_web/controllers/user_confirmation_controller.ex:55
 #, elixir-autogen, elixir-format
-#: lib/panic_web/controllers/user_confirmation_controller.ex:42
-#: lib/panic_web/controllers/user_confirmation_controller.ex:46
 msgid "User confirmed successfully."
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/controllers/user_registration_controller.ex:25
+#, elixir-autogen, elixir-format
 msgid "User created successfully."
 msgstr ""
 
+#: lib/panic_web/live/user_settings/user_onboarding_live.ex:39
+#: lib/panic_web/templates/user_confirmation/unconfirmed.html.heex:9
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/user_settings/user_onboarding_live.ex:35
 msgid "Welcome!"
 msgstr ""
 
+#: lib/panic_web/live/user_settings/user_onboarding_live.ex:54
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/user_settings/user_onboarding_live.ex:50
 msgid "What is your name?*"
 msgstr ""
 
+#: lib/panic_web/controllers/user_auth.ex:249
 #, elixir-autogen, elixir-format
-#: lib/panic_web/controllers/user_auth.ex:222
 msgid "You do not have access to this page."
 msgstr ""
 
+#: lib/panic_web/controllers/user_auth.ex:207
+#: lib/panic_web/live/hooks/user_on_mount_hooks.ex:17
 #, elixir-autogen, elixir-format
-#: lib/panic_web/controllers/user_auth.ex:193
-#: lib/panic_web/live/user_on_mount_hooks.ex:17
 msgid "You must log in to access this page."
 msgstr ""
 
+#: lib/panic_web/controllers/user_auth.ex:262
 #, elixir-autogen, elixir-format
-#: lib/panic_web/controllers/user_auth.ex:235
 msgid "Your account is not accessible."
 msgstr ""
 
+#: lib/panic_web/live/user_settings/user_onboarding_live.ex:55
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/panic_web/live/user_settings/user_onboarding_live.ex:51
 msgid "eg. John"
 msgstr ""
 
-#, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_invite_form_component.ex:23
+#: lib/panic_web/live/orgs/org/team_live/org_team_invite_form_component.ex:23
 #: lib/panic_web/live/user_settings/edit_email_live.ex:23
+#, elixir-autogen, elixir-format
 msgid "eg. john@gmail.com"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_settings_layout_component.ex:23
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/org_settings_layout_component.ex:23
 msgid "%{org_name} settings"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/user_settings/user_org_invitations_live.ex:58
+#, elixir-autogen, elixir-format
 msgid "Accept"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_team_live.html.heex:48
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_live.html.heex:71
 msgid "Are you sure you want to leave this team?"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/user_settings/user_org_invitations_live.ex:51
+#, elixir-autogen, elixir-format
 msgid "Are you sure you want to reject this invitation?"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_team_live.html.heex:85
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_live.html.heex:108
 msgid "Are yous ure you want to remove this invitation?"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/team_live/org_membership_form_component.ex:26
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_membership_form_component.ex:26
 msgid "Be careful"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/team_live/org_membership_form_component.ex:27
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_membership_form_component.ex:27
 msgid "By removing yourself from admin you won't be able to regain access."
 msgstr ""
 
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:48
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:47
 msgid "Can't find it? Check your spam folder."
 msgstr ""
 
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:32
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:97
+#: lib/panic_web/live/user_settings/edit_totp_live.ex:115
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:31
-#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:96
 msgid "Cancel"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/components/auth_providers.ex:33
 #: lib/panic_web/live/auth/passwordless_auth_live.html.heex:2
+#, elixir-autogen, elixir-format
 msgid "Continue with passwordless"
 msgstr ""
 
+#: lib/panic_web/live/orgs/orgs_live.ex:92
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/orgs_live.ex:102
 msgid "Create a new organization"
 msgstr ""
 
+#: lib/panic_web/live/orgs/orgs_live.ex:63
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/orgs_live.ex:73
 msgid "Create your first organization by clicking the button below."
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_team_live.html.heex:84
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_live.html.heex:107
 msgid "Delete"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_team_live.html.heex:70
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_live.html.heex:93
 msgid "E-mail"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_settings_layout_component.ex:42
+#: lib/panic_web/live/orgs/org/org_team_live.html.heex:54
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/org_settings_layout_component.ex:42
-#: lib/panic_web/live/orgs/team/org_team_live.html.heex:77
 msgid "Edit"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_team_live.html.heex:25
+#: lib/panic_web/live/orgs/org/team_live/org_team_invite_form_component.ex:22
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_invite_form_component.ex:22
-#: lib/panic_web/live/orgs/team/org_team_live.html.heex:48
 msgid "Email"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/controllers/user_settings_controller.ex:46
+#, elixir-autogen, elixir-format
 msgid "Email change link is invalid or it has expired."
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/controllers/user_settings_controller.ex:41
+#, elixir-autogen, elixir-format
 msgid "Email changed successfully."
 msgstr ""
 
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:17
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:16
 msgid "Enter the email with to register or sign in with and we'll email you a pin code."
 msgstr ""
 
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:34
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:33
 msgid "Get pin code"
 msgstr ""
 
+#: lib/panic_web/templates/page/landing_page.html.heex:213
 #, elixir-autogen, elixir-format
-#: lib/panic_web/templates/page/landing_page.html.heex:208
 msgid "Here are some features you can use to get started with your web app."
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/controllers/user_reset_password_controller.ex:24
+#, elixir-autogen, elixir-format
 msgid "If your email is in our system, you will receive instructions to reset your password shortly."
 msgstr ""
 
+#: lib/panic_web/controllers/user_session_controller.ex:21
 #, elixir-autogen, elixir-format
-#: lib/panic_web/controllers/user_session_controller.ex:19
 msgid "Invalid email or password"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/controllers/user_settings_controller.ex:100
+#, elixir-autogen, elixir-format
 msgid "Invalid link"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/user_settings/user_org_invitations_live.ex:34
+#, elixir-autogen, elixir-format
 msgid "Invitation"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/team_live/org_team_invite_form_component.ex:79
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_invite_form_component.ex:79
 msgid "Invitation sent successfully"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/user_settings/user_org_invitations_live.ex:95
+#, elixir-autogen, elixir-format
 msgid "Invitation was accepted"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/user_settings/user_org_invitations_live.ex:110
+#, elixir-autogen, elixir-format
 msgid "Invitation was rejected"
 msgstr ""
 
-#, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_live.html.heex:87
+#: lib/panic_web/live/orgs/org/org_team_live.html.heex:64
 #: lib/panic_web/menus.ex:152
+#, elixir-autogen, elixir-format
 msgid "Invitations"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/team_live/org_team_invite_form_component.ex:28
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_invite_form_component.ex:28
 msgid "Invite"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_team_live.ex:31
+#: lib/panic_web/live/orgs/org/org_team_live.html.heex:16
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_live.ex:29
-#: lib/panic_web/live/orgs/team/org_team_live.html.heex:39
 msgid "Invite new member"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/team_live/org_team_invite_form_component.ex:28
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_invite_form_component.ex:28
 msgid "Inviting..."
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_team_live.html.heex:42
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_live.html.heex:65
 msgid "Leave"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_team_live.ex:64
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_live.ex:62
 msgid "Member deleted successfully"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_team_live.html.heex:9
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_live.html.heex:32
 msgid "Members"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/team_live/org_membership_form_component.ex:79
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_membership_form_component.ex:79
 msgid "Membership updated successfully"
 msgstr ""
 
+#: lib/panic_web/live/orgs/orgs_live.ex:55
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/orgs_live.ex:65
 msgid "My organizations"
 msgstr ""
 
+#: lib/panic_web/live/orgs/orgs_live.ex:40
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/orgs_live.ex:50
 msgid "New invitations"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_team_live.html.heex:95
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_live.html.heex:118
 msgid "No pending invitations."
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/auth/passwordless_auth_live.ex:103
+#, elixir-autogen, elixir-format
 msgid "Not a valid pin. Sure you typed it correctly?"
 msgstr ""
 
-#, elixir-autogen, elixir-format, fuzzy
 #: lib/panic_web/controllers/user_reset_password_controller.ex:41
+#, elixir-autogen, elixir-format, fuzzy
 msgid "Password reset successfully."
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/controllers/user_settings_controller.ex:21
+#, elixir-autogen, elixir-format
 msgid "Password updated successfully."
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/user_settings/user_org_invitations_live.ex:50
+#, elixir-autogen, elixir-format
 msgid "Reject"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_team_live.html.heex:43
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_live.html.heex:66
 msgid "Remove"
 msgstr ""
 
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:108
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:107
 msgid "Resend pin code"
 msgstr ""
 
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:104
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:103
 msgid "Resending new pin code..."
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/controllers/user_reset_password_controller.ex:56
+#, elixir-autogen, elixir-format
 msgid "Reset password link is invalid or it has expired."
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_team_live.html.heex:24
+#: lib/panic_web/live/orgs/org/team_live/org_membership_form_component.ex:21
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_membership_form_component.ex:21
-#: lib/panic_web/live/orgs/team/org_team_live.html.heex:47
 msgid "Role"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/team_live/org_membership_form_component.ex:32
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_membership_form_component.ex:32
 msgid "Save"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_form_component.ex:14
+#: lib/panic_web/live/orgs/org/team_live/org_membership_form_component.ex:32
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/org_form_component.ex:14
-#: lib/panic_web/live/orgs/team/org_membership_form_component.ex:32
 msgid "Saving..."
 msgstr ""
 
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:34
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:33
 msgid "Sending..."
 msgstr ""
 
+#: lib/panic_web/controllers/user_session_controller.ex:65
 #, elixir-autogen, elixir-format
-#: lib/panic_web/controllers/user_session_controller.ex:62
 msgid "Sign in failed."
 msgstr ""
 
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:54
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:53
 msgid "Signing in..."
 msgstr ""
 
+#: lib/panic_web/templates/page/landing_page.html.heex:284
 #, elixir-autogen, elixir-format
-#: lib/panic_web/templates/page/landing_page.html.heex:279
 msgid "Simple, transparent pricing that adapts to the size of your company."
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_team_live.ex:73
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_live.ex:71
 msgid "Something went wrong. Please try again or contact support if it keeps happening."
 msgstr ""
 
+#: lib/panic_web/controllers/user_auth.ex:55
 #, elixir-autogen, elixir-format
-#: lib/panic_web/controllers/user_auth.ex:62
 msgid "There is a problem with your account. Please contact support."
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/auth/passwordless_auth_live.ex:97
+#, elixir-autogen, elixir-format
 msgid "Too many incorrect attempts."
 msgstr ""
 
-#, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/orgs_live.ex:107
+#: lib/panic_web/live/orgs/orgs_live.ex:97
 #: lib/panic_web/live/user_settings/user_org_invitations_live.ex:68
+#, elixir-autogen, elixir-format
 msgid "Unconfirmed account"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/auth/passwordless_auth_live.ex:175
+#, elixir-autogen, elixir-format
 msgid "Unknown error."
 msgstr ""
 
+#: lib/panic_web/live/orgs/orgs_live.ex:50
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/orgs_live.ex:60
 msgid "View invitations"
 msgstr ""
 
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:46
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:45
 msgid "We've sent a 6 digit sign in pin code to"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/dashboard_live.html.heex:3
+#, elixir-autogen, elixir-format
 msgid "Welcome, %{name}"
 msgstr ""
 
-#, elixir-autogen, elixir-format, fuzzy
 #: lib/panic_web/controllers/org_plugs.ex:27
 #: lib/panic_web/controllers/org_plugs.ex:41
-#: lib/panic_web/live/orgs/org_on_mount_hooks.ex:25
-#: lib/panic_web/live/orgs/org_on_mount_hooks.ex:36
+#: lib/panic_web/live/orgs/hooks/org_on_mount_hooks.ex:25
+#: lib/panic_web/live/orgs/hooks/org_on_mount_hooks.ex:36
+#, elixir-autogen, elixir-format, fuzzy
 msgid "You do not have permission to access this page."
 msgstr ""
 
+#: lib/panic_web/live/orgs/orgs_live.ex:61
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/orgs_live.ex:71
 msgid "You don't belong to any organizations"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/user_settings/user_org_invitations_live.ex:38
+#, elixir-autogen, elixir-format
 msgid "You have been invited to join %{org_name}"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_team_live.ex:57
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_live.ex:55
 msgid "You have left %{org_name}"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/user_settings/user_org_invitations_live.ex:22
+#, elixir-autogen, elixir-format
 msgid "You have no pending invitations."
 msgstr ""
 
+#: lib/panic_web/live/orgs/orgs_live.ex:42
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/orgs_live.ex:52
 msgid "You have pending invitations."
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/user_settings/user_org_invitations_live.ex:69
+#, elixir-autogen, elixir-format
 msgid "You may have pending invitations. To see them please confirm your account by clicking the link in the e-mail we sent you. If you didn't receive an e-mail,"
 msgstr ""
 
+#: lib/panic_web/live/hooks/user_on_mount_hooks.ex:29
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/user_on_mount_hooks.ex:29
 msgid "You must confirm your email to access this page."
 msgstr ""
 
-#, elixir-autogen, elixir-format
-#: lib/panic_web/live/dashboard_live.ex:23
 #: lib/panic_web/live/user_settings/user_org_invitations_live.ex:123
+#, elixir-autogen, elixir-format
 msgid "You will receive an e-mail with instructions shortly."
 msgstr ""
 
+#: lib/panic_web/live/user_settings/edit_password_live.ex:63
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/user_settings/edit_password_live.ex:64
 msgid "You will receive instructions to reset your password shortly."
 msgstr ""
 
+#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:67
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/auth/passwordless_auth_live.html.heex:66
 msgid "Your sign in pin code"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic/orgs/membership.ex:84
+#, elixir-autogen, elixir-format
 msgid "cannot remove last admin of the organization"
 msgstr ""
 
-#, elixir-autogen, elixir-format
 #: lib/panic_web/live/user_settings/user_org_invitations_live.ex:73
+#, elixir-autogen, elixir-format
 msgid "click here to resend it"
 msgstr ""
 
-#, elixir-autogen, elixir-format, fuzzy
 #: lib/panic_web/live/auth/passwordless_auth_live.html.heex:10
+#: lib/panic_web/templates/user_registration/new.html.heex:36
+#: lib/panic_web/templates/user_reset_password/new.html.heex:20
+#: lib/panic_web/templates/user_session/new.html.heex:25
+#, elixir-autogen, elixir-format, fuzzy
 msgid "eg. sarah@gmail.com"
 msgstr ""
 
+#: lib/panic_web/live/orgs/orgs_live.ex:36
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/orgs_live.ex:46
 msgid "Listing organizations for %{name}"
 msgstr ""
 
+#: lib/panic_web/live/orgs/orgs_live.ex:27
+#: lib/panic_web/menus.ex:179
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/panic_web/live/orgs/orgs_live.ex:24
-#: lib/panic_web/menus.ex:170
 msgid "Organizations"
 msgstr ""
 
+#: lib/panic_web/live/orgs/orgs_live.ex:106
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/orgs_live.ex:116
 msgid "Please confirm your account to create an organization."
 msgstr ""
 
+#: lib/panic_web/live/orgs/orgs_live.ex:100
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/panic_web/live/orgs/orgs_live.ex:110
 msgid "You have been invited to join %{org_names}. To create an organization or accept any invitations, please confirm your account first."
 msgstr ""
 
-#, elixir-autogen, elixir-format, fuzzy
-#: lib/panic_web/controllers/user_auth.ex:208
-msgid "You must be confirmed to access this page."
-msgstr ""
-
+#: lib/panic_web/live/orgs/org/org_team_live.ex:36
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/team/org_team_live.ex:34
 msgid "Edit member"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/edit_org_live.ex:13
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/edit_org_live.ex:11
 msgid "Editing %{org_name"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_team_live.ex:97
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/panic_web/live/orgs/team/org_team_live.ex:95
 msgid "Invitation deleted successfully"
 msgstr ""
 
+#: lib/panic_web/live/orgs/orgs_live.ex:21
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/panic_web/live/orgs/orgs_live.ex:18
 msgid "New organization"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_form_component.ex:63
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/org_form_component.ex:63
 msgid "Organization created successfully"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_form_component.ex:50
 #, elixir-autogen, elixir-format, fuzzy
-#: lib/panic_web/live/orgs/org_form_component.ex:50
 msgid "Organization updated successfully"
 msgstr ""
 
+#: lib/panic_web/live/orgs/org/org_settings_layout_component.ex:48
+#: lib/panic_web/live/orgs/org/org_team_live.ex:26
 #, elixir-autogen, elixir-format
-#: lib/panic_web/live/orgs/org_settings_layout_component.ex:48
-#: lib/panic_web/live/orgs/team/org_team_live.ex:24
 msgid "Team"
+msgstr ""
+
+#: lib/panic_web/controllers/user_totp_controller.ex:28
+#, elixir-autogen, elixir-format
+msgid "backup code"
+msgid_plural "backup codes"
+msgstr[0] ""
+msgstr[1] ""
+
+#: lib/panic_web/menus.ex:161
+#, elixir-autogen, elixir-format
+msgid "2FA"
+msgstr ""
+
+#: lib/panic_web/live/user_settings/edit_totp_live.ex:30
+#, elixir-autogen, elixir-format
+msgid "2FA Enabled"
+msgstr ""
+
+#: lib/panic_web/controllers/user_confirmation_controller.ex:29
+#, elixir-autogen, elixir-format
+msgid "A new email has been sent to %{user_email}"
+msgstr ""
+
+#: lib/panic_web/templates/user_registration/new.html.heex:6
+#, elixir-autogen, elixir-format
+msgid "Already registered?"
+msgstr ""
+
+#: lib/panic_web/templates/user_confirmation/unconfirmed.html.heex:15
+#, elixir-autogen, elixir-format
+msgid "Can't find the email?"
+msgstr ""
+
+#: lib/panic_web/templates/user_totp/new.html.heex:18
+#, elixir-autogen, elixir-format
+msgid "Code"
+msgstr ""
+
+#: lib/panic_web/templates/user_confirmation/edit.html.heex:1
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Confirm account"
+msgstr ""
+
+#: lib/panic_web/templates/user_confirmation/edit.html.heex:32
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Confirm my account"
+msgstr ""
+
+#: lib/panic_web/templates/user_settings/unsubscribe_from_notification_subscription.html.heex:38
+#, elixir-autogen, elixir-format
+msgid "Confirm unsubscribe from %{subscription}"
+msgstr ""
+
+#: lib/panic_web/templates/user_settings/mailbluster_unsubscribed_confirmation.html.heex:44
+#: lib/panic_web/templates/user_settings/unsubscribe_from_notification_subscription.html.heex:124
+#, elixir-autogen, elixir-format
+msgid "Continue"
+msgstr ""
+
+#: lib/panic_web/templates/user_registration/new.html.heex:40
+#, elixir-autogen, elixir-format
+msgid "Create account"
+msgstr ""
+
+#: lib/panic_web/templates/user_confirmation/unconfirmed.html.heex:1
+#, elixir-autogen, elixir-format
+msgid "Email confirmation required"
+msgstr ""
+
+#: lib/panic_web/templates/user_totp/new.html.heex:7
+#, elixir-autogen, elixir-format
+msgid "Enter the six-digit code from your device or any of your eight-character backup codes to finish logging in."
+msgstr ""
+
+#: lib/panic_web/live/user_settings/edit_password_live.ex:43
+#: lib/panic_web/templates/user_reset_password/new.html.heex:1
+#: lib/panic_web/templates/user_session/new.html.heex:37
+#, elixir-autogen, elixir-format
+msgid "Forgot your password?"
+msgstr ""
+
+#: lib/panic_web/templates/user_confirmation/edit.html.heex:7
+#: lib/panic_web/templates/user_confirmation/unconfirmed.html.heex:23
+#, elixir-autogen, elixir-format
+msgid "Home"
+msgstr ""
+
+#: lib/panic_web/controllers/user_totp_controller.ex:44
+#, elixir-autogen, elixir-format
+msgid "Invalid two-factor authentication code"
+msgstr ""
+
+#: lib/panic_web/templates/user_totp/new.html.heex:31
+#, elixir-autogen, elixir-format
+msgid "Keep me logged in for 60 days"
+msgstr ""
+
+#: lib/panic_web/templates/user_registration/new.html.heex:40
+#: lib/panic_web/templates/user_reset_password/edit.html.heex:31
+#: lib/panic_web/templates/user_reset_password/new.html.heex:26
+#: lib/panic_web/templates/user_session/new.html.heex:31
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Loading..."
+msgstr ""
+
+#: lib/panic_web/templates/user_session/new.html.heex:6
+#, elixir-autogen, elixir-format
+msgid "Not yet registered?"
+msgstr ""
+
+#: lib/panic_web/templates/user_registration/new.html.heex:21
+#: lib/panic_web/templates/user_reset_password/edit.html.heex:22
+#, elixir-autogen, elixir-format
+msgid "Oops, something went wrong! Please check the errors below."
+msgstr ""
+
+#: lib/panic_web/templates/user_settings/unsubscribe_from_notification_subscription.html.heex:48
+#: lib/panic_web/templates/user_settings/unsubscribe_from_notification_subscription.html.heex:101
+#, elixir-autogen, elixir-format
+msgid "Or, manage your"
+msgstr ""
+
+#: lib/panic_web/templates/user_confirmation/unconfirmed.html.heex:11
+#, elixir-autogen, elixir-format
+msgid "Please confirm your email address to continue. It should be in your inbox."
+msgstr ""
+
+#: lib/panic_web/templates/user_confirmation/edit.html.heex:21
+#: lib/panic_web/templates/user_reset_password/edit.html.heex:11
+#: lib/panic_web/templates/user_reset_password/new.html.heex:11
+#: lib/panic_web/templates/user_session/new.html.heex:9
+#, elixir-autogen, elixir-format
+msgid "Register"
+msgstr ""
+
+#: lib/panic_web/templates/user_confirmation/unconfirmed.html.heex:16
+#, elixir-autogen, elixir-format
+msgid "Resend confirmation instructions"
+msgstr ""
+
+#: lib/panic_web/templates/user_reset_password/edit.html.heex:31
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Reset password"
+msgstr ""
+
+#: lib/panic_web/templates/user_reset_password/new.html.heex:25
+#, elixir-autogen, elixir-format
+msgid "Send instructions to reset password"
+msgstr ""
+
+#: lib/panic_web/templates/user_confirmation/edit.html.heex:16
+#: lib/panic_web/templates/user_registration/new.html.heex:9
+#: lib/panic_web/templates/user_reset_password/edit.html.heex:6
+#: lib/panic_web/templates/user_reset_password/new.html.heex:6
+#: lib/panic_web/templates/user_session/new.html.heex:31
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Sign in"
+msgstr ""
+
+#: lib/panic_web/templates/user_confirmation/unconfirmed.html.heex:25
+#, elixir-autogen, elixir-format
+msgid "Sign out"
+msgstr ""
+
+#: lib/panic_web/controllers/user_session_controller.ex:27
+#, elixir-autogen, elixir-format
+msgid "Signed out successfully"
+msgstr ""
+
+#: lib/panic_web/templates/user_confirmation/edit.html.heex:29
+#, elixir-autogen, elixir-format
+msgid "Touch the button below to confirm your account."
+msgstr ""
+
+#: lib/panic_web/live/user_settings/edit_totp_live.ex:23
+#, elixir-autogen, elixir-format
+msgid "Two-factor authentication"
+msgstr ""
+
+#: lib/panic_web/controllers/user_confirmation_controller.ex:85
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Unconfirmed email"
+msgstr ""
+
+#: lib/panic_web/templates/user_settings/unsubscribe_from_notification_subscription.html.heex:111
+#, elixir-autogen, elixir-format
+msgid "Undo"
+msgstr ""
+
+#: lib/panic_web/templates/user_settings/unsubscribe_from_notification_subscription.html.heex:93
+#, elixir-autogen, elixir-format
+msgid "Unsubscribed from %{subscription}"
+msgstr ""
+
+#: lib/panic_web/templates/user_settings/mailbluster_unsubscribed_confirmation.html.heex:36
+#, elixir-autogen, elixir-format
+msgid "Unsubscribed successfully"
+msgstr ""
+
+#: lib/panic_web/templates/user_totp/new.html.heex:41
+#, elixir-autogen, elixir-format
+msgid "Verify code and sign in"
+msgstr ""
+
+#: lib/panic_web/templates/user_settings/unsubscribe_from_notification_subscription.html.heex:69
+#, elixir-autogen, elixir-format
+msgid "Yes, unsubscribe"
+msgstr ""
+
+#: lib/panic_web/controllers/user_confirmation_controller.ex:18
+#, elixir-autogen, elixir-format
+msgid "You are already confirmed."
+msgstr ""
+
+#: lib/panic_web/controllers/user_totp_controller.ex:34
+#, elixir-autogen, elixir-format
+msgid "You have %{remaining} %{plural} left. You can generate new ones under the Two-factor authentication section in the Settings page"
+msgstr ""
+
+#: lib/panic_web/controllers/user_confirmation_controller.ex:13
+#, elixir-autogen, elixir-format
+msgid "You must be signed in to resend confirmation instructions."
+msgstr ""
+
+#: lib/panic_web/templates/user_settings/mailbluster_unsubscribed_confirmation.html.heex:39
+#, elixir-autogen, elixir-format
+msgid "You will no longer recieve marketing related notifications."
+msgstr ""
+
+#: lib/panic_web/templates/user_registration/new.html.heex:30
+#, elixir-autogen, elixir-format, fuzzy
+msgid "eg. Sarah Smith"
+msgstr ""
+
+#: lib/panic_web/templates/user_settings/unsubscribe_from_notification_subscription.html.heex:48
+#: lib/panic_web/templates/user_settings/unsubscribe_from_notification_subscription.html.heex:101
+#, elixir-autogen, elixir-format
+msgid "notification preferences"
+msgstr ""
+
+#: lib/panic_web/live/orgs/org/org_dashboard_live.ex:33
+#, elixir-autogen, elixir-format
+msgid "Organisation dashboard"
+msgstr ""
+
+#: lib/panic_web/live/user_settings/edit_password_live.ex:40
+#, elixir-autogen, elixir-format
+msgid "This will send a reset password link to the email '%{email}'. Continue?"
 msgstr ""

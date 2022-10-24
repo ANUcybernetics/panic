@@ -28,8 +28,8 @@ if Mix.env() == :dev do
 
   normal_user =
     UserSeeder.normal_user(%{
-      email: "ben@benswift.me",
-      name: "Ben Swift",
+      email: "user@example.com",
+      name: "Sarah Cunningham",
       password: "password",
       confirmed_at: Timex.now() |> Timex.to_naive_datetime()
     })

@@ -53,7 +53,7 @@ defmodule Panic.Accounts.NotificationSubscriptions do
     PanicWeb.Router.Helpers.user_settings_url(
       PanicWeb.Endpoint,
       :unsubscribe_from_notification_subscription,
-      HashId.encode(user.id),
+      Util.HashId.encode(user.id),
       notification_subscription_name
     )
   end

@@ -7,23 +7,32 @@ defmodule PanicWeb.UserConfirmationController do
     render(conn, "new.html")
   end
 
-  def create(conn, %{"user" => %{"email" => email}}) do
-    if user = Accounts.get_user_by_email(email) do
-      Accounts.deliver_user_confirmation_instructions(
-        user,
-        &Routes.user_confirmation_url(conn, :edit, &1)
-      )
-    end
+  def resend_confirm_email(conn, _) do
+    if is_nil(conn.assigns[:current_user]) do
+      conn
+      |> put_flash(:error, gettext("You must be signed in to resend confirmation instructions."))
+      |> redirect(to: "/")
+    else
+      if conn.assigns.current_user.confirmed_at do
+        conn
+        |> put_flash(:info, gettext("You are already confirmed."))
+        |> redirect(to: PanicWeb.Helpers.home_path(conn.assigns[:current_user]))
+      else
+        Accounts.deliver_user_confirmation_instructions(
+          conn.assigns.current_user,
+          &Routes.user_confirmation_url(conn, :edit, &1)
+        )
 
-    # In order to prevent user enumeration attacks, regardless of the outcome, show an impartial success/error message.
-    conn
-    |> put_flash(
-      :info,
-      gettext(
-        "If your email is in our system and it has not been confirmed yet, you will receive an email with instructions shortly."
-      )
-    )
-    |> redirect(to: "/")
+        conn
+        |> put_flash(
+          :info,
+          gettext("A new email has been sent to %{user_email}",
+            user_email: conn.assigns.current_user.email
+          )
+        )
+        |> redirect(to: Routes.user_confirmation_path(conn, :unconfirmed))
+      end
+    end
   end
 
   def edit(conn, %{"token" => token}) do
@@ -61,6 +70,19 @@ defmodule PanicWeb.UserConfirmationController do
             |> put_flash(:error, gettext("User confirmation link is invalid or it has expired."))
             |> redirect(to: "/")
         end
+    end
+  end
+
+  def unconfirmed(conn, _) do
+    cond do
+      !conn.assigns[:current_user] ->
+        redirect(conn, to: "/")
+
+      conn.assigns.current_user.confirmed_at ->
+        redirect(conn, to: PanicWeb.Helpers.home_path(conn.assigns.current_user))
+
+      true ->
+        render(conn, page_title: gettext("Unconfirmed email"))
     end
   end
 end

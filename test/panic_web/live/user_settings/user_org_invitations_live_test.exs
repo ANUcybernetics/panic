@@ -8,14 +8,6 @@ defmodule PanicWeb.UserOrgInvitationsLiveTest do
   setup :register_and_sign_in_user
 
   describe "when invitations are present" do
-    test "can't see invitations when not confirmed", %{conn: conn, user: user, org: _org} do
-      Repo.update(Ecto.Changeset.change(user, %{confirmed_at: nil}))
-      {:ok, _, html} = live(conn, Routes.live_path(conn, PanicWeb.UserOrgInvitationsLive))
-      assert html =~ "You may have pending invitations"
-      assert html =~ "confirm your account"
-      refute html =~ "You have no pending invitations"
-    end
-
     test "can accept an invitation", %{conn: conn, user: user, org: _org} do
       new_org = org_fixture()
       invitation_fixture(new_org, %{email: user.email})

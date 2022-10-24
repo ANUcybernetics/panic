@@ -1,5 +1,7 @@
 defmodule PanicWeb.Components.Brand do
   use Phoenix.Component
+  alias PanicWeb.Router.Helpers, as: Routes
+  alias PanicWeb.Endpoint
 
   # SETUP_TODO
   # This module relies on the following images. Replace these images with your logos
@@ -10,35 +12,45 @@ defmodule PanicWeb.Components.Brand do
   # /priv/static/images/favicon.png
 
   @doc "Displays your full logo. "
-  def logo(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:class, fn -> "h-10" end)
-      |> assign_new(:variant, fn -> nil end)
 
+  attr :class, :string, default: "h-10"
+  attr :variant, :string, default: "both", values: ["dark", "light", "both"]
+
+  def logo(assigns) do
     ~H"""
-    <%= if @variant do %>
-      <img class={@class} src={"/images/logo_#{@variant}.svg"} />
+    <%= if Enum.member?(["light", "dark"], @variant) do %>
+      <img class={@class} src={Routes.static_path(Endpoint, "/images/logo_#{@variant}.svg")} />
     <% else %>
-      <img class={@class <> " block dark:hidden"} src="/images/logo_dark.svg" />
-      <img class={@class <> " hidden dark:block"} src="/images/logo_light.svg" />
+      <img
+        class={@class <> " block dark:hidden"}
+        src={Routes.static_path(Endpoint, "/images/logo_dark.svg")}
+      />
+      <img
+        class={@class <> " hidden dark:block"}
+        src={Routes.static_path(Endpoint, "/images/logo_light.svg")}
+      />
     <% end %>
     """
   end
 
   @doc "Displays just the icon part of your logo"
-  def logo_icon(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:class, fn -> "h-9 w-9" end)
-      |> assign_new(:variant, fn -> nil end)
 
+  attr :class, :string, default: "h-9 w-9"
+  attr :variant, :string, default: "both", values: ["dark", "light", "both"]
+
+  def logo_icon(assigns) do
     ~H"""
-    <%= if @variant do %>
-      <img class={@class} src={"/images/logo_icon_#{@variant}.svg"} />
+    <%= if Enum.member?(["light", "dark"], @variant) do %>
+      <img class={@class} src={Routes.static_path(Endpoint, "/images/logo_icon_#{@variant}.svg")} />
     <% else %>
-      <img class={@class <> " block dark:hidden"} src="/images/logo_icon_dark.svg" />
-      <img class={@class <> " hidden dark:block"} src="/images/logo_icon_light.svg" />
+      <img
+        class={@class <> " block dark:hidden"}
+        src={Routes.static_path(Endpoint, "/images/logo_icon_dark.svg")}
+      />
+      <img
+        class={@class <> " hidden dark:block"}
+        src={Routes.static_path(Endpoint, "/images/logo_icon_light.svg")}
+      />
     <% end %>
     """
   end

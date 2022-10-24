@@ -1,21 +1,16 @@
 defmodule PanicWeb.Components.AuthProviders do
   use Phoenix.Component
-  import PetalComponents.Link
-  alias PetalComponents.Heroicons
   import PetalFramework.Components.SocialButton
   import PanicWeb.Helpers
   import PanicWeb.Gettext
   alias PanicWeb.Router.Helpers, as: Routes
 
   # Shows the login buttons for all available providers. Can add a break "Or login with"
-  # prop :or_location, :string, options: ["top", "bottom"]
-  # prop :conn_or_socket, :map
-  def auth_providers(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:or_location, fn -> nil end)
-      |> assign_new(:or_text, fn -> "Or" end)
+  attr :or_location, :string, default: "", values: ["top", "bottom", ""]
+  attr :or_text, :string, default: "Or"
+  attr :conn_or_socket, :any
 
+  def auth_providers(assigns) do
     ~H"""
     <%= if auth_provider_loaded?("google") || auth_provider_loaded?("github") || auth_provider_loaded?("passwordless") do %>
       <%= if @or_location == "top" do %>
@@ -25,11 +20,10 @@ defmodule PanicWeb.Components.AuthProviders do
       <div class="flex flex-col gap-2">
         <%= if auth_provider_loaded?("passwordless") do %>
           <.link
-            link_type="a"
-            to={Routes.passwordless_auth_path(@conn_or_socket, :sign_in)}
+            href={Routes.passwordless_auth_path(@conn_or_socket, :sign_in)}
             class="inline-flex items-center justify-center w-full px-4 py-2 text-sm font-medium leading-5 text-gray-700 bg-white border border-gray-300 rounded-md hover:text-gray-900 hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:border-gray-400 focus:bg-gray-100 focus:text-gray-900 active:border-gray-400 active:bg-gray-200 active:text-black dark:text-gray-300 dark:focus:text-gray-100 dark:active:text-gray-100 dark:hover:text-gray-200 dark:bg-transparent dark:hover:bg-gray-800 dark:hover:border-gray-400 dark:border-gray-500 dark:focus:border-gray-300 dark:active:border-gray-300"
           >
-            <Heroicons.Outline.mail class="w-5 h-5" />
+            <Heroicons.envelope class="w-5 h-5" />
             <span class="ml-2"><%= gettext("Continue with passwordless") %></span>
           </.link>
         <% end %>
@@ -63,7 +57,8 @@ defmodule PanicWeb.Components.AuthProviders do
   end
 
   # Shows a line with some text in the middle of the line. eg "Or login with"
-  # prop or_text, :string
+  attr :or_text, :string
+
   def or_break(assigns) do
     ~H"""
     <div class="relative my-5">

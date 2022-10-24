@@ -1,4 +1,7 @@
 defmodule PanicWeb.OrgsLive do
+  @moduledoc """
+  List all orgs for the current_user.
+  """
   use PanicWeb, :live_view
   alias Panic.Orgs
   alias Panic.Orgs.Org
@@ -65,11 +68,10 @@ defmodule PanicWeb.OrgsLive do
             <%= if @orgs != [] do %>
               <%= for org <- @orgs do %>
                 <.link
-                  link_type="live_redirect"
-                  to={Routes.live_path(@socket, PanicWeb.OrgDashboardLive, org.slug)}
-                  class="relative block w-full p-12 text-center text-gray-800 bg-gray-200 rounded-lg shadow-lg dark:bg-gray-800 hover:bg-gray-300 dark:text-gray-400 dark:group-hover:text-gray-100"
+                  navigate={Routes.live_path(@socket, PanicWeb.OrgDashboardLive, org.slug)}
+                  class="relative block w-full p-12 text-center text-gray-700 bg-gray-100 border border-gray-200 rounded-lg shadow dark:border-gray-700 dark:shadow-lg dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 dark:text-gray-400 dark:group-hover:text-gray-100"
                 >
-                  <Heroicons.Outline.office_building class="w-12 h-12 mx-auto" />
+                  <Heroicons.building_office class="w-12 h-12 mx-auto" />
 
                   <span class="block mt-2 text-sm font-medium ">
                     <%= org.name %>
@@ -79,11 +81,10 @@ defmodule PanicWeb.OrgsLive do
             <% end %>
 
             <.link
-              link_type="live_redirect"
-              to={Routes.orgs_path(@socket, :new)}
-              class="relative block w-full p-12 text-center text-gray-500 border-2 border-gray-300 border-dashed rounded-lg dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 hover:text-gray-900 dark:text-gray-400"
+              navigate={Routes.orgs_path(@socket, :new)}
+              class="relative block w-full p-12 text-center text-gray-500 border-2 border-gray-300 border-dashed rounded-lg dark:border-gray-700 hover:border-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600 hover:text-gray-900 dark:text-gray-400"
             >
-              <Heroicons.Outline.plus class="w-12 h-12 mx-auto" />
+              <Heroicons.plus class="w-12 h-12 mx-auto" />
 
               <span class="block mt-2 text-sm font-medium ">
                 <%= gettext("Create a new organization") %>

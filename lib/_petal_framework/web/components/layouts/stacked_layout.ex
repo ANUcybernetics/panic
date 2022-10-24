@@ -3,13 +3,15 @@ defmodule PetalFramework.Components.StackedLayout do
   use PetalComponents
   import PetalFramework.Components.Navbar
 
-  # prop current_page, :atom
-  # prop current_user_name, :any
-  # prop main_menu_items, :list
-  # prop user_menu_items, :list
-  # prop avatar_src, :any
-  # slot default
-  # slot logo
+  attr :current_page, :atom, required: true
+  attr :main_menu_items, :list, default: []
+  attr :user_menu_items, :list, default: []
+  attr :avatar_src, :string, default: nil
+  attr :home_path, :string, default: "/"
+  slot(:inner_block)
+  slot(:top_right)
+  slot(:logo)
+
   def stacked_layout(assigns) do
     assigns =
       assigns
@@ -21,7 +23,7 @@ defmodule PetalFramework.Components.StackedLayout do
       |> assign_new(:top_right, fn -> nil end)
 
     ~H"""
-    <div class="h-screen overflow-y-scroll bg-gray-100 dark:bg-gray-900">
+    <div class="h-screen overflow-y-scroll bg-white dark:bg-gray-900">
       <.navbar {assigns} />
 
       <%= render_slot(@inner_block) %>

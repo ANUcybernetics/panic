@@ -48,12 +48,7 @@ defmodule PanicWeb.ConnCase do
   test context.
   """
   def register_and_sign_in_user(%{conn: conn}) do
-    user =
-      Panic.AccountsFixtures.user_fixture(%{
-        is_onboarded: true,
-        confirmed_at: NaiveDateTime.truncate(NaiveDateTime.utc_now(), :second)
-      })
-
+    user = Panic.AccountsFixtures.confirmed_user_fixture(%{is_onboarded: true})
     org = Panic.OrgsFixtures.org_fixture(user)
     membership = Panic.Orgs.get_membership!(user, org.slug)
     %{conn: log_in_user(conn, user), user: user, org: org, membership: membership}

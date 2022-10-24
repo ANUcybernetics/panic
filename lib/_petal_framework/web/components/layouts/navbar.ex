@@ -3,41 +3,38 @@ defmodule PetalFramework.Components.Navbar do
   A responsive navbar that contains a main menu and dropdown menu (user menu)
   """
   use Phoenix.Component
-  alias PetalComponents.Heroicons
+  alias PetalComponents.HeroiconsV1
   import PetalComponents.{Container, Link, Avatar}
   import PetalFramework.Components.UserDropdownMenu
 
-  # prop main_menu_items, :list
-  # prop user_menu_items, :list
-  # prop current_page, :atom
-  # prop current_user_name, :any
-  # prop avatar_rc, :string
-  # prop class, :string
-  # slot logo
-  def navbar(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:avatar_src, fn -> nil end)
-      |> assign_new(:current_user, fn -> nil end)
-      |> assign_new(:class, fn -> "" end)
-      |> assign_new(:home_path, fn -> "/" end)
-      |> assign_new(:container_max_width, fn -> "lg" end)
+  attr :current_page, :atom, required: true
+  attr :main_menu_items, :list, default: []
+  attr :user_menu_items, :list, default: []
+  attr :current_user_name, :string, default: nil
+  attr :avatar_src, :string, default: nil
+  attr :class, :string, default: ""
+  attr :home_path, :string, default: "/"
+  attr :container_max_width, :string, default: "lg", values: ["sm", "md", "lg", "xl", "full"]
+  slot(:inner_block)
+  slot(:top_right)
+  slot(:logo)
 
+  def navbar(assigns) do
     ~H"""
     <div class={"bg-white dark:bg-gray-800 shadow #{@class}"} x-data="{mobileMenuOpen: false}">
       <.container max_width={@container_max_width}>
         <div class="flex justify-between h-16">
           <div class="flex">
-            <.link to={@home_path}>
+            <.link navigate={@home_path}>
               <%= render_slot(@logo) %>
             </.link>
 
             <%= if get_in(@main_menu_items, [Access.at(0), :menu_items]) do %>
-              <div class="hidden lg:flex divide-x divide-gray-100 dark:divide-gray-700">
+              <div class="hidden divide-x divide-gray-100 lg:flex dark:divide-gray-700">
                 <%= for menu_group <- @main_menu_items do %>
-                  <div class="lg:flex lg:space-x-8 px-8">
+                  <div class="px-8 lg:flex lg:space-x-8">
                     <%= for menu_item <- menu_group.menu_items do %>
-                      <.link
+                      <.a
                         to={menu_item.path}
                         label={menu_item.label}
                         class={main_menu_item_class(@current_page, menu_item.name)}
@@ -49,7 +46,7 @@ defmodule PetalFramework.Components.Navbar do
             <% else %>
               <div class="hidden lg:ml-6 lg:flex lg:space-x-8">
                 <%= for menu_item <- @main_menu_items do %>
-                  <.link
+                  <.a
                     to={menu_item.path}
                     label={menu_item.label}
                     class={main_menu_item_class(@current_page, menu_item.name)}
@@ -60,9 +57,7 @@ defmodule PetalFramework.Components.Navbar do
           </div>
 
           <div class="hidden gap-3 lg:ml-6 lg:flex lg:items-center">
-            <%= if @top_right do %>
-              <%= render_slot(@top_right) %>
-            <% end %>
+            <%= render_slot(@top_right) %>
 
             <%= if Util.present?(@user_menu_items) do %>
               <.user_menu_dropdown
@@ -85,12 +80,18 @@ defmodule PetalFramework.Components.Navbar do
                 Open main menu
               </span>
 
-              <div class="w-6 h-6" :class="{ 'hidden': mobileMenuOpen, 'block': !(mobileMenuOpen) }">
-                <Heroicons.Outline.menu class="w-6 h-6" />
+              <div
+                class="w-6 h-6"
+                x-bind:class="{ 'hidden': mobileMenuOpen, 'block': !(mobileMenuOpen) }"
+              >
+                <HeroiconsV1.Outline.menu class="w-6 h-6" />
               </div>
 
-              <div class="w-6 h-6" :class="{ 'block': mobileMenuOpen, 'hidden': !(mobileMenuOpen) }">
-                <Heroicons.Outline.x class="w-6 h-6" />
+              <div
+                class="w-6 h-6"
+                x-bind:class="{ 'block': mobileMenuOpen, 'hidden': !(mobileMenuOpen) }"
+              >
+                <HeroiconsV1.Outline.x class="w-6 h-6" />
               </div>
             </button>
           </div>
@@ -114,11 +115,11 @@ defmodule PetalFramework.Components.Navbar do
               <div class="pt-3 pb-3 first:pt-0">
                 <%= for menu_item <- menu_group.menu_items do %>
                   <.link
-                    link_type="live_redirect"
-                    to={menu_item.path}
-                    label={menu_item.label}
+                    navigate={menu_item.path}
                     class={mobile_menu_item_class(@current_page, menu_item.name)}
-                  />
+                  >
+                    <%= menu_item.label %>
+                  </.link>
                 <% end %>
               </div>
             <% end %>
@@ -127,11 +128,11 @@ defmodule PetalFramework.Components.Navbar do
           <div class="pt-2 pb-3 space-y-1">
             <%= for menu_item <- @main_menu_items do %>
               <.link
-                link_type="live_redirect"
-                to={menu_item.path}
-                label={menu_item.label}
+                navigate={menu_item.path}
                 class={mobile_menu_item_class(@current_page, menu_item.name)}
-              />
+              >
+                <%= menu_item.label %>
+              </.link>
             <% end %>
           </div>
         <% end %>
@@ -161,9 +162,10 @@ defmodule PetalFramework.Components.Navbar do
 
           <div class="mt-3 space-y-1">
             <%= for menu_item <- @user_menu_items do %>
-              <.link
-                link_type="live_redirect"
+              <.a
+                link_type={if menu_item[:method], do: "a", else: "live_redirect"}
                 to={menu_item.path}
+                method={if menu_item[:method], do: menu_item[:method], else: nil}
                 label={menu_item.label}
                 class={mobile_menu_item_class(@current_page, menu_item.name)}
               />

@@ -1,16 +1,16 @@
 defmodule PetalFramework.Components.UserDropdownMenu do
   use Phoenix.Component
-  alias PetalComponents.Heroicons
+  alias PetalComponents.HeroiconsV1
   import PetalComponents.Avatar
   import PetalComponents.Dropdown
 
-  # prop user_menu_items, :list
-  # prop current_user_name, :string
-  def user_menu_dropdown(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:avatar_src, fn -> nil end)
+  attr :user_menu_items, :list,
+    doc: "list of maps with keys :path, :icon (atom), :label, :method (atom)"
 
+  attr :current_user_name, :string, doc: "the current signed in user's name"
+  attr :avatar_src, :string, default: nil, doc: "the current signed in user's avatar image src"
+
+  def user_menu_dropdown(assigns) do
     ~H"""
     <.dropdown>
       <:trigger_element>
@@ -21,7 +21,7 @@ defmodule PetalFramework.Components.UserDropdownMenu do
             <.avatar size="sm" />
           <% end %>
 
-          <Heroicons.Solid.chevron_down class="w-4 h-4 ml-1 -mr-1 text-gray-400 dark:text-gray-100" />
+          <HeroiconsV1.Solid.chevron_down class="w-4 h-4 ml-1 -mr-1 text-gray-400 dark:text-gray-100" />
         </div>
       </:trigger_element>
       <%= for menu_item <- @user_menu_items do %>
@@ -31,7 +31,7 @@ defmodule PetalFramework.Components.UserDropdownMenu do
           to={menu_item.path}
         >
           <%= if is_atom(menu_item.icon) do %>
-            <Heroicons.Outline.render icon={menu_item.icon} class="w-5 h-5 text-gray-500" />
+            <HeroiconsV1.Outline.render icon={menu_item.icon} class="w-5 h-5 text-gray-500" />
           <% end %>
 
           <%= if is_binary(menu_item.icon) do %>

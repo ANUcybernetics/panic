@@ -8,21 +8,25 @@
   <meta name="description" content={description(@conn)} />
 
   <link rel="icon" href={Routes.static_path(@conn, "/images/favicon.png")} />
-
+  <!-- Open Graph (used by Facebook/Twitter). See layout_view.ex for relevant function -->
   <meta property="og:type" content="website" />
-  <meta property="og:url" content={PanicWeb.Endpoint.url()} />
+  <meta property="og:url" content={current_page_url(@conn)} />
   <meta property="og:title" content={title(@conn)} />
   <meta property="og:description" content={description(@conn)} />
-  <meta property="og:image" content={Routes.static_url(@conn, "/images/open-graph.png")} />
-
-  <meta property="twitter:card" content="summary_large_image" />
-  <meta property="twitter:url" content={PanicWeb.Endpoint.url()} />
-  <meta property="twitter:title" content={title(@conn)} />
-  <meta property="twitter:description" content={description(@conn)} />
-  <meta property="twitter:image" content={Routes.static_path(@conn, "/images/open-graph.png")} />
+  <meta property="og:image" content={og_image(@conn)} />
+  <!-- Twitter only -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:site" content={twitter_site(@conn)} />
+  <meta name="twitter:creator" content={twitter_creator(@conn)} />
 
   <link phx-track-static rel="stylesheet" href={Routes.static_path(@conn, "/assets/app.css")} />
-  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js">
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.10.3/cdn.js"
+    integrity="sha512-KnYVZoWDMDmJwjmoUEcEd//9bap1dhg0ltiMWtdoKwvVdmEFZGoKsFhYBzuwP2v2iHGnstBor8tjPcFQNgI5cA=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+    defer
+  >
   </script>
 
   <script

@@ -5,8 +5,10 @@ defmodule PanicWeb.UserSessionController do
   alias Panic.Accounts.{User, UserToken}
   alias PanicWeb.UserAuth
 
+  plug :redirect_if_passwordless_disabled when action in [:create_from_token]
+
   def new(conn, _params) do
-    render(conn, "new.html", error_message: nil)
+    render(conn, "new.html", error_message: nil, page_title: gettext("Sign in"))
   end
 
   def create(conn, %{"user" => user_params}) do
@@ -62,6 +64,16 @@ defmodule PanicWeb.UserSessionController do
         conn
         |> put_flash(:error, gettext("Sign in failed."))
         |> redirect(to: Routes.passwordless_auth_path(conn, :sign_in))
+    end
+  end
+
+  def redirect_if_passwordless_disabled(conn, _opts) do
+    if Panic.config(:passwordless_enabled) do
+      conn
+    else
+      conn
+      |> redirect(to: Routes.user_session_path(conn, :new))
+      |> halt()
     end
   end
 end

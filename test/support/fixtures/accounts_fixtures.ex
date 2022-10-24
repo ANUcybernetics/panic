@@ -14,8 +14,11 @@ defmodule Panic.AccountsFixtures do
   def valid_user_password, do: "password"
 
   def valid_user_attributes(attrs \\ %{}) do
+    # Faker sometimes produces a name like O'Brian. This may cause a test to fail when checking for a name as it renders in the HTML as O&#39;Brian
+    random_name = Faker.Person.name() |> String.replace("'", "")
+
     Enum.into(attrs, %{
-      name: Faker.Person.En.first_name() <> " " <> Faker.Person.En.last_name(),
+      name: random_name,
       email: unique_user_email(),
       password: valid_user_password()
     })

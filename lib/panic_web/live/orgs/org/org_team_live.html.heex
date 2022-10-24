@@ -1,0 +1,124 @@
+<.org_settings_layout
+  current_page={:org_team}
+  current_user={@current_user}
+  current_org={@current_org}
+  current_membership={@current_membership}
+  socket={@socket}
+>
+  <div class="flex items-center justify-between mb-5">
+    <.h4 class="mb-0"><%= gettext("Members") %></.h4>
+
+    <.button
+      link_type="live_patch"
+      to={Routes.org_team_path(@socket, :invite, @current_org.slug)}
+      size="sm"
+      color="primary"
+      label={gettext("Invite new member")}
+    />
+  </div>
+
+  <.table>
+    <thead>
+      <.tr>
+        <.th><%= gettext("Name") %></.th>
+        <.th><%= gettext("Role") %></.th>
+        <.th><%= gettext("Email") %></.th>
+        <.th></.th>
+      </.tr>
+    </thead>
+
+    <tbody>
+      <%= for membership <- @memberships do %>
+        <.tr id={"member-#{membership.user_id}"}>
+          <.td class={td_class()}><%= user_name(membership.user) %></.td>
+          <.td class={td_class()}>
+            <%= membership.role |> Atom.to_string() |> String.capitalize() %>
+          </.td>
+          <.td class={td_class()}><%= membership.user.email %></.td>
+          <.td class={td_class("flex justify-end gap-2")}>
+            <.button
+              size="sm"
+              color="danger"
+              label={
+                if membership.user_id == @current_user.id,
+                  do: gettext("Leave"),
+                  else: gettext("Remove")
+              }
+              disabled={@members_count == 1}
+              phx-click="delete_member"
+              phx-value-id={membership.id}
+              data-confirm={gettext("Are you sure you want to leave this team?")}
+            />
+
+            <.button
+              size="sm"
+              color="white"
+              label={gettext("Edit")}
+              link_type="live_patch"
+              to={Routes.org_team_path(@socket, :edit_membership, @current_org.slug, membership)}
+            />
+          </.td>
+        </.tr>
+      <% end %>
+    </tbody>
+  </.table>
+
+  <.h4 class="mt-10 mb-5"><%= gettext("Invitations") %></.h4>
+
+  <%= if @invitations != [] do %>
+    <.table id="invitations">
+      <thead>
+        <.tr>
+          <.th><%= gettext("E-mail") %></.th>
+          <.th></.th>
+        </.tr>
+      </thead>
+      <tbody>
+        <%= for invitation <- @invitations do %>
+          <.tr id={"invitation-#{invitation.id}"}>
+            <.td class={td_class()}>
+              <%= invitation.email %>
+            </.td>
+            <.td class={td_class("text-right")}>
+              <.button
+                size="sm"
+                color="danger"
+                label={gettext("Delete")}
+                data-confirm={gettext("Are yous ure you want to remove this invitation?")}
+                phx-value-id={invitation.id}
+                phx-click="delete_invitation"
+              />
+            </.td>
+          </.tr>
+        <% end %>
+      </tbody>
+    </.table>
+  <% else %>
+    <div class="text-sm text-gray-500"><%= gettext("No pending invitations.") %></div>
+  <% end %>
+
+  <%= if @live_action == :invite do %>
+    <.live_component
+      module={PanicWeb.OrgTeamLive.OrgTeamInviteFormComponent}
+      id={:new_membership}
+      page_title={@page_title}
+      current_org={@current_org}
+      current_user={@current_user}
+      return_to={Routes.org_team_path(@socket, :index, @current_org.slug)}
+    />
+  <% end %>
+
+  <%= if @live_action == :edit_membership do %>
+    <.modal max_width="sm" title={@page_title}>
+      <.live_component
+        module={PanicWeb.OrgTeamLive.OrgMembershipFormComponent}
+        id={:edit_membership}
+        current_org={@current_org}
+        current_user={@current_user}
+        membership={@membership}
+        current_membership={@current_membership}
+        return_to={Routes.org_team_path(@socket, :index, @current_org.slug)}
+      />
+    </.modal>
+  <% end %>
+</.org_settings_layout>

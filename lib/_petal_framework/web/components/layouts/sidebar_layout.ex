@@ -42,34 +42,27 @@ defmodule PetalFramework.Components.SidebarLayout do
   use PetalComponents
   import PetalFramework.Components.UserDropdownMenu
 
-  # prop current_page, :atom
-  # prop main_menu_items, :list
-  # prop user_menu_items, :list
-  # prop avatar_src, :string
-  # prop sidebar_title, :string
-  # prop home_path, :string
-  # slot default
-  # slot top_right
-  # slot logo
-  def sidebar_layout(assigns) do
-    assigns =
-      assigns
-      |> assign_new(:main_menu_items, fn -> [] end)
-      |> assign_new(:user_menu_items, fn -> [] end)
-      |> assign_new(:avatar_src, fn -> nil end)
-      |> assign_new(:sidebar_title, fn -> "Pages" end)
-      |> assign_new(:home_path, fn -> "/" end)
-      |> assign_new(:top_right, fn -> nil end)
+  attr :current_page, :atom, required: true
+  attr :main_menu_items, :list, default: []
+  attr :user_menu_items, :list, default: []
+  attr :avatar_src, :string, default: nil
+  attr :current_user_name, :string, default: nil
+  attr :sidebar_title, :string, default: nil
+  attr :home_path, :string, default: "/"
+  slot(:inner_block)
+  slot(:top_right)
+  slot(:logo)
 
+  def sidebar_layout(assigns) do
     ~H"""
     <div
       class="flex h-screen overflow-hidden bg-gray-100 dark:bg-gray-900"
       x-data="{sidebarOpen: false}"
     >
-      <div class="shadow lg:w-64">
+      <div class="relative z-40 shadow lg:w-64">
         <div
           class="fixed inset-0 z-40 transition-opacity duration-200 bg-gray-900 bg-opacity-30 lg:hidden lg:z-auto"
-          :class="sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'"
+          x-bind:class="sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'"
           aria-hidden="true"
           x-cloak
         >
@@ -77,8 +70,8 @@ defmodule PetalFramework.Components.SidebarLayout do
 
         <div
           id="sidebar"
-          class="absolute top-0 left-0 z-40 flex-shrink-0 w-64 h-screen p-4 overflow-y-scroll transition-transform duration-200 ease-in-out transform bg-gray-800 lg:static lg:left-auto lg:top-auto lg:translate-x-0 lg:overflow-y-auto no-scrollbar"
-          :class="sidebarOpen ? 'translate-x-0' : '-translate-x-64'"
+          class="absolute top-0 left-0 z-40 flex-shrink-0 w-64 h-screen p-4 overflow-y-scroll transition-transform duration-200 ease-in-out transform bg-white dark:bg-gray-800 lg:static lg:left-auto lg:top-auto lg:translate-x-0 lg:overflow-y-auto no-scrollbar"
+          x-bind:class="sidebarOpen ? 'translate-x-0' : '-translate-x-64'"
           @click.away="sidebarOpen = false"
           @keydown.escape.window="sidebarOpen = false"
           x-cloak="lg"
@@ -88,7 +81,7 @@ defmodule PetalFramework.Components.SidebarLayout do
               class="text-gray-500 lg:hidden hover:text-gray-400"
               @click.stop="sidebarOpen = !sidebarOpen"
               aria-controls="sidebar"
-              :aria-expanded="sidebarOpen"
+              x-bind:aria-expanded="sidebarOpen"
             >
               <span class="sr-only">
                 Close sidebar
@@ -98,7 +91,7 @@ defmodule PetalFramework.Components.SidebarLayout do
               </svg>
             </button>
 
-            <.link to={@home_path} class="block">
+            <.link navigate={@home_path} class="block">
               <%= render_slot(@logo) %>
             </.link>
           </div>
@@ -126,7 +119,7 @@ defmodule PetalFramework.Components.SidebarLayout do
       </div>
 
       <div class="relative flex flex-col flex-1 pb-32 overflow-x-auto overflow-y-auto lg:pb-0">
-        <header class="sticky top-0 z-30 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-800">
+        <header class="sticky top-0 z-30 lg:bg-white/75 lg:shadow dark:lg:shadow-none dark:border-b dark:bg-gray-900/75 dark:border-gray-800 lg:backdrop-filter backdrop-blur">
           <div class="px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 -mb-px">
               <div class="flex min-w-[68px]">
@@ -134,7 +127,7 @@ defmodule PetalFramework.Components.SidebarLayout do
                   class="text-gray-500 hover:text-gray-600 lg:hidden"
                   @click.stop="sidebarOpen = !sidebarOpen"
                   aria-controls="sidebar"
-                  :aria-expanded="sidebarOpen"
+                  x-bind:aria-expanded="sidebarOpen"
                 >
                   <span class="sr-only">
                     Open sidebar
@@ -152,9 +145,7 @@ defmodule PetalFramework.Components.SidebarLayout do
               </div>
 
               <div class="flex items-center gap-3">
-                <%= if @top_right do %>
-                  <%= render_slot(@top_right) %>
-                <% end %>
+                <%= render_slot(@top_right) %>
 
                 <%= if @user_menu_items != [] do %>
                   <.user_menu_dropdown
@@ -174,9 +165,10 @@ defmodule PetalFramework.Components.SidebarLayout do
     """
   end
 
-  # prop current_page, :atom
-  # prop menu_items, :list
-  # prop title, :string
+  attr :current_page, :atom
+  attr :menu_items, :list
+  attr :title, :string
+
   def menu(assigns) do
     ~H"""
     <div>
@@ -191,11 +183,13 @@ defmodule PetalFramework.Components.SidebarLayout do
           <%= for menu_item <- @menu_items do %>
             <%= if menu_item[:path] do %>
               <.link
-                link_type="live_redirect"
-                to={menu_item.path}
+                navigate={menu_item.path}
                 class={menu_item_classes(@current_page, menu_item.name)}
               >
-                <Heroicons.Outline.render icon={menu_item.icon} class="w-5 h-5" />
+                <HeroiconsV1.Outline.render
+                  icon={menu_item.icon}
+                  class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                />
 
                 <span class="ml-3">
                   <%= menu_item.label %>
@@ -209,17 +203,17 @@ defmodule PetalFramework.Components.SidebarLayout do
     """
   end
 
-  def link_class(),
+  def menu_item_base(),
     do:
-      "flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+      "flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50"
 
   # Active state
   def menu_item_classes(page, page),
     do:
-      "flex items-center px-3 py-2 text-sm font-medium text-gray-200 bg-gray-700 hover:text-gray-200 rounded-md group"
+      "#{menu_item_base()} bg-gray-100 dark:bg-gray-700 dark:hover:text-gray-200 rounded-md group"
 
   # Inactive state
   def menu_item_classes(_current_page, _link_page),
     do:
-      "flex items-center px-3 py-2 text-sm font-medium text-gray-200 hover:text-white hover:bg-gray-700 rounded-md group"
+      "#{menu_item_base()} hover:text-gray-800 dark:hover:text-white dark:hover:bg-gray-700 rounded-md group"
 end

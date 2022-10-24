@@ -46,7 +46,7 @@ defmodule PanicWeb.UserOnboardingLive do
             </div>
           </div>
           <div class="mt-5 sm:mt-6">
-            <.form id="update_profile_form" let={f} for={@changeset} phx-submit="submit">
+            <.form :let={f} id="update_profile_form" for={@changeset} phx-submit="submit">
               <.form_field
                 type="text_input"
                 form={f}

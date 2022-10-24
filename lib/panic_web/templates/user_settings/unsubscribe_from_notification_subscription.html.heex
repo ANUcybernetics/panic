@@ -35,7 +35,9 @@
 
           <div class="mt-3 text-center sm:mt-5">
             <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-headline">
-              Confirm unsubscribe from " <%= @subscription.label %> "
+              <%= gettext("Confirm unsubscribe from %{subscription}",
+                subscription: @subscription.label
+              ) %>
             </h3>
             <div class="mt-2 text-sm prose-sm text-gray-500">
               <%= @subscription.unsub_description %> .
@@ -43,7 +45,7 @@
 
             <%= if assigns[:current_user] do %>
               <div class="mt-2 text-sm prose-sm text-gray-500">
-                Or, manage your <%= link("notification preferences",
+                <%= gettext("Or, manage your") %> <%= link(gettext("notification preferences"),
                   to: Routes.live_path(@conn, PanicWeb.EditNotificationsLive),
                   class: "text-blue-500 hover:underline"
                 ) %> .
@@ -52,7 +54,9 @@
           </div>
 
           <div class="flex items-center justify-center gap-5 mt-10">
-            <.link to="/" class="text-sm text-gray-600 hover:underline" label="Cancel" />
+            <.link href="/" class="text-sm text-gray-600 hover:underline">
+              Cancel
+            </.link>
 
             <.button
               link_type="a"
@@ -64,7 +68,7 @@
                   @subscription.name
                 )
               }
-              label="Yes, unsubscribe"
+              label={gettext("Yes, unsubscribe")}
               method={:put}
             />
           </div>
@@ -88,7 +92,7 @@
           </div>
           <div class="mt-3 text-center sm:mt-5">
             <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-headline">
-              Unsubscribed from " <%= @subscription.label %> "
+              <%= gettext("Unsubscribed from %{subscription}", subscription: @subscription.label) %>
             </h3>
             <div class="mt-2 text-sm prose-sm text-gray-500">
               <%= @subscription.unsub_description %>
@@ -96,7 +100,7 @@
 
             <%= if assigns[:current_user] do %>
               <div class="mt-2 text-sm prose-sm text-gray-500">
-                Or, manage your <%= link("notification preferences",
+                <%= gettext("Or, manage your") %> <%= link(gettext("notification preferences"),
                   to: Routes.live_path(@conn, PanicWeb.EditNotificationsLive),
                   class: "text-blue-500 hover:underline"
                 ) %> .
@@ -106,9 +110,8 @@
 
           <div class="flex items-center justify-center gap-5 mt-10">
             <.link
-              label="Undo"
               method={:put}
-              to={
+              href={
                 Routes.user_settings_path(
                   @conn,
                   :toggle_notification_subscription,
@@ -117,9 +120,10 @@
                 )
               }
               class="text-sm text-gray-600 hover:underline"
-            />
-
-            <.button to="/" link_type="a" label="Continue" />
+            >
+              <%= gettext("Undo") %>
+            </.link>
+            <.button to="/" link_type="a" label={gettext("Continue")} />
           </div>
         <% end %>
       </div>

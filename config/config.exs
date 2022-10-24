@@ -7,6 +7,7 @@
 # General application configuration
 import Config
 
+# SETUP_TODO - ensure these details are correct
 # Option descriptions:
 # app_name: This appears in your email layout and also your meta title tag
 # business_name: This appears in your landing page footer next to the copyright symbol
@@ -19,16 +20,17 @@ import Config
 # github_url: (deletable) The URL to your Github account (used in the landing page footer)
 # discord_url: (deletable) The URL to your Discord invititation (used in the landing page footer)
 config :panic,
-  app_name: "Panic",
-  business_name: "ANU School of Cybernetics",
-  support_email: "ben.swift@anu.edu.au",
-  mailer_default_from_name: "Ben Swift",
-  mailer_default_from_email: "ben.swift@anu.edu.au",
+  app_name: "Petal",
+  business_name: "Petal Pty Ltd",
+  support_email: "support@example.com",
+  mailer_default_from_name: "Support",
+  mailer_default_from_email: "support@example.com",
   logo_url_for_emails:
     "https://res.cloudinary.com/wickedsites/image/upload/v1643336799/petal/petal_logo_light_w5jvlg.png",
-  seo_description: "PANIC: Playground Ai Network for Interactive Creativity",
-  twitter_url: "https://twitter.com/benswift",
-  github_url: "https://github.com/benswift"
+  seo_description: "SaaS boilerplate template powered by Elixir's Phoenix and TailwindCSS",
+  twitter_url: "https://twitter.com/PetalFramework",
+  github_url: "https://github.com/petalframework",
+  discord_url: "https://discord.gg/exbwVbjAct"
 
 config :panic,
   ecto_repos: [Panic.Repo]
@@ -51,7 +53,7 @@ config :panic, Panic.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configure esbuild (the version is required)
 config :esbuild,
-  version: "0.14.0",
+  version: "0.15.5",
   default: [
     args:
       ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
@@ -70,7 +72,7 @@ config :phoenix, :json_library, Jason
 config :petal_components, :error_translator_function, {PanicWeb.ErrorHelpers, :translate_error}
 
 config :tailwind,
-  version: "3.1.2",
+  version: "3.1.8",
   default: [
     args: ~w(
     --config=tailwind.config.js
@@ -120,6 +122,27 @@ config :ueberauth, Ueberauth,
   ]
 
 config :panic, :passwordless_enabled, true
+
+# Reduce XSS risks by declaring which dynamic resources are allowed to load
+# If you use any CDNs, whitelist them here.
+# Policy struct: https://github.com/mbramson/content_security_policy/blob/master/lib/content_security_policy/policy.ex
+# Read more about the options: https://content-security-policy.com
+# Note that we use unsafe-eval because Alpine JS requires it :( (see https://alpinejs.dev/advanced/csp)
+config :panic, :content_security_policy, %{
+  default_src: [
+    "'unsafe-inline'",
+    "'unsafe-eval'",
+    "'self'",
+    "data:",
+    "https://cdnjs.cloudflare.com",
+    "https://cdn.skypack.dev",
+    "https://rsms.me",
+    "https://res.cloudinary.com",
+    "ws://localhost:4000"
+  ]
+}
+
+config :flop, repo: Panic.Repo
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

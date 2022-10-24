@@ -63,13 +63,13 @@ defmodule PanicWeb.Helpers do
   def auth_provider_loaded?(provider) do
     case provider do
       "google" ->
-        !!get_in(Application.get_env(:ueberauth, Ueberauth.Strategy.Google.OAuth), [:client_id])
+        get_in(Application.get_env(:ueberauth, Ueberauth.Strategy.Google.OAuth), [:client_id])
 
       "github" ->
-        !!get_in(Application.get_env(:ueberauth, Ueberauth.Strategy.Github.OAuth), [:client_id])
+        get_in(Application.get_env(:ueberauth, Ueberauth.Strategy.Github.OAuth), [:client_id])
 
       "passwordless" ->
-        !!Panic.config(:passwordless_enabled)
+        Panic.config(:passwordless_enabled)
     end
   end
 end

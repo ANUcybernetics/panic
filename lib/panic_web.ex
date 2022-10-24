@@ -55,7 +55,10 @@ defmodule PanicWeb do
       use Phoenix.LiveView,
         layout: {PanicWeb.LayoutView, "live.html"}
 
-      on_mount PanicWeb.RestoreLocale
+      on_mount {PanicWeb.UserOnMountHooks, :maybe_assign_user}
+      on_mount PanicWeb.RestoreLocaleHook
+      on_mount PanicWeb.AllowEctoSandboxHook
+
       unquote(view_helpers())
     end
   end
@@ -91,6 +94,7 @@ defmodule PanicWeb do
       use Phoenix.HTML
 
       # Import LiveView and .heex helpers (live_render, live_patch, <.form>, etc)
+      import Phoenix.Component
       import Phoenix.LiveView.Helpers
 
       # Import basic rendering functionality (render, render_layout, etc)
@@ -111,6 +115,17 @@ defmodule PanicWeb do
       use PetalComponents
       use PetalFramework
 
+      # Components that are aliased but not imported (less used ones)
+      alias PetalFramework.Components.{
+        AlpineComponents
+      }
+
+      # Live components
+      alias PetalFramework.LiveComponents.{
+        DataTable
+      }
+
+      # Components that are imported (commonly used)
       import PanicWeb.Components.{
         Layout,
         Brand,
