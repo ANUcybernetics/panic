@@ -49,7 +49,9 @@
                 phx-click="move_model_down"
                 phx-value-pos={idx}
                 disabled={idx == Enum.count(@network.models) - 1}
-              />
+              >
+                <HeroiconsV1.Solid.arrow_circle_down />
+              </.icon_button>
               <.icon_button
                 color="primary"
                 variant="outline"
@@ -58,7 +60,9 @@
                 phx-click="move_model_up"
                 phx-value-pos={idx}
                 disabled={idx == 0}
-              />
+              >
+                <HeroiconsV1.Solid.arrow_circle_up />
+              </.icon_button>
               <.icon_button
                 variant="outline"
                 size="sm"
@@ -66,7 +70,9 @@
                 color="danger"
                 phx-click="remove_model"
                 phx-value-pos={idx}
-              />
+              >
+                <HeroiconsV1.Outline.trash />
+              </.icon_button>
               <div class="ml-4 inline-block">
                 <span class={"block h-3 w-3 mb-1 rounded-t-full #{model_input_color(model)}"}>
                 </span>
