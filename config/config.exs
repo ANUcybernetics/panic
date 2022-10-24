@@ -138,6 +138,7 @@ config :panic, :content_security_policy, %{
     "https://cdn.skypack.dev",
     "https://rsms.me",
     "https://res.cloudinary.com",
+    "https://replicate.delivery",
     "ws://localhost:4000"
   ]
 }
