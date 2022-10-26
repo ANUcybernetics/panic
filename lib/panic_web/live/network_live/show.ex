@@ -111,14 +111,14 @@ defmodule PanicWeb.NetworkLive.Show do
 
     # now run the thing...
     Panic.BackgroundTask.run(fn ->
-
       output = Models.dispatch(run.model, run.input)
 
       case Models.update_run(run, %{output: output}) do
         {:ok, run} ->
           Networks.broadcast(run.network_id, {"run_succeeded", %{run | status: :succeeded}})
+
         {:error, changeset} ->
-          IO.inspect {changeset, output}
+          IO.inspect({changeset, output})
       end
     end)
 

@@ -141,7 +141,7 @@ defmodule Panic.Models.Platforms.Replicate do
     ## one at random
     text
     |> String.split("\n------------------------------------------\n")
-    |> Enum.random
+    |> Enum.random()
   end
 
   ## image to image
@@ -179,7 +179,8 @@ defmodule Panic.Models.Platforms.Replicate do
 
     {:ok, request_body} = Jason.encode(%{version: model_version, input: input_params})
 
-    {:ok, %HTTPoison.Response{status_code: 201, body: response_body}} = HTTPoison.post(url, request_body, headers(), hackney: [pool: :default])
+    {:ok, %HTTPoison.Response{status_code: 201, body: response_body}} =
+      HTTPoison.post(url, request_body, headers(), hackney: [pool: :default])
 
     {:ok, %{"id" => id}} = Jason.decode(response_body)
 

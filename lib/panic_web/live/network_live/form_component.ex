@@ -41,7 +41,7 @@ defmodule PanicWeb.NetworkLive.FormComponent do
     ~H"""
     <div>
       <.form
-        let={f}
+        :let={f}
         for={@changeset}
         id="new-network-form"
         phx-target={@myself}
