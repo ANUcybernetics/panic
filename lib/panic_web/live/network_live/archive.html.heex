@@ -10,7 +10,7 @@
       <% end %>
       <div class="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-4">
         <%= for run <- runs do %>
-          <PanicWeb.Live.Components.run_widget run={run} socket={@socket} />
+          <PanicWeb.Live.Components.run run={run} socket={@socket} />
         <% end %>
       </div>
     <% end %>

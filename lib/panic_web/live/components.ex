@@ -5,7 +5,7 @@ defmodule PanicWeb.Live.Components do
   A live "grid" of run cards
   """
 
-  def run_widget(assigns) do
+  def run(assigns) do
     ~H"""
     <div class="relative block w-full text-center text-gray-800 bg-gray-200 shadow-lg dark:bg-gray-800 hover:bg-gray-300 dark:text-gray-400 dark:group-hover:text-gray-100">
       <div class="h-48 grid place-items-center overflow-hidden">
@@ -49,7 +49,7 @@ defmodule PanicWeb.Live.Components do
     ~H"""
     <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
       <%= for {run, _idx} <- Enum.with_index(@cycle) do %>
-        <.run_widget run={run} socket={@socket} />
+        <.run run={run} socket={@socket} />
       <% end %>
     </div>
     """
