@@ -67,20 +67,24 @@ models, and in our preso we\'re happy to go into some of the cybernetic ideas
 behind the design - or to focus on the app (and its inputs/outputs) itself -
 happy to fit with whatever will make the most kickarse symposium for everyone.
 
-## Usage
+## Development
 
-For more comprehensive install instructions, please see the [installation guide](https://docs.petal.build/petal-pro-documentation/fundamentals/installation).
+It's a standard Phoenix (v1.6) and Phoenix LiveView (v0.18) app, so all those
+guides should help you out.
 
-0. Download the [latest release](https://petal.build/downloads) or for the bleeding edge, clone this project
-0. Install Elixir & Erlang if you haven't already - see below for more info
-0. Optionally rename your project (open the file `rename_phoenix_project.sh` and read the instructions at the top)
-0. Optionally change your database name in `dev.exs`
-1. Setup the project with `mix setup`
-2. Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
-3. Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
-4. Do a global search for `SETUP_TODO` and follow the instructions to mold the boilerplate to your brand
+Inside the codebase here's a (domain) glossary to help you figure out what's
+going on:
 
-### Managing Elixir & Erlang & Node with asdf
+- **model**: a particular AI model (e.g. Stable Diffusion)
+- **platform**: model-hosting cloud platform (e.g. replicate, huggingface)
+- **network**: a specific network of models, designed so that the output of one is
+  fed as input to the next, and so on
+- **run**: a specific "inference" run for a single model; includes both the input
+  (prompt) an the output (response), along with some other metadata
+- **cycle**: a specific cycle of runs starting from an initial prompt (may or may
+  not converge, depending on whether convergence testing is present)
+
+## Setup
 
 We use [asdf](https://asdf-vm.com) for managing tool versions.
 
