@@ -1,73 +1,102 @@
-<p align="center">
-  <img src="https://res.cloudinary.com/wickedsites/image/upload/v1650064156/petal/panic_jbuqvj.png" height="128">
+# Panic Creative AI Looper
 
-  <p align="center">
-    Launch beautiful Phoenix web apps with this boilerplate project.
-  </p>
-</p>
+The rise of cloud AI platforms like OpenAI and HuggingFace means that using
+Creative AI models is no longer (necessarily) a toilsome struggle against
+undocumented python code and CUDA version errors. Anyone with a credit card can
+log in, input their text/image/audio, hit "run model", and see for the results.
+This has led to a Cambrian explosion of AI art - good and bad - as new, diverse
+voices probe the input manifolds of models like GPT-3 and DALL-E. The Creative
+AI practitioner is therefore presented with the eternal Jurassic Park question:
+just because we *can* put our text/audio/images into these models have them
+provide new text/audio/images in return, does it mean that we *should*?
 
-<p align="center">
-  <a href="https://docs.petal.build">DOCS</a>
-</p>
+At the Creative AI symposium we will demo new Creative AI app called **PANIC:
+Playground Ai Network for Interactive Creativity**---probably through a talk,
+but with plenty of examples and maybe even some live coding/demos. This web app
+allows users to connect up arbitrary networks of Creative AI models to one
+another. The app requires the "modality" of each connection to match up, for
+example the text output of GPT-3 may be fed into the text input of a DALL-E
+mini, or the audio output of a "musical style transfer" model to a "speech to
+text" one. PANIC imposes no other restrictions about whether any particular
+connection makes sense from a semantic perspective---the practitioner is free to
+hook things up and see what behaviours the network manifests.
 
-## Launching new projects
+Along with generating interesting (and sometimes cooked) text/audio/image
+outputs, the purpose of PANIC is to explore how different ways of connecting
+these hosted Creative AI models---different network topologies---give rise to
+different outputs. What are the fixed points of a given network of models? Where
+are the "attractors" in the phase space of all possible inputs, and where are
+the phase transitions? When there are closed loops in the network (an "AI
+Ouroboros"), does the system settle into some sort of "steady state"? Do they
+generate any interesting outputs which we may not have seen with just individual
+prompting of a single model?
 
-We recommend downloading the latest version from the "Releases" section. The `main` branch will be the most recent but there is a slightly higher chance of bugs (although we will endeavour to keep the `main` branch as stable as possible).
+The general outline for our proposed talk/presentation is:
 
-## Get up and running
+-   introduction (with examples/demo) to Creative AI model platforms e.g.
+    OpenAI, HuggingFace, AccompliceAI
 
-**Assumptions:**
-- You have Elixir & Erlang installed
-- You have Postgres installed and running (optional - see "Using Docker for Postgres" below
+-   explanation & demo of the PANIC "create a network of AI models" interface
 
-If you don't meet this assumptions you can read our [comprehensive install instructions](https://docs.petal.build/petal-pro-documentation/fundamentals/installation).
+-   set up different PANIC network topologies, seeing how different
+    text/audio/image inputs are transformed as they are passed through different
+    Creative AI networks (including "closed loop" topologies)
 
-**The steps**
-1. `mix setup` (this get dependencies, setup database, migrations, seeds, install esbuild + Tailwind)
-1. `iex -S mix phx.server` (starts the server in IEX mode)
-1. Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+-   discussion of emergent behaviours, recurring patterns, degenerate & edge
+    cases, and what it all says about the nature of Creative AI model platforms
+    in their current form
 
-**Moving forward:**
-- Do a global search for `SETUP_TODO` and follow the instructions to mold the boilerplate to your brand
-- Optional: Follow our tutorial ["Creating a web app from start to finish"](https://docs.petal.build/petal-pro-documentation/guides/creating-a-web-app-from-start-to-finish) to get an overview of Petal Pro
-## Using Docker for Postgres
+While PANIC is an experimental tool for creative "play", the accessibility of
+these AI model platforms (cost, time, technical knowledge) means that their
+inputs & outputs are being increasingly taken up in the flows of people &
+culture which traverse our world---participating in both human and non-human
+feedback loops. PANIC is a playground for leaning in to that connectivity to
+better understand where that road leads.
 
-If your system doesn't have Postgres you can use docker-compose to run it in a container (saves you having to install it).
+Note to symposium organisers: PANIC doesn\'t exists in a robust, shareable form
+just yet, but you have my (Ben\'s) word as a creative coder that it\'ll be
+working and demoable by the symposium date ;)
 
-| Command | Description |
-| --- | ----------- |
-| `docker compose up` | Start in the foreground |
-| `docker compose up -d` | Start in the background |
-| `docker compose down` | Stop the containers |
-| `docker compose down -v` | Stop and delete all Postgres data by removing the volume |
-| `docker compose exec db psql --username postgres` | Access through psql|
+## About the School of Cybernetics
 
-The connection details for any local clients would be the following:
+At the School of Cybernetics we love thinking about the way that feedback loops
+(and the connections between components in general) define the behaviour of the
+systems in which we live, work and create. That interest sits behind the design
+of PANIC as a tool for making (and breaking!) networks of hosted Creative AI
+models, and in our preso we\'re happy to go into some of the cybernetic ideas
+behind the design - or to focus on the app (and its inputs/outputs) itself -
+happy to fit with whatever will make the most kickarse symposium for everyone.
+
+## Usage
+
+For more comprehensive install instructions, please see the [installation guide](https://docs.petal.build/petal-pro-documentation/fundamentals/installation).
+
+0. Download the [latest release](https://petal.build/downloads) or for the bleeding edge, clone this project
+0. Install Elixir & Erlang if you haven't already - see below for more info
+0. Optionally rename your project (open the file `rename_phoenix_project.sh` and read the instructions at the top)
+0. Optionally change your database name in `dev.exs`
+1. Setup the project with `mix setup`
+2. Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+3. Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+4. Do a global search for `SETUP_TODO` and follow the instructions to mold the boilerplate to your brand
+
+### Managing Elixir & Erlang & Node with asdf
+
+We use [asdf](https://asdf-vm.com) for managing tool versions.
+
+The file `.tool-version` tells asdf which versions we use.
+
+Run `asdf install` to install those versions.
+
+### Other Setup notes
 
 ```
-Host: localhost
-Port: 5432
-User: postgres
-Password: postgres
-```
+mix phx.gen.context Models Run runs platform:enum:replicate:huggingface:openai model_name:string input:string output:string metadata:map
+mix petal.gen.live Networks Network networks owner_id:references:users name:string models:array:integer loop:boolean
+``````
 
-## Renaming
+## Licence
 
-Rename your project by opening the file `rename_phoenix_project.sh` and reading the instructions at the top.
+(c) Ben Swift, Adrian Schmidt
 
-Note that it is not recommended to rename the project if you wish to keep pulling in Petal Pro updates. This is because it can be much harder to update after you have renamed.
-
-## Maintaining code quality as you develop
-
-Run `mix quality` to look for issues with your code. This will run each of these tasks:
-
-* `mix format --check-formatted` (formats your code)
-* `mix sobelow --config` (security analysis)
-* `mix coveralls` (test coverage)
-* `mix credo` (code quality)
-
-If the output is overwhelming, try running one at a time.
-
-## Contributing
-
-Petal Pro is a paid product but we welcome PR's if you find small bugs / typos / improvements. Let us know if you want to contribute in a more significant way and we can offer unlimited membership in return.
+MIT
