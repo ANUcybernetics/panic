@@ -84,6 +84,11 @@ going on:
 - **cycle**: a specific cycle of runs starting from an initial prompt (may or may
   not converge, depending on whether convergence testing is present)
 
+TODO: some of these I'd like to change, especially _run_ (because it'd be nice
+to reserve that word for things like "is it running?" rather than this specific
+sense... perhaps replace that with _prediction_ like replicate does, or perhaps
+_inference_).
+
 ## Setup
 
 We use [asdf](https://asdf-vm.com) for managing tool versions.
