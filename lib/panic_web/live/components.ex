@@ -45,6 +45,16 @@ defmodule PanicWeb.Live.Components do
     """
   end
 
+  def cycle(assigns) do
+    ~H"""
+    <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
+      <%= for {run, _idx} <- Enum.with_index(@cycle) do %>
+        <.run_widget run={run} socket={@socket} />
+      <% end %>
+    </div>
+    """
+  end
+
   def vestaboard_simulator(assigns) do
     board_id = "ba16996e-154f-4f31-83b7-ae0a8f13ecaf" # Panic 1
 
