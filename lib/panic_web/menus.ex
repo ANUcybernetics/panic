@@ -10,9 +10,7 @@ defmodule PanicWeb.Menus do
   # Public menu (marketing related pages)
   def public_menu_items(_user \\ nil),
     do: [
-      %{label: gettext("Features"), path: "/#features"},
-      %{label: gettext("Testimonials"), path: "/#testimonials"},
-      %{label: gettext("Pricing"), path: "/#pricing"}
+      # %{label: gettext("Features"), path: "/#features"},
     ]
 
   # Signed out main menu
@@ -20,15 +18,7 @@ defmodule PanicWeb.Menus do
     do: []
 
   # Signed in main menu
-  def main_menu_items(current_user),
-    do:
-      build_menu(
-        [
-          :dashboard,
-          :orgs
-        ],
-        current_user
-      )
+  def main_menu_items(current_user), do: build_menu([], current_user)
 
   # Signed out user menu
   def user_menu_items(nil),
