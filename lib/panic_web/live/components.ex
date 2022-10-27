@@ -45,6 +45,14 @@ defmodule PanicWeb.Live.Components do
     """
   end
 
+  def vestaboard_simulator(assigns) do
+    board_id = "ba16996e-154f-4f31-83b7-ae0a8f13ecaf" # Panic 1
+
+    ~H"""
+    <iframe src="https://simulator.vestaboard.com/?boardId={@board_id}" width="710" height="404.7" scrolling="no" style="border: none"></iframe>
+    """
+  end
+
   def local_or_remote_url(socket, url) do
     if String.match?(url, ~r/https?:\/\//) do
       url
@@ -52,4 +60,6 @@ defmodule PanicWeb.Live.Components do
       Routes.static_path(socket, "/model_outputs/" <> Path.basename(url))
     end
   end
+
+
 end
