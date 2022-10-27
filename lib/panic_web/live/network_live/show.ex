@@ -137,12 +137,8 @@ defmodule PanicWeb.NetworkLive.Show do
     idx = cycle_index(socket.assigns.cycle, run)
     cycle = List.replace_at(socket.assigns.cycle, idx, run)
 
-    cycle_status =
-      if Models.cycle_has_converged?(run.first_run_id) do
-        :converged
-      else
-        socket.assigns.cycle_status
-      end
+    ## note: there used to be a convergence check here, but SD doesn't need it
+    cycle_status = socket.assigns.cycle_status
 
     if cycle_status == :running do
       attrs = %{
