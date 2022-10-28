@@ -1,10 +1,6 @@
 defmodule PanicWeb.Live.Components do
   use PanicWeb, :component
 
-  @doc """
-  A live "grid" of run cards
-  """
-
   def run(assigns) do
     ~H"""
     <div class="relative block w-full text-center text-gray-800 bg-gray-200 shadow-lg dark:bg-gray-800 hover:bg-gray-300 dark:text-gray-400 dark:group-hover:text-gray-100">
@@ -70,6 +66,4 @@ defmodule PanicWeb.Live.Components do
       Routes.static_path(socket, "/model_outputs/" <> Path.basename(url))
     end
   end
-
-
 end
