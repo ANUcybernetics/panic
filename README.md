@@ -83,6 +83,8 @@ going on:
   (prompt) an the output (response), along with some other metadata
 - **cycle**: a specific cycle of runs starting from an initial prompt (may or may
   not converge, depending on whether convergence testing is present)
+- **loop**: a (fixed-size) ringbuffer of the most recent runs in the current
+  cycle---useful for displaying on a grid to show the progress of the cycle
 
 TODO: some of these I'd like to change, especially _run_ (because it'd be nice
 to reserve that word for things like "is it running?" rather than this specific
