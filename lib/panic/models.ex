@@ -102,9 +102,17 @@ defmodule Panic.Models do
 
   """
   def create_run(attrs \\ %{}) do
-    %Run{}
-    |> Run.changeset(attrs)
-    |> Repo.insert()
+    run =
+      %Run{}
+      |> Run.changeset(attrs)
+      |> Repo.insert()
+
+    if run.first_run_id do
+      run
+    else
+      # if first_run_id is nil, this run must be a first_run, so set id accordingly
+      update_run(run, %{first_run_id: run.id})
+    end
   end
 
   @doc """
