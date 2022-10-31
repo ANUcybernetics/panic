@@ -28,7 +28,16 @@ defmodule Panic.Models.Run do
   @doc false
   def changeset(run, attrs) do
     run
-    |> cast(attrs, [:model, :input, :output, :metadata, :cycle_index, :parent_id, :first_run_id, :network_id])
+    |> cast(attrs, [
+      :model,
+      :input,
+      :output,
+      :metadata,
+      :cycle_index,
+      :parent_id,
+      :first_run_id,
+      :network_id
+    ])
     |> validate_required([:model, :input, :network_id])
     |> validate_inclusion(:model, Models.list_models())
     |> validate_number(:cycle_index, greater_than_or_equal_to: 0)
