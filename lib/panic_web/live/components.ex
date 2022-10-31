@@ -52,10 +52,18 @@ defmodule PanicWeb.Live.Components do
   end
 
   def vestaboard_simulator(assigns) do
-    board_id = "ba16996e-154f-4f31-83b7-ae0a8f13ecaf" # Panic 1
+    # Panic 1
+    board_id = "ba16996e-154f-4f31-83b7-ae0a8f13ecaf"
 
     ~H"""
-    <iframe src="https://simulator.vestaboard.com/?boardId={@board_id}" width="710" height="404.7" scrolling="no" style="border: none"></iframe>
+    <iframe
+      src="https://simulator.vestaboard.com/?boardId={board_id}"
+      width="710"
+      height="404.7"
+      scrolling="no"
+      style="border: none"
+    >
+    </iframe>
     """
   end
 
