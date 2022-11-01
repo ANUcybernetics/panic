@@ -14,27 +14,16 @@
       />
     </.page_header>
 
-    <div>
-      <.form
-        :let={f}
-        for={@first_run_changeset}
-        id="first-run-input"
-        phx-change="validate_first_run"
-        phx-submit="create_first_run"
-      >
-        <.form_field type="text_input" label="Starting prompt" form={f} field={:input} />
-      </.form>
+    <.live_component
+      module={PanicWeb.NetworkLive.InitialPromptComponent}
+      id="initial-prompt-input"
+      network={@network}
+    />
+
+    <div class="mb-4">
+      <span class="font-bold"><%= @first_run && @first_run.input %></span>
     </div>
 
-    <div class="mb-4 flex justify-between">
-      <span>
-        <span class="font-bold"><%= @first_run && @first_run.input %></span>
-      </span>
-      <span>
-        (cycle length <%= @cycle_length %>, current status: <span class="italic"><%= @cycle_status %></span>)
-      </span>
-    </div>
-
-    <PanicWeb.Live.Components.cycle cycle={@cycle} socket={@socket} />
+    <PanicWeb.Live.Components.slots slots={@slots} socket={@socket} />
   </.container>
 </.layout>

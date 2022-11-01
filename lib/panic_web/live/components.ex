@@ -1,5 +1,6 @@
 defmodule PanicWeb.Live.Components do
   use PanicWeb, :component
+  alias Panic.Models
 
   def run(assigns) do
     ~H"""
@@ -41,10 +42,10 @@ defmodule PanicWeb.Live.Components do
     """
   end
 
-  def cycle(assigns) do
+  def slots(assigns) do
     ~H"""
     <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
-      <%= for {run, _idx} <- Enum.with_index(@cycle) do %>
+      <%= for {run, _idx} <- Enum.with_index(@slots) do %>
         <.run run={run} socket={@socket} />
       <% end %>
     </div>
