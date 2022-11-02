@@ -3,7 +3,6 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
 
   alias Panic.Networks
   alias Panic.Models
-  alias Panic.Models.Run
 
   @impl true
   def update(%{network: network} = assigns, socket) do
