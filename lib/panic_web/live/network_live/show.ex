@@ -5,7 +5,7 @@ defmodule PanicWeb.NetworkLive.Show do
   alias Panic.Models
   alias Panic.Models.Run
 
-  @num_slots 9
+  @num_slots 6
 
   @impl true
   def mount(_params, _session, socket) do
