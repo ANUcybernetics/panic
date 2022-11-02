@@ -97,7 +97,11 @@ defmodule Panic.Models do
     result =
       %Run{}
       |> Run.changeset(
-        Map.merge(attrs, %{"network_id" => network_id, "model" => List.first(models), "cycle_index" => 0})
+        Map.merge(attrs, %{
+          "network_id" => network_id,
+          "model" => List.first(models),
+          "cycle_index" => 0
+        })
       )
       |> Repo.insert()
 
@@ -109,7 +113,8 @@ defmodule Panic.Models do
 
   def create_next_run(
         %Network{id: network_id, models: models},
-        %Run{cycle_index: cycle_index, first_run_id: first_run_id, output: next_input} = _parent_run,
+        %Run{cycle_index: cycle_index, first_run_id: first_run_id, output: next_input} =
+          _parent_run,
         attrs \\ %{}
       ) do
     next_model = Enum.at(models, Integer.mod(cycle_index + 1, Enum.count(models)))

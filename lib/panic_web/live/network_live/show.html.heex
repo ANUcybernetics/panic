@@ -1,7 +1,12 @@
 <.layout current_page={:show_network} current_user={@current_user} type="stacked">
   <.container class="py-16">
     <.page_header title={@network.name}>
-      <.button class="bg-red-600 hover:bg-red-400" link_type="button" phx_click="stop_cycle" label="Stop" />
+      <.button
+        class="bg-red-600 hover:bg-red-400"
+        link_type="button"
+        phx_click="stop_cycle"
+        label="Stop"
+      />
       <.button
         link_type="live_patch"
         label="Edit"

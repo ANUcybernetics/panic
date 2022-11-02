@@ -99,6 +99,7 @@ defmodule PanicWeb.NetworkLive.Show do
         |> Enum.reject(&is_nil/1)
         |> Enum.map(&Map.get(&1, :updated_at))
         |> Enum.max(Date)
+
       Date.compare(max, run.updated_at) == :gt
     else
       false
