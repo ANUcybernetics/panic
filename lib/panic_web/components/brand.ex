@@ -3,14 +3,6 @@ defmodule PanicWeb.Components.Brand do
   alias PanicWeb.Router.Helpers, as: Routes
   alias PanicWeb.Endpoint
 
-  # SETUP_TODO
-  # This module relies on the following images. Replace these images with your logos
-  # /priv/static/images/logo_dark.svg
-  # /priv/static/images/logo_light.svg
-  # /priv/static/images/logo_icon_dark.svg
-  # /priv/static/images/logo_icon_light.svg
-  # /priv/static/images/favicon.png
-
   @doc "Displays your full logo. "
 
   attr :class, :string, default: "h-10"
