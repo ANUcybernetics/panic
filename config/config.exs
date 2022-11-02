@@ -138,6 +138,7 @@ config :panic, :content_security_policy, %{
     "https://rsms.me",
     "https://res.cloudinary.com",
     "https://replicate.delivery",
+    "https://simulator.vestaboard.com",
     "ws://localhost:4000"
   ]
 }
