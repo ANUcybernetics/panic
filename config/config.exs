@@ -7,7 +7,6 @@
 # General application configuration
 import Config
 
-# SETUP_TODO - ensure these details are correct
 # Option descriptions:
 # app_name: This appears in your email layout and also your meta title tag
 # business_name: This appears in your landing page footer next to the copyright symbol
