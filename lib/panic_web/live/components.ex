@@ -53,8 +53,12 @@ defmodule PanicWeb.Live.Components do
   end
 
   def vestaboard_simulator(assigns) do
-    # Panic 1
-    board_id = "ba16996e-154f-4f31-83b7-ae0a8f13ecaf"
+    board_id =
+      case assigns.board do
+        :panic_1 -> "ba16996e-154f-4f31-83b7-ae0a8f13ecaf"
+        :panic_2 -> "26241875-af6f-44dc-916a-4895b46eda57"
+        :panic_3 -> "c3def357-b70c-45df-ba68-1bf40ff24400"
+      end
 
     ~H"""
     <iframe
