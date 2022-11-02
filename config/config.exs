@@ -20,17 +20,16 @@ import Config
 # github_url: (deletable) The URL to your Github account (used in the landing page footer)
 # discord_url: (deletable) The URL to your Discord invititation (used in the landing page footer)
 config :panic,
-  app_name: "Petal",
-  business_name: "Petal Pty Ltd",
-  support_email: "support@example.com",
-  mailer_default_from_name: "Support",
-  mailer_default_from_email: "support@example.com",
+  app_name: "Panic",
+  business_name: "ANU School of Cybernetics",
+  support_email: "ben.swift@anu.edu.au",
+  mailer_default_from_name: "Ben Swift",
+  mailer_default_from_email: "ben.swift@anu.edu.au",
   logo_url_for_emails:
     "https://res.cloudinary.com/wickedsites/image/upload/v1643336799/petal/petal_logo_light_w5jvlg.png",
-  seo_description: "SaaS boilerplate template powered by Elixir's Phoenix and TailwindCSS",
-  twitter_url: "https://twitter.com/PetalFramework",
-  github_url: "https://github.com/petalframework",
-  discord_url: "https://discord.gg/exbwVbjAct"
+  seo_description: "PANIC: Playground Ai Network for Interactive Creativity",
+  twitter_url: "https://twitter.com/benswift",
+  github_url: "https://github.com/benswift"
 
 config :panic,
   ecto_repos: [Panic.Repo]
