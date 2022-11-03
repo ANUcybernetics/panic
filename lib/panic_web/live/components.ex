@@ -1,6 +1,7 @@
 defmodule PanicWeb.Live.Components do
   use PanicWeb, :component
   alias Panic.Models
+  alias Panic.Models.Platforms.Vestaboard
 
   def run(assigns) do
     ~H"""
@@ -53,22 +54,17 @@ defmodule PanicWeb.Live.Components do
   end
 
   def vestaboard_simulator(assigns) do
-    board_id =
-      case assigns.board do
-        :panic_1 -> "ba16996e-154f-4f31-83b7-ae0a8f13ecaf"
-        :panic_2 -> "26241875-af6f-44dc-916a-4895b46eda57"
-        :panic_3 -> "c3def357-b70c-45df-ba68-1bf40ff24400"
-      end
-
     ~H"""
-    <iframe
-      src="https://simulator.vestaboard.com/?boardId={board_id}"
-      width="710"
-      height="404.7"
-      scrolling="no"
-      style="border: none"
-    >
-    </iframe>
+    <div class="aspect-w-7 aspect-h-4">
+      <iframe
+        src="https://simulator.vestaboard.com/?boardId={Vestaboard.board_id(@board_name)}"
+        width="710"
+        height="404.7"
+        scrolling="no"
+        style="absolute border-none insert-0"
+      >
+      </iframe>
+    </div>
     """
   end
 
