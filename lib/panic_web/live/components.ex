@@ -43,7 +43,7 @@ defmodule PanicWeb.Live.Components do
     """
   end
 
-  def slots(assigns) do
+  def slots_grid(assigns) do
     ~H"""
     <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
       <%= for {run, _idx} <- Enum.with_index(@slots) do %>
