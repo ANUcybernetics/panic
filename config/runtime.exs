@@ -37,6 +37,11 @@ config :panic,
     System.get_env("VESTABOARD_API_SECRET_3") ||
       raise("""
       environment variable VESTABOARD_API_SECRET_3 is missing.
+      """),
+  vestaboard_api_secret_4:
+    System.get_env("VESTABOARD_API_SECRET_4") ||
+      raise("""
+      environment variable VESTABOARD_API_SECRET_4 is missing.
       """)
 
 config :ueberauth, Ueberauth.Strategy.Google.OAuth,
