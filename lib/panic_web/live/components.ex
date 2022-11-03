@@ -3,6 +3,38 @@ defmodule PanicWeb.Live.Components do
   alias Panic.Models
   alias Panic.Models.Platforms.Vestaboard
 
+  def text_run(assigns) do
+    ~H"""
+    <div class="p-2 text-md text-left">
+      <%= for line <- String.split(@run.output, "\n\n") do %>
+        <%= unless line == "" do %>
+          <p><%= line %></p>
+        <% end %>
+      <% end %>
+    </div>
+    """
+  end
+
+  def vestaboard_run(assigns) do
+    ~H"""
+    <.vestaboard_simulator run={@run} board_name={@board.name} />
+    """
+  end
+
+  def image_run(assigns) do
+    ~H"""
+    <img class="w-full object-cover" src={@run.output} />
+    """
+  end
+
+  def audio_run(assigns) do
+    ~H"""
+    <audio autoplay controls={false} src={local_or_remote_url(@socket, @run.output)} />
+    <HeroiconsV1.Outline.volume_up class="w-12 h-12 mx-auto" />
+    """
+  end
+
+
   def run(assigns) do
     ~H"""
     <div class="relative block w-full text-center text-gray-800 bg-gray-200 shadow-lg dark:bg-gray-800 hover:bg-gray-300 dark:text-gray-400 dark:group-hover:text-gray-100">
@@ -16,18 +48,11 @@ defmodule PanicWeb.Live.Components do
             <% :succeeded -> %>
               <%= case Models.model_io(@run.model) do %>
                 <% {_, :text} -> %>
-                  <div class="p-2 text-md text-left">
-                    <%= for line <- String.split(@run.output, "\n\n") do %>
-                      <%= unless line == "" do %>
-                        <p><%= line %></p>
-                      <% end %>
-                    <% end %>
-                  </div>
+                  <.text_run run={@run} />
                 <% {_, :image} -> %>
-                  <img class="w-full object-cover" src={@run.output} />
+                  <.image_run run={@run} />
                 <% {_, :audio} -> %>
-                  <audio autoplay controls={false} src={local_or_remote_url(@socket, @run.output)} />
-                  <HeroiconsV1.Outline.volume_up class="w-12 h-12 mx-auto" />
+                <.audio_run run={@run} />
               <% end %>
             <% :failed -> %>
               <HeroiconsV1.Outline.x_circle class="w-12 h-12 mx-auto" />
