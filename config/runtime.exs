@@ -22,6 +22,16 @@ config :panic,
     System.get_env("HUGGINGFACE_API_TOKEN") ||
       raise("""
       environment variable HUGGINGFACE_API_TOKEN is missing.
+      """),
+  vestaboard_api_key:
+    System.get_env("VESTABOARD_API_KEY") ||
+      raise("""
+      environment variable VESTABOARD_API_KEY is missing.
+      """),
+  vestaboard_api_secret:
+    System.get_env("VESTABOARD_API_SECRET") ||
+      raise("""
+      environment variable VESTABOARD_API_SECRET is missing.
       """)
 
 config :ueberauth, Ueberauth.Strategy.Google.OAuth,
