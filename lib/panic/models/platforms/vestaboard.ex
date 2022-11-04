@@ -18,6 +18,10 @@ defmodule Panic.Models.Platforms.Vestaboard do
     case HTTPoison.post(url, request_body, headers(board_name)) do
       {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} ->
         Jason.decode(response_body)
+
+      {:ok, %HTTPoison.Response{status_code: 503}} ->
+        # this isn't *really* ok, but hopefully we can ignore it
+        {:ok, :too_many_requests}
     end
   end
 
