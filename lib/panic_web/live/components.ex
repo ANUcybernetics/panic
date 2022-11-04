@@ -17,7 +17,7 @@ defmodule PanicWeb.Live.Components do
 
   def vestaboard_run(assigns) do
     ~H"""
-    <.vestaboard_simulator run={@run} board_name={@board.name} />
+    <.vestaboard_simulator run={@run} board_name={@board_name} />
     """
   end
 
@@ -48,11 +48,11 @@ defmodule PanicWeb.Live.Components do
             <% :succeeded -> %>
               <%= case Models.model_io(@run.model) do %>
                 <% {_, :text} -> %>
-                  <.text_run run={@run} />
+                  <.vestaboard_run run={@run} board_name={:panic_1} />
                 <% {_, :image} -> %>
                   <.image_run run={@run} />
                 <% {_, :audio} -> %>
-                <.audio_run run={@run} />
+                  <.audio_run run={@run} />
               <% end %>
             <% :failed -> %>
               <HeroiconsV1.Outline.x_circle class="w-12 h-12 mx-auto" />
@@ -79,17 +79,17 @@ defmodule PanicWeb.Live.Components do
   end
 
   def vestaboard_simulator(assigns) do
+    {:ok, result} = Vestaboard.send_text(assigns.board_name, assigns.run.output)
+
     ~H"""
-    <div class="aspect-w-7 aspect-h-4">
-      <iframe
-        src="https://simulator.vestaboard.com/?boardId={Vestaboard.board_id(@board_name)}"
-        width="710"
-        height="404.7"
-        scrolling="no"
-        style="absolute border-none insert-0"
-      >
-      </iframe>
-    </div>
+    <iframe
+      src="https://simulator.vestaboard.com/?boardId={Vestaboard.board_id(@board_name)}"
+      width="710"
+      height="404.7"
+      scrolling="no"
+      style="absolute border-none insert-0"
+    >
+    </iframe>
     """
   end
 
