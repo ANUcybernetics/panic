@@ -29,6 +29,7 @@ defmodule Panic.Models do
       "replicate:kyrick/prompt-parrot",
       "replicate:methexis-inc/img2prompt",
       "replicate:rmokady/clip_prefix_caption",
+      "replicate:j-min/clip-caption-reward",
       "replicate:stability-ai/stable-diffusion"
     ]
   end
@@ -49,6 +50,7 @@ defmodule Panic.Models do
   def model_io("replicate:kyrick/prompt-parrot"), do: {:text, :text}
   def model_io("replicate:methexis-inc/img2prompt"), do: {:image, :text}
   def model_io("replicate:rmokady/clip_prefix_caption"), do: {:image, :text}
+  def model_io("replicate:j-min/clip-caption-reward"), do: {:image, :text}
   def model_io("replicate:stability-ai/stable-diffusion"), do: {:text, :image}
 
   def list_runs(%Network{id: network_id}) do
