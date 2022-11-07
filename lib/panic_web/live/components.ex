@@ -48,7 +48,7 @@ defmodule PanicWeb.Live.Components do
               <% :succeeded -> %>
                 <%= case Models.model_io(@run.model) do %>
                   <% {_, :text} -> %>
-                    <.vestaboard_run run={@run} board_name={:panic_1} />
+                    <.text_run run={@run} />
                   <% {_, :image} -> %>
                     <.image_run run={@run} />
                   <% {_, :audio} -> %>
