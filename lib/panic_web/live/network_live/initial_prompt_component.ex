@@ -46,6 +46,22 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
   def render(assigns) do
     ~H"""
     <div>
+      <div class="flex mb-4 gap-2 justify-end">
+        <.button
+          class="bg-red-600 hover:bg-red-400"
+          link_type="button"
+          phx_click="stop_cycle"
+          label="Stop"
+        />
+        <.button
+          link_type="live_patch"
+          label="Edit"
+          to={Routes.network_edit_path(@socket, :edit, @network.id)}
+        />
+        <.button link_type="live_patch" label="Back" to={Routes.network_index_path(@socket, :index)} />
+        <.button type="submit" phx_disable_with="Panicking..." label="Panic" />
+      </div>
+
       <.form
         :let={f}
         for={@changeset}
@@ -54,8 +70,7 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
         phx-change="validate"
         phx-submit="start-cycle"
       >
-        <.form_field type="text_input" form={f} field={:input} />
-        <.button type="submit" phx_disable_with="Panicking..." label="Panic" />
+        <.form_field type="text_input" form={f} field={:input} label="type a starting prompt" />
       </.form>
     </div>
     """
