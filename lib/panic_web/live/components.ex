@@ -80,7 +80,7 @@ defmodule PanicWeb.Live.Components do
   end
 
   def vestaboard_simulator(assigns) do
-    {:ok, result} = Vestaboard.send_text(assigns.board_name, assigns.run.output)
+    {:ok, _result} = Vestaboard.send_text(assigns.board_name, assigns.run.output)
 
     ~H"""
     <iframe
