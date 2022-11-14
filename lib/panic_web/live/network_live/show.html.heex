@@ -8,7 +8,7 @@
       network={@network}
     />
 
-    <div class="mb-4" :if={@first_run}>
+    <div :if={@first_run} class="mb-4">
       <span class="font-bold">starting prompt: <%= @first_run.input %></span>
     </div>
 
