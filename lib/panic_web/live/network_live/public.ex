@@ -12,7 +12,7 @@ defmodule PanicWeb.NetworkLive.Public do
   @impl true
   def handle_params(%{"id" => network_id} = params, _, socket) do
     network = Networks.get_network!(network_id)
-    num_slots = Map.get(params, "slots", 1)
+    num_slots = Map.get(params, "slots", "1") |> String.to_integer()
 
     Networks.subscribe(network_id)
 
@@ -51,8 +51,10 @@ defmodule PanicWeb.NetworkLive.Public do
   @impl true
   def render(%{live_action: :view} = assigns) do
     ~H"""
-    <div class="w-screen h-screen">
-      <PanicWeb.Live.Components.slots_grid slots={@slots} />
+    <div class="grid gap-8 md:grid-cols-6">
+      <%= for {run, _idx} <- Enum.with_index(@slots) do %>
+        <PanicWeb.Live.Components.run run={run} />
+      <% end %>
     </div>
     """
   end
