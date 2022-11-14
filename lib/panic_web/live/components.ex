@@ -29,7 +29,7 @@ defmodule PanicWeb.Live.Components do
 
   def audio_run(assigns) do
     ~H"""
-    <audio autoplay controls={false} src={local_or_remote_url(@socket, @run.output)} />
+    <audio autoplay controls={false} src={@run.output} />
     <HeroiconsV1.Outline.volume_up class="w-12 h-12 mx-auto" />
     """
   end
@@ -73,7 +73,7 @@ defmodule PanicWeb.Live.Components do
     ~H"""
     <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
       <%= for {run, _idx} <- Enum.with_index(@slots) do %>
-        <.run run={run} socket={@socket} />
+        <.run run={run} />
       <% end %>
     </div>
     """
