@@ -36,8 +36,7 @@ defmodule PanicWeb.Live.Components do
 
   def run(assigns) do
     ~H"""
-    <div class="relative block w-full text-center text-gray-800 bg-gray-200 shadow-lg dark:bg-gray-800 hover:bg-gray-300 dark:text-gray-400 dark:group-hover:text-gray-100">
-      <div class="aspect-w-16 aspect-h-9 overflow-hidden">
+    <div class="aspect-w-16 aspect-h-9 overflow-hidden relative block w-full text-center text-gray-800 bg-gray-200 shadow-lg dark:bg-gray-800 hover:bg-gray-300 dark:text-gray-400 dark:group-hover:text-gray-100">
         <div class="absolute inset-0 grid place-items-center">
           <%= if @run do %>
             <%= case @run.status do %>
@@ -64,7 +63,6 @@ defmodule PanicWeb.Live.Components do
             <div class="text-gray-400 italic">blank</div>
           <% end %>
         </div>
-      </div>
     </div>
     """
   end
