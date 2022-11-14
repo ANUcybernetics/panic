@@ -43,10 +43,10 @@ defmodule PanicWeb.Router do
       # page_builder:live:public
 
       # public network routes
-      scope "/view"
-      live "/networks/:id/current", NetworkLive.Public, :current
-      live "/networks/:id/overview", NetworkLive.Public, :overview
-      live "/networks/:id/screen/:screen_id", NetworkLive.Public, :screen
+      scope "/view" do
+        live "/networks/:id", NetworkLive.Public, :view
+        live "/networks/:id/screen/:screen_id", NetworkLive.Public, :screen
+      end
     end
   end
 
