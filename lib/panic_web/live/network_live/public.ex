@@ -29,13 +29,11 @@ defmodule PanicWeb.NetworkLive.Public do
 
   @impl true
   def handle_info({:run_completed, %Run{status: :succeeded} = run}, %{assigns: %{live_action: :view}} = socket) do
-    IO.inspect {:received_1, run}
     {:noreply, update(socket, :slots, fn slots -> push_front_drop_last(run, slots) end )}
   end
 
   @impl true
   def handle_info({:run_completed, %Run{cycle_index: idx, status: :succeeded} = run}, %{assigns: %{live_action: :screen}} = socket) do
-    IO.inspect {:received_2, run}
     num_screens = 8 # hardcoded for Panic, will generalise later
 
     if Integer.mod(idx, num_screens) == socket.assigns.screen_id do
