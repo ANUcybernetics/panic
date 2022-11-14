@@ -89,7 +89,6 @@ defmodule PanicWeb.NetworkLive.Show do
     {:noreply, assign(socket, :status, :waiting)}
   end
 
-  # defp rotate([head | tail]), do: tail ++ [head]
   defp mod_num_slots(n), do: Integer.mod(n, @num_slots)
 
   defp stale_run?(slots, run) do
