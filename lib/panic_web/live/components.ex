@@ -23,7 +23,10 @@ defmodule PanicWeb.Live.Components do
 
   def image_run(assigns) do
     ~H"""
-    <img class="w-full object-cover" src={@run.output} />
+    <div class="relative">
+      <img class="w-full object-cover" src={@run.output} />
+      <span class="absolute left-4 bottom-4 text-gray-100 text-left"><%= @run.input %></span>
+    </div>
     """
   end
 
