@@ -31,16 +31,23 @@ defmodule PanicWeb.NetworkLive.Public do
   ########
 
   @impl true
-  def handle_info({:run_completed, %Run{cycle_index: idx, status: :succeeded} = run}, %{assigns: %{live_action: :view, slots: slots, slot_count: slot_count}} = socket) do
-    slots = slots
-    |> List.replace_at(Integer.mod(idx, slot_count), run)
-    |> List.replace_at(Integer.mod(idx + 1, slot_count), nil)
+  def handle_info(
+        {:run_completed, %Run{cycle_index: idx, status: :succeeded} = run},
+        %{assigns: %{live_action: :view, slots: slots, slot_count: slot_count}} = socket
+      ) do
+    slots =
+      slots
+      |> List.replace_at(Integer.mod(idx, slot_count), run)
+      |> List.replace_at(Integer.mod(idx + 1, slot_count), nil)
+
     {:noreply, assign(socket, :slots, slots)}
   end
 
   @impl true
-  def handle_info({:run_completed, %Run{cycle_index: idx, status: :succeeded} = run}, %{assigns: %{live_action: :screen, slot_id: slot_id, slot_count: slot_count}} = socket) do
-
+  def handle_info(
+        {:run_completed, %Run{cycle_index: idx, status: :succeeded} = run},
+        %{assigns: %{live_action: :screen, slot_id: slot_id, slot_count: slot_count}} = socket
+      ) do
     case Integer.mod(idx, slot_count) do
       ^slot_id -> {:noreply, assign(socket, :slots, [run])}
       _ -> {:noreply, socket}
