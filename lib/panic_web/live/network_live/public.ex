@@ -13,6 +13,7 @@ defmodule PanicWeb.NetworkLive.Public do
   def handle_params(%{"id" => network_id} = params, _, socket) do
     network = Networks.get_network!(network_id)
     num_slots = Map.get(params, "slots", "1") |> String.to_integer()
+    screen_id = Map.get(params, "screen_id", "0") |> String.to_integer()
 
     Networks.subscribe(network_id)
 
@@ -20,6 +21,7 @@ defmodule PanicWeb.NetworkLive.Public do
      socket
      |> assign(:page_title, "Public network view")
      |> assign(:network, network)
+     |> assign(:screen_id, screen_id)
      |> assign(:slots, List.duplicate(nil, num_slots))}
   end
 
@@ -47,6 +49,9 @@ defmodule PanicWeb.NetworkLive.Public do
     {:noreply, socket}
   end
 
+  #############
+  # rendering #
+  #############
 
   @impl true
   def render(%{live_action: :view} = assigns) do
@@ -56,6 +61,13 @@ defmodule PanicWeb.NetworkLive.Public do
         <PanicWeb.Live.Components.run run={run} />
       <% end %>
     </div>
+    """
+  end
+
+  @impl true
+  def render(%{live_action: :screen} = assigns) do
+    ~H"""
+    <PanicWeb.Live.Components.run run={List.first(@slots)} />
     """
   end
 
