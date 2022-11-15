@@ -62,7 +62,7 @@ defmodule Panic.Models.Platforms.Replicate do
       num_inference_steps: 50,
       guidance_scale: 7.5,
       width: 1024,
-      height: 768
+      height: 576
     }
 
     %{"output" => [image_url]} = create_and_wait(model, input_params)
