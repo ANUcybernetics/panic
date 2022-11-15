@@ -12,8 +12,8 @@ defmodule PanicWeb.NetworkLive.Public do
   @impl true
   def handle_params(%{"id" => network_id} = params, _, socket) do
     network = Networks.get_network!(network_id)
-    num_slots = Map.get(params, "slots", "1") |> String.to_integer()
-    screen_id = Map.get(params, "screen_id", "0") |> String.to_integer()
+    slot_id = params |> Map.get("slot_id", "0") |> String.to_integer()
+    slot_count = params |> Map.get("slot_count") |> String.to_integer()
 
     Networks.subscribe(network_id)
 
@@ -21,8 +21,9 @@ defmodule PanicWeb.NetworkLive.Public do
      socket
      |> assign(:page_title, "Public network view")
      |> assign(:network, network)
-     |> assign(:screen_id, screen_id)
-     |> assign(:slots, List.duplicate(nil, num_slots))}
+     |> assign(:slot_id, slot_id)
+     |> assign(:slot_count, slot_count)
+     |> assign(:slots, List.duplicate(nil, slot_count))}
   end
 
   ########
@@ -35,13 +36,11 @@ defmodule PanicWeb.NetworkLive.Public do
   end
 
   @impl true
-  def handle_info({:run_completed, %Run{cycle_index: idx, status: :succeeded} = run}, %{assigns: %{live_action: :screen}} = socket) do
-    num_screens = 8 # hardcoded for Panic, will generalise later
+  def handle_info({:run_completed, %Run{cycle_index: idx, status: :succeeded} = run}, %{assigns: %{live_action: :screen, slot_id: slot_id, slot_count: slot_count}} = socket) do
 
-    if Integer.mod(idx, num_screens) == socket.assigns.screen_id do
-      {:noreply, assign(socket, :slots, [run])}
-    else
-      {:noreply, socket}
+    case Integer.mod(idx, slot_count) do
+      ^slot_id -> {:noreply, assign(socket, :slots, [run])}
+      _ -> {:noreply, socket}
     end
   end
 

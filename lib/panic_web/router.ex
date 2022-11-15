@@ -44,8 +44,8 @@ defmodule PanicWeb.Router do
 
       # public network routes
       scope "/view" do
-        live "/networks/:id", NetworkLive.Public, :view
-        live "/networks/:id/screen/:screen_id", NetworkLive.Public, :screen
+        live "/networks/:id/:slot_count", NetworkLive.Public, :view
+        live "/networks/:id/screen/:slot_id/:slot_count", NetworkLive.Public, :screen
       end
     end
   end
