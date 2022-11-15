@@ -55,7 +55,7 @@ defmodule PanicWeb.NetworkLive.Public do
   @impl true
   def render(%{live_action: :view} = assigns) do
     ~H"""
-    <div class="grid gap-8 md:grid-cols-6">
+    <div class="grid gap-4 md:grid-cols-6">
       <%= for run <- Enum.filter(@slots, &(!is_nil(&1))) do %>
         <PanicWeb.Live.Components.run run={run} />
       <% end %>
