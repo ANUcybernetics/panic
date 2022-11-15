@@ -29,7 +29,7 @@ defmodule PanicWeb.NetworkLive.Public do
 
   @impl true
   def handle_info({:run_completed, %Run{status: :succeeded} = run}, %{assigns: %{live_action: :view}} = socket) do
-    {:noreply, update(socket, :slots, fn slots -> push_front_drop_last(run, slots) end )}
+    {:noreply, update(socket, :slots, fn slots -> push_and_reset_if_full(run, slots) end)}
   end
 
   @impl true
@@ -52,12 +52,24 @@ defmodule PanicWeb.NetworkLive.Public do
   def render(%{live_action: :view} = assigns) do
     ~H"""
     <div class="grid gap-8 md:grid-cols-6">
-      <%= for {run, _idx} <- Enum.with_index(@slots) do %>
+      <%= for run <- Enum.filter(@slots, &(!is_nil(&1))) do %>
         <PanicWeb.Live.Components.run run={run} />
       <% end %>
     </div>
     """
   end
 
-  defp push_front_drop_last(new_run, slots), do: [new_run] ++ Enum.drop(slots, -1)
+  defp push_and_rotate(new_run, slots) do
+    case Enum.find_index(slots, &is_nil/1) do
+      nil -> Enum.drop(slots, 1) ++ [new_run]
+      first_nil -> List.replace_at(slots, first_nil, new_run)
+    end
+  end
+
+  defp push_and_reset_if_full(new_run, slots) do
+    case Enum.find_index(slots, &is_nil/1) do
+      nil -> [new_run] ++ List.duplicate(nil, Enum.count(slots) - 1)
+      first_nil -> List.replace_at(slots, first_nil, new_run)
+    end
+  end
 end
