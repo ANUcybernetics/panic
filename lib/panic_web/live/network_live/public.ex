@@ -31,8 +31,11 @@ defmodule PanicWeb.NetworkLive.Public do
   ########
 
   @impl true
-  def handle_info({:run_completed, %Run{status: :succeeded} = run}, %{assigns: %{live_action: :view}} = socket) do
-    {:noreply, update(socket, :slots, fn slots -> push_and_reset_if_full(run, slots) end)}
+  def handle_info({:run_completed, %Run{cycle_index: idx, status: :succeeded} = run}, %{assigns: %{live_action: :view, slots: slots, slot_count: slot_count}} = socket) do
+    slots = slots
+    |> List.replace_at(Integer.mod(idx, slot_count), run)
+    |> List.replace_at(Integer.mod(idx + 1, slot_count), nil)
+    {:noreply, assign(socket, :slots, slots)}
   end
 
   @impl true
@@ -56,7 +59,7 @@ defmodule PanicWeb.NetworkLive.Public do
   def render(%{live_action: :view} = assigns) do
     ~H"""
     <div class="grid gap-4 md:grid-cols-6">
-      <%= for run <- Enum.filter(@slots, &(!is_nil(&1))) do %>
+      <%= for run <- @slots do %>
         <PanicWeb.Live.Components.run run={run} />
       <% end %>
     </div>
