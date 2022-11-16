@@ -10,7 +10,7 @@ defmodule PanicWeb.UserRegistrationController do
     render(conn, "new.html", changeset: changeset, page_title: gettext("Register"))
   end
 
-  def create(conn, %{"user" => %{"email" => "cybernetics@anu.edu.au"}} = params) do
+  def create(conn, %{"user" => %{"email" => "socy@anu.edu.au"}} = params) do
     case Accounts.register_user(Map.get(params, "user")) do
       {:ok, user} ->
         {:ok, _} =
