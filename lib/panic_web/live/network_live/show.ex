@@ -109,6 +109,7 @@ defmodule PanicWeb.NetworkLive.Show do
   # display #
   ###########
 
+  @impl true
   def render(assigns) do
     ~H"""
     <.layout current_page={:show_network} current_user={@current_user} type="stacked">
