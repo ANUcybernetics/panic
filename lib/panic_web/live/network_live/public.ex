@@ -80,17 +80,17 @@ defmodule PanicWeb.NetworkLive.Public do
     """
   end
 
-  defp push_and_rotate(new_run, slots) do
-    case Enum.find_index(slots, &is_nil/1) do
-      nil -> Enum.drop(slots, 1) ++ [new_run]
-      first_nil -> List.replace_at(slots, first_nil, new_run)
-    end
-  end
+  # defp push_and_rotate(new_run, slots) do
+  #   case Enum.find_index(slots, &is_nil/1) do
+  #     nil -> Enum.drop(slots, 1) ++ [new_run]
+  #     first_nil -> List.replace_at(slots, first_nil, new_run)
+  #   end
+  # end
 
-  defp push_and_reset_if_full(new_run, slots) do
-    case Enum.find_index(slots, &is_nil/1) do
-      nil -> [new_run] ++ List.duplicate(nil, Enum.count(slots) - 1)
-      first_nil -> List.replace_at(slots, first_nil, new_run)
-    end
-  end
+  # defp push_and_reset_if_full(new_run, slots) do
+  #   case Enum.find_index(slots, &is_nil/1) do
+  #     nil -> [new_run] ++ List.duplicate(nil, Enum.count(slots) - 1)
+  #     first_nil -> List.replace_at(slots, first_nil, new_run)
+  #   end
+  # end
 end
