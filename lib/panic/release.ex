@@ -33,18 +33,17 @@ defmodule Panic.Release do
   end
 
   def maybe_create_user do
-    unless Accounts.get_user_by_email("socy@anu.edu.au") do
+    email = "socy@cybernetics.anu.edu"
+
+    unless Accounts.get_user_by_email(email) do
       # this is stolen from seeds.exs, but that doesn't run in prod, so again,
       # it'll do for the exhibition
-      normal_user =
-        UserSeeder.normal_user(%{
-              email: "socy@anu.edu.au",
-              name: "Panic Viewer",
-              password: "cybernetics",
-              confirmed_at: Timex.now() |> Timex.to_naive_datetime()})
-
-      org = Panic.Orgs.list_orgs() |> List.first()
-      Panic.Orgs.create_invitation(org, %{email: normal_user.email})
+      UserSeeder.normal_user(%{
+        email: email,
+        name: "Panic Viewer",
+        password: "cybernetics"
+      })
+      |> Accounts.confirm_user!()
     end
   end
 end
