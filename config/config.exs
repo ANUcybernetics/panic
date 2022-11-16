@@ -137,6 +137,9 @@ config :panic, :content_security_policy, %{
     "https://rsms.me",
     "https://res.cloudinary.com",
     "ws://localhost:4000",
+    # for fly.io deployment
+    "wss://panic.fly.dev",
+    "wss://panic.fly.dev/live/websocket",
     # cloud AI APIS
     "https://replicate.delivery",
     "https://simulator.vestaboard.com",
