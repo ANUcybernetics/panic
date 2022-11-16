@@ -25,7 +25,9 @@ defmodule PanicWeb.Live.Components do
     ~H"""
     <div class="relative w-full">
       <img class="w-full object-cover" src={@run.output} />
-      <span class="absolute top-2 right-2 text-4xl text-gray-300 text-right">AI model: <%= @run.model %></span>
+      <span class="absolute top-2 right-2 text-4xl text-gray-300 text-right">
+        AI model: <%= @run.model %>
+      </span>
       <span class="absolute left-2 bottom-2 text-4xl text-gray-100 text-left"><%= @run.input %></span>
     </div>
     """
