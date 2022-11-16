@@ -119,7 +119,7 @@ config :ueberauth, Ueberauth,
     github: {Ueberauth.Strategy.Github, [default_scope: "user:email"]}
   ]
 
-config :panic, :passwordless_enabled, true
+config :panic, :passwordless_enabled, false
 
 # Reduce XSS risks by declaring which dynamic resources are allowed to load
 # If you use any CDNs, whitelist them here.
