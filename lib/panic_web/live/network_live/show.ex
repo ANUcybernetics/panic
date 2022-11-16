@@ -104,4 +104,30 @@ defmodule PanicWeb.NetworkLive.Show do
       false
     end
   end
+
+  ###########
+  # display #
+  ###########
+
+  def render(assigns) do
+    ~H"""
+    <.layout current_page={:show_network} current_user={@current_user} type="stacked">
+      <.container class="py-16">
+        <.page_header title={@network.name}></.page_header>
+
+        <.live_component
+          module={PanicWeb.NetworkLive.InitialPromptComponent}
+          id="initial-prompt-input"
+          network={@network}
+        />
+
+        <div :if={@first_run} class="mb-4">
+          <span class="font-bold">starting prompt: <%= @first_run.input %></span>
+        </div>
+
+        <PanicWeb.Live.Components.slots_grid slots={@slots} />
+      </.container>
+    </.layout>
+    """
+  end
 end
