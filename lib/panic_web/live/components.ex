@@ -25,7 +25,7 @@ defmodule PanicWeb.Live.Components do
     ~H"""
     <div class="relative">
       <img class="w-full object-cover" src={@run.output} />
-      <span class="absolute left-4 bottom-4 text-gray-100 text-left"><%= @run.input %></span>
+      <span class="absolute left-4 bottom-4 text-xl text-gray-100 text-left drop-shadow-xl"><%= @run.input %></span>
     </div>
     """
   end
