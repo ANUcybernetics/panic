@@ -15,6 +15,9 @@ module.exports = {
         primary: colors.blue,
         secondary: colors.pink,
       },
+      fontFamily: {
+        'major-mono-display': ['"Major Mono Display"'],
+      },
     },
   },
   plugins: [

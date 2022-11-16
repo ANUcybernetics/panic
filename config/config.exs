@@ -136,9 +136,13 @@ config :panic, :content_security_policy, %{
     "https://cdn.skypack.dev",
     "https://rsms.me",
     "https://res.cloudinary.com",
+    "ws://localhost:4000",
+    # cloud AI APIS
     "https://replicate.delivery",
     "https://simulator.vestaboard.com",
-    "ws://localhost:4000"
+    # Google Fonts
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com"
   ]
 }
 
