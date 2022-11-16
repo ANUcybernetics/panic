@@ -66,7 +66,7 @@ defmodule PanicWeb.Live.Components do
             <%= @run.model |> String.split(~r/[:\/]/) |> List.last() %>
           </div>
         <% else %>
-          <div class="text-gray-400 italic">blank</div>
+          <div class="text-gray-400 italic">BLANK</div>
         <% end %>
       </div>
     </div>
