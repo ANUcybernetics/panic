@@ -10,8 +10,8 @@ defmodule PanicWeb.UserRegistrationController do
     render(conn, "new.html", changeset: changeset, page_title: gettext("Register"))
   end
 
-  def create(conn, %{"user" => user_params}) do
-    case Accounts.register_user(user_params) do
+  def create(conn, %{"user" => %{"email" => "cybernetics@anu.edu.au"}} = params) do
+    case Accounts.register_user(Map.get(params, "user")) do
       {:ok, user} ->
         {:ok, _} =
           Accounts.deliver_user_confirmation_instructions(
@@ -28,5 +28,12 @@ defmodule PanicWeb.UserRegistrationController do
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "new.html", changeset: changeset)
     end
+  end
+
+  def create(conn, _params) do
+    conn
+    |> put_flash(:error, gettext("Panic is currently invite-only; contact ben.swift@anu.edu.au"))
+    |> redirect(to: "/")
+    |> halt()
   end
 end
