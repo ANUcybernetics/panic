@@ -31,7 +31,7 @@ defmodule Panic.Release do
   end
 
   def maybe_create_user do
-    email = "socy@cybernetics.anu.edu"
+    email = "socy@anu.edu"
 
     unless Accounts.get_user_by_email(email) do
       # this is stolen from seeds.exs, but that doesn't run in prod, so again,
