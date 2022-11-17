@@ -46,7 +46,7 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
   def render(assigns) do
     ~H"""
     <div>
-      <div class="flex mb-4 gap-2 justify-end">
+      <div :if={@show_buttons} class="flex mb-4 gap-2 justify-end">
         <.button
           class="bg-red-600 hover:bg-red-400"
           link_type="button"

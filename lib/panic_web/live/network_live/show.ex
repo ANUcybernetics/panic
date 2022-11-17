@@ -110,7 +110,7 @@ defmodule PanicWeb.NetworkLive.Show do
   ###########
 
   @impl true
-  def render(assigns) do
+  def render(%{live_action: :show} = assigns) do
     ~H"""
     <.layout current_page={:show_network} current_user={@current_user} type="stacked">
       <.container class="py-16">
@@ -120,15 +120,40 @@ defmodule PanicWeb.NetworkLive.Show do
           module={PanicWeb.NetworkLive.InitialPromptComponent}
           id="initial-prompt-input"
           network={@network}
+          show_buttons={true}
         />
 
         <div :if={@first_run} class="mb-4">
-          <span class="font-bold">starting prompt: <%= @first_run.input %></span>
+          <span class="font-bold">input: <%= @first_run.input %></span>
         </div>
 
         <PanicWeb.Live.Components.slots_grid slots={@slots} />
       </.container>
     </.layout>
+    """
+  end
+
+  @impl true
+  def render(%{live_action: :terminal} = assigns) do
+    ~H"""
+    <div class="w-screen h-screen grid place-items-center">
+      <div class="w-2/3">
+        <.live_component
+          module={PanicWeb.NetworkLive.InitialPromptComponent}
+          id="initial-prompt-input"
+          network={@network}
+          show_buttons={false}
+        />
+      </div>
+
+      <div :if={@first_run} class="mb-4">
+        <span class="font-bold text-4xl">last input: <%= @first_run.input %></span>
+      </div>
+
+      <div class="hidden">
+        <PanicWeb.Live.Components.slots_grid slots={@slots} />
+      </div>
+    </div>
     """
   end
 end
