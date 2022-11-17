@@ -29,19 +29,4 @@ defmodule Panic.Release do
   defp load_app do
     Application.load(@app)
   end
-
-  def maybe_create_user do
-    email = "socy@anu.edu.au"
-
-    unless Accounts.get_user_by_email(email) do
-      # this is stolen from seeds.exs, but that doesn't run in prod, so again,
-      # it'll do for the exhibition
-      UserSeeder.normal_user(%{
-        email: email,
-        name: "Panic Viewer",
-        password: "cybernetics"
-      })
-      |> Accounts.confirm_user!()
-    end
-  end
 end
