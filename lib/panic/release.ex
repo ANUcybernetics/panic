@@ -5,10 +5,6 @@ defmodule Panic.Release do
   """
   @app :panic
 
-  # gross! gross! gross! but deadlines.
-  alias Panic.Accounts
-  alias Panic.Accounts.UserSeeder
-
   def migrate do
     load_app()
 
