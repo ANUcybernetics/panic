@@ -40,7 +40,11 @@ defmodule PanicWeb.NetworkLive.Public do
       |> List.replace_at(Integer.mod(idx, slot_count), run)
       |> List.replace_at(Integer.mod(idx + 1, slot_count), nil)
 
-    {:noreply, assign(socket, :slots, slots)}
+    if idx == 0 do
+      {:noreply, assign(socket, slots: slots, first_run: run)}
+    else
+      {:noreply, assign(socket, :slots, slots)}
+    end
   end
 
   @impl true
@@ -65,7 +69,8 @@ defmodule PanicWeb.NetworkLive.Public do
   @impl true
   def render(%{live_action: :view} = assigns) do
     ~H"""
-    <div class="grid gap-4 md:grid-cols-6">
+    <div class="text-4xl p-8 mb-4">input: <span :if={@first_run}><%= @first_run.input %></span></div>
+    <div class="grid gap-4 md:grid-cols-4">
       <%= for run <- @slots do %>
         <PanicWeb.Live.Components.run run={run} />
       <% end %>

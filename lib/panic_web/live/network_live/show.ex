@@ -147,7 +147,7 @@ defmodule PanicWeb.NetworkLive.Show do
       </div>
 
       <div :if={@first_run} class="mb-4">
-        <span class="font-bold text-4xl">last input: <%= @first_run.input %></span>
+        <span class="font-bold">input: <%= @first_run.input %></span>
       </div>
 
       <div class="hidden">
