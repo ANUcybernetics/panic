@@ -7,12 +7,14 @@ defmodule PanicWeb.NetworkLive.Show do
   alias Panic.Models.Platforms.Vestaboard
 
   @num_slots 6
+  @reprompt_seconds 30
 
   @impl true
   def mount(_params, _session, socket) do
     {:ok,
      socket
      |> assign(:status, :waiting)
+     |> assign(:timer, 0)
      |> assign(:first_run, nil)
      |> assign(:slots, List.duplicate(nil, @num_slots))}
   end
@@ -35,12 +37,21 @@ defmodule PanicWeb.NetworkLive.Show do
   # info #
   ########
 
+  @impl true
+  def handle_info(:decrement_timer, socket) do
+    schedule_timer_decrement(socket.assigns.timer)
+    {:noreply, update(socket, :timer, &(&1 - 1))}
+  end
+
   # handler for whenever a *first* run is created
   @impl true
   def handle_info({:run_created, %Run{cycle_index: 0} = run}, socket) do
+    schedule_timer_decrement(@reprompt_seconds)
+
     {:noreply,
      socket
      |> assign(:status, :running)
+     |> assign(:timer, @reprompt_seconds)
      |> assign(:first_run, run)
      |> assign(:slots, [run] ++ List.duplicate(nil, @num_slots - 1))}
   end
@@ -69,7 +80,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
       # gross, just for testing
       if socket.assigns.vestaboards? and run.model == "replicate:rmokady/clip_prefix_caption" do
-        {:ok, _} =Vestaboard.send_text(:panic_4, run.output)
+        {:ok, _} = Vestaboard.send_text(:panic_4, run.output)
       end
 
       {:noreply,
@@ -113,6 +124,12 @@ defmodule PanicWeb.NetworkLive.Show do
     end
   end
 
+  defp schedule_timer_decrement(timer) do
+    if timer > 0 do
+      Process.send_after(self(), :decrement_timer, 1000)
+    end
+  end
+
   ###########
   # display #
   ###########
@@ -143,16 +160,26 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def render(%{live_action: :terminal} = assigns) do
+    disabled? = assigns.timer > 0
+
     ~H"""
-    <div class="w-screen h-screen grid place-items-center">
+    <div class="relative w-screen h-screen grid place-items-center">
       <div class="w-2/3">
         <.live_component
           module={PanicWeb.NetworkLive.InitialPromptComponent}
           id="initial-prompt-input"
           network={@network}
           terminal={true}
+          disabled={disabled?}
         />
-        <div class="mb-4">input: <span :if={@first_run}><%= @first_run.input %></span></div>
+        <div>
+          <%= if @timer <= 0 do %>
+            input: <span :if={@first_run}><%= @first_run.input %></span>
+          <% else %>
+            (<%= @timer %>s until next prompt)
+          <% end %>
+        </div>
+        <div class="absolute bottom-2 right-2"><%= @status %></div>
       </div>
 
       <div class="hidden">
