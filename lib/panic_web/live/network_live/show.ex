@@ -144,9 +144,7 @@ defmodule PanicWeb.NetworkLive.Show do
           network={@network}
           show_buttons={false}
         />
-        <div :if={@first_run} class="mb-4">
-          <span class="font-bold">input: <%= @first_run.input %></span>
-        </div>
+        <div class="mb-4">input: <span :if={@first_run}><%= @first_run.input %></span></div>
       </div>
 
       <div class="hidden">

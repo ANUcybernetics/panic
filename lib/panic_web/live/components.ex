@@ -40,34 +40,38 @@ defmodule PanicWeb.Live.Components do
     """
   end
 
+  def run(%{run: nil} = assigns) do
+    ~H"""
+    <div class="aspect-w-16 aspect-h-9 overflow-hidden relative block w-full text-center text-gray-200 bg-gray-50 shadow-lg">
+      <div class="grid place-items-center">BLANK</div>
+    </div>
+    """
+  end
+
   def run(assigns) do
     ~H"""
     <div class="aspect-w-16 aspect-h-9 overflow-hidden relative block w-full text-center text-gray-800 bg-gray-200 shadow-lg dark:bg-gray-800 hover:bg-gray-300 dark:text-gray-400 dark:group-hover:text-gray-100">
       <div class="absolute inset-0 grid place-items-center">
-        <%= if @run do %>
-          <%= case @run.status do %>
-            <% :created -> %>
-              <HeroiconsV1.Outline.minus_circle class="w-12 h-12 mx-auto" />
-            <% :running -> %>
-              <.spinner class="mx-auto" size="md" />
-            <% :succeeded -> %>
-              <%= case Models.model_io(@run.model) do %>
-                <% {_, :text} -> %>
-                  <.text_run run={@run} />
-                <% {_, :image} -> %>
-                  <.image_run run={@run} />
-                <% {_, :audio} -> %>
-                  <.audio_run run={@run} />
-              <% end %>
-            <% :failed -> %>
-              <HeroiconsV1.Outline.x_circle class="w-12 h-12 mx-auto" />
-          <% end %>
-          <div class="absolute left-2 -bottom-6">
-            <%= @run.model |> String.split(~r/[:\/]/) |> List.last() %>
-          </div>
-        <% else %>
-          <div class="text-gray-400 italic">BLANK</div>
+        <%= case @run.status do %>
+          <% :created -> %>
+            <HeroiconsV1.Outline.minus_circle class="w-12 h-12 mx-auto" />
+          <% :running -> %>
+            <.spinner class="mx-auto" size="md" />
+          <% :succeeded -> %>
+            <%= case Models.model_io(@run.model) do %>
+              <% {_, :text} -> %>
+                <.text_run run={@run} />
+              <% {_, :image} -> %>
+                <.image_run run={@run} />
+              <% {_, :audio} -> %>
+                <.audio_run run={@run} />
+            <% end %>
+          <% :failed -> %>
+            <HeroiconsV1.Outline.x_circle class="w-12 h-12 mx-auto" />
         <% end %>
+        <div class="absolute left-2 -bottom-6">
+          <%= @run.model |> String.split(~r/[:\/]/) |> List.last() %>
+        </div>
       </div>
     </div>
     """
