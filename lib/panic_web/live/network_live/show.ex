@@ -4,6 +4,7 @@ defmodule PanicWeb.NetworkLive.Show do
   alias Panic.Networks
   alias Panic.Models
   alias Panic.Models.Run
+  alias Panic.Models.Platforms.Vestaboard
 
   @num_slots 6
 
@@ -17,14 +18,16 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   @impl true
-  def handle_params(%{"id" => network_id}, _, socket) do
+  def handle_params(%{"id" => network_id} = params, _, socket) do
     network = Networks.get_network!(network_id)
+    vestaboards? = params |> Map.has_key?("vestaboards")
 
     Networks.subscribe(network_id)
 
     {:noreply,
      socket
      |> assign(:page_title, "Show network")
+     |> assign(:vestaboards?, vestaboards?)
      |> assign(:network, network)}
   end
 
@@ -62,6 +65,11 @@ defmodule PanicWeb.NetworkLive.Show do
         {:ok, next_run} = Models.create_next_run(socket.assigns.network, run)
         Models.dispatch_run(next_run)
         Networks.broadcast(next_run.network_id, {:run_created, %{next_run | status: :running}})
+      end
+
+      # gross, just for testing
+      if socket.assigns.vestaboards? and run.model == "replicate:rmokady/clip_prefix_caption" do
+        {:ok, _} =Vestaboard.send_text(:panic_4, run.output)
       end
 
       {:noreply,
