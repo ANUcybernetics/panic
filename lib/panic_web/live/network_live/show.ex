@@ -120,7 +120,7 @@ defmodule PanicWeb.NetworkLive.Show do
           module={PanicWeb.NetworkLive.InitialPromptComponent}
           id="initial-prompt-input"
           network={@network}
-          show_buttons={true}
+          terminal={false}
         />
 
         <div :if={@first_run} class="mb-4">
@@ -142,7 +142,7 @@ defmodule PanicWeb.NetworkLive.Show do
           module={PanicWeb.NetworkLive.InitialPromptComponent}
           id="initial-prompt-input"
           network={@network}
-          show_buttons={false}
+          terminal={true}
         />
         <div class="mb-4">input: <span :if={@first_run}><%= @first_run.input %></span></div>
       </div>

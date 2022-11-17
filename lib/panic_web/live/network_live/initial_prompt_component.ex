@@ -43,10 +43,10 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
   end
 
   @impl true
-  def render(assigns) do
+  def render(%{terminal: false} = assigns) do
     ~H"""
     <div>
-      <div :if={@show_buttons} class="flex mb-4 gap-2 justify-end">
+      <div class="flex mb-4 gap-2 justify-end">
         <.button
           class="bg-red-600 hover:bg-red-400"
           link_type="button"
@@ -71,6 +71,24 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
         phx-submit="start-cycle"
       >
         <.form_field type="text_input" form={f} field={:input} label="type a starting prompt" />
+      </.form>
+    </div>
+    """
+  end
+
+  @impl true
+  def render(%{terminal: true} = assigns) do
+    ~H"""
+    <div>
+      <.form
+        :let={f}
+        for={@changeset}
+        id={@id}
+        phx-target={@myself}
+        phx-change="validate"
+        phx-submit="start-cycle"
+      >
+      <.form_field type="text_input" form={f} field={:input} label="type a starting prompt" />
       </.form>
     </div>
     """
