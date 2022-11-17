@@ -172,13 +172,8 @@ defmodule PanicWeb.NetworkLive.Show do
           terminal={true}
           disabled={disabled?}
         />
-        <div>
-          <%= if @timer <= 0 do %>
-            input: <span :if={@first_run}><%= @first_run.input %></span>
-          <% else %>
-            (<%= @timer %>s until next prompt)
-          <% end %>
-        </div>
+        <div class="mb-4">input: <span :if={@first_run}><%= @first_run.input %></span></div>
+        <div :if={@timer > 0}>timer: (<%= @timer %>s until ready)</div>
         <div class="absolute bottom-2 right-2"><%= @status %></div>
       </div>
 
