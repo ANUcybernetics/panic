@@ -8,8 +8,7 @@ defmodule PanicWeb.Live.Components do
     <div class="p-4 text-md text-left">
       <%= for line <- String.split(@run.output, "\n\n") do %>
         <%= unless line == "" do %>
-          <p class="absolute left-[10px] top-[10px] text-purple-700"><%= line %></p>
-          <p class="absolute left-[11px] top-[11px] text-purple-300"><%= line %></p>
+          <p class="text-purple-300"><%= line %></p>
         <% end %>
       <% end %>
     </div>
