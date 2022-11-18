@@ -71,7 +71,6 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
         phx-submit="start-cycle"
       >
         <.form_field
-          disabled
           type="text_input"
           form={f}
           field={:input}
