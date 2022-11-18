@@ -26,11 +26,17 @@ defmodule PanicWeb.Live.Components do
     ~H"""
     <div class="relative w-full">
       <img class="w-full object-cover" src={@run.output} />
-      <span class="absolute top-2 right-2 text-xl text-gray-300 text-right">
+      <span :if={false} class="absolute top-2 right-2 text-xl text-gray-300 text-right">
         <%= @run.model %>
       </span>
-      <span class="absolute left-[30px] bottom-[30px] text-2xl text-purple-700 text-left"><%= @run.input %></span>
-      <span class="absolute left-[31px] bottom-[31px] text-2xl text-purple-300 text-left"><%= @run.input %></span>
+      <%= if @show_input do %>
+        <span class="absolute left-[30px] bottom-[30px] text-2xl text-purple-700 text-left">
+          <%= @run.input %>
+        </span>
+        <span class="absolute left-[31px] bottom-[31px] text-2xl text-purple-300 text-left">
+          <%= @run.input %>
+        </span>
+      <% end %>
     </div>
     """
   end
@@ -64,7 +70,7 @@ defmodule PanicWeb.Live.Components do
               <% {_, :text} -> %>
                 <.text_run run={@run} />
               <% {_, :image} -> %>
-                <.image_run run={@run} />
+                <.image_run run={@run} show_input={@show_input} />
               <% {_, :audio} -> %>
                 <.audio_run run={@run} />
             <% end %>
@@ -83,7 +89,7 @@ defmodule PanicWeb.Live.Components do
     ~H"""
     <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
       <%= for {run, _idx} <- Enum.with_index(@slots) do %>
-        <.run run={run} />
+        <.run run={run} show_input={false} />
       <% end %>
     </div>
     """

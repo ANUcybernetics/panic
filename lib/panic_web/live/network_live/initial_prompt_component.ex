@@ -70,12 +70,7 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
         phx-change="validate"
         phx-submit="start-cycle"
       >
-        <.form_field
-          type="text_input"
-          form={f}
-          field={:input}
-          label="input"
-        />
+        <.form_field type="text_input" form={f} field={:input} label="input" />
       </.form>
     </div>
     """
@@ -93,7 +88,13 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
         phx-change="validate"
         phx-submit="start-cycle"
       >
-      <.text_input wrapper_classes="bg-gray-900" disabled={@disabled} form={f} field={:input} placeholder="type your input..." />
+        <.text_input
+          wrapper_classes="bg-gray-900"
+          disabled={@disabled}
+          form={f}
+          field={:input}
+          placeholder="type your input..."
+        />
       </.form>
     </div>
     """

@@ -111,6 +111,7 @@ defmodule PanicWeb.NetworkLive.Show do
   defp mod_num_slots(n), do: Integer.mod(n, @num_slots)
 
   defp stale_run?(_slots, %Run{cycle_index: 0}), do: false
+
   defp stale_run?(slots, %Run{cycle_index: idx}) do
     case Enum.at(slots, mod_num_slots(idx - 1)) do
       nil -> true
@@ -165,10 +166,14 @@ defmodule PanicWeb.NetworkLive.Show do
           disabled={assigns.timer > 0}
         />
         <div class="mt-4">current input: <span :if={@first_run}><%= @first_run.input %></span></div>
-        <div class="mt-4" :if={@timer > 0}>(<%= @timer %>s until ready to go again)</div>
+        <div :if={@timer > 0} class="mt-4">(<%= @timer %>s until ready to go again)</div>
         <div class="absolute bottom-[20px] right-[20px]"><%= @status %></div>
-        <span class="absolute left-[20px] bottom-[20px] text-2xl text-purple-700 text-left">Panic</span>
-        <span class="absolute left-[21px] bottom-[21px] text-2xl text-purple-300 text-left">Panic</span>
+        <span class="absolute left-[20px] bottom-[20px] text-2xl text-purple-700 text-left">
+          Panic
+        </span>
+        <span class="absolute left-[21px] bottom-[21px] text-2xl text-purple-300 text-left">
+          Panic
+        </span>
       </div>
 
       <div class="hidden">
