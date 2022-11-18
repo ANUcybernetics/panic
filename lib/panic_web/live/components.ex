@@ -8,7 +8,7 @@ defmodule PanicWeb.Live.Components do
     <div class="p-4 text-md text-left">
       <%= for line <- String.split(@run.output, "\n\n") do %>
         <%= unless line == "" do %>
-          <p class="absolute left-[10px] top-[10px] text-purple-700 uppercase"><%= line %></p>
+          <p class="absolute left-[10px] top-[10px] text-purple-700"><%= line %></p>
           <p class="absolute left-[11px] top-[11px] text-purple-300"><%= line %></p>
         <% end %>
       <% end %>
@@ -29,8 +29,8 @@ defmodule PanicWeb.Live.Components do
       <span class="absolute top-2 right-2 text-xl text-gray-300 text-right">
         <%= @run.model %>
       </span>
-      <span class="absolute left-[30px] bottom-[30px] text-2xl text-purple-700 text-left uppercase"><%= @run.input %></span>
-      <span class="absolute left-[32px] bottom-[32px] text-2xl text-purple-300 text-left"><%= @run.input %></span>
+      <span class="absolute left-[30px] bottom-[30px] text-2xl text-purple-700 text-left"><%= @run.input %></span>
+      <span class="absolute left-[31px] bottom-[31px] text-2xl text-purple-300 text-left"><%= @run.input %></span>
     </div>
     """
   end

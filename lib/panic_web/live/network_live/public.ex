@@ -69,11 +69,16 @@ defmodule PanicWeb.NetworkLive.Public do
   @impl true
   def render(%{live_action: :view} = assigns) do
     ~H"""
-    <div class="text-4xl p-8 mb-4">input: <span :if={@first_run}><%= @first_run.input %></span></div>
+    <div class="bg-black h-screen">
+    <div class="relative text-6xl h-32">
+    <span class="absolute left-[30px] top-[30px] text-purple-700">input: <span :if={@first_run}><%= @first_run.input %></span></span>
+    <span class="absolute left-[32px] top-[32px] text-purple-300">input: <span :if={@first_run}><%= @first_run.input %></span></span>
+    </div>
     <div class="grid gap-4 md:grid-cols-4">
       <%= for run <- @slots do %>
         <PanicWeb.Live.Components.run run={run} />
       <% end %>
+    </div>
     </div>
     """
   end
