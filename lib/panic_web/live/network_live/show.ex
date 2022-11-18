@@ -110,17 +110,11 @@ defmodule PanicWeb.NetworkLive.Show do
 
   defp mod_num_slots(n), do: Integer.mod(n, @num_slots)
 
-  defp stale_run?(slots, run) do
-    if Enum.any?(slots) do
-      max =
-        slots
-        |> Enum.reject(&is_nil/1)
-        |> Enum.map(&Map.get(&1, :updated_at))
-        |> Enum.max(Date)
-
-      Date.compare(max, run.updated_at) == :gt
-    else
-      false
+  defp stale_run?(slots, %Run{cycle_index: 0}), do: false
+  defp stale_run?(slots, %Run{cycle_index: idx}) do
+    case Enum.at(slots, mod_num_slots(idx - 1)) do
+      nil -> true
+      %Run{cycle_index: prev_idx} -> idx != prev_idx + 1
     end
   end
 
