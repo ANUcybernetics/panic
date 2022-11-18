@@ -8,7 +8,8 @@ defmodule PanicWeb.Live.Components do
     <div class="p-4 text-md text-left">
       <%= for line <- String.split(@run.output, "\n\n") do %>
         <%= unless line == "" do %>
-          <p><%= line %></p>
+          <p class="absolute left-[10px] top-[10px] text-purple-700 uppercase"><%= line %></p>
+          <p class="absolute left-[11px] top-[11px] text-purple-300"><%= line %></p>
         <% end %>
       <% end %>
     </div>
@@ -43,7 +44,7 @@ defmodule PanicWeb.Live.Components do
 
   def run(%{run: nil} = assigns) do
     ~H"""
-    <div class="aspect-w-16 aspect-h-9 overflow-hidden relative block w-full text-center text-gray-200 bg-gray-50 shadow-lg">
+    <div class="aspect-w-16 aspect-h-9 overflow-hidden relative block w-full text-center text-gray-400 bg-gray-700 shadow-lg">
       <div class="grid place-items-center">BLANK</div>
     </div>
     """
@@ -51,7 +52,7 @@ defmodule PanicWeb.Live.Components do
 
   def run(assigns) do
     ~H"""
-    <div class="aspect-w-16 aspect-h-9 overflow-hidden relative block w-full text-center text-gray-800 bg-gray-200 shadow-lg dark:bg-gray-800 hover:bg-gray-300 dark:text-gray-400 dark:group-hover:text-gray-100">
+    <div class="aspect-w-16 aspect-h-9 overflow-hidden relative block w-full text-center text-gray-200 bg-gray-900 shadow-lg">
       <div class="absolute inset-0 grid place-items-center">
         <%= case @run.status do %>
           <% :created -> %>

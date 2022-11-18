@@ -110,7 +110,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   defp mod_num_slots(n), do: Integer.mod(n, @num_slots)
 
-  defp stale_run?(slots, %Run{cycle_index: 0}), do: false
+  defp stale_run?(_slots, %Run{cycle_index: 0}), do: false
   defp stale_run?(slots, %Run{cycle_index: idx}) do
     case Enum.at(slots, mod_num_slots(idx - 1)) do
       nil -> true
@@ -154,8 +154,6 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def render(%{live_action: :terminal} = assigns) do
-    disabled? = assigns.timer > 0
-
     ~H"""
     <div class="relative w-screen h-screen grid place-items-center">
       <div class="w-2/3">
@@ -164,7 +162,7 @@ defmodule PanicWeb.NetworkLive.Show do
           id="initial-prompt-input"
           network={@network}
           terminal={true}
-          disabled={disabled?}
+          disabled={assigns.timer > 0}
         />
         <div class="mb-4"><span :if={@first_run}><%= @first_run.input %></span></div>
         <div :if={@timer > 0}>timer: (<%= @timer %>s until ready)</div>
