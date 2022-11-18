@@ -74,7 +74,7 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
           type="text_input"
           form={f}
           field={:input}
-          label="type a starting prompt"
+          label="input:"
         />
       </.form>
     </div>
@@ -98,7 +98,7 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
           type="text_input"
           form={f}
           field={:input}
-          label="type a starting prompt"
+          label="input:"
         />
       </.form>
     </div>

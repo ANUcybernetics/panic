@@ -149,7 +149,7 @@ defmodule PanicWeb.NetworkLive.Show do
         />
 
         <div :if={@first_run} class="mb-4">
-          <span class="font-bold">input: <%= @first_run.input %></span>
+          <span class="font-bold"><%= @first_run.input %></span>
         </div>
 
         <PanicWeb.Live.Components.slots_grid slots={@slots} />
@@ -172,7 +172,7 @@ defmodule PanicWeb.NetworkLive.Show do
           terminal={true}
           disabled={disabled?}
         />
-        <div class="mb-4">input: <span :if={@first_run}><%= @first_run.input %></span></div>
+        <div class="mb-4"><span :if={@first_run}><%= @first_run.input %></span></div>
         <div :if={@timer > 0}>timer: (<%= @timer %>s until ready)</div>
         <div class="absolute bottom-2 right-2"><%= @status %></div>
       </div>
