@@ -24,7 +24,7 @@ defmodule PanicWeb.NetworkLive.Show do
     network = Networks.get_network!(network_id)
     vestaboards =
       params
-      |> Map.get("vestaboards", [])
+      |> Map.get("vestaboards", "")
       |> String.graphemes()
       |> Enum.map(&(String.to_atom("panic_" <> &1)))
 
