@@ -126,6 +126,8 @@ defmodule PanicWeb.NetworkLive.Show do
     end
   end
 
+  defp send_to_vestaboard([], _run), do: :pass
+
   defp send_to_vestaboard(vestaboards, run) do
     ## hardcoded, will make more generalisable later
     idx =
