@@ -180,10 +180,9 @@ defmodule PanicWeb.NetworkLive.Show do
           id="initial-prompt-input"
           network={@network}
           terminal={true}
-          disabled={assigns.timer > 0}
+          timer={@timer}
         />
-        <div class="mt-4">current input: <span :if={@first_run}><%= @first_run.input %></span></div>
-        <div :if={@timer > 0} class="mt-4">(<%= @timer %>s until ready to go again)</div>
+        <div :if={@first_run} class="mt-4">current input: <%= @first_run.input %></div>
         <div class="absolute bottom-[20px] right-[20px]"><%= @status %></div>
         <span class="absolute left-[20px] bottom-[20px] text-2xl text-purple-700 text-left">
           Panic

@@ -24,6 +24,10 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
     {:noreply, assign(socket, :changeset, changeset)}
   end
 
+  def handle_event("validate", _, socket) do
+    {:noreply, socket}
+  end
+
   def handle_event("start-cycle", %{"run" => params}, socket) do
     network = socket.assigns.network
 
@@ -40,6 +44,10 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, changeset: changeset)}
     end
+  end
+
+  def handle_event("start-cycle", _, socket) do
+    {:noreply, socket}
   end
 
   @impl true
@@ -90,13 +98,16 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
       >
         <.text_input
           wrapper_classes="bg-gray-900"
-          disabled={@disabled}
+          disabled={@timer > 0}
           form={f}
           field={:input}
-          placeholder="type your input..."
+          placeholder={placeholder_text(@timer)}
         />
       </.form>
     </div>
     """
   end
+
+  defp placeholder_text(timer) when timer > 0, do: "ready for new input in #{timer}s..."
+  defp placeholder_text(timer), do: "type your input"
 end
