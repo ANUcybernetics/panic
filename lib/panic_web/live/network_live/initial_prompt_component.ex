@@ -94,7 +94,7 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
         id={@id}
         phx-target={@myself}
         phx-change="validate"
-        phx-submit="start-cycle"
+        phx-submit={JS.push("start-cycle")}
       >
         <.text_input
           wrapper_classes="bg-gray-900"
