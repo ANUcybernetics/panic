@@ -173,17 +173,15 @@ defmodule PanicWeb.NetworkLive.Show do
   @impl true
   def render(%{live_action: :terminal} = assigns) do
     ~H"""
-    <div class="relative w-screen h-screen bg-black text-purple-300">
-      <div class="w-2/3 pt-24 mx-auto">
-        <.live_component
-          module={PanicWeb.NetworkLive.InitialPromptComponent}
-          id="initial-prompt-input"
-          network={@network}
-          terminal={true}
-          timer={@timer}
-        />
-        <div :if={@first_run} class="mt-4">current input: <%= @first_run.input %></div>
-      </div>
+    <div class="relative p-36 w-screen h-screen bg-black text-purple-300">
+      <.live_component
+        module={PanicWeb.NetworkLive.InitialPromptComponent}
+        id="initial-prompt-input"
+        network={@network}
+        terminal={true}
+        timer={@timer}
+      />
+      <div :if={@first_run} class="mt-4">current input: <%= @first_run.input %></div>
 
       <div class="hidden">
         <PanicWeb.Live.Components.slots_grid slots={@slots} />
