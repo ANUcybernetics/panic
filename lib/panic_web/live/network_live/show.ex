@@ -22,14 +22,18 @@ defmodule PanicWeb.NetworkLive.Show do
   @impl true
   def handle_params(%{"id" => network_id} = params, _, socket) do
     network = Networks.get_network!(network_id)
-    vestaboards? = params |> Map.has_key?("vestaboards")
+    vestaboards =
+      params
+      |> Map.get("vestaboards", [])
+      |> String.graphemes()
+      |> Enum.map(&(String.to_atom("panic_" <> &1)))
 
     Networks.subscribe(network_id)
 
     {:noreply,
      socket
      |> assign(:page_title, "Show network")
-     |> assign(:vestaboards?, vestaboards?)
+     |> assign(:vestaboards, vestaboards)
      |> assign(:network, network)}
   end
 
@@ -78,10 +82,7 @@ defmodule PanicWeb.NetworkLive.Show do
         Networks.broadcast(next_run.network_id, {:run_created, %{next_run | status: :running}})
       end
 
-      # gross, just for testing
-      if socket.assigns.vestaboards? and run.model == "replicate:rmokady/clip_prefix_caption" do
-        {:ok, _} = Vestaboard.send_text(:panic_4, run.output)
-      end
+      send_to_vestaboard(socket.assigns.vestaboards, run)
 
       {:noreply,
        assign(socket, :slots, List.replace_at(socket.assigns.slots, mod_num_slots(idx), run))}
@@ -122,6 +123,20 @@ defmodule PanicWeb.NetworkLive.Show do
   defp schedule_timer_decrement(timer) do
     if timer > 0 do
       Process.send_after(self(), :decrement_timer, 1000)
+    end
+  end
+
+  defp send_to_vestaboard(vestaboards, run) do
+    ## hardcoded, will make more generalisable later
+    idx =
+      run.cycle_index
+      |> Integer.mod(12)
+      |> Integer.floor_div(3)
+
+    if run.model == "replicate:rmokady/clip_prefix_caption" do
+      vestaboards
+      |> Enum.at(idx)
+      |> Vestaboard.send_text(run.output)
     end
   end
 
