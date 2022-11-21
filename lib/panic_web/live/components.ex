@@ -49,7 +49,7 @@ defmodule PanicWeb.Live.Components do
 
   def run(%{run: nil} = assigns) do
     ~H"""
-    <div class="aspect-w-16 aspect-h-9 overflow-hidden relative block w-full text-center text-gray-400 bg-gray-700 shadow-lg">
+    <div class="aspect-w-16 aspect-h-9 overflow-hidden relative block w-full text-center text-gray-400 bg-gray-900 shadow-lg">
       <div class="grid place-items-center">BLANK</div>
     </div>
     """
