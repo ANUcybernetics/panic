@@ -44,12 +44,16 @@ defmodule PanicWeb.NetworkLive.Public do
         {:run_completed, %Run{cycle_index: idx, status: :succeeded} = run},
         %{assigns: %{live_action: :view, slots: slots, slot_count: slot_count}} = socket
       ) do
-    slots =
-      slots
-      |> List.replace_at(Integer.mod(idx, slot_count), run)
-      |> List.replace_at(Integer.mod(idx + 1, slot_count), nil)
 
-    {:noreply, assign(socket, :slots, slots)}
+    if PanicWeb.NetworkLive.Show.stale_run?(slots, run) do
+      {:noreply, socket}
+    else
+      slots =
+        slots
+        |> List.replace_at(Integer.mod(idx, slot_count), run)
+        |> List.replace_at(Integer.mod(idx + 1, slot_count), nil)
+      {:noreply, assign(socket, :slots, slots)}
+    end
   end
 
   @impl true
