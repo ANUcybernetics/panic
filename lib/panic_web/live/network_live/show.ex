@@ -183,19 +183,27 @@ defmodule PanicWeb.NetworkLive.Show do
           timer={@timer}
         />
         <div :if={@first_run} class="mt-4">current input: <%= @first_run.input %></div>
-        <div class="absolute bottom-[20px] right-[20px]"><%= @status %></div>
-        <span class="absolute left-[20px] bottom-[20px] text-2xl text-purple-700 text-left">
-          Panic
-        </span>
-        <span class="absolute left-[21px] bottom-[21px] text-2xl text-purple-300 text-left">
-          Panic
-        </span>
       </div>
 
       <div class="hidden">
         <PanicWeb.Live.Components.slots_grid slots={@slots} />
       </div>
+
+      <.status_footer status={@status} />
     </div>
     """
   end
+
+  def status_footer(assigns) do
+    ~H"""
+    <div class="absolute bottom-[20px] right-[20px] text-2xl"><%= @status %></div>
+    <span class="absolute left-[20px] bottom-[20px] text-2xl text-purple-700 text-left">
+      Panic
+    </span>
+    <span class="absolute left-[21px] bottom-[21px] text-2xl text-purple-300 text-left">
+      Panic
+    </span>
+    """
+  end
+
 end
