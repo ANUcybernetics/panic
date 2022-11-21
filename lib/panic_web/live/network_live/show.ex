@@ -130,7 +130,7 @@ defmodule PanicWeb.NetworkLive.Show do
     ## hardcoded, will make more generalisable later
     idx =
       run.cycle_index
-      |> Integer.mod(12)
+      |> Integer.mod(Enum.count(vestaboards) * 3)
       |> Integer.floor_div(3)
 
     if run.model == "replicate:rmokady/clip_prefix_caption" do
