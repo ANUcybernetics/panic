@@ -155,7 +155,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
         <.live_component
           module={PanicWeb.NetworkLive.InitialPromptComponent}
-          id="initial-prompt-input"
+          id="initial-prompt"
           network={@network}
           terminal={false}
         />
@@ -176,7 +176,7 @@ defmodule PanicWeb.NetworkLive.Show do
     <div class="relative p-36 w-screen h-screen bg-black text-purple-300">
       <.live_component
         module={PanicWeb.NetworkLive.InitialPromptComponent}
-        id="initial-prompt-input"
+        id="initial-prompt"
         network={@network}
         terminal={true}
         timer={@timer}
