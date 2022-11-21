@@ -204,6 +204,9 @@ defmodule Panic.Models do
 
       {:ok, updated_run} = update_run(run, %{output: output})
 
+      ## just so things don't get *too* quick
+      Process.sleep(5_000)
+
       Panic.Networks.broadcast(network_id, {:run_completed, %{updated_run | status: :succeeded}})
     end)
   end
