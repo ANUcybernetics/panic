@@ -32,6 +32,15 @@ defmodule PanicWeb.NetworkLive.Public do
 
   @impl true
   def handle_info(
+    {:run_completed, %Run{cycle_index: 0, status: :succeeded} = run},
+    %{assigns: %{live_action: :view, slot_count: slot_count}} = socket
+  ) do
+
+    {:noreply, assign(socket, slots: [run] ++ List.duplicate(nil, slot_count - 1), first_run: run)}
+  end
+
+  @impl true
+  def handle_info(
         {:run_completed, %Run{cycle_index: idx, status: :succeeded} = run},
         %{assigns: %{live_action: :view, slots: slots, slot_count: slot_count}} = socket
       ) do
@@ -40,11 +49,7 @@ defmodule PanicWeb.NetworkLive.Public do
       |> List.replace_at(Integer.mod(idx, slot_count), run)
       |> List.replace_at(Integer.mod(idx + 1, slot_count), nil)
 
-    if idx == 0 do
-      {:noreply, assign(socket, slots: slots, first_run: run)}
-    else
-      {:noreply, assign(socket, :slots, slots)}
-    end
+    {:noreply, assign(socket, :slots, slots)}
   end
 
   @impl true
