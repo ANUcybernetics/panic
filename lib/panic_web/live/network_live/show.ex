@@ -84,14 +84,14 @@ defmodule PanicWeb.NetworkLive.Show do
     if stale_run?(socket.assigns.slots, run) do
       {:noreply, socket}
     else
+      send_to_vestaboard(socket.assigns.vestaboards, run)
+
       # if the completed run was successful, create & dispatch the new one
       if socket.assigns.status == :running and status == :succeeded do
         {:ok, next_run} = Models.create_next_run(socket.assigns.network, run)
         Models.dispatch_run(next_run)
         Networks.broadcast(next_run.network_id, {:run_created, %{next_run | status: :running}})
       end
-
-      send_to_vestaboard(socket.assigns.vestaboards, run)
 
       {:noreply,
        assign(socket, :slots, List.replace_at(socket.assigns.slots, mod_num_slots(idx), run))}
