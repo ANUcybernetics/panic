@@ -97,7 +97,7 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
         phx-submit={JS.push("start-cycle")}
       >
         <.text_input
-          id={"#{@id}-textinput"}
+          id={"panic-main-textinput"}
           class="disabled:bg-rose-300"
           disabled={@timer > 0}
           form={f}
