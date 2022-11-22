@@ -31,6 +31,11 @@ defmodule PanicWeb.NetworkLive.Public do
   ########
 
   @impl true
+  def handle_info({:run_created, %Run{cycle_index: 0} = run}, socket) do
+    {:noreply, assign(socket, first_run: run)}
+  end
+
+  @impl true
   def handle_info(
     {:run_completed, %Run{cycle_index: 0, status: :succeeded} = run},
     %{assigns: %{live_action: :view, slot_count: slot_count}} = socket
