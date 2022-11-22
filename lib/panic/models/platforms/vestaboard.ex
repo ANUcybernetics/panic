@@ -25,6 +25,11 @@ defmodule Panic.Models.Platforms.Vestaboard do
     end
   end
 
+  def clear_all() do
+    [:panic_1, :panic_2, :panic_3, :panic_4]
+    |> Enum.each(&(send_text(&1, "")))
+  end
+
   defp board_id(board_name) do
     %{
       panic_1: "ba16996e-154f-4f31-83b7-ae0a8f13ecaf",

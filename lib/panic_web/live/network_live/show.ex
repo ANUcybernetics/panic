@@ -61,6 +61,8 @@ defmodule PanicWeb.NetworkLive.Show do
   def handle_info({:run_created, %Run{cycle_index: 0} = run}, socket) do
     schedule_timer_decrement(@reprompt_seconds)
 
+    Vestaboard.clear_all()
+
     {:noreply,
      socket
      |> assign(:status, :running)
