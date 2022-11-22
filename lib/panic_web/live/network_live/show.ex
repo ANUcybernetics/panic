@@ -44,7 +44,15 @@ defmodule PanicWeb.NetworkLive.Show do
   @impl true
   def handle_info(:decrement_timer, socket) do
     schedule_timer_decrement(socket.assigns.timer)
-    {:noreply, update(socket, :timer, &(&1 - 1))}
+
+    if socket.assigns.timer == 0 do
+      {:noreply,
+       socket
+       |> update(:timer, &(&1 - 1))
+       |> push_event("focus_input", %{id: "panic-main-textinput"})}
+    else
+      {:noreply, update(socket, :timer, &(&1 - 1))}
+    end
   end
 
   # handler for whenever a *first* run is created

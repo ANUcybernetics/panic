@@ -95,6 +95,7 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
         phx-target={@myself}
         phx-change="validate"
         phx-submit={JS.push("start-cycle")}
+        phx-hook="FocusInputHook"
         autocomplete="off"
       >
         <.text_input
