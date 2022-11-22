@@ -45,7 +45,7 @@ defmodule PanicWeb.NetworkLive.Public do
         %{assigns: %{live_action: :view, slots: slots, slot_count: slot_count}} = socket
       ) do
 
-    if PanicWeb.NetworkLive.Show.stale_run?(slots, run) do
+    if stale_run?(slots, run) do
       {:noreply, socket}
     else
       slots =
@@ -69,6 +69,15 @@ defmodule PanicWeb.NetworkLive.Public do
 
   def handle_info(_, socket) do
     {:noreply, socket}
+  end
+
+  def stale_run?(_slots, %Run{cycle_index: 0}), do: false
+
+  def stale_run?(slots, %Run{cycle_index: idx}) do
+    case Enum.at(slots, Integer.mod(idx - 1, Enum.count(slots))) do
+      nil -> true
+      %Run{cycle_index: prev_idx} -> idx != prev_idx + 1
+    end
   end
 
   #############
