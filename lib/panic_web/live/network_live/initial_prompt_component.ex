@@ -96,7 +96,6 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
         phx-change="validate"
         phx-submit={JS.push("start-cycle")}
         phx-hook="FocusInputHook"
-        autocomplete="off"
       >
         <.text_input
           id={"panic-main-textinput"}
@@ -105,7 +104,7 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
           form={f}
           field={:input}
           placeholder={placeholder_text(@timer)}
-          autocomplete="false"
+          autocomplete="off"
         />
       </.form>
     </div>
