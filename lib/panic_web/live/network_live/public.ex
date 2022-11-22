@@ -96,8 +96,8 @@ defmodule PanicWeb.NetworkLive.Public do
   @impl true
   def render(%{live_action: :view} = assigns) do
     ~H"""
-    <div class="bg-black h-screen">
-      <div class="relative text-6xl h-60">
+    <div class="bg-black h-screen cursor-none">
+      <div class="relative text-8xl h-72">
         <span class="absolute left-[30px] top-[30px] text-purple-700">
           input: <span :if={@first_run}><%= @first_run.input %></span>
         </span>

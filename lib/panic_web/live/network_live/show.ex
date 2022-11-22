@@ -184,7 +184,7 @@ defmodule PanicWeb.NetworkLive.Show do
   @impl true
   def render(%{live_action: :terminal} = assigns) do
     ~H"""
-    <div class="relative p-36 w-screen h-screen bg-black text-purple-300">
+    <div class="relative p-36 w-screen h-screen bg-black text-purple-300 cursor-none">
       <.live_component
         module={PanicWeb.NetworkLive.InitialPromptComponent}
         id="initial-prompt"
