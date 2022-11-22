@@ -113,5 +113,5 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
   end
 
   defp placeholder_text(timer) when timer > 0, do: "ready for new input in #{timer}s..."
-  defp placeholder_text(timer), do: "type your input"
+  defp placeholder_text(_timer), do: "type your input"
 end
