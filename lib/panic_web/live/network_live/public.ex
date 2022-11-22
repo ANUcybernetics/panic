@@ -23,7 +23,7 @@ defmodule PanicWeb.NetworkLive.Public do
      |> assign(:network, network)
      |> assign(:slot_id, slot_id)
      |> assign(:slot_count, slot_count)
-     |> assign(:slots, List.duplicate(nil, slot_count))}
+     |> assign(:slots, empty_slots(slot_count))}
   end
 
   ########
@@ -32,7 +32,7 @@ defmodule PanicWeb.NetworkLive.Public do
 
   @impl true
   def handle_info({:run_created, %Run{cycle_index: 0} = run}, socket) do
-    {:noreply, assign(socket, first_run: run)}
+    {:noreply, assign(socket, first_run: run, slots: empty_slots(socket.assigns.slot_count))}
   end
 
   @impl true
@@ -41,7 +41,7 @@ defmodule PanicWeb.NetworkLive.Public do
     %{assigns: %{live_action: :view, slot_count: slot_count}} = socket
   ) do
 
-    {:noreply, assign(socket, slots: [run] ++ List.duplicate(nil, slot_count - 1), first_run: run)}
+    {:noreply, assign(socket, slots: [run] ++ empty_slots(slot_count - 1), first_run: run)}
   end
 
   @impl true
@@ -83,6 +83,10 @@ defmodule PanicWeb.NetworkLive.Public do
       nil -> true
       %Run{cycle_index: prev_idx} -> idx != prev_idx + 1
     end
+  end
+
+  defp empty_slots(slot_count) do
+    List.duplicate(nil, slot_count)
   end
 
   #############
