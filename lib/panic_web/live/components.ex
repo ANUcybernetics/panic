@@ -29,10 +29,10 @@ defmodule PanicWeb.Live.Components do
         <%= @run.model %>
       </span>
       <%= if @show_input do %>
-        <span class="absolute left-[30px] bottom-[30px] text-2xl text-purple-700 text-left">
+        <span class="absolute left-[20px] bottom-[20px] right-[20px] text-2xl text-purple-700 text-left">
           <%= @run.input %>
         </span>
-        <span class="absolute left-[31px] bottom-[31px] text-2xl text-purple-300 text-left">
+        <span class="absolute left-[21px] bottom-[21px] right-[19px] text-2xl text-purple-300 text-left">
           <%= @run.input %>
         </span>
       <% end %>
