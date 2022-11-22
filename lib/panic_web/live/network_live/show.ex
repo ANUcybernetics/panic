@@ -16,7 +16,8 @@ defmodule PanicWeb.NetworkLive.Show do
      |> assign(:status, :waiting)
      |> assign(:timer, 0)
      |> assign(:first_run, nil)
-     |> assign(:slots, List.duplicate(nil, @num_slots))}
+     |> assign(:slots, List.duplicate(nil, @num_slots))
+     |> push_event("focus_input", %{id: "panic-main-textinput"})}
   end
 
   @impl true
