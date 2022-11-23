@@ -47,6 +47,14 @@ defmodule PanicWeb.Live.Components do
     """
   end
 
+  def running_run(assigns) do
+    ~H"""
+    <div class="absolute inset-0 animate-pulse bg-rose-600 grid place-items-center">
+      <span class="text-black text-5xl">panic!</span>
+    </div>
+    """
+  end
+
   def run(%{run: nil} = assigns) do
     ~H"""
     <div class="aspect-w-16 aspect-h-9 overflow-hidden relative block w-full text-center text-gray-400 bg-gray-900 shadow-lg">
@@ -63,7 +71,7 @@ defmodule PanicWeb.Live.Components do
           <% :created -> %>
             <HeroiconsV1.Outline.minus_circle class="w-12 h-12 mx-auto" />
           <% :running -> %>
-            <.spinner class="mx-auto" size="md" />
+            <.running_run />
           <% :succeeded -> %>
             <%= case Models.model_io(@run.model) do %>
               <% {_, :text} -> %>
