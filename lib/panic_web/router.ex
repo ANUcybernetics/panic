@@ -98,6 +98,10 @@ defmodule PanicWeb.Router do
     end
   end
 
+  scope "/api", PanicWeb do
+    get "/networks/:id", NetworksAPIController, :show
+  end
+
   use PanicWeb.AuthRoutes
   use PanicWeb.MailblusterRoutes
   use PanicWeb.AdminRoutes
