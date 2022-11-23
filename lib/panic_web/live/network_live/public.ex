@@ -58,9 +58,13 @@ defmodule PanicWeb.NetworkLive.Public do
   def stale_run?(_slots, %Run{cycle_index: 0}), do: false
 
   def stale_run?(slots, %Run{cycle_index: idx}) do
-    case Enum.at(slots, Integer.mod(idx - 1, Enum.count(slots))) do
-      nil -> true
-      %Run{cycle_index: prev_idx} -> idx != prev_idx + 1
+    if Enum.any?(slots) do
+      case Enum.at(slots, Integer.mod(idx - 1, Enum.count(slots))) do
+        nil -> true
+        %Run{cycle_index: prev_idx} -> idx != prev_idx + 1
+      end
+      false
+    else
     end
   end
 
