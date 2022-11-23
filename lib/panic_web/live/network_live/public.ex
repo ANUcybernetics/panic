@@ -22,7 +22,6 @@ defmodule PanicWeb.NetworkLive.Public do
      |> assign(:page_title, "Public network view")
      |> assign(:network, network)
      |> assign(:slot_id, slot_id)
-     |> assign(:slot_count, slot_count)
      |> assign(:slots, empty_slots(slot_count))}
   end
 
@@ -32,44 +31,24 @@ defmodule PanicWeb.NetworkLive.Public do
 
   @impl true
   def handle_info({:run_created, %Run{cycle_index: 0} = run}, socket) do
-    {:noreply, assign(socket, first_run: run, slots: empty_slots(socket.assigns.slot_count))}
+    {:noreply,
+     socket
+     |> assign(:first_run, run)
+     |> update(:slots, fn slots -> update_slots(slots, run) end)}
   end
 
   @impl true
-  def handle_info(
-    {:run_completed, %Run{cycle_index: 0, status: :succeeded} = run},
-    %{assigns: %{live_action: :view, slot_count: slot_count}} = socket
-  ) do
-
-    {:noreply, assign(socket, slots: [run] ++ empty_slots(slot_count - 1), first_run: run)}
+  def handle_info({:run_created, run}, socket) do
+    {:noreply,
+     socket
+     |> update(:slots, fn slots -> update_slots(slots, run) end)}
   end
 
   @impl true
-  def handle_info(
-        {:run_completed, %Run{cycle_index: idx, status: :succeeded} = run},
-        %{assigns: %{live_action: :view, slots: slots, slot_count: slot_count}} = socket
-      ) do
-
-    if stale_run?(slots, run) do
-      {:noreply, socket}
-    else
-      slots =
-        slots
-        |> List.replace_at(Integer.mod(idx, slot_count), run)
-        |> List.replace_at(Integer.mod(idx + 1, slot_count), nil)
-      {:noreply, assign(socket, :slots, slots)}
-    end
-  end
-
-  @impl true
-  def handle_info(
-        {:run_completed, %Run{cycle_index: idx, status: :succeeded} = run},
-        %{assigns: %{live_action: :screen, slot_id: slot_id, slot_count: slot_count}} = socket
-      ) do
-    case Integer.mod(idx, slot_count) do
-      ^slot_id -> {:noreply, assign(socket, :slots, [run])}
-      _ -> {:noreply, socket}
-    end
+  def handle_info({:run_completed, %Run{status: :succeeded} = run}, socket) do
+    {:noreply,
+     socket
+     |> update(:slots, fn slots -> update_slots(slots, run) end)}
   end
 
   def handle_info(_, socket) do
@@ -87,6 +66,20 @@ defmodule PanicWeb.NetworkLive.Public do
 
   defp empty_slots(slot_count) do
     List.duplicate(nil, slot_count)
+  end
+
+  defp update_slots(slots, %Run{cycle_index: 0} = run) do
+    slot_count = Enum.count(slots)
+    [run] ++ empty_slots(slot_count - 1)
+  end
+
+  defp update_slots(slots, %Run{cycle_index: idx} = run) do
+    if stale_run?(slots, run) do
+      slots
+    else
+      slot_count = Enum.count(slots)
+      List.replace_at(slots, Integer.mod(idx, slot_count), run)
+    end
   end
 
   #############
@@ -117,7 +110,7 @@ defmodule PanicWeb.NetworkLive.Public do
   @impl true
   def render(%{live_action: :screen} = assigns) do
     ~H"""
-    <PanicWeb.Live.Components.run run={List.first(@slots)} show_input={true} />
+    <PanicWeb.Live.Components.run run={Enum.at(@slots, @slot_id)} show_input={true} />
     """
   end
 
