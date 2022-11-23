@@ -37,6 +37,10 @@ defmodule Panic.Networks do
   """
   def get_network!(id), do: Repo.get!(Network, id)
 
+  def get_network_preload_runs!(id) do
+    id |> get_network! |> Repo.preload(:runs)
+  end
+
   @doc """
   Creates a network.
 
