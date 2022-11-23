@@ -27,7 +27,7 @@ defmodule Panic.Models.Platforms.Vestaboard do
 
   def clear_all() do
     [:panic_1, :panic_2, :panic_3, :panic_4]
-    |> Enum.each(&(send_text(&1, "")))
+    |> Enum.each(&send_text(&1, ""))
   end
 
   defp board_id(board_name) do

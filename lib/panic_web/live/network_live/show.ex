@@ -23,11 +23,12 @@ defmodule PanicWeb.NetworkLive.Show do
   @impl true
   def handle_params(%{"id" => network_id} = params, _, socket) do
     network = Networks.get_network!(network_id)
+
     vestaboards =
       params
       |> Map.get("vestaboards", "")
       |> String.graphemes()
-      |> Enum.map(&(String.to_atom("panic_" <> &1)))
+      |> Enum.map(&String.to_atom("panic_" <> &1))
 
     Networks.subscribe(network_id)
 
@@ -214,5 +215,4 @@ defmodule PanicWeb.NetworkLive.Show do
     </span>
     """
   end
-
 end

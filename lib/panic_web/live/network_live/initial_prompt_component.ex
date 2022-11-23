@@ -98,7 +98,7 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
         phx-hook="FocusInputHook"
       >
         <.text_input
-          id={"panic-main-textinput"}
+          id="panic-main-textinput"
           class="disabled:bg-rose-300"
           disabled={@timer > 0}
           form={f}

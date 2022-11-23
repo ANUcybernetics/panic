@@ -204,7 +204,8 @@ defmodule Panic.Models do
 
       {:ok, updated_run} = update_run(run, %{output: output})
 
-      unless updated_run.cycle_index < 6 or updated_run.model == "replicate:rmokady/clip_prefix_caption" do
+      unless updated_run.cycle_index < 6 or
+               updated_run.model == "replicate:rmokady/clip_prefix_caption" do
         ## after the first few, sleep so things don't get *too* quick
         Process.sleep(5_000)
       end
