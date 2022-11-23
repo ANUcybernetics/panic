@@ -5,7 +5,7 @@ defmodule PanicWeb.Live.Components do
 
   def text_run(assigns) do
     ~H"""
-    <div class="p-4 text-xl text-left">
+    <div class="p-4 text-2xl text-left">
       <%= for line <- String.split(@run.output, "\n\n") do %>
         <%= unless line == "" do %>
           <p class="text-purple-300"><%= line %></p>
