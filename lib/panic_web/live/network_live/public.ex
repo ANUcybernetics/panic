@@ -61,10 +61,10 @@ defmodule PanicWeb.NetworkLive.Public do
     if Enum.any?(slots) do
       case Enum.at(slots, Integer.mod(idx - 1, Enum.count(slots))) do
         nil -> true
-        %Run{cycle_index: prev_idx} -> idx != prev_idx + 1
+        %Run{cycle_index: prev_idx} -> idx != (prev_idx + 1)
       end
-      false
     else
+      false
     end
   end
 
