@@ -2,11 +2,12 @@ defmodule PanicWeb.NetworkLive.Public do
   use PanicWeb, :live_view
 
   alias Panic.Networks
+  alias Panic.Models
   alias Panic.Models.Run
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :first_run, nil)}
+    {:ok, socket}
   end
 
   @impl true
@@ -41,6 +42,7 @@ defmodule PanicWeb.NetworkLive.Public do
   def handle_info({:run_created, run}, socket) do
     {:noreply,
      socket
+     |> assign_new(:first_run, fn -> Models.get_run!(run.first_run_id) end)
      |> update(:slots, fn slots -> update_slots(slots, run) end)}
   end
 
@@ -48,6 +50,7 @@ defmodule PanicWeb.NetworkLive.Public do
   def handle_info({:run_completed, %Run{status: :succeeded} = run}, socket) do
     {:noreply,
      socket
+     |> assign_new(:first_run, fn -> Models.get_run!(run.first_run_id) end)
      |> update(:slots, fn slots -> update_slots(slots, run) end)}
   end
 
@@ -96,10 +99,10 @@ defmodule PanicWeb.NetworkLive.Public do
     <div class="bg-black h-screen cursor-none">
       <div class="relative text-4xl h-48">
         <span class="absolute left-[30px] top-[30px] text-purple-700">
-          input: <span :if={@first_run}><%= @first_run.input %></span>
+          input: <span :if={Map.has_key?(assigns, :first_run)}><%= @first_run.input %></span>
         </span>
         <span class="absolute left-[32px] top-[32px] text-purple-300">
-          input: <span :if={@first_run}><%= @first_run.input %></span>
+          input: <span :if={Map.has_key?(assigns, :first_run)}><%= @first_run.input %></span>
         </span>
       </div>
       <div class="grid gap-2 md:grid-cols-6">
