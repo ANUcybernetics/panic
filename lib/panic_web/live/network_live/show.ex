@@ -8,7 +8,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @num_slots 6
   @reprompt_seconds 30
-  @vestaboard_models ["replicate:rmokady/clip_prefix_caption", "replicate:2feet6inches/cog-prompt-parrot"]
+  @vestaboard_models ["replicate:rmokady/clip_prefix_caption", "replicate:j-min/clip-caption-reward"]
 
   @impl true
   def mount(_params, _session, socket) do
