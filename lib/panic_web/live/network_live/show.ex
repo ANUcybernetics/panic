@@ -8,6 +8,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @num_slots 6
   @reprompt_seconds 30
+  @vestaboard_models ["replicate:rmokady/clip_prefix_caption", "replicate:2feet6inches/cog-prompt-parrot"]
 
   @impl true
   def mount(_params, _session, socket) do
@@ -147,7 +148,7 @@ defmodule PanicWeb.NetworkLive.Show do
       |> Integer.mod(Enum.count(vestaboards) * 3)
       |> Integer.floor_div(3)
 
-    if run.model == "replicate:rmokady/clip_prefix_caption" do
+    if Enum.member?(run.model, @vestaboard_models) do
       vestaboards
       |> Enum.at(idx)
       |> Vestaboard.send_text(run.output)
