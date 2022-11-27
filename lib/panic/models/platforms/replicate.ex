@@ -1,6 +1,7 @@
 defmodule Panic.Models.Platforms.Replicate do
   @url "https://api.replicate.com/v1"
   @nsfw_placeholder "https://res.cloudinary.com/teepublic/image/private/s--XZyAQb6t--/t_Preview/b_rgb:191919,c_lpad,f_jpg,h_630,q_90,w_1200/v1532173190/production/designs/2918923_0.jpg"
+  @recv_timeout 30_000
 
   def get_model_versions(model) do
     url = "#{@url}/models/#{model}/versions"
@@ -19,7 +20,7 @@ defmodule Panic.Models.Platforms.Replicate do
   def get_status(prediction_id) do
     url = "#{@url}/predictions/#{prediction_id}"
 
-    case HTTPoison.get(url, headers(), hackney: [pool: :default]) do
+    case HTTPoison.get(url, headers(), hackney: [pool: :default], recv_timeout: @recv_timeout) do
       {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} ->
         {:ok, body} = Jason.decode(response_body)
         body
@@ -29,7 +30,7 @@ defmodule Panic.Models.Platforms.Replicate do
   def get(prediction_id) do
     url = "#{@url}/predictions/#{prediction_id}"
 
-    case HTTPoison.get(url, headers(), hackney: [pool: :default]) do
+    case HTTPoison.get(url, headers(), hackney: [pool: :default], recv_timeout: @recv_timeout) do
       {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} ->
         {:ok, body} = Jason.decode(response_body)
 
