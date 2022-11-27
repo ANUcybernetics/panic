@@ -148,7 +148,7 @@ defmodule PanicWeb.NetworkLive.Show do
       |> Integer.mod(Enum.count(vestaboards) * 3)
       |> Integer.floor_div(3)
 
-    if Enum.member?(run.model, @vestaboard_models) do
+    if Enum.member?(@vestaboard_models, run.model) do
       vestaboards
       |> Enum.at(idx)
       |> Vestaboard.send_text(run.output)
