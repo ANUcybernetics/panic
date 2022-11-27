@@ -98,10 +98,10 @@ defmodule PanicWeb.NetworkLive.Public do
     ~H"""
     <div class="bg-black h-screen cursor-none overflow-hidden">
       <div class="relative text-4xl h-48">
-        <span class="absolute left-[30px] top-[30px] text-purple-700">
+        <span class="absolute left-[30px] top-[30px] text-purple-700 max-w-fit-content">
           input: <span :if={Map.has_key?(assigns, :first_run)}><%= @first_run.input %></span>
         </span>
-        <span class="absolute left-[32px] top-[32px] text-purple-300">
+        <span class="absolute left-[32px] top-[32px] text-purple-300 max-w-fit-content">
           input: <span :if={Map.has_key?(assigns, :first_run)}><%= @first_run.input %></span>
         </span>
       </div>
