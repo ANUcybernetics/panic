@@ -27,6 +27,7 @@ defmodule Panic.Models do
       "replicate:charlesfrye/text-recognizer-gpu",
       "replicate:kuprel/min-dalle",
       "replicate:kyrick/prompt-parrot",
+      "replicate:2feet6inches/cog-prompt-parrot",
       "replicate:methexis-inc/img2prompt",
       "replicate:rmokady/clip_prefix_caption",
       "replicate:j-min/clip-caption-reward",
@@ -48,6 +49,7 @@ defmodule Panic.Models do
   def model_io("replicate:charlesfrye/text-recognizer-gpu"), do: {:image, :text}
   def model_io("replicate:kuprel/min-dalle"), do: {:text, :image}
   def model_io("replicate:kyrick/prompt-parrot"), do: {:text, :text}
+  def model_io("replicate:2feet6inches/cog-prompt-parrot"), do: {:text, :text}
   def model_io("replicate:methexis-inc/img2prompt"), do: {:image, :text}
   def model_io("replicate:rmokady/clip_prefix_caption"), do: {:image, :text}
   def model_io("replicate:j-min/clip-caption-reward"), do: {:image, :text}
