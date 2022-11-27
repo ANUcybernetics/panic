@@ -99,7 +99,7 @@ defmodule PanicWeb.NetworkLive.InitialPromptComponent do
       >
         <.text_input
           id="panic-main-textinput"
-          class="disabled:bg-rose-300"
+          class="text-purple-900 disabled:bg-rose-300"
           disabled={@timer > 0}
           form={f}
           field={:input}
