@@ -96,7 +96,7 @@ defmodule PanicWeb.NetworkLive.Public do
   @impl true
   def render(%{live_action: :view} = assigns) do
     ~H"""
-    <div class="bg-black h-screen cursor-none">
+    <div class="bg-black h-screen cursor-none overflow-hidden">
       <div class="relative text-4xl h-48">
         <span class="absolute left-[30px] top-[30px] text-purple-700">
           input: <span :if={Map.has_key?(assigns, :first_run)}><%= @first_run.input %></span>
