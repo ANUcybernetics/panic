@@ -31,7 +31,8 @@ defmodule Panic.Models do
       "replicate:methexis-inc/img2prompt",
       "replicate:rmokady/clip_prefix_caption",
       "replicate:j-min/clip-caption-reward",
-      "replicate:stability-ai/stable-diffusion"
+      "replicate:stability-ai/stable-diffusion",
+      "replicate:prompthero/openjourney"
     ]
   end
 
@@ -54,6 +55,7 @@ defmodule Panic.Models do
   def model_io("replicate:rmokady/clip_prefix_caption"), do: {:image, :text}
   def model_io("replicate:j-min/clip-caption-reward"), do: {:image, :text}
   def model_io("replicate:stability-ai/stable-diffusion"), do: {:text, :image}
+  def model_io("replicate:prompthero/openjourney"), do: {:text, :image}
 
   def list_runs(%Network{id: network_id}) do
     Repo.all(from r in Run, where: r.network_id == ^network_id, order_by: [asc: r.cycle_index])

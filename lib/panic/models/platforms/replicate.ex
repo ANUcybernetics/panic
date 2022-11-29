@@ -71,6 +71,20 @@ defmodule Panic.Models.Platforms.Replicate do
   end
 
   ## text to image
+  def create("prompthero/openjourney" = model, prompt) do
+    input_params = %{
+      prompt: prompt,
+      num_inference_steps: 50,
+      guidance_scale: 7.5,
+      width: 1024,
+      height: 576
+    }
+
+    %{"output" => [image_url]} = create_and_wait(model, input_params)
+    image_url
+  end
+
+  ## text to image
   def create("cjwbw/stable-diffusion-high-resolution" = model, prompt) do
     input_params = %{
       prompt: prompt,
