@@ -7,7 +7,7 @@ defmodule Panic.Networks.Analytics do
   alias Panic.Networks.Network
 
 
-  def time_to_word(%Network{id: id}, ""), do: {0, 0, 0}
+  def time_to_word(%Network{id: _id}, ""), do: {0, 0, 0}
 
   def time_to_word(%Network{id: id}, word) do
     num_runs = Repo.aggregate((from r in Run, where: r.network_id == ^id), :count)
