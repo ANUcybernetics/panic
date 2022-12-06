@@ -14,5 +14,6 @@ defmodule Panic.Networks.Analytics do
     |> mean()
   end
 
+  defp mean([]), do: 0
   defp mean(list), do: Enum.sum(list) / Enum.count(list)
 end
