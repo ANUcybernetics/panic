@@ -111,7 +111,7 @@ defmodule PanicWeb.NetworkLive.Public do
 
   def word_analytics(assigns) do
     ~H"""
-    <span><%= @symbol %> <%= (100.0 * @ccw / @cycle_count) |> Float.round(1) |> Float.to_string  %>%/<%= @ttw |> Float.round(1) |> Float.to_string %>att</span>
+    <span><%= @symbol %> <%= (100.0 * @ccw / @cycle_count) |> trunc() |> Integer.to_string  %>%/<%= @ttw |> trunc() |> Integer.to_string %>τ</span>
     """
   end
 
@@ -120,18 +120,18 @@ defmodule PanicWeb.NetworkLive.Public do
       assigns,
       :words,
       [{"🐑", :sheep},
-       {"🐎", :horse},
+       {"🐴", :horse},
        {"🐪", :camel},
        {"🪁", :kite},
-       {"☂", :umbrella}
+       {"⛱", :umbrella}
       ])
 
     ~H"""
-    <div :if={@analytics.cycle_count != 0} class="flex justify-between">
+    <div :if={@analytics.cycle_count != 0} class="flex justify-between p-1">
       <%= for {symbol, word} <- @words do %>
         <.word_analytics symbol={symbol} ccw={@analytics[word][:ccw]} ttw={@analytics[word][:ttw]} cycle_count={@analytics.cycle_count} />
       <% end %>
-      <span>TOTAL <%= @analytics.cycle_count |> Integer.to_string %> cycles/<%= @analytics.run_count|> Integer.to_string %> runs</span>
+      <span>TOTAL <%= @analytics.cycle_count |> Integer.to_string %>C/<%= @analytics.run_count|> Integer.to_string %>R</span>
     </div>
     """
   end
@@ -154,7 +154,7 @@ defmodule PanicWeb.NetworkLive.Public do
           <PanicWeb.Live.Components.run run={run} show_input={false} />
         <% end %>
       </div>
-      <div class="absolute left-0 bottom-0 right-0 text-purple-300 bg-white/20">
+      <div class="absolute left-0 bottom-0 right-0 text-lg text-purple-300 bg-white/20">
         <.analytics_hud analytics={@analytics} />
       </div>
     </div>
