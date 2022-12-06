@@ -7,7 +7,10 @@ defmodule Panic.Networks.Analytics do
   alias Panic.Networks.Network
 
   def average_cycle_length(%Network{id: id}) do
-    Repo.all(from r in Run, where: r.network_id == ^id, select: count(), group_by: r.first_run_id)
+    query = from r in Run, where: r.network_id == ^id, select: count(), group_by: r.first_run_id
+
+    query
+    |> Repo.all()
     |> mean()
   end
 
