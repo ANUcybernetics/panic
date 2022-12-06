@@ -111,7 +111,7 @@ defmodule PanicWeb.NetworkLive.Public do
 
   def word_analytics(assigns) do
     ~H"""
-    <span><%= @symbol %> <%= (100.0 * @ccw / @cycle_count) |> trunc() |> Integer.to_string  %>%/<%= @ttw |> trunc() |> Integer.to_string %>τ</span>
+    <span><span class="font-noto-color-emoji"><%= @symbol %></span> <%= (100.0 * @ccw / @cycle_count) |> trunc() |> Integer.to_string  %>%/<%= @ttw |> trunc() |> Integer.to_string %>τ</span>
     """
   end
 
@@ -120,10 +120,10 @@ defmodule PanicWeb.NetworkLive.Public do
       assigns,
       :words,
       [{"🐑", :sheep},
-       {"🐴", :horse},
+       {"🐎", :horse},
        {"🐪", :camel},
        {"🪁", :kite},
-       {"⛱", :umbrella}
+       {"☂", :umbrella}
       ])
 
     ~H"""

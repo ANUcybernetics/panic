@@ -17,6 +17,7 @@ module.exports = {
       },
       fontFamily: {
         'major-mono-display': ['"Major Mono Display"'],
+        'noto-color-emoji': ['"Noto Color Emoji"'],
       },
     },
   },
