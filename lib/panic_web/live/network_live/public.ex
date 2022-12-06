@@ -97,8 +97,10 @@ defmodule PanicWeb.NetworkLive.Public do
       run_count: Analytics.run_count(network),
       cycle_count: Analytics.cycle_count(network),
       sheep: Analytics.time_to_word(network, "sheep"),
-      horses: Analytics.time_to_word(network, "horse"),
-      camels: Analytics.time_to_word(network, "camel")
+      horse: Analytics.time_to_word(network, "horse"),
+      camel: Analytics.time_to_word(network, "camel"),
+      kite: Analytics.time_to_word(network, "kite"),
+      umbrella: Analytics.time_to_word(network, "umbrella"),
     }
   end
 
@@ -107,18 +109,30 @@ defmodule PanicWeb.NetworkLive.Public do
   #############
 
   def word_analytics(assigns) do
+    IO.inspect assigns
+
     ~H"""
-    <span><%= @symbol %>: <%= (100.0 * @ccw / @cycle_count) |> Float.round(1) |> Float.to_string  %>%/avg wait <%= @ttw |> Float.round(1) |> Float.to_string %></span>
+    <span><%= @symbol %>: <%= (100.0 * @ccw / @cycle_count) |> Float.round(1) |> Float.to_string  %>%/<%= @ttw |> Float.round(1) |> Float.to_string %> avg</span>
     """
   end
 
   def analytics_hud(assigns) do
+    assigns = Map.put(
+      assigns,
+      :words,
+      [{"🐑", :sheep},
+       {"🐎", :horse},
+       {"🐪", :camel},
+       {"🪁", :kite},
+       {"☂", :umbrella}
+      ])
+
     ~H"""
     <div :if={@analytics.cycle_count != 0} class="flex gap-x-8">
-      <span><%= @analytics.cycle_count |> Integer.to_string %> cycles, <%= @analytics.run_count|> Integer.to_string %> runs</span>
-      <.word_analytics symbol="🐑" ccw={@analytics.sheep.ccw} ttw={@analytics.sheep.ttw} cycle_count={@analytics.cycle_count} />
-      <.word_analytics symbol="🐎" ccw={@analytics.horses.ccw} ttw={@analytics.horses.ttw} cycle_count={@analytics.cycle_count} />
-      <.word_analytics symbol="🐪" ccw={@analytics.camels.ccw} ttw={@analytics.camels.ttw} cycle_count={@analytics.cycle_count} />
+      <%= for {symbol, word} <- @words do %>
+        <.word_analytics symbol={symbol} ccw={@analytics[word][:ccw]} ttw={@analytics[word][:ttw]} cycle_count={@analytics.cycle_count} />
+      <% end %>
+      <span>total: <%= @analytics.cycle_count |> Integer.to_string %> cycles/<%= @analytics.run_count|> Integer.to_string %> runs</span>
     </div>
     """
   end
@@ -141,7 +155,7 @@ defmodule PanicWeb.NetworkLive.Public do
           <PanicWeb.Live.Components.run run={run} show_input={false} />
         <% end %>
       </div>
-      <div class="absolute bottom-4 right-4 text-purple-300 bg-white/20">
+      <div class="absolute left-4 bottom-4 right-4 text-purple-300 bg-white/20">
         <.analytics_hud analytics={@analytics} />
       </div>
     </div>
