@@ -15,7 +15,7 @@ defmodule Panic.Networks.Analytics do
     |> List.first
   end
 
-  def time_to_word(%Network{id: _id}, ""), do: {0, 0, 0}
+  def time_to_word(%Network{id: _id}, ""), do: {0, 0.0}
 
   def time_to_word(%Network{id: id}, word) do
     word_like = "%" <> word <> "%"
@@ -24,12 +24,12 @@ defmodule Panic.Networks.Analytics do
 
     cycle_lengths = Repo.all(query)
 
-    avg_tts =
+    avg_ttw =
       cycle_lengths
       |> Enum.map(fn {_first_run_id, cycle_length} -> cycle_length end)
       |> mean()
 
-    {Enum.count(cycle_lengths), avg_tts}
+    %{ccw: Enum.count(cycle_lengths), ttw: avg_ttw}
   end
 
   def average_cycle_length(%Network{id: id}) do
@@ -40,6 +40,6 @@ defmodule Panic.Networks.Analytics do
     |> mean()
   end
 
-  defp mean([]), do: 0
+  defp mean([]), do: 0.0
   defp mean(list), do: Enum.sum(list) / Enum.count(list)
 end

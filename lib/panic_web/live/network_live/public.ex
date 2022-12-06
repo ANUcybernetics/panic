@@ -2,6 +2,7 @@ defmodule PanicWeb.NetworkLive.Public do
   use PanicWeb, :live_view
 
   alias Panic.Networks
+  alias Panic.Networks.Analytics
   alias Panic.Models
   alias Panic.Models.Run
 
@@ -18,10 +19,12 @@ defmodule PanicWeb.NetworkLive.Public do
 
     Networks.subscribe(network_id)
 
+    ## analytics
     {:noreply,
      socket
      |> assign(:page_title, "Public network view")
      |> assign(:network, network)
+     |> assign(:analytics, get_analytics(network))
      |> assign(:slot_id, slot_id)
      |> assign(:slots, empty_slots(slot_count))}
   end
@@ -89,9 +92,37 @@ defmodule PanicWeb.NetworkLive.Public do
     end
   end
 
+  defp get_analytics(network) do
+    %{
+      run_count: Analytics.run_count(network),
+      cycle_count: Analytics.cycle_count(network),
+      sheep: Analytics.time_to_word(network, "sheep"),
+      horses: Analytics.time_to_word(network, "horse"),
+      camels: Analytics.time_to_word(network, "camel")
+    }
+  end
+
   #############
   # rendering #
   #############
+
+  def word_analytics(assigns) do
+    ~H"""
+    <span><%= @symbol %>: <%= (100.0 * @ccw / @cycle_count) |> Float.round(1) |> Float.to_string  %>%/avg wait <%= @ttw |> Float.round(1) |> Float.to_string %></span>
+    """
+  end
+
+  def analytics_hud(assigns) do
+    ~H"""
+    <div :if={@analytics.cycle_count != 0} class="flex gap-x-8">
+      <span><%= @analytics.cycle_count |> Integer.to_string %> cycles, <%= @analytics.run_count|> Integer.to_string %> runs</span>
+      <.word_analytics symbol="🐑" ccw={@analytics.sheep.ccw} ttw={@analytics.sheep.ttw} cycle_count={@analytics.cycle_count} />
+      <.word_analytics symbol="🐎" ccw={@analytics.horses.ccw} ttw={@analytics.horses.ttw} cycle_count={@analytics.cycle_count} />
+      <.word_analytics symbol="🐪" ccw={@analytics.camels.ccw} ttw={@analytics.camels.ttw} cycle_count={@analytics.cycle_count} />
+    </div>
+    """
+  end
+
 
   @impl true
   def render(%{live_action: :view} = assigns) do
@@ -109,6 +140,9 @@ defmodule PanicWeb.NetworkLive.Public do
         <%= for run <- @slots do %>
           <PanicWeb.Live.Components.run run={run} show_input={false} />
         <% end %>
+      </div>
+      <div class="absolute bottom-4 right-4 text-purple-300 bg-white/20">
+        <.analytics_hud analytics={@analytics} />
       </div>
     </div>
     """
