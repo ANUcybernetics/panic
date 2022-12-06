@@ -6,12 +6,13 @@ defmodule Panic.Networks.Analytics do
   alias Panic.Models.Run
   alias Panic.Networks.Network
 
+  def run_count(%Network{id: id}) do
+    Repo.aggregate((from r in Run, where: r.network_id == ^id), :count)
+  end
 
   def time_to_word(%Network{id: _id}, ""), do: {0, 0, 0}
 
   def time_to_word(%Network{id: id}, word) do
-    num_runs = Repo.aggregate((from r in Run, where: r.network_id == ^id), :count)
-
     word_like = "%" <> word <> "%"
 
     query = from r in Run, where: r.network_id == ^id, where: like(r.output, ^word_like), group_by: r.first_run_id, select: {r.first_run_id, min(r.cycle_index)}
@@ -23,7 +24,7 @@ defmodule Panic.Networks.Analytics do
       |> Enum.map(fn {_first_run_id, cycle_length} -> cycle_length end)
       |> mean()
 
-    {num_runs, Enum.count(cycle_lengths) / num_runs, avg_tts}
+    {Enum.count(cycle_lengths), avg_tts}
   end
 
   def average_cycle_length(%Network{id: id}) do
