@@ -10,6 +10,10 @@ defmodule Panic.Networks.Analytics do
     Repo.aggregate((from r in Run, where: r.network_id == ^id), :count)
   end
 
+  def cycle_count(%Network{id: id}) do
+    Repo.all(from r in Run, where: r.network_id == ^id, select: count(r.first_run_id, :distinct))
+  end
+
   def time_to_word(%Network{id: _id}, ""), do: {0, 0, 0}
 
   def time_to_word(%Network{id: id}, word) do
