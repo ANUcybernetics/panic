@@ -154,7 +154,7 @@ defmodule PanicWeb.NetworkLive.Public do
           <PanicWeb.Live.Components.run run={run} show_input={false} />
         <% end %>
       </div>
-      <div class="absolute left-0 bottom-0 right-0 text-lg text-purple-300 bg-white/20">
+      <div class="absolute left-0 bottom-0 right-0 text-lg text-purple-300 backdrop-blur-md bg-white/20">
         <.analytics_hud analytics={@analytics} />
       </div>
     </div>
