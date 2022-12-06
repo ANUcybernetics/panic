@@ -1,5 +1,4 @@
 defmodule Panic.Networks.Analytics do
-
   import Ecto.Query, warn: false
   alias Panic.Repo
 
@@ -7,12 +6,12 @@ defmodule Panic.Networks.Analytics do
   alias Panic.Networks.Network
 
   def run_count(%Network{id: id}) do
-    Repo.aggregate((from r in Run, where: r.network_id == ^id), :count)
+    Repo.aggregate(from(r in Run, where: r.network_id == ^id), :count)
   end
 
   def cycle_count(%Network{id: id}) do
     Repo.all(from r in Run, where: r.network_id == ^id, select: count(r.first_run_id, :distinct))
-    |> List.first
+    |> List.first()
   end
 
   def time_to_word(%Network{id: _id}, ""), do: {0, 0.0}
@@ -20,7 +19,12 @@ defmodule Panic.Networks.Analytics do
   def time_to_word(%Network{id: id}, word) do
     word_like = "%" <> word <> "%"
 
-    query = from r in Run, where: r.network_id == ^id, where: like(r.output, ^word_like), group_by: r.first_run_id, select: {r.first_run_id, min(r.cycle_index)}
+    query =
+      from r in Run,
+        where: r.network_id == ^id,
+        where: like(r.output, ^word_like),
+        group_by: r.first_run_id,
+        select: {r.first_run_id, min(r.cycle_index)}
 
     cycle_lengths = Repo.all(query)
 

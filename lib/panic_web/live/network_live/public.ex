@@ -54,7 +54,8 @@ defmodule PanicWeb.NetworkLive.Public do
     {:noreply,
      socket
      |> assign_new(:first_run, fn -> Models.get_run!(run.first_run_id) end)
-     |> assign(:analytics, get_analytics(socket.assigns.network)) ## *super* expensive - refactor asap!
+     ## *super* expensive - refactor asap!
+     |> assign(:analytics, get_analytics(socket.assigns.network))
      |> update(:slots, fn slots -> update_slots(slots, run) end)}
   end
 
@@ -68,7 +69,7 @@ defmodule PanicWeb.NetworkLive.Public do
     if Enum.any?(slots) do
       case Enum.at(slots, Integer.mod(idx - 1, Enum.count(slots))) do
         nil -> true
-        %Run{cycle_index: prev_idx} -> idx != (prev_idx + 1)
+        %Run{cycle_index: prev_idx} -> idx != prev_idx + 1
       end
     else
       false
@@ -101,7 +102,7 @@ defmodule PanicWeb.NetworkLive.Public do
       horse: Analytics.time_to_word(network, "horse"),
       camel: Analytics.time_to_word(network, "camel"),
       kite: Analytics.time_to_word(network, "kite"),
-      umbrella: Analytics.time_to_word(network, "umbrella"),
+      umbrella: Analytics.time_to_word(network, "umbrella")
     }
   end
 
@@ -111,31 +112,39 @@ defmodule PanicWeb.NetworkLive.Public do
 
   def word_analytics(assigns) do
     ~H"""
-    <span><span class="font-noto-color-emoji"><%= @symbol %></span> <%= (100.0 * @ccw / @cycle_count) |> trunc() |> Integer.to_string  %>%/<%= @ttw |> trunc() |> Integer.to_string %>τ</span>
+    <span>
+      <span class="font-noto-color-emoji"><%= @symbol %></span> <%= (100.0 * @ccw / @cycle_count)
+      |> trunc()
+      |> Integer.to_string() %>%/<%= @ttw |> trunc() |> Integer.to_string() %>τ
+    </span>
     """
   end
 
   def analytics_hud(assigns) do
-    assigns = Map.put(
-      assigns,
-      :words,
-      [{"🐑", :sheep},
-       {"🐎", :horse},
-       {"🐪", :camel},
-       {"🪁", :kite},
-       {"☂", :umbrella}
-      ])
+    assigns =
+      Map.put(
+        assigns,
+        :words,
+        [{"🐑", :sheep}, {"🐎", :horse}, {"🐪", :camel}, {"🪁", :kite}, {"☂", :umbrella}]
+      )
 
     ~H"""
     <div :if={@analytics.cycle_count != 0} class="flex justify-between p-1">
       <%= for {symbol, word} <- @words do %>
-        <.word_analytics symbol={symbol} ccw={@analytics[word][:ccw]} ttw={@analytics[word][:ttw]} cycle_count={@analytics.cycle_count} />
+        <.word_analytics
+          symbol={symbol}
+          ccw={@analytics[word][:ccw]}
+          ttw={@analytics[word][:ttw]}
+          cycle_count={@analytics.cycle_count}
+        />
       <% end %>
-      <span>TOTAL <%= @analytics.cycle_count |> Integer.to_string %>C/<%= @analytics.run_count|> Integer.to_string %>R</span>
+      <span>
+        TOTAL <%= @analytics.cycle_count |> Integer.to_string() %>C/<%= @analytics.run_count
+        |> Integer.to_string() %>R
+      </span>
     </div>
     """
   end
-
 
   @impl true
   def render(%{live_action: :view} = assigns) do

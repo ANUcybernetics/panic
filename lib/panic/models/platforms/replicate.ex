@@ -146,6 +146,7 @@ defmodule Panic.Models.Platforms.Replicate do
     %{"output" => text} = create_and_wait(model, %{image: image_url})
     text
   end
+
   ## text to text
   def create("kyrick/prompt-parrot" = model, prompt) do
     %{"output" => text} = create_and_wait(model, %{prompt: prompt})
@@ -160,6 +161,7 @@ defmodule Panic.Models.Platforms.Replicate do
 
   def create("2feet6inches/cog-prompt-parrot" = model, prompt) do
     %{"output" => text} = create_and_wait(model, %{prompt: prompt})
+
     text
     |> String.split("\n")
     |> Enum.random()
