@@ -54,6 +54,7 @@ defmodule PanicWeb.NetworkLive.Public do
     {:noreply,
      socket
      |> assign_new(:first_run, fn -> Models.get_run!(run.first_run_id) end)
+     |> assign(:analytics, get_analytics(network)) ## *super* expensive - refactor asap!
      |> update(:slots, fn slots -> update_slots(slots, run) end)}
   end
 
