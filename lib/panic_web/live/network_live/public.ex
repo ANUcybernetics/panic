@@ -109,8 +109,6 @@ defmodule PanicWeb.NetworkLive.Public do
   #############
 
   def word_analytics(assigns) do
-    IO.inspect assigns
-
     ~H"""
     <span><%= @symbol %> <%= (100.0 * @ccw / @cycle_count) |> Float.round(1) |> Float.to_string  %>%/<%= @ttw |> Float.round(1) |> Float.to_string %>att</span>
     """
