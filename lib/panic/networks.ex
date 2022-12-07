@@ -7,6 +7,7 @@ defmodule Panic.Networks do
   alias Panic.Repo
 
   alias Panic.Networks.Network
+  alias Panic.Models.Run
 
   @doc """
   Returns the list of networks.
@@ -38,7 +39,8 @@ defmodule Panic.Networks do
   def get_network!(id), do: Repo.get!(Network, id)
 
   def get_network_preload_runs!(id) do
-    id |> get_network! |> Repo.preload(:runs)
+    runs_query = from r in Run, order_by: r.updated_at
+    Repo.one!(from n in Network, where: n.id == ^id, preload: [runs: ^runs_query])
   end
 
   @doc """
