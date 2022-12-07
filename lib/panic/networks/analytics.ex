@@ -23,6 +23,7 @@ defmodule Panic.Networks.Analytics do
       from r in Run,
         where: r.network_id == ^id,
         where: like(r.output, ^word_like),
+        where: r.cycle_index != 0, ## ignore first runs for "time to word" calculations
         group_by: r.first_run_id,
         select: {r.first_run_id, min(r.cycle_index)}
 
