@@ -125,7 +125,7 @@ defmodule PanicWeb.NetworkLive.Public do
       Map.put(
         assigns,
         :words,
-        [{"🐑", :sheep}, {"🐎", :horse}, {"🐪", :camel}, {"🪁", :kite}, {"☂", :umbrella}]
+        [{"🐑", :sheep}, {"🐎", :horse}, {"🐪", :camel}, {"🪁", :kite}, {"☂", :umbrella}, {"✂", :scissors}]
       )
 
     ~H"""
