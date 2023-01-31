@@ -350,4 +350,100 @@ defmodule Panic.Accounts do
       {:error, :user, changeset, _} -> {:error, changeset}
     end
   end
+
+  alias Panic.Accounts.APITokens
+
+  @doc """
+  Returns the list of api_tokens.
+
+  ## Examples
+
+      iex> list_api_tokens()
+      [%APITokens{}, ...]
+
+  """
+  def list_api_tokens do
+    Repo.all(APITokens)
+  end
+
+  @doc """
+  Gets a single api_tokens.
+
+  Raises `Ecto.NoResultsError` if the Api tokens does not exist.
+
+  ## Examples
+
+      iex> get_api_tokens!(123)
+      %APITokens{}
+
+      iex> get_api_tokens!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_api_tokens!(id), do: Repo.get!(APITokens, id)
+
+  @doc """
+  Creates a api_tokens.
+
+  ## Examples
+
+      iex> create_api_tokens(%{field: value})
+      {:ok, %APITokens{}}
+
+      iex> create_api_tokens(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_api_tokens(attrs \\ %{}) do
+    %APITokens{}
+    |> APITokens.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a api_tokens.
+
+  ## Examples
+
+      iex> update_api_tokens(api_tokens, %{field: new_value})
+      {:ok, %APITokens{}}
+
+      iex> update_api_tokens(api_tokens, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_api_tokens(%APITokens{} = api_tokens, attrs) do
+    api_tokens
+    |> APITokens.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a api_tokens.
+
+  ## Examples
+
+      iex> delete_api_tokens(api_tokens)
+      {:ok, %APITokens{}}
+
+      iex> delete_api_tokens(api_tokens)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_api_tokens(%APITokens{} = api_tokens) do
+    Repo.delete(api_tokens)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking api_tokens changes.
+
+  ## Examples
+
+      iex> change_api_tokens(api_tokens)
+      %Ecto.Changeset{data: %APITokens{}}
+
+  """
+  def change_api_tokens(%APITokens{} = api_tokens, attrs \\ %{}) do
+    APITokens.changeset(api_tokens, attrs)
+  end
 end

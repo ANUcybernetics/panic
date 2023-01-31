@@ -1,0 +1,44 @@
+<.header>
+  Listing Api tokens
+  <:actions>
+    <.link patch={~p"/api_tokens/new"}>
+      <.button>New Api tokens</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="api_tokens"
+  rows={@api_tokens_collection}
+  row_click={&JS.navigate(~p"/api_tokens/#{&1}")}
+>
+  <:col :let={api_tokens} label="Name"><%= api_tokens.name %></:col>
+  <:col :let={api_tokens} label="Token"><%= api_tokens.token %></:col>
+  <:action :let={api_tokens}>
+    <div class="sr-only">
+      <.link navigate={~p"/api_tokens/#{api_tokens}"}>Show</.link>
+    </div>
+    <.link patch={~p"/api_tokens/#{api_tokens}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={api_tokens}>
+    <.link phx-click={JS.push("delete", value: %{id: api_tokens.id})} data-confirm="Are you sure?">
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal
+  :if={@live_action in [:new, :edit]}
+  id="api_tokens-modal"
+  show
+  on_cancel={JS.navigate(~p"/api_tokens")}
+>
+  <.live_component
+    module={PanicWeb.APITokensLive.FormComponent}
+    id={@api_tokens.id || :new}
+    title={@page_title}
+    action={@live_action}
+    api_tokens={@api_tokens}
+    navigate={~p"/api_tokens"}
+  />
+</.modal>

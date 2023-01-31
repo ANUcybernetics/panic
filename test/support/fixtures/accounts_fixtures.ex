@@ -28,4 +28,19 @@ defmodule Panic.AccountsFixtures do
     [_, token | _] = String.split(captured_email.text_body, "[TOKEN]")
     token
   end
+
+  @doc """
+  Generate a api_tokens.
+  """
+  def api_tokens_fixture(attrs \\ %{}) do
+    {:ok, api_tokens} =
+      attrs
+      |> Enum.into(%{
+        name: "some name",
+        token: "some token"
+      })
+      |> Panic.Accounts.create_api_tokens()
+
+    api_tokens
+  end
 end

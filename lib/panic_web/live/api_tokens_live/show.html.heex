@@ -1,0 +1,32 @@
+<.header>
+  Api tokens <%= @api_tokens.id %>
+  <:subtitle>This is a api_tokens record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/api_tokens/#{@api_tokens}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit api_tokens</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Name"><%= @api_tokens.name %></:item>
+  <:item title="Token"><%= @api_tokens.token %></:item>
+</.list>
+
+<.back navigate={~p"/api_tokens"}>Back to api_tokens</.back>
+
+<.modal
+  :if={@live_action == :edit}
+  id="api_tokens-modal"
+  show
+  on_cancel={JS.patch(~p"/api_tokens/#{@api_tokens}")}
+>
+  <.live_component
+    module={PanicWeb.APITokensLive.FormComponent}
+    id={@api_tokens.id}
+    title={@page_title}
+    action={@live_action}
+    api_tokens={@api_tokens}
+    navigate={~p"/api_tokens/#{@api_tokens}"}
+  />
+</.modal>

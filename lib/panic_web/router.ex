@@ -82,6 +82,13 @@ defmodule PanicWeb.Router do
 
       live "/networks/:id", NetworkLive.Show, :show
       live "/networks/:id/show/edit", NetworkLive.Show, :edit
+
+      live "/api_tokens", APITokensLive.Index, :index
+      live "/api_tokens/new", APITokensLive.Index, :new
+      live "/api_tokens/:id/edit", APITokensLive.Index, :edit
+
+      live "/api_tokens/:id", APITokensLive.Show, :show
+      live "/api_tokens/:id/show/edit", APITokensLive.Show, :edit
     end
   end
 
