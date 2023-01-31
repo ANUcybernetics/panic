@@ -1,111 +1,44 @@
 defmodule PanicWeb.Router do
   use PanicWeb, :router
-  import PanicWeb.UserAuth
-  import PanicWeb.OrgPlugs
-  import Phoenix.LiveDashboard.Router
-  alias PanicWeb.OnboardingPlug
 
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
-    plug :put_root_layout, {PanicWeb.LayoutView, :root}
+    plug :put_root_layout, {PanicWeb.Layouts, :root}
     plug :protect_from_forgery
-
-    plug(:put_secure_browser_headers, %{
-      "content-security-policy" =>
-        ContentSecurityPolicy.serialize(
-          struct(ContentSecurityPolicy.Policy, Panic.config(:content_security_policy))
-        )
-    })
-
-    plug :fetch_current_user
-    plug :kick_user_if_suspended_or_deleted
-    plug PetalFramework.SetLocalePlug, gettext: PanicWeb.Gettext
+    plug :put_secure_browser_headers
   end
 
-  pipeline :authenticated do
-    plug :require_authenticated_user
-    plug OnboardingPlug
-    plug :assign_org_data
+  pipeline :api do
+    plug :accepts, ["json"]
   end
 
-  # Public routes
   scope "/", PanicWeb do
-    pipe_through [:browser]
+    pipe_through :browser
 
-    # page_builder:static:public
-    get "/", PageController, :landing_page
-    get "/privacy", PageController, :privacy
-    get "/license", PageController, :license
+    get "/", PageController, :home
+  end
 
-    live_session :public do
-      # page_builder:live:public
+  # Other scopes may use custom stacks.
+  # scope "/api", PanicWeb do
+  #   pipe_through :api
+  # end
 
-      # public network routes
-      scope "/view" do
-        live "/networks/:id/:slot_count", NetworkLive.Public, :view
-        live "/networks/:id/screen/:slot_id/:slot_count", NetworkLive.Public, :screen
-      end
+  # Enable LiveDashboard and Swoosh mailbox preview in development
+  if Application.compile_env(:panic, :dev_routes) do
+    # If you want to use the LiveDashboard in production, you should put
+    # it behind authentication and allow only admins to access it.
+    # If your application does not have an admins-only section yet,
+    # you can use Plug.BasicAuth to set up some basic authentication
+    # as long as you are also using SSL (which you should anyway).
+    import Phoenix.LiveDashboard.Router
+
+    scope "/dev" do
+      pipe_through :browser
+
+      live_dashboard "/dashboard", metrics: PanicWeb.Telemetry
+      forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end
-
-  # App routes - for signed in and confirmed users only
-  scope "/app", PanicWeb do
-    pipe_through [:browser, :authenticated]
-
-    # page_builder:static:authenticated
-    put "/users/settings/update-password", UserSettingsController, :update_password
-    get "/users/settings/confirm-email/:token", UserSettingsController, :confirm_email
-    get "/users/totp", UserTOTPController, :new
-    post "/users/totp", UserTOTPController, :create
-
-    live_session :authenticated,
-      on_mount: [
-        {PanicWeb.UserOnMountHooks, :require_authenticated_user},
-        {PanicWeb.OrgOnMountHooks, :assign_org_data}
-      ] do
-      # page_builder:live:authenticated
-      live "/", DashboardLive
-      live "/users/onboarding", UserOnboardingLive
-      live "/users/edit-profile", EditProfileLive
-      live "/users/edit-email", EditEmailLive
-      live "/users/change-password", EditPasswordLive
-      live "/users/edit-notifications", EditNotificationsLive
-      live "/users/org-invitations", UserOrgInvitationsLive
-      live "/users/two-factor-authentication", EditTotpLive
-
-      live "/orgs", OrgsLive, :index
-      live "/orgs/new", OrgsLive, :new
-
-      scope "/org/:org_slug" do
-        live "/", OrgDashboardLive
-        live "/edit", EditOrgLive
-        live "/team", OrgTeamLive, :index
-        live "/team/invite", OrgTeamLive, :invite
-        live "/team/memberships/:id/edit", OrgTeamLive, :edit_membership
-      end
-
-      # Panic-specific stuff from here
-      live "/networks", NetworkLive.Index, :index
-      live "/networks/new", NetworkLive.Index, :new
-
-      live "/networks/:id", NetworkLive.Show, :show
-      live "/networks/:id/edit", NetworkLive.Edit, :edit
-      live "/networks/:id/archive", NetworkLive.Archive, :show
-      # special route for the Panic terminal
-      live "/networks/:id/terminal", NetworkLive.Show, :terminal
-    end
-  end
-
-  scope "/api", PanicWeb do
-    get "/networks/:id", NetworksAPIController, :show
-  end
-
-  use PanicWeb.AuthRoutes
-  use PanicWeb.MailblusterRoutes
-  use PanicWeb.AdminRoutes
-
-  # DevRoutes must always be last
-  use PanicWeb.DevRoutes
 end

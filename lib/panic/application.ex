@@ -8,16 +8,16 @@ defmodule Panic.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Start the Ecto repository
-      Panic.Repo,
       # Start the Telemetry supervisor
       PanicWeb.Telemetry,
+      # Start the Ecto repository
+      Panic.Repo,
       # Start the PubSub system
       {Phoenix.PubSub, name: Panic.PubSub},
+      # Start Finch
+      {Finch, name: Panic.Finch},
       # Start the Endpoint (http/https)
-      PanicWeb.Endpoint,
-      {Task.Supervisor, name: Panic.BackgroundTask},
-      {Oban, oban_config()}
+      PanicWeb.Endpoint
       # Start a worker by calling: Panic.Worker.start_link(arg)
       # {Panic.Worker, arg}
     ]
@@ -34,10 +34,5 @@ defmodule Panic.Application do
   def config_change(changed, _new, removed) do
     PanicWeb.Endpoint.config_change(changed, removed)
     :ok
-  end
-
-  # Conditionally disable queues or plugins here.
-  defp oban_config do
-    Application.fetch_env!(:panic, Oban)
   end
 end

@@ -1,4 +1,5 @@
-# Panic Creative AI Looper
+# Panic!
+## **P**layground **A**i **N**etwork for **I**nteractive **C**reativity
 
 The rise of cloud AI platforms like OpenAI and HuggingFace means that using
 Creative AI models is no longer (necessarily) a toilsome struggle against
@@ -69,7 +70,7 @@ happy to fit with whatever will make the most kickarse symposium for everyone.
 
 ## Development
 
-It's a standard Phoenix (v1.6) and Phoenix LiveView (v0.18) app, so all those
+It's a standard Phoenix (v1.7) and Phoenix LiveView (v0.18) app, so all those
 guides should help you out.
 
 Inside the codebase here's a (domain) glossary to help you figure out what's
@@ -108,6 +109,6 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 ## Licence
 
-(c) Ben Swift, Adrian Schmidt
+(c) Ben Swift
 
 MIT

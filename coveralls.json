@@ -1,7 +1,0 @@
-{
-  "skip_files": [
-    "test/support",
-    "lib/panic_web/endpoint.ex",
-    "lib/panic_web/gettext.ex"
-  ]
-}

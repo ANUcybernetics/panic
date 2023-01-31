@@ -2,12 +2,10 @@ import Config
 
 # Configure your database
 config :panic, Panic.Repo,
-  username: "postgres",
-  password: "postgres",
-  database: "panic_dev",
-  hostname: "localhost",
-  show_sensitive_data_on_connection_error: true,
-  pool_size: 10
+  database: Path.expand("../panic_dev.db", Path.dirname(__ENV__.file)),
+  pool_size: 5,
+  stacktrace: true,
+  show_sensitive_data_on_connection_error: true
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
@@ -22,9 +20,8 @@ config :panic, PanicWeb.Endpoint,
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "47TFd8fpLTZROcN4Lxz/OQ5fz4hVFMNCsSxHKwSrRGZGxDcWKyGH+1uxAtGYn1/Q",
+  secret_key_base: "IGfpHOvrBO/rzXHsDtwaaL+PkwxFf9YfMKY0dnZc0vpjZjouAVoIoJJzf4VvBqL2",
   watchers: [
-    # Start the esbuild watcher by calling Esbuild.install_and_run(:default, args)
     esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
     tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
   ]
@@ -37,7 +34,6 @@ config :panic, PanicWeb.Endpoint,
 #
 #     mix phx.gen.cert
 #
-# Note that this task requires Erlang/OTP 20 or later.
 # Run `mix help phx.gen.cert` for more information.
 #
 # The `http:` config above can be replaced with:
@@ -59,11 +55,12 @@ config :panic, PanicWeb.Endpoint,
     patterns: [
       ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
-      ~r"lib/panic_web/(live|views)/.*(ex)$",
-      ~r"lib/panic_web/templates/.*(eex)$",
-      ~r"lib/_petal_framework/web/(components|live_components|live_views)/.*(ex)$"
+      ~r"lib/panic_web/(controllers|live|components)/.*(ex|heex)$"
     ]
   ]
+
+# Enable dev routes for dashboard and mailbox
+config :panic, dev_routes: true
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
@@ -75,22 +72,5 @@ config :phoenix, :stacktrace_depth, 20
 # Initialize plugs at runtime for faster development compilation
 config :phoenix, :plug_init_mode, :runtime
 
-# Used in Util.email_valid?
-# In dev mode we don't bother with MX record check - just the string format.
-# In prod.ex MX checking is enabled
-config :email_checker,
-  default_dns: :system,
-  also_dns: [],
-  validations: [EmailChecker.Check.Format],
-  smtp_retries: 2,
-  timeout_milliseconds: :infinity
-
-# Uncomment when you want to send test emails:
-# Also ensure in config.exs that mailer_default_from_email is set to an email that is whitelisted on Amazon SES
-# config :panic, Panic.Mailer,
-#   adapter: Swoosh.Adapters.AmazonSES,
-#   region: System.get_env("AWS_REGION"),
-#   access_key: System.get_env("AWS_ACCESS_KEY"),
-#   secret: System.get_env("AWS_SECRET")
-
-config :panic, :env, :dev
+# Disable swoosh api client as it is only required for production adapters.
+config :swoosh, :api_client, false
