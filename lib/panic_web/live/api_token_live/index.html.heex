@@ -34,7 +34,7 @@
   on_cancel={JS.navigate(~p"/api_tokens")}
 >
   <.live_component
-    module={PanicWeb.APITokensLive.FormComponent}
+    module={PanicWeb.APITokenLive.FormComponent}
     id={@api_tokens.id || :new}
     title={@page_title}
     action={@live_action}

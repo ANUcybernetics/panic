@@ -7,7 +7,7 @@ defmodule Panic.Accounts.User do
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :confirmed_at, :naive_datetime
-    has_many :api_tokens, Panic.Accounts.APITokens
+    has_many :api_tokens, Panic.Accounts.APIToken
 
     timestamps()
   end

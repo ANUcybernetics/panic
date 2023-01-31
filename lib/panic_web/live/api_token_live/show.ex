@@ -1,4 +1,4 @@
-defmodule PanicWeb.APITokensLive.Show do
+defmodule PanicWeb.APITokenLive.Show do
   use PanicWeb, :live_view
 
   alias Panic.Accounts

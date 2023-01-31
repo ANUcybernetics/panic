@@ -1,8 +1,8 @@
-defmodule PanicWeb.APITokensLive.Index do
+defmodule PanicWeb.APITokenLive.Index do
   use PanicWeb, :live_view
 
   alias Panic.Accounts
-  alias Panic.Accounts.APITokens
+  alias Panic.Accounts.APIToken
 
   @impl true
   def mount(_params, _session, socket) do
@@ -23,7 +23,7 @@ defmodule PanicWeb.APITokensLive.Index do
   defp apply_action(socket, :new, _params) do
     socket
     |> assign(:page_title, "New Api tokens")
-    |> assign(:api_tokens, %APITokens{})
+    |> assign(:api_tokens, %APIToken{})
   end
 
   defp apply_action(socket, :index, _params) do

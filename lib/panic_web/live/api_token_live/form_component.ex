@@ -1,4 +1,4 @@
-defmodule PanicWeb.APITokensLive.FormComponent do
+defmodule PanicWeb.APITokenLive.FormComponent do
   use PanicWeb, :live_component
 
   alias Panic.Accounts

@@ -1,4 +1,4 @@
-defmodule PanicWeb.APITokensLiveTest do
+defmodule PanicWeb.APITokenLiveTest do
   use PanicWeb.ConnCase
 
   import Phoenix.LiveViewTest

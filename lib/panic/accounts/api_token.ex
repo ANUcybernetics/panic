@@ -1,4 +1,4 @@
-defmodule Panic.Accounts.APITokens do
+defmodule Panic.Accounts.APIToken do
   use Ecto.Schema
   import Ecto.Changeset
 

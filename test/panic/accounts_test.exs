@@ -507,15 +507,16 @@ defmodule Panic.AccountsTest do
   end
 
   describe "api_tokens" do
-    alias Panic.Accounts.APITokens
+    alias Panic.Accounts.APIToken
 
     import Panic.AccountsFixtures
 
     @invalid_attrs %{name: nil, token: nil}
 
-    test "list_api_tokens/0 returns all api_tokens" do
+    test "list_api_tokens/0 returns all api_tokens for user" do
+      user = user_fixture()
       api_tokens = api_tokens_fixture()
-      assert Accounts.list_api_tokens() == [api_tokens]
+      assert Accounts.list_api_tokens(user) == [api_tokens]
     end
 
     test "get_api_tokens!/1 returns the api_tokens with given id" do
@@ -526,7 +527,7 @@ defmodule Panic.AccountsTest do
     test "create_api_tokens/1 with valid data creates a api_tokens" do
       valid_attrs = %{name: "some name", token: "some token"}
 
-      assert {:ok, %APITokens{} = api_tokens} = Accounts.create_api_tokens(valid_attrs)
+      assert {:ok, %APIToken{} = api_tokens} = Accounts.create_api_tokens(valid_attrs)
       assert api_tokens.name == "some name"
       assert api_tokens.token == "some token"
     end
@@ -539,7 +540,7 @@ defmodule Panic.AccountsTest do
       api_tokens = api_tokens_fixture()
       update_attrs = %{name: "some updated name", token: "some updated token"}
 
-      assert {:ok, %APITokens{} = api_tokens} =
+      assert {:ok, %APIToken{} = api_tokens} =
                Accounts.update_api_tokens(api_tokens, update_attrs)
 
       assert api_tokens.name == "some updated name"
@@ -554,7 +555,7 @@ defmodule Panic.AccountsTest do
 
     test "delete_api_tokens/1 deletes the api_tokens" do
       api_tokens = api_tokens_fixture()
-      assert {:ok, %APITokens{}} = Accounts.delete_api_tokens(api_tokens)
+      assert {:ok, %APIToken{}} = Accounts.delete_api_tokens(api_tokens)
       assert_raise Ecto.NoResultsError, fn -> Accounts.get_api_tokens!(api_tokens.id) end
     end
 

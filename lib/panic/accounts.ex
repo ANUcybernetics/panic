@@ -351,15 +351,15 @@ defmodule Panic.Accounts do
     end
   end
 
-  alias Panic.Accounts.APITokens
+  alias Panic.Accounts.APIToken
 
   @doc """
   Returns the list of api_tokens.
 
   ## Examples
 
-      iex> list_api_tokens()
-      [%APITokens{}, ...]
+      iex> list_api_tokens(%User{})
+      [%APIToken{}, ...]
 
   """
   def list_api_tokens(%User{} = user) do
@@ -374,13 +374,13 @@ defmodule Panic.Accounts do
   ## Examples
 
       iex> get_api_tokens!(123)
-      %APITokens{}
+      %APIToken{}
 
       iex> get_api_tokens!(456)
       ** (Ecto.NoResultsError)
 
   """
-  def get_api_tokens!(id), do: Repo.get!(APITokens, id)
+  def get_api_tokens!(id), do: Repo.get!(APIToken, id)
 
   @doc """
   Creates a api_tokens.
@@ -388,15 +388,15 @@ defmodule Panic.Accounts do
   ## Examples
 
       iex> create_api_tokens(%{field: value})
-      {:ok, %APITokens{}}
+      {:ok, %APIToken{}}
 
       iex> create_api_tokens(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
   def create_api_tokens(attrs \\ %{}) do
-    %APITokens{}
-    |> APITokens.changeset(attrs)
+    %APIToken{}
+    |> APIToken.changeset(attrs)
     |> Repo.insert()
   end
 
@@ -406,15 +406,15 @@ defmodule Panic.Accounts do
   ## Examples
 
       iex> update_api_tokens(api_tokens, %{field: new_value})
-      {:ok, %APITokens{}}
+      {:ok, %APIToken{}}
 
       iex> update_api_tokens(api_tokens, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_api_tokens(%APITokens{} = api_tokens, attrs) do
+  def update_api_tokens(%APIToken{} = api_tokens, attrs) do
     api_tokens
-    |> APITokens.changeset(attrs)
+    |> APIToken.changeset(attrs)
     |> Repo.update()
   end
 
@@ -424,13 +424,13 @@ defmodule Panic.Accounts do
   ## Examples
 
       iex> delete_api_tokens(api_tokens)
-      {:ok, %APITokens{}}
+      {:ok, %APIToken{}}
 
       iex> delete_api_tokens(api_tokens)
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_api_tokens(%APITokens{} = api_tokens) do
+  def delete_api_tokens(%APIToken{} = api_tokens) do
     Repo.delete(api_tokens)
   end
 
@@ -440,10 +440,10 @@ defmodule Panic.Accounts do
   ## Examples
 
       iex> change_api_tokens(api_tokens)
-      %Ecto.Changeset{data: %APITokens{}}
+      %Ecto.Changeset{data: %APIToken{}}
 
   """
-  def change_api_tokens(%APITokens{} = api_tokens, attrs \\ %{}) do
-    APITokens.changeset(api_tokens, attrs)
+  def change_api_tokens(%APIToken{} = api_tokens, attrs \\ %{}) do
+    APIToken.changeset(api_tokens, attrs)
   end
 end
