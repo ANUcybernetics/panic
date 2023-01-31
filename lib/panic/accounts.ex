@@ -362,8 +362,8 @@ defmodule Panic.Accounts do
       [%APITokens{}, ...]
 
   """
-  def list_api_tokens do
-    Repo.all(APITokens)
+  def list_api_tokens(%User{} = user) do
+    Repo.preload(user, [:api_tokens])
   end
 
   @doc """
