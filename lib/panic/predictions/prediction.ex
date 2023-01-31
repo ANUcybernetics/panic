@@ -8,8 +8,8 @@ defmodule Panic.Predictions.Prediction do
     field :model, :string
     field :output, :string
     field :run_index, :integer
-    field :network_id, :id
-    field :genesis_id, :id
+    belongs_to :network, Panic.Networks.Network
+    belongs_to :genesis, Panic.Predictions.Prediction
 
     timestamps()
   end
