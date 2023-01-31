@@ -18,7 +18,18 @@ defmodule Panic.Runs.RunFSM do
   use Finitomata, fsm: @fsm, auto_terminate: true
 
   @impl Finitomata
-  def on_transition(_state, :init!, _event_payload, payload) do
+  def on_transition(:pre_run, :init!, _event_payload, payload) do
     {:ok, :waiting, payload}
+  end
+
+  @impl Finitomata
+  def on_transition(:waiting, :input, changeset, payload) do
+    ## TODO fire off API call to hosted AI platform
+    {:ok, :running, Map.merge(payload, changeset: changeset)}
+  end
+
+  @impl Finitomata
+  def on_transition(:running, :prediction, _prediction, payload) do
+    {:ok, :running, Map.merge(payload, :ready_countdown)}
   end
 end
