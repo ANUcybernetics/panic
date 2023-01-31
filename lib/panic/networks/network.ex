@@ -6,7 +6,7 @@ defmodule Panic.Networks.Network do
     field :description, :string
     field :models, {:array, :string}
     field :name, :string
-    field :user_id, :id
+    belongs_to :user, Panic.Accounts.User
 
     timestamps()
   end

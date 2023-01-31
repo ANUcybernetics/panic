@@ -5,7 +5,7 @@ defmodule Panic.Accounts.APIToken do
   schema "api_tokens" do
     field :name, :string
     field :token, :string
-    field :user_id, :id
+    belongs_to :user, Panic.Accounts.User
 
     timestamps()
   end
