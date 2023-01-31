@@ -20,6 +20,18 @@ if System.get_env("PHX_SERVER") do
   config :panic, PanicWeb.Endpoint, server: true
 end
 
+config :panic,
+  replicate_api_token:
+    System.get_env("REPLICATE_API_TOKEN") ||
+      raise("""
+      environment variable REPLICATE_API_TOKEN is missing.
+      """),
+  openai_api_token:
+    System.get_env("OPENAI_API_TOKEN") ||
+      raise("""
+      environment variable OPENAI_API_TOKEN is missing.
+      """)
+
 if config_env() == :prod do
   database_path =
     System.get_env("DATABASE_PATH") ||
