@@ -1,0 +1,33 @@
+<.header>
+  Network <%= @network.id %>
+  <:subtitle>This is a network record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/networks/#{@network}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit network</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Models"><%= @network.models %></:item>
+  <:item title="Name"><%= @network.name %></:item>
+  <:item title="Description"><%= @network.description %></:item>
+</.list>
+
+<.back navigate={~p"/networks"}>Back to networks</.back>
+
+<.modal
+  :if={@live_action == :edit}
+  id="network-modal"
+  show
+  on_cancel={JS.patch(~p"/networks/#{@network}")}
+>
+  <.live_component
+    module={PanicWeb.NetworkLive.FormComponent}
+    id={@network.id}
+    title={@page_title}
+    action={@live_action}
+    network={@network}
+    navigate={~p"/networks/#{@network}"}
+  />
+</.modal>

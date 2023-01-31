@@ -68,6 +68,20 @@ defmodule PanicWeb.Router do
       on_mount: [{PanicWeb.UserAuth, :ensure_authenticated}] do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+
+      live "/predictions", PredictionLive.Index, :index
+      live "/predictions/new", PredictionLive.Index, :new
+      live "/predictions/:id/edit", PredictionLive.Index, :edit
+
+      live "/predictions/:id", PredictionLive.Show, :show
+      live "/predictions/:id/show/edit", PredictionLive.Show, :edit
+
+      live "/networks", NetworkLive.Index, :index
+      live "/networks/new", NetworkLive.Index, :new
+      live "/networks/:id/edit", NetworkLive.Index, :edit
+
+      live "/networks/:id", NetworkLive.Show, :show
+      live "/networks/:id/show/edit", NetworkLive.Show, :edit
     end
   end
 
