@@ -80,17 +80,11 @@ going on:
 - **platform**: model-hosting cloud platform (e.g. replicate, huggingface)
 - **network**: a specific network of models, designed so that the output of one is
   fed as input to the next, and so on
-- **run**: a specific "inference" run for a single model; includes both the input
-  (prompt) an the output (response), along with some other metadata
-- **cycle**: a specific cycle of runs starting from an initial prompt (may or may
-  not converge, depending on whether convergence testing is present)
-- **loop**: a (fixed-size) ringbuffer of the most recent runs in the current
-  cycle---useful for displaying on a grid to show the progress of the cycle
-
-TODO: some of these I'd like to change, especially _run_ (because it'd be nice
-to reserve that word for things like "is it running?" rather than this specific
-sense... perhaps replace that with _prediction_ like replicate does, or perhaps
-_inference_).
+- **prediction**: a specific "inference" run for a single model; includes both
+  the input (prompt) an the output (prediction), along with some other metadata
+- **run**: a specific cycle of predictions starting from an initial prompt and
+  following the models in a network (may or may not converge, depending on
+  whether convergence testing is happening)
 
 ## Setup
 
