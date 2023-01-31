@@ -9,7 +9,7 @@ defmodule Panic.Predictions.Prediction do
     field :output, :string
     field :run_index, :integer
     field :network_id, :id
-    field :first_run_id, :id
+    field :genesis_id, :id
 
     timestamps()
   end
