@@ -9,7 +9,8 @@ defmodule Panic.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      compilers: [:finitomata] ++ Mix.compilers()
     ]
   end
 
