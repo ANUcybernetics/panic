@@ -42,3 +42,6 @@ npm-debug.log
 
 # Sobelow
 .sobelow
+
+# development databases
+/panic_dev.db*
