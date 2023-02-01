@@ -16,7 +16,7 @@ defmodule Panic.NetworksFixtures do
       Map.merge(
         %{
           description: "some description",
-          models: ["option1", "option2"],
+          models: ["model1", "model2"],
           name: "some name",
           user_id: user.id
         },
