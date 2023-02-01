@@ -24,8 +24,7 @@ defmodule Panic.Predictions.Prediction do
       :output,
       :metadata,
       :run_index,
-      :network_id,
-      :genesis_id
+      :network_id
     ])
     |> foreign_key_constraint(:network)
     |> foreign_key_constraint(:genesis)
