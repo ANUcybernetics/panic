@@ -528,8 +528,8 @@ defmodule Panic.AccountsTest do
       user = user_fixture()
       name = "FancyAI"
       token = ";laskdfjasdfhsdjfljs"
-      api_token = api_token_fixture(%{user_id: user.id, name: name, token: token})
-      assert %APIToken{name: name, token: token} = Accounts.get_api_token!(user, name)
+      _api_token = api_token_fixture(%{user_id: user.id, name: name, token: token})
+      assert %APIToken{name: ^name, token: ^token} = Accounts.get_api_token!(user, name)
     end
 
     test "create_api_token/1 with valid data creates a api_token" do
