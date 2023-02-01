@@ -9,13 +9,13 @@ defmodule PanicWeb.APITokenLive.FormComponent do
     <div>
       <.header>
         <%= @title %>
-        <:subtitle>Use this form to manage api_tokens records in your database.</:subtitle>
+        <:subtitle>Use this form to manage api_token records in your database.</:subtitle>
       </.header>
 
       <.simple_form
         :let={f}
         for={@changeset}
-        id="api_tokens-form"
+        id="api_token-form"
         phx-target={@myself}
         phx-change="validate"
         phx-submit="save"
@@ -31,8 +31,8 @@ defmodule PanicWeb.APITokenLive.FormComponent do
   end
 
   @impl true
-  def update(%{api_tokens: api_tokens} = assigns, socket) do
-    changeset = Accounts.change_api_tokens(api_tokens)
+  def update(%{api_token: api_token} = assigns, socket) do
+    changeset = Accounts.change_api_token(api_token)
 
     {:ok,
      socket
@@ -41,22 +41,22 @@ defmodule PanicWeb.APITokenLive.FormComponent do
   end
 
   @impl true
-  def handle_event("validate", %{"api_tokens" => api_tokens_params}, socket) do
+  def handle_event("validate", %{"api_token" => api_token_params}, socket) do
     changeset =
-      socket.assigns.api_tokens
-      |> Accounts.change_api_tokens(api_tokens_params)
+      socket.assigns.api_token
+      |> Accounts.change_api_token(api_token_params)
       |> Map.put(:action, :validate)
 
     {:noreply, assign(socket, :changeset, changeset)}
   end
 
-  def handle_event("save", %{"api_tokens" => api_tokens_params}, socket) do
-    save_api_tokens(socket, socket.assigns.action, api_tokens_params)
+  def handle_event("save", %{"api_token" => api_token_params}, socket) do
+    save_api_token(socket, socket.assigns.action, api_token_params)
   end
 
-  defp save_api_tokens(socket, :edit, api_tokens_params) do
-    case Accounts.update_api_tokens(socket.assigns.api_tokens, api_tokens_params) do
-      {:ok, _api_tokens} ->
+  defp save_api_token(socket, :edit, api_token_params) do
+    case Accounts.update_api_token(socket.assigns.api_token, api_token_params) do
+      {:ok, _api_token} ->
         {:noreply,
          socket
          |> put_flash(:info, "Api tokens updated successfully")
@@ -67,9 +67,9 @@ defmodule PanicWeb.APITokenLive.FormComponent do
     end
   end
 
-  defp save_api_tokens(socket, :new, api_tokens_params) do
-    case Accounts.create_api_tokens(api_tokens_params) do
-      {:ok, _api_tokens} ->
+  defp save_api_token(socket, :new, api_token_params) do
+    case Accounts.create_api_token(api_token_params) do
+      {:ok, _api_token} ->
         {:noreply,
          socket
          |> put_flash(:info, "Api tokens created successfully")

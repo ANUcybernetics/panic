@@ -17,25 +17,25 @@ defmodule PanicWeb.APITokenLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit Api tokens")
-    |> assign(:api_tokens, Accounts.get_api_tokens!(id))
+    |> assign(:api_token, Accounts.get_api_token!(id))
   end
 
   defp apply_action(socket, :new, _params) do
     socket
     |> assign(:page_title, "New Api tokens")
-    |> assign(:api_tokens, %APIToken{})
+    |> assign(:api_token, %APIToken{})
   end
 
   defp apply_action(socket, :index, _params) do
     socket
     |> assign(:page_title, "Listing Api tokens")
-    |> assign(:api_tokens, nil)
+    |> assign(:api_token, nil)
   end
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    api_tokens = Accounts.get_api_tokens!(id)
-    {:ok, _} = Accounts.delete_api_tokens(api_tokens)
+    api_token = Accounts.get_api_token!(id)
+    {:ok, _} = Accounts.delete_api_token(api_token)
 
     {:noreply, assign(socket, :api_tokens_collection, list_api_tokens())}
   end

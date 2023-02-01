@@ -1,32 +1,32 @@
 <.header>
-  Api tokens <%= @api_tokens.id %>
-  <:subtitle>This is a api_tokens record from your database.</:subtitle>
+  Api tokens <%= @api_token.id %>
+  <:subtitle>This is a api_token record from your database.</:subtitle>
   <:actions>
-    <.link patch={~p"/api_tokens/#{@api_tokens}/show/edit"} phx-click={JS.push_focus()}>
-      <.button>Edit api_tokens</.button>
+    <.link patch={~p"/api_tokens/#{@api_token}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit api_token</.button>
     </.link>
   </:actions>
 </.header>
 
 <.list>
-  <:item title="Name"><%= @api_tokens.name %></:item>
-  <:item title="Token"><%= @api_tokens.token %></:item>
+  <:item title="Name"><%= @api_token.name %></:item>
+  <:item title="Token"><%= @api_token.token %></:item>
 </.list>
 
-<.back navigate={~p"/api_tokens"}>Back to api_tokens</.back>
+<.back navigate={~p"/api_tokens"}>Back to api_token</.back>
 
 <.modal
   :if={@live_action == :edit}
-  id="api_tokens-modal"
+  id="api_token-modal"
   show
-  on_cancel={JS.patch(~p"/api_tokens/#{@api_tokens}")}
+  on_cancel={JS.patch(~p"/api_tokens/#{@api_token}")}
 >
   <.live_component
     module={PanicWeb.APITokenLive.FormComponent}
-    id={@api_tokens.id}
+    id={@api_token.id}
     title={@page_title}
     action={@live_action}
-    api_tokens={@api_tokens}
-    navigate={~p"/api_tokens/#{@api_tokens}"}
+    api_token={@api_token}
+    navigate={~p"/api_tokens/#{@api_token}"}
   />
 </.modal>

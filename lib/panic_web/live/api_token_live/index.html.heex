@@ -12,16 +12,16 @@
   rows={@api_tokens_collection}
   row_click={&JS.navigate(~p"/api_tokens/#{&1}")}
 >
-  <:col :let={api_tokens} label="Name"><%= api_tokens.name %></:col>
-  <:col :let={api_tokens} label="Token"><%= api_tokens.token %></:col>
-  <:action :let={api_tokens}>
+  <:col :let={api_token} label="Name"><%= api_token.name %></:col>
+  <:col :let={api_token} label="Token"><%= api_token.token %></:col>
+  <:action :let={api_token}>
     <div class="sr-only">
-      <.link navigate={~p"/api_tokens/#{api_tokens}"}>Show</.link>
+      <.link navigate={~p"/api_tokens/#{api_token}"}>Show</.link>
     </div>
-    <.link patch={~p"/api_tokens/#{api_tokens}/edit"}>Edit</.link>
+    <.link patch={~p"/api_tokens/#{api_token}/edit"}>Edit</.link>
   </:action>
-  <:action :let={api_tokens}>
-    <.link phx-click={JS.push("delete", value: %{id: api_tokens.id})} data-confirm="Are you sure?">
+  <:action :let={api_token}>
+    <.link phx-click={JS.push("delete", value: %{id: api_token.id})} data-confirm="Are you sure?">
       Delete
     </.link>
   </:action>
@@ -29,16 +29,16 @@
 
 <.modal
   :if={@live_action in [:new, :edit]}
-  id="api_tokens-modal"
+  id="api_token-modal"
   show
   on_cancel={JS.navigate(~p"/api_tokens")}
 >
   <.live_component
     module={PanicWeb.APITokenLive.FormComponent}
-    id={@api_tokens.id || :new}
+    id={@api_token.id || :new}
     title={@page_title}
     action={@live_action}
-    api_tokens={@api_tokens}
+    api_token={@api_token}
     navigate={~p"/api_tokens"}
   />
 </.modal>

@@ -367,83 +367,83 @@ defmodule Panic.Accounts do
   end
 
   @doc """
-  Gets a single api_tokens.
+  Gets a single api_token.
 
   Raises `Ecto.NoResultsError` if the Api tokens does not exist.
 
   ## Examples
 
-      iex> get_api_tokens!(123)
+      iex> get_api_token!(123)
       %APIToken{}
 
-      iex> get_api_tokens!(456)
+      iex> get_api_token!(456)
       ** (Ecto.NoResultsError)
 
   """
-  def get_api_tokens!(id), do: Repo.get!(APIToken, id)
+  def get_api_token!(id), do: Repo.get!(APIToken, id)
 
   @doc """
-  Creates a api_tokens.
+  Creates a api_token.
 
   ## Examples
 
-      iex> create_api_tokens(%{field: value})
+      iex> create_api_token(%{field: value})
       {:ok, %APIToken{}}
 
-      iex> create_api_tokens(%{field: bad_value})
+      iex> create_api_token(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_api_tokens(attrs \\ %{}) do
+  def create_api_token(attrs \\ %{}) do
     %APIToken{}
     |> APIToken.changeset(attrs)
     |> Repo.insert()
   end
 
   @doc """
-  Updates a api_tokens.
+  Updates a api_token.
 
   ## Examples
 
-      iex> update_api_tokens(api_tokens, %{field: new_value})
+      iex> update_api_token(api_token, %{field: new_value})
       {:ok, %APIToken{}}
 
-      iex> update_api_tokens(api_tokens, %{field: bad_value})
+      iex> update_api_token(api_token, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_api_tokens(%APIToken{} = api_tokens, attrs) do
-    api_tokens
+  def update_api_token(%APIToken{} = api_token, attrs) do
+    api_token
     |> APIToken.changeset(attrs)
     |> Repo.update()
   end
 
   @doc """
-  Deletes a api_tokens.
+  Deletes a api_token.
 
   ## Examples
 
-      iex> delete_api_tokens(api_tokens)
+      iex> delete_api_token(api_token)
       {:ok, %APIToken{}}
 
-      iex> delete_api_tokens(api_tokens)
+      iex> delete_api_token(api_token)
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_api_tokens(%APIToken{} = api_tokens) do
-    Repo.delete(api_tokens)
+  def delete_api_token(%APIToken{} = api_token) do
+    Repo.delete(api_token)
   end
 
   @doc """
-  Returns an `%Ecto.Changeset{}` for tracking api_tokens changes.
+  Returns an `%Ecto.Changeset{}` for tracking api_token changes.
 
   ## Examples
 
-      iex> change_api_tokens(api_tokens)
+      iex> change_api_token(api_token)
       %Ecto.Changeset{data: %APIToken{}}
 
   """
-  def change_api_tokens(%APIToken{} = api_tokens, attrs \\ %{}) do
-    APIToken.changeset(api_tokens, attrs)
+  def change_api_token(%APIToken{} = api_token, attrs \\ %{}) do
+    APIToken.changeset(api_token, attrs)
   end
 end

@@ -13,7 +13,7 @@ defmodule PanicWeb.APITokenLive.Show do
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:api_tokens, Accounts.get_api_tokens!(id))}
+     |> assign(:api_token, Accounts.get_api_token!(id))}
   end
 
   defp page_title(:show), do: "Show Api tokens"

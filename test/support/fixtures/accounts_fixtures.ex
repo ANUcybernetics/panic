@@ -30,12 +30,12 @@ defmodule Panic.AccountsFixtures do
   end
 
   @doc """
-  Generate a api_tokens.
+  Generate a api_token.
   """
-  def api_tokens_fixture(attrs \\ %{}) do
+  def api_token_fixture(attrs \\ %{}) do
     user = user_fixture()
 
-    {:ok, api_tokens} =
+    {:ok, api_token} =
       Map.merge(
         %{
           name: "some name",
@@ -44,8 +44,8 @@ defmodule Panic.AccountsFixtures do
         },
         attrs
       )
-      |> Panic.Accounts.create_api_tokens()
+      |> Panic.Accounts.create_api_token()
 
-    api_tokens
+    api_token
   end
 end

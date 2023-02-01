@@ -506,7 +506,7 @@ defmodule Panic.AccountsTest do
     end
   end
 
-  describe "api_tokens" do
+  describe "api_token" do
     alias Panic.Accounts.APIToken
 
     import Panic.AccountsFixtures
@@ -515,55 +515,54 @@ defmodule Panic.AccountsTest do
 
     test "list_api_tokens/1 returns all api_tokens for user" do
       user = user_fixture()
-      api_tokens = api_tokens_fixture(%{user_id: user.id})
-      assert Accounts.list_api_tokens(user) == [api_tokens]
+      api_token = api_token_fixture(%{user_id: user.id})
+      assert Accounts.list_api_tokens(user) == [api_token]
     end
 
-    test "get_api_tokens!/1 returns the api_tokens with given id" do
-      api_tokens = api_tokens_fixture()
-      assert Accounts.get_api_tokens!(api_tokens.id) == api_tokens
+    test "get_api_token!/1 returns the api_token with given id" do
+      api_token = api_token_fixture()
+      assert Accounts.get_api_token!(api_token.id) == api_token
     end
 
-    test "create_api_tokens/1 with valid data creates a api_tokens" do
+    test "create_api_token/1 with valid data creates a api_token" do
       user = user_fixture()
       valid_attrs = %{name: "some name", token: "some token", user_id: user.id}
 
-      assert {:ok, %APIToken{} = api_tokens} = Accounts.create_api_tokens(valid_attrs)
-      assert api_tokens.name == "some name"
-      assert api_tokens.token == "some token"
-      assert api_tokens.user_id == user.id
+      assert {:ok, %APIToken{} = api_token} = Accounts.create_api_token(valid_attrs)
+      assert api_token.name == "some name"
+      assert api_token.token == "some token"
+      assert api_token.user_id == user.id
     end
 
-    test "create_api_tokens/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Accounts.create_api_tokens(@invalid_attrs)
+    test "create_api_token/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Accounts.create_api_token(@invalid_attrs)
     end
 
-    test "update_api_tokens/2 with valid data updates the api_tokens" do
-      api_tokens = api_tokens_fixture()
+    test "update_api_token/2 with valid data updates the api_token" do
+      api_token = api_token_fixture()
       update_attrs = %{name: "some updated name", token: "some updated token"}
 
-      assert {:ok, %APIToken{} = api_tokens} =
-               Accounts.update_api_tokens(api_tokens, update_attrs)
+      assert {:ok, %APIToken{} = api_token} = Accounts.update_api_token(api_token, update_attrs)
 
-      assert api_tokens.name == "some updated name"
-      assert api_tokens.token == "some updated token"
+      assert api_token.name == "some updated name"
+      assert api_token.token == "some updated token"
     end
 
-    test "update_api_tokens/2 with invalid data returns error changeset" do
-      api_tokens = api_tokens_fixture()
-      assert {:error, %Ecto.Changeset{}} = Accounts.update_api_tokens(api_tokens, @invalid_attrs)
-      assert api_tokens == Accounts.get_api_tokens!(api_tokens.id)
+    test "update_api_token/2 with invalid data returns error changeset" do
+      api_token = api_token_fixture()
+      assert {:error, %Ecto.Changeset{}} = Accounts.update_api_token(api_token, @invalid_attrs)
+      assert api_token == Accounts.get_api_token!(api_token.id)
     end
 
-    test "delete_api_tokens/1 deletes the api_tokens" do
-      api_tokens = api_tokens_fixture()
-      assert {:ok, %APIToken{}} = Accounts.delete_api_tokens(api_tokens)
-      assert_raise Ecto.NoResultsError, fn -> Accounts.get_api_tokens!(api_tokens.id) end
+    test "delete_api_token/1 deletes the api_token" do
+      api_token = api_token_fixture()
+      assert {:ok, %APIToken{}} = Accounts.delete_api_token(api_token)
+      assert_raise Ecto.NoResultsError, fn -> Accounts.get_api_token!(api_token.id) end
     end
 
-    test "change_api_tokens/1 returns a api_tokens changeset" do
-      api_tokens = api_tokens_fixture()
-      assert %Ecto.Changeset{} = Accounts.change_api_tokens(api_tokens)
+    test "change_api_token/1 returns a api_token changeset" do
+      api_token = api_token_fixture()
+      assert %Ecto.Changeset{} = Accounts.change_api_token(api_token)
     end
   end
 end
