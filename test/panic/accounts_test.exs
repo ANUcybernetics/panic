@@ -524,6 +524,14 @@ defmodule Panic.AccountsTest do
       assert Accounts.get_api_token!(api_token.id) == api_token
     end
 
+    test "get_api_token!/1 returns the correct api_token for %User{} and token_name" do
+      user = user_fixture()
+      name = "FancyAI"
+      token = ";laskdfjasdfhsdjfljs"
+      api_token = api_token_fixture(%{user_id: user.id, name: name, token: token})
+      assert %APIToken{name: name, token: token} = Accounts.get_api_token!(user, name)
+    end
+
     test "create_api_token/1 with valid data creates a api_token" do
       user = user_fixture()
       valid_attrs = %{name: "some name", token: "some token", user_id: user.id}

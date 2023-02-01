@@ -383,6 +383,24 @@ defmodule Panic.Accounts do
   def get_api_token!(id), do: Repo.get!(APIToken, id)
 
   @doc """
+  Gets a single api_token.
+
+  Raises `Ecto.NoResultsError` if the Api tokens does not exist.
+
+  ## Examples
+
+      iex> get_api_token!(123)
+      %APIToken{}
+
+      iex> get_api_token!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_api_token!(%User{id: id}, token_name) when is_binary(token_name) do
+    Repo.one(from tok in APIToken, where: tok.user_id == ^id && tok.name == ^token_name)
+  end
+
+  @doc """
   Creates a api_token.
 
   ## Examples
