@@ -7,6 +7,7 @@ defmodule Panic.PredictionsTest do
     alias Panic.Predictions.Prediction
 
     import Panic.PredictionsFixtures
+    import Panic.NetworksFixtures
 
     @invalid_attrs %{input: nil, metadata: nil, model: nil, output: nil, run_index: nil}
 
@@ -21,12 +22,15 @@ defmodule Panic.PredictionsTest do
     end
 
     test "create_prediction/1 with valid data creates a prediction" do
+      network = network_fixture()
+
       valid_attrs = %{
         input: "some input",
         metadata: %{},
         model: "some model",
         output: "some output",
-        run_index: 42
+        run_index: 42,
+        network_id: network.id
       }
 
       assert {:ok, %Prediction{} = prediction} = Predictions.create_prediction(valid_attrs)
@@ -35,6 +39,7 @@ defmodule Panic.PredictionsTest do
       assert prediction.model == "some model"
       assert prediction.output == "some output"
       assert prediction.run_index == 42
+      assert prediction.network_id == network.id
     end
 
     test "create_prediction/1 with invalid data returns error changeset" do

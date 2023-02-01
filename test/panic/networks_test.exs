@@ -7,6 +7,7 @@ defmodule Panic.NetworksTest do
     alias Panic.Networks.Network
 
     import Panic.NetworksFixtures
+    import Panic.AccountsFixtures
 
     @invalid_attrs %{description: nil, models: nil, name: nil}
 
@@ -21,16 +22,20 @@ defmodule Panic.NetworksTest do
     end
 
     test "create_network/1 with valid data creates a network" do
+      user = user_fixture()
+
       valid_attrs = %{
         description: "some description",
         models: ["option1", "option2"],
-        name: "some name"
+        name: "some name",
+        user_id: user.id
       }
 
       assert {:ok, %Network{} = network} = Networks.create_network(valid_attrs)
       assert network.description == "some description"
       assert network.models == ["option1", "option2"]
       assert network.name == "some name"
+      assert network.user_id == user.id
     end
 
     test "create_network/1 with invalid data returns error changeset" do

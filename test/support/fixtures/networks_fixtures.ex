@@ -4,17 +4,24 @@ defmodule Panic.NetworksFixtures do
   entities via the `Panic.Networks` context.
   """
 
+  import Panic.AccountsFixtures
+
   @doc """
   Generate a network.
   """
   def network_fixture(attrs \\ %{}) do
+    user = user_fixture()
+
     {:ok, network} =
-      attrs
-      |> Enum.into(%{
-        description: "some description",
-        models: ["option1", "option2"],
-        name: "some name"
-      })
+      Map.merge(
+        %{
+          description: "some description",
+          models: ["option1", "option2"],
+          name: "some name",
+          user_id: user.id
+        },
+        attrs
+      )
       |> Panic.Networks.create_network()
 
     network
