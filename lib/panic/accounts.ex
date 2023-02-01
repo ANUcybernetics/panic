@@ -397,7 +397,7 @@ defmodule Panic.Accounts do
 
   """
   def get_api_token!(%User{id: id}, token_name) when is_binary(token_name) do
-    Repo.one(from tok in APIToken, where: tok.user_id == ^id && tok.name == ^token_name)
+    Repo.one(from tok in APIToken, where: tok.user_id == ^id and tok.name == ^token_name)
   end
 
   @doc """

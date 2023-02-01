@@ -4,8 +4,8 @@ defmodule Panic.Platforms.OpenAI do
   @max_response_length 50
   # @recv_timeout 10_000
 
-  def list_engines() do
-    Finch.build(:get, @url, headers())
+  def list_engines(user) do
+    Finch.build(:get, @url, headers(user))
     |> Finch.request(Panic.Finch)
     |> case do
       {:ok, %Finch.Response{body: response_body, status: 200}} ->
@@ -17,14 +17,14 @@ defmodule Panic.Platforms.OpenAI do
     end
   end
 
-  def create("davinci-instruct-beta" = model, prompt) do
+  def create("davinci-instruct-beta" = model, prompt, user) do
     request_body = %{
       prompt: prompt,
       max_tokens: @max_response_length,
       temperature: @temperature
     }
 
-    Finch.build(:post, "#{@url}/#{model}/completions", headers(), Jason.encode!(request_body))
+    Finch.build(:post, "#{@url}/#{model}/completions", headers(user), Jason.encode!(request_body))
     |> Finch.request(Panic.Finch)
     |> case do
       {:ok, %Finch.Response{body: response_body, status: 200}} ->

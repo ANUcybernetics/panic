@@ -3,8 +3,8 @@ defmodule Panic.Platforms.Replicate do
   @nsfw_placeholder "https://res.cloudinary.com/teepublic/image/private/s--XZyAQb6t--/t_Preview/b_rgb:191919,c_lpad,f_jpg,h_630,q_90,w_1200/v1532173190/production/designs/2918923_0.jpg"
   # @recv_timeout 10_000
 
-  def get_model_versions(model) do
-    Finch.build(:get, "#{@url}/models/#{model}/versions", headers())
+  def get_model_versions(model, user) do
+    Finch.build(:get, "#{@url}/models/#{model}/versions", headers(user))
     |> Finch.request(Panic.Finch)
     |> case do
       {:ok, %Finch.Response{body: response_body, status: 200}} ->
@@ -16,12 +16,12 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
-  def get_latest_model_version(model) do
-    get_model_versions(model) |> List.first() |> Map.get("id")
+  def get_latest_model_version(model, user) do
+    get_model_versions(model, user) |> List.first() |> Map.get("id")
   end
 
-  def get_status(prediction_id) do
-    Finch.build(:get, "#{@url}/predictions/#{prediction_id}", headers())
+  def get_status(prediction_id, user) do
+    Finch.build(:get, "#{@url}/predictions/#{prediction_id}", headers(user))
     |> Finch.request(Panic.Finch)
     |> case do
       {:ok, %Finch.Response{body: response_body, status: 200}} ->
@@ -29,8 +29,8 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
-  def get(prediction_id) do
-    Finch.build(:get, "#{@url}/predictions/#{prediction_id}", headers())
+  def get(prediction_id, user) do
+    Finch.build(:get, "#{@url}/predictions/#{prediction_id}", headers(user))
     |> Finch.request(Panic.Finch)
     |> case do
       {:ok, %Finch.Response{body: response_body, status: 200}} ->
@@ -46,7 +46,7 @@ defmodule Panic.Platforms.Replicate do
 
           %{"status" => status} when status in ~w(starting processing) ->
             ## recursion case; doesn't need a tuple
-            get(prediction_id)
+            get(prediction_id, user)
         end
 
       {:error, reason} ->
@@ -54,24 +54,24 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
-  def cancel(prediction_id) do
-    Finch.build(:post, "#{@url}/predictions/#{prediction_id}/cancel", headers(), [])
+  def cancel(prediction_id, user) do
+    Finch.build(:post, "#{@url}/predictions/#{prediction_id}/cancel", headers(user), [])
     |> Finch.request(Panic.Finch)
   end
 
-  def create_and_wait(model, input_params) do
+  def create_and_wait(model, input_params, user) do
     request_body = %{
-      version: get_latest_model_version(model),
+      version: get_latest_model_version(model, user),
       input: input_params
     }
 
-    Finch.build(:post, "#{@url}/predictions", headers(), Jason.encode!(request_body))
+    Finch.build(:post, "#{@url}/predictions", headers(user), Jason.encode!(request_body))
     |> Finch.request(Panic.Finch)
     |> case do
       {:ok, %Finch.Response{body: response_body, status: 200}} ->
         %{"id" => id} = Jason.decode!(response_body)
 
-        case get(id) do
+        case get(id, user) do
           {:ok, body} -> body
           {:error, :nsfw} -> %{"output" => [@nsfw_placeholder]}
         end
@@ -79,7 +79,7 @@ defmodule Panic.Platforms.Replicate do
   end
 
   ## text to image
-  def create("stability-ai/stable-diffusion" = model, prompt) do
+  def create("stability-ai/stable-diffusion" = model, prompt, user) do
     input_params = %{
       prompt: prompt,
       num_inference_steps: 50,
@@ -88,12 +88,12 @@ defmodule Panic.Platforms.Replicate do
       height: 576
     }
 
-    %{"output" => [image_url]} = create_and_wait(model, input_params)
+    %{"output" => [image_url]} = create_and_wait(model, input_params, user)
     image_url
   end
 
   ## text to image
-  def create("prompthero/openjourney" = model, prompt) do
+  def create("prompthero/openjourney" = model, prompt, user) do
     input_params = %{
       prompt: prompt,
       num_inference_steps: 50,
@@ -102,12 +102,12 @@ defmodule Panic.Platforms.Replicate do
       height: 576
     }
 
-    %{"output" => [image_url]} = create_and_wait(model, input_params)
+    %{"output" => [image_url]} = create_and_wait(model, input_params, user)
     image_url
   end
 
   ## text to image
-  def create("cjwbw/stable-diffusion-high-resolution" = model, prompt) do
+  def create("cjwbw/stable-diffusion-high-resolution" = model, prompt, user) do
     input_params = %{
       prompt: prompt,
       steps: 50,
@@ -116,62 +116,63 @@ defmodule Panic.Platforms.Replicate do
       ori_height: 256
     }
 
-    %{"output" => image_url} = create_and_wait(model, input_params)
+    %{"output" => image_url} = create_and_wait(model, input_params, user)
     image_url
   end
 
-  def create("kuprel/min-dalle" = model, prompt) do
+  def create("kuprel/min-dalle" = model, prompt, user) do
     %{"output" => [image_url]} =
-      create_and_wait(model, %{text: prompt, grid_size: 1, progressive_outputs: 0})
+      create_and_wait(model, %{text: prompt, grid_size: 1, progressive_outputs: 0}, user)
 
     image_url
   end
 
-  def create("benswift/min-dalle" = model, prompt) do
+  def create("benswift/min-dalle" = model, prompt, user) do
     %{"output" => [image_url]} =
-      create_and_wait(model, %{text: prompt, grid_size: 1, progressive_outputs: 0})
+      create_and_wait(model, %{text: prompt, grid_size: 1, progressive_outputs: 0}, user)
 
     image_url
   end
 
-  def create("afiaka87/retrieval-augmented-diffusion" = model, prompt) do
-    create_and_wait(model, %{prompt: prompt, width: 256, height: 256})
+  def create("afiaka87/retrieval-augmented-diffusion" = model, prompt, user) do
+    create_and_wait(model, %{prompt: prompt, width: 256, height: 256}, user)
   end
 
-  def create("laion-ai/ongo" = model, prompt) do
+  def create("laion-ai/ongo" = model, prompt, user) do
     %{"output" => image_urls} =
       create_and_wait(
         model,
-        %{text: prompt, batch_size: 1, height: 256, width: 256, intermediate_outputs: 0}
+        %{text: prompt, batch_size: 1, height: 256, width: 256, intermediate_outputs: 0},
+        user
       )
 
     List.last(image_urls)
   end
 
   ## image to text
-  def create("methexis-inc/img2prompt" = model, image_url) do
-    %{"output" => text} = create_and_wait(model, %{image: image_url})
+  def create("methexis-inc/img2prompt" = model, image_url, user) do
+    %{"output" => text} = create_and_wait(model, %{image: image_url}, user)
     text
   end
 
-  def create("charlesfrye/text-recognizer-gpu" = model, image_url) do
-    %{"output" => text} = create_and_wait(model, %{image: image_url})
+  def create("charlesfrye/text-recognizer-gpu" = model, image_url, user) do
+    %{"output" => text} = create_and_wait(model, %{image: image_url}, user)
     text
   end
 
-  def create("rmokady/clip_prefix_caption" = model, image_url) do
-    %{"output" => text} = create_and_wait(model, %{image: image_url})
+  def create("rmokady/clip_prefix_caption" = model, image_url, user) do
+    %{"output" => text} = create_and_wait(model, %{image: image_url}, user)
     text
   end
 
-  def create("j-min/clip-caption-reward" = model, image_url) do
-    %{"output" => text} = create_and_wait(model, %{image: image_url})
+  def create("j-min/clip-caption-reward" = model, image_url, user) do
+    %{"output" => text} = create_and_wait(model, %{image: image_url}, user)
     text
   end
 
   ## text to text
-  def create("kyrick/prompt-parrot" = model, prompt) do
-    %{"output" => text} = create_and_wait(model, %{prompt: prompt})
+  def create("kyrick/prompt-parrot" = model, prompt, user) do
+    %{"output" => text} = create_and_wait(model, %{prompt: prompt}, user)
 
     ## for some reason this model returns multiple prompts, but separated by a
     ## "separator" string rather than in a list, so we split it here and choose
@@ -181,8 +182,8 @@ defmodule Panic.Platforms.Replicate do
     |> Enum.random()
   end
 
-  def create("2feet6inches/cog-prompt-parrot" = model, prompt) do
-    %{"output" => text} = create_and_wait(model, %{prompt: prompt})
+  def create("2feet6inches/cog-prompt-parrot" = model, prompt, user) do
+    %{"output" => text} = create_and_wait(model, %{prompt: prompt}, user)
 
     text
     |> String.split("\n")
@@ -190,13 +191,15 @@ defmodule Panic.Platforms.Replicate do
   end
 
   ## image to image
-  def create("netease-gameai/spatchgan-selfie2anime" = model, image_url) do
-    %{"output" => [%{"file" => image_url} | _]} = create_and_wait(model, %{image: image_url})
+  def create("netease-gameai/spatchgan-selfie2anime" = model, image_url, user) do
+    %{"output" => [%{"file" => image_url} | _]} =
+      create_and_wait(model, %{image: image_url}, user)
+
     image_url
   end
 
   ## text to audio
-  def create("annahung31/emopia" = model, prompt) do
+  def create("annahung31/emopia" = model, prompt, user) do
     emotion_opts = [
       "High valence, high arousal",
       "Low valence, high arousal",
@@ -208,18 +211,18 @@ defmodule Panic.Platforms.Replicate do
     seed = string_to_seed(prompt)
 
     %{"output" => [%{"file" => audio_url} | _]} =
-      create_and_wait(model, %{emotion: emotion, seed: seed})
+      create_and_wait(model, %{emotion: emotion, seed: seed}, user)
 
     audio_url
   end
 
-  def create("afiaka87/tortoise-tts" = model, prompt) do
-    %{"output" => output} = create_and_wait(model, %{text: prompt})
+  def create("afiaka87/tortoise-tts" = model, prompt, user) do
+    %{"output" => output} = create_and_wait(model, %{text: prompt}, user)
     output
   end
 
-  defp headers do
-    api_token = Application.fetch_env!(:panic, :replicate_api_token)
+  defp headers(user) do
+    api_token = Panic.Accounts.get_api_token!(user, "Replicate")
 
     %{
       "Authorization" => "Token #{api_token}",
