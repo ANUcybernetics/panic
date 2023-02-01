@@ -34,8 +34,8 @@ defmodule Panic.Platforms.OpenAI do
     end
   end
 
-  defp headers do
-    api_token = Application.fetch_env!(:panic, :openai_api_token)
+  defp headers(user) do
+    api_token = Panic.Accounts.get_api_token!(user, "OpenAI")
 
     %{
       "Authorization" => "Bearer #{api_token}",
