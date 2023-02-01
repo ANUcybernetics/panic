@@ -45,3 +45,4 @@ npm-debug.log
 
 # development databases
 /panic_dev.db*
+/panic_test.db*
