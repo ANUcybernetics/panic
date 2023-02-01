@@ -363,7 +363,7 @@ defmodule Panic.Accounts do
 
   """
   def list_api_tokens(%User{} = user) do
-    Repo.preload(user, [:api_tokens])
+    Repo.preload(user, [:api_tokens]) |> Map.get(:api_tokens)
   end
 
   @doc """
