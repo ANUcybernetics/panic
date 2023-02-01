@@ -11,7 +11,7 @@ defmodule Panic.PlatformsFixtures do
   end
 
   def replicate_create_image_url("stability-ai/stable-diffusion", prompt) do
-    "https://example.com/replicate-images/#{Slugify.slugify(prompt)}"
+    "https://example.com/replicate-images/#{Slug.slugify(prompt)}"
   end
 
   def replicate_create_text("j-min/clip-caption-reward", image_url) do
