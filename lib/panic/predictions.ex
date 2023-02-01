@@ -53,6 +53,17 @@ defmodule Panic.Predictions do
     %Prediction{}
     |> Prediction.changeset(attrs)
     |> Repo.insert()
+    |> case do
+      {:ok, %Prediction{genesis_id: nil} = prediction} ->
+        ## must be a first run, so set :genesis_id to :id, then return
+        update_prediction(prediction, %{genesis_id: prediction.id})
+
+      {:ok, prediction} ->
+        {:ok, prediction}
+
+      {:error, changeset} ->
+        {:error, changeset}
+    end
   end
 
   @doc """
