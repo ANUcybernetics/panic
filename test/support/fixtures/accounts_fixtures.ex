@@ -33,12 +33,17 @@ defmodule Panic.AccountsFixtures do
   Generate a api_tokens.
   """
   def api_tokens_fixture(attrs \\ %{}) do
+    user = user_fixture()
+
     {:ok, api_tokens} =
-      attrs
-      |> Enum.into(%{
-        name: "some name",
-        token: "some token"
-      })
+      Map.merge(
+        %{
+          name: "some name",
+          token: "some token",
+          user_id: user.id
+        },
+        attrs
+      )
       |> Panic.Accounts.create_api_tokens()
 
     api_tokens

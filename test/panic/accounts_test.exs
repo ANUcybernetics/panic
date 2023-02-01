@@ -513,9 +513,9 @@ defmodule Panic.AccountsTest do
 
     @invalid_attrs %{name: nil, token: nil}
 
-    test "list_api_tokens/0 returns all api_tokens for user" do
+    test "list_api_tokens/1 returns all api_tokens for user" do
       user = user_fixture()
-      api_tokens = api_tokens_fixture()
+      api_tokens = api_tokens_fixture(%{user_id: user.id})
       assert Accounts.list_api_tokens(user) == [api_tokens]
     end
 
@@ -525,11 +525,13 @@ defmodule Panic.AccountsTest do
     end
 
     test "create_api_tokens/1 with valid data creates a api_tokens" do
-      valid_attrs = %{name: "some name", token: "some token"}
+      user = user_fixture()
+      valid_attrs = %{name: "some name", token: "some token", user_id: user.id}
 
       assert {:ok, %APIToken{} = api_tokens} = Accounts.create_api_tokens(valid_attrs)
       assert api_tokens.name == "some name"
       assert api_tokens.token == "some token"
+      assert api_tokens.user_id == user.id
     end
 
     test "create_api_tokens/1 with invalid data returns error changeset" do
