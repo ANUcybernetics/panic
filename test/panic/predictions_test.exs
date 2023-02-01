@@ -21,7 +21,7 @@ defmodule Panic.PredictionsTest do
       assert Predictions.get_prediction!(prediction.id) == prediction
     end
 
-    test "create_prediction/1 with valid data creates a prediction" do
+    test "create_prediction/1 with valid data and no :genesis_id creates a 'genesis' prediction" do
       network = network_fixture()
 
       valid_attrs = %{
@@ -40,6 +40,31 @@ defmodule Panic.PredictionsTest do
       assert prediction.output == "some output"
       assert prediction.run_index == 42
       assert prediction.network_id == network.id
+      assert prediction.genesis_id == network.id
+    end
+
+    test "create_prediction/1 with valid data and a :genesis_id creates a new prediction" do
+      network = network_fixture()
+      genesis_prediction = prediction_fixture(%{network_id: network.id})
+
+      valid_attrs = %{
+        input: "some input",
+        metadata: %{},
+        model: "some model",
+        output: "some output",
+        run_index: 42,
+        network_id: network.id,
+        genesis_id: genesis_prediction.id
+      }
+
+      assert {:ok, %Prediction{} = prediction} = Predictions.create_prediction(valid_attrs)
+      assert prediction.input == "some input"
+      assert prediction.metadata == %{}
+      assert prediction.model == "some model"
+      assert prediction.output == "some output"
+      assert prediction.run_index == 42
+      assert prediction.network_id == network.id
+      assert prediction.genesis_id == genesis_prediction.id
     end
 
     test "create_prediction/1 with invalid data returns error changeset" do
