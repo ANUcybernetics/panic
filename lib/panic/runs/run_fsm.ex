@@ -6,9 +6,8 @@ defmodule Panic.Runs.RunFSM do
 
   @fsm """
   pre_run --> |init!| waiting
-  waiting --> |input| running
+  waiting --> |prediction| running
   running --> |prediction| running
-  running --> |input| running
   running --> |stop| waiting
   running --> |reset| waiting
   waiting --> |end_run| post_run
@@ -16,6 +15,7 @@ defmodule Panic.Runs.RunFSM do
   """
 
   use Finitomata, fsm: @fsm, auto_terminate: true
+  alias Panic.Predictions
 
   @impl Finitomata
   def on_transition(:pre_run, :init!, _event_payload, payload) do
@@ -23,13 +23,17 @@ defmodule Panic.Runs.RunFSM do
   end
 
   @impl Finitomata
-  def on_transition(:waiting, :input, changeset, payload) do
-    ## TODO fire off API call to hosted AI platform
-    {:ok, :running, Map.merge(payload, changeset: changeset)}
+  def on_transition(:waiting, :prediction, prediction, payload) do
+    {:ok, :running, Map.put(payload, :last_prediction, prediction)}
   end
 
   @impl Finitomata
-  def on_transition(:running, :prediction, _prediction, payload) do
-    {:ok, :running, Map.merge(payload, :ready_countdown)}
+  def on_enter(:running, %Finitomata.State{
+        payload: %{last_prediction: last_prediction, network: network}
+      }) do
+    IO.inspect("entering :running state, last prediction id was #{last_prediction.id}")
+    Process.sleep(1_000)
+    Finitomata.transition("network:#{network.id}", {:prediction, Enum.random(0..100)})
+    :ok
   end
 end
