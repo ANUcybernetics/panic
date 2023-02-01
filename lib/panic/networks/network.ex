@@ -14,7 +14,8 @@ defmodule Panic.Networks.Network do
   @doc false
   def changeset(network, attrs) do
     network
-    |> cast(attrs, [:models, :name, :description])
-    |> validate_required([:models, :name, :description])
+    |> cast(attrs, [:models, :name, :description, :user_id])
+    |> validate_required([:models, :name, :description, :user_id])
+    |> foreign_key_constraint(:user)
   end
 end

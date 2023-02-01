@@ -13,7 +13,9 @@ defmodule Panic.Accounts.APIToken do
   @doc false
   def changeset(api_tokens, attrs) do
     api_tokens
-    |> cast(attrs, [:name, :token])
-    |> validate_required([:name, :token])
+    |> cast(attrs, [:name, :token, :user_id])
+    |> validate_required([:name, :token, :user_id])
+    |> foreign_key_constraint(:user)
+    |> unique_constraint([:user_id, :name])
   end
 end

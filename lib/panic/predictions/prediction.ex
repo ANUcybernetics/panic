@@ -17,7 +17,17 @@ defmodule Panic.Predictions.Prediction do
   @doc false
   def changeset(prediction, attrs) do
     prediction
-    |> cast(attrs, [:model, :input, :output, :metadata, :run_index])
-    |> validate_required([:model, :input, :output, :metadata, :run_index])
+    |> cast(attrs, [:model, :input, :output, :metadata, :run_index, :network_id, :genesis_id])
+    |> validate_required([
+      :model,
+      :input,
+      :output,
+      :metadata,
+      :run_index,
+      :network_id,
+      :genesis_id
+    ])
+    |> foreign_key_constraint(:network)
+    |> foreign_key_constraint(:genesis)
   end
 end
