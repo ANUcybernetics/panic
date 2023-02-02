@@ -49,15 +49,17 @@ defmodule Panic.AccountsFixtures do
     api_token
   end
 
-  def insert_api_tokens_from_env(%User{id: id}) do
-    {:ok, _token} = Panic.Accounts.create_api_token(
-      %{name: "OpenAI",
-        token: System.get_env("OPEN_API_TOKEN"),
+  def insert_api_tokens_from_env(%Panic.Accounts.User{id: id}) do
+    {:ok, _token} =
+      Panic.Accounts.create_api_token(%{
+        name: "OpenAI",
+        token: System.get_env("OPENAI_API_TOKEN"),
         user_id: id
       })
 
-    {:ok, _token} = Panic.Accounts.create_api_token(
-      %{name: "Replicate",
+    {:ok, _token} =
+      Panic.Accounts.create_api_token(%{
+        name: "Replicate",
         token: System.get_env("REPLICATE_API_TOKEN"),
         user_id: id
       })
