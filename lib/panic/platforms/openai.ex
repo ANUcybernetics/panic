@@ -35,10 +35,10 @@ defmodule Panic.Platforms.OpenAI do
   end
 
   defp headers(user) do
-    api_token = Panic.Accounts.get_api_token!(user, "OpenAI")
+    %Panic.Accounts.APIToken{token: token} = Panic.Accounts.get_api_token!(user, "OpenAI")
 
     %{
-      "Authorization" => "Bearer #{api_token}",
+      "Authorization" => "Bearer #{token}",
       "Content-Type" => "application/json"
     }
   end

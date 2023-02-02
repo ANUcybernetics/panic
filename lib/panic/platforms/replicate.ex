@@ -222,10 +222,10 @@ defmodule Panic.Platforms.Replicate do
   end
 
   defp headers(user) do
-    api_token = Panic.Accounts.get_api_token!(user, "Replicate")
+    %Panic.Accounts.APIToken{token: token} = Panic.Accounts.get_api_token!(user, "Replicate")
 
     %{
-      "Authorization" => "Token #{api_token}",
+      "Authorization" => "Token #{token}",
       "Content-Type" => "application/json"
     }
   end
