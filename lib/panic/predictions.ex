@@ -165,29 +165,6 @@ defmodule Panic.Predictions do
   end
 
   @doc """
-  Creates a "next" prediction - the next one in the run.
-
-  ## Examples
-
-      iex> create_next_prediction(%Prediction{})
-      {:ok, %Prediction{}}
-
-  """
-  def create_next_prediction(%Prediction{} = prev) do
-    prev = Panic.Repo.preload(prev, [:network])
-    run_index = prev.run_index + 1
-    model = Enum.at(prev.network.models, Integer.mod(run_index, 2))
-
-    create_prediction(%{
-      input: prev.output,
-      model: model,
-      run_index: run_index,
-      metadata: %{},
-      network_id: prev.network.id
-    })
-  end
-
-  @doc """
   Updates a prediction.
 
   ## Examples
