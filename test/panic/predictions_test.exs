@@ -107,11 +107,15 @@ defmodule Panic.PredictionsTest do
     } do
       input = "Tell me a joke about potatoes."
 
-      assert {:ok, %Prediction{} = genesis_prediction} =
+      assert {:ok, %Prediction{run_index: 0} = genesis} =
                Predictions.create_genesis_prediction(input, network)
 
-      assert {:ok, %Prediction{} = _next_prediction} =
-               Predictions.create_next_prediction(genesis_prediction, network)
+      assert is_binary(genesis.output)
+
+      genesis_id = genesis.id
+
+      assert {:ok, %Prediction{run_index: 1, genesis_id: ^genesis_id}} =
+               Predictions.create_next_prediction(genesis, network)
     end
   end
 
