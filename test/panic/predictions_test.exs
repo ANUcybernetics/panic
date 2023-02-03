@@ -91,39 +91,36 @@ defmodule Panic.PredictionsTest do
   end
 
   describe "create predictions with real API calls" do
-    setup [:create_user_and_network, :load_env_vars]
+    setup [:create_network, :load_env_vars]
 
-    test "create_genesis_prediction/3 works with valid params", %{user: user, network: network} do
+    test "create_genesis_prediction/2 works with valid params", %{network: network} do
       input = "Tell me a joke about potatoes."
 
       assert {:ok, %Prediction{output: output}} =
-               Predictions.create_genesis_prediction(input, network, user)
+               Predictions.create_genesis_prediction(input, network)
 
       assert is_binary(output)
     end
 
-    test "create_genesis_prediction/3 followed by create_next_prediction/3 works", %{
-      user: user,
+    test "create_genesis_prediction/2 followed by create_next_prediction/2 works", %{
       network: network
     } do
       input = "Tell me a joke about potatoes."
 
       assert {:ok, %Prediction{} = genesis_prediction} =
-               Predictions.create_genesis_prediction(input, network, user)
+               Predictions.create_genesis_prediction(input, network)
 
       assert {:ok, %Prediction{} = _next_prediction} =
-               Predictions.create_next_prediction(genesis_prediction, network, user)
+               Predictions.create_next_prediction(genesis_prediction, network)
     end
   end
 
-  defp create_user_and_network(_context) do
-    user = user_fixture()
-    network = network_fixture(%{user_id: user.id})
-    %{user: user, network: network}
+  defp create_network(_context) do
+    %{network: network_fixture()}
   end
 
-  defp load_env_vars(%{user: user} = context) do
-    insert_api_tokens_from_env(user)
+  defp load_env_vars(%{network: network} = context) do
+    insert_api_tokens_from_env(network.user_id)
     context
   end
 end

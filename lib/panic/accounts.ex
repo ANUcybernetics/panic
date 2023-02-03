@@ -400,6 +400,10 @@ defmodule Panic.Accounts do
     Repo.one(from tok in APIToken, where: tok.user_id == ^id and tok.name == ^token_name)
   end
 
+  def get_api_token!(user_id, token_name) when is_integer(user_id) and is_binary(token_name) do
+    Repo.one(from tok in APIToken, where: tok.user_id == ^user_id and tok.name == ^token_name)
+  end
+
   @doc """
   Creates a api_token.
 

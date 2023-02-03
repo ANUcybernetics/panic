@@ -8,7 +8,6 @@ defmodule Panic.Predictions do
 
   alias Panic.Predictions.Prediction
   alias Panic.Networks.Network
-  alias Panic.Accounts.User
 
   @doc """
   Returns the list of predictions.
@@ -43,8 +42,8 @@ defmodule Panic.Predictions do
   Creates a prediction.
 
   Unless you're creating a prediction from a "raw" map of attrs, it's probably
-  easier to call `create_genesis_prediction/3` (which will hit the API for you,
-  plus fix up the genesis block stuff) or `create_next_prediction/3` (again,
+  easier to call `create_genesis_prediction/2` (which will hit the API for you,
+  plus fix up the genesis block stuff) or `create_prediction/3` (again,
   will hit the API and get all the `run_index` stuff right).
 
   ## Examples
@@ -76,24 +75,24 @@ defmodule Panic.Predictions do
 
   ## Examples
 
-      iex> create_genesis_prediction("this is a text input prompt", %Network{}, %User{})
+      iex> create_genesis_prediction("this is a text input prompt", %Network{})
       {:ok, %Prediction{}}
 
       ## if any of the arguments are invalid
-      iex> create_genesis_prediction(nil, %Network{}, %User{})
+      iex> create_genesis_prediction(nil, %Network{})
       {:error, %Ecto.Changeset{}}
 
       ## if the platform API call fails for some reason
-      iex> create_genesis_prediction("valid text input", %Network{}, %User{})
+      iex> create_genesis_prediction("valid text input", %Network{})
       {:platform_error, reason}
 
   """
-  def create_genesis_prediction(input, %Network{} = network, %User{} = user) do
+  def create_genesis_prediction(input, %Network{} = network) do
     ## TODO it would be better if this function checked if the changeset were
     ## valid apart from the output before making the API call (to avoid making
     ## the API call if the other params were invalid)
     model = Panic.Networks.model_at_index(network, 0)
-    output = Panic.Platforms.api_call(model, input, user)
+    output = Panic.Platforms.api_call(model, input, network.user_id)
 
     %{
       input: input,
@@ -128,22 +127,21 @@ defmodule Panic.Predictions do
 
   ## Examples
 
-      iex> create_next_prediction(%Prediction{}, %Network{}, %User{})
+      iex> create_next_prediction(%Prediction{}, %Network{})
       {:ok, %Prediction{}}
 
       ## if any of the arguments are invalid
-      iex> create_next_prediction(nil, %Network{}, %User{})
+      iex> create_next_prediction(nil, %Network{})
       {:error, %Ecto.Changeset{}}
 
       ## if the platform API call fails for some reason
-      iex> create_next_prediction(%Prediction{}, %Network{}, %User{})
+      iex> create_next_prediction(%Prediction{}, %Network{})
       {:platform_error, reason}
 
   """
   def create_next_prediction(
         %Prediction{} = previous_prediction,
-        %Network{} = network,
-        %User{} = user
+        %Network{} = network
       ) do
     ## TODO it would be better if this function checked if the changeset were
     ## valid apart from the output before making the API call (to avoid making
@@ -151,7 +149,7 @@ defmodule Panic.Predictions do
     run_index = previous_prediction.run_index + 1
     model = Panic.Networks.model_at_index(network, run_index)
     input = previous_prediction.output
-    output = Panic.Platforms.api_call(model, input, user)
+    output = Panic.Platforms.api_call(model, input, network.user_id)
 
     %{
       input: input,
