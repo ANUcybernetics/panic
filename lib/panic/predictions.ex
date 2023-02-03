@@ -95,16 +95,15 @@ defmodule Panic.Predictions do
     model = Panic.Networks.model_at_index(network, 0)
     output = Panic.Platforms.api_call(model, input, user)
 
-    %Prediction{}
-    |> Prediction.changeset(%{
+    %{
       input: input,
       output: output,
       model: model,
       run_index: 0,
       metadata: %{},
       network_id: network.id
-    })
-    |> Repo.insert()
+    }
+    |> create_prediction()
     |> case do
       {:ok, %Prediction{id: id} = prediction} ->
         ## it's a first run, so set :genesis_id to :id
