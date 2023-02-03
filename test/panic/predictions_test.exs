@@ -2,13 +2,13 @@ defmodule Panic.PredictionsTest do
   use Panic.DataCase
 
   alias Panic.Predictions
+  alias Panic.Predictions.Prediction
+
+  import Panic.PredictionsFixtures
+  import Panic.NetworksFixtures
+  import Panic.AccountsFixtures
 
   describe "predictions" do
-    alias Panic.Predictions.Prediction
-
-    import Panic.PredictionsFixtures
-    import Panic.NetworksFixtures
-
     @invalid_attrs %{input: nil, metadata: nil, model: nil, output: nil, run_index: nil}
 
     test "list_predictions/0 returns all predictions" do
@@ -21,7 +21,7 @@ defmodule Panic.PredictionsTest do
       assert Predictions.get_prediction!(prediction.id) == prediction
     end
 
-    test "create_prediction/1 with valid data and no :genesis_id creates a 'genesis' prediction" do
+    test "create_prediction/1 with valid data creates a prediction" do
       network = network_fixture()
 
       valid_attrs = %{
@@ -30,7 +30,8 @@ defmodule Panic.PredictionsTest do
         model: "some model",
         output: "some output",
         run_index: 42,
-        network_id: network.id
+        network_id: network.id,
+        genesis_id: network.id
       }
 
       assert {:ok, %Prediction{} = prediction} = Predictions.create_prediction(valid_attrs)
@@ -41,30 +42,6 @@ defmodule Panic.PredictionsTest do
       assert prediction.run_index == 42
       assert prediction.network_id == network.id
       assert prediction.genesis_id == network.id
-    end
-
-    test "create_prediction/1 with valid data and a :genesis_id creates a new prediction" do
-      network = network_fixture()
-      genesis_prediction = prediction_fixture(%{network_id: network.id})
-
-      valid_attrs = %{
-        input: "some input",
-        metadata: %{},
-        model: "some model",
-        output: "some output",
-        run_index: 42,
-        network_id: network.id,
-        genesis_id: genesis_prediction.id
-      }
-
-      assert {:ok, %Prediction{} = prediction} = Predictions.create_prediction(valid_attrs)
-      assert prediction.input == "some input"
-      assert prediction.metadata == %{}
-      assert prediction.model == "some model"
-      assert prediction.output == "some output"
-      assert prediction.run_index == 42
-      assert prediction.network_id == network.id
-      assert prediction.genesis_id == genesis_prediction.id
     end
 
     test "create_prediction/1 with invalid data returns error changeset" do
@@ -111,5 +88,29 @@ defmodule Panic.PredictionsTest do
       prediction = prediction_fixture()
       assert %Ecto.Changeset{} = Predictions.change_prediction(prediction)
     end
+  end
+
+  describe "create predictions with real API calls" do
+    setup [:create_user_and_network, :load_env_vars]
+
+    test "create_genesis_prediction/3 works with valid params", %{user: user, network: network} do
+      input = "Tell me a joke about potatoes."
+
+      assert {:ok, %Prediction{output: output}} =
+               Predictions.create_genesis_prediction(input, network, user)
+
+      assert is_binary(output)
+    end
+  end
+
+  defp create_user_and_network(_context) do
+    user = user_fixture()
+    network = network_fixture(%{user_id: user.id})
+    %{user: user, network: network}
+  end
+
+  defp load_env_vars(%{user: user} = context) do
+    insert_api_tokens_from_env(user)
+    context
   end
 end
