@@ -115,6 +115,56 @@ defmodule Panic.Predictions do
   end
 
   @doc """
+  Given a prediction, creates the next one in the Run.
+
+  This function will make the call to the relevant model API (based on the
+  `:models` field of the network) and return the completed `%Prediction{}`
+  object. This might take a while (the API call is synchronous), so call it in a
+  `Task` or something if you're worried about blocking.
+
+  If the model API call fails for whatever reason, this will return a changeset
+  as usual (with _hopefully_ a more helpful error validation message than the
+  usual "can't be blank").
+
+  ## Examples
+
+      iex> create_next_prediction(%Prediction{}, %Network{}, %User{})
+      {:ok, %Prediction{}}
+
+      ## if any of the arguments are invalid
+      iex> create_next_prediction(nil, %Network{}, %User{})
+      {:error, %Ecto.Changeset{}}
+
+      ## if the platform API call fails for some reason
+      iex> create_next_prediction(%Prediction{}, %Network{}, %User{})
+      {:platform_error, reason}
+
+  """
+  def create_next_prediction(
+        %Prediction{} = previous_prediction,
+        %Network{} = network,
+        %User{} = user
+      ) do
+    ## TODO it would be better if this function checked if the changeset were
+    ## valid apart from the output before making the API call (to avoid making
+    ## the API call if the other params were invalid)
+    run_index = previous_prediction.run_index + 1
+    model = Panic.Networks.model_at_index(network, run_index)
+    input = previous_prediction.output
+    output = Panic.Platforms.api_call(model, input, user)
+
+    %{
+      input: input,
+      output: output,
+      model: model,
+      run_index: run_index,
+      metadata: %{},
+      network_id: network.id
+    }
+    |> create_prediction()
+  end
+
+  @doc """
   Creates a "next" prediction - the next one in the run.
 
   ## Examples

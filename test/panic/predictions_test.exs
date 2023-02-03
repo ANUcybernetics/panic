@@ -101,6 +101,19 @@ defmodule Panic.PredictionsTest do
 
       assert is_binary(output)
     end
+
+    test "create_genesis_prediction/3 followed by create_next_prediction/3 works", %{
+      user: user,
+      network: network
+    } do
+      input = "Tell me a joke about potatoes."
+
+      assert {:ok, %Prediction{} = genesis_prediction} =
+               Predictions.create_genesis_prediction(input, network, user)
+
+      assert {:ok, %Prediction{} = next_prediction} =
+               Predictions.create_next_prediction(genesis_prediction, network, user)
+    end
   end
 
   defp create_user_and_network(_context) do
