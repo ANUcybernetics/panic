@@ -1,6 +1,7 @@
 defmodule Panic.RunFSMTest do
   use Panic.DataCase
 
+  alias Panic.Predictions
   import Panic.{AccountsFixtures, NetworksFixtures}
 
   describe "Run FSM" do
@@ -16,6 +17,16 @@ defmodule Panic.RunFSMTest do
       assert %Finitomata.State{current: :running} = Finitomata.state(network.id)
 
       Process.sleep(30_000)
+
+      ## this is a bit hard to test due to the async nature of things, but these
+      ## things are _necessary_ for asserting that it's worked (not necessarily
+      ## _sufficient_)
+
+      ## check we've generated a contiguous sequence of run indexes
+      prediction_indices = Predictions.list_predictions(network) |> Enum.map(& &1.run_index)
+
+      assert Enum.sort(prediction_indices) ==
+               Range.new(0, Enum.max(prediction_indices)) |> Enum.to_list()
 
       send_event_and_sleep(network.id, {:reset, nil})
       assert %Finitomata.State{current: :waiting} = Finitomata.state(network.id)

@@ -14,12 +14,41 @@ defmodule Panic.Predictions do
 
   ## Examples
 
-      iex> list_predictions()
-      [%Prediction{}, ...]
+  iex> list_predictions()
+  [%Prediction{}, ...]
 
   """
   def list_predictions do
     Repo.all(Prediction)
+  end
+
+  @doc """
+  Returns the list of predictions for a given `network`.
+
+  ## Examples
+
+      iex> list_predictions(%Network{})
+      [%Prediction{}, ...]
+
+  """
+  def list_predictions(%Network{id: network_id}) do
+    Repo.all(from p in Prediction, where: p.network_id == ^network_id)
+  end
+
+  @doc """
+  Returns the list of predictions for a given `network` and `genesis_id` (i.e.
+  all the predictions in a run).
+
+  ## Examples
+
+  iex> list_predictions(%Network{}, 15)
+  [%Prediction{}, ...]
+
+  """
+  def list_predictions(%Network{id: network_id}, genesis_id) when is_integer(genesis_id) do
+    Repo.all(
+      from p in Prediction, where: p.network_id == ^network_id and p.genesis_id == ^genesis_id
+    )
   end
 
   @doc """
