@@ -5,10 +5,9 @@ defmodule Panic.RunFSMTest do
   import Panic.{AccountsFixtures, NetworksFixtures}
 
   describe "Run FSM" do
-    setup [:create_network, :load_env_vars]
+    setup [:create_network, :load_env_vars, :start_fsm]
 
     test "golden path", %{network: network} do
-      Finitomata.start_fsm(Panic.Runs.RunFSM, network.id, %{network: network})
       assert Finitomata.alive?(network.id)
       assert %Finitomata.State{current: :waiting} = Finitomata.state(network.id)
 
@@ -16,8 +15,8 @@ defmodule Panic.RunFSMTest do
       send_event_and_sleep(network.id, {:input, "ok, let's kick things off..."})
       assert %Finitomata.State{current: :running} = Finitomata.state(network.id)
 
-      seconds = 30
-      IO.puts("about to run the FSM for #{seconds}s... please be patient")
+      seconds = 10
+      IO.puts("about to run the FSM for #{seconds}s, please be patient...")
       Process.sleep(seconds * 1000)
 
       ## this is a bit hard to test due to the async nature of things, but these
@@ -47,6 +46,11 @@ defmodule Panic.RunFSMTest do
 
   defp load_env_vars(%{network: network} = context) do
     insert_api_tokens_from_env(network.user_id)
+    context
+  end
+
+  defp start_fsm(%{network: network} = context) do
+    Finitomata.start_fsm(Panic.Runs.RunFSM, network.id, %{network: network})
     context
   end
 
