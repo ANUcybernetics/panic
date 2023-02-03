@@ -106,7 +106,7 @@ defmodule Panic.Networks do
     Enum.at(models, index)
   end
 
-  def next_model(%Network{models: models}, %Prediction{run_index: run_index}) do
+  def next_model(%Network{models: models}, %Panic.Predictions.Prediction{run_index: run_index}) do
     Enum.at(models, Integer.mod(run_index + 1, Enum.count(models)))
   end
 end
