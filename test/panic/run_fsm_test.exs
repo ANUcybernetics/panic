@@ -16,7 +16,7 @@ defmodule Panic.RunFSMTest do
       send_event_and_sleep(network.id, {:input, "ok, let's kick things off..."})
       assert %Finitomata.State{current: :running} = Finitomata.state(network.id)
 
-      seconds = 10
+      seconds = 30
       IO.puts("about to run the FSM for #{seconds}s... please be patient")
       Process.sleep(seconds * 1000)
 
@@ -28,7 +28,7 @@ defmodule Panic.RunFSMTest do
       send_event_and_sleep(network.id, {:reset, nil})
       assert %Finitomata.State{current: :waiting} = Finitomata.state(network.id)
 
-      IO.inspect("shutting things down...")
+      IO.puts("shutting things down...")
       send_event_and_sleep(network.id, {:shut_down, nil})
       ## here, at the end of all things
       assert not Finitomata.alive?(network.id)
@@ -63,6 +63,6 @@ defmodule Panic.RunFSMTest do
     assert Enum.chunk_every(predictions, 2, 1, :discard)
            |> Enum.all?(fn [a, b] -> a.output == b.input end)
 
-    IO.inspect("successfully checked run invariants on #{Enum.count(predictions)} predictions")
+    IO.puts("successfully checked run invariants on #{Enum.count(predictions)} predictions")
   end
 end
