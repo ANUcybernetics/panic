@@ -7,7 +7,7 @@ defmodule Panic.RunFSMTest do
   describe "Run FSM" do
     setup [:create_network, :load_env_vars]
 
-    test "single user, golden path", %{network: network} do
+    test "golden path", %{network: network} do
       Finitomata.start_fsm(Panic.Runs.RunFSM, network.id, %{network: network})
       assert Finitomata.alive?(network.id)
       assert %Finitomata.State{current: :waiting} = Finitomata.state(network.id)
