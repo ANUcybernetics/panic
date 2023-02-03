@@ -17,7 +17,6 @@ defmodule Panic.PlatformsTest do
 
       output = OpenAI.create("davinci-instruct-beta", input, user)
 
-      IO.inspect(input <> output)
       assert is_binary(output)
     end
 
@@ -26,7 +25,6 @@ defmodule Panic.PlatformsTest do
 
       output = OpenAI.create("text-davinci-003", input, user)
 
-      IO.inspect(input <> output)
       assert is_binary(output)
     end
 
@@ -35,7 +33,6 @@ defmodule Panic.PlatformsTest do
 
       output = OpenAI.create("text-ada-001", input, user)
 
-      IO.inspect(input <> output)
       assert is_binary(output)
     end
   end
