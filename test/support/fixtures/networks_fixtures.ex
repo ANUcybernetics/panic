@@ -15,9 +15,9 @@ defmodule Panic.NetworksFixtures do
     {:ok, network} =
       Map.merge(
         %{
-          description: "some description",
+          description: "a test network (but the models are real)",
           models: ["openai:text-davinci-003", "openai:text-ada-001"],
-          name: "some name",
+          name: "My Awesome Network",
           user_id: user.id
         },
         attrs
