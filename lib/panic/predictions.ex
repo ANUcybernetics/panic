@@ -25,6 +25,8 @@ defmodule Panic.Predictions do
   @doc """
   Returns the list of predictions for a given `network`.
 
+  Results are ordered by the `:run_index` field
+
   ## Examples
 
       iex> list_predictions(%Network{})
@@ -32,12 +34,16 @@ defmodule Panic.Predictions do
 
   """
   def list_predictions(%Network{id: network_id}) do
-    Repo.all(from p in Prediction, where: p.network_id == ^network_id)
+    Repo.all(
+      from p in Prediction, where: p.network_id == ^network_id, order_by: [asc: p.run_index]
+    )
   end
 
   @doc """
   Returns the list of predictions for a given `network` and `genesis_id` (i.e.
   all the predictions in a run).
+
+  Results are ordered by the `:run_index` field
 
   ## Examples
 
@@ -47,7 +53,9 @@ defmodule Panic.Predictions do
   """
   def list_predictions(%Network{id: network_id}, genesis_id) when is_integer(genesis_id) do
     Repo.all(
-      from p in Prediction, where: p.network_id == ^network_id and p.genesis_id == ^genesis_id
+      from p in Prediction,
+        where: p.network_id == ^network_id and p.genesis_id == ^genesis_id,
+        order_by: [asc: p.run_index]
     )
   end
 
