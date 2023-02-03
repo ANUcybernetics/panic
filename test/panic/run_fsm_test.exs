@@ -14,7 +14,7 @@ defmodule Panic.RunFSMTest do
       assert %Finitomata.State{current: :waiting} = Finitomata.state(fsm_name)
 
       ## genesis input
-      send_event_and_sleep(fsm_name, {:input, %{input: "ok, let's kick things off..."}})
+      send_event_and_sleep(fsm_name, {:input, "ok, let's kick things off..."})
       assert %Finitomata.State{current: :running} = Finitomata.state(fsm_name)
 
       Process.sleep(10_000)
