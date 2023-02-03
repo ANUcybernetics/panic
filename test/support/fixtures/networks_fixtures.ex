@@ -16,7 +16,7 @@ defmodule Panic.NetworksFixtures do
       Map.merge(
         %{
           description: "some description",
-          models: ["model1", "model2"],
+          models: ["openai:text-davinci-003", "openai:text-ada-001"],
           name: "some name",
           user_id: user.id
         },
