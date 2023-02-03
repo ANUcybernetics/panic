@@ -20,7 +20,8 @@ defmodule Panic.Application do
       PanicWeb.Endpoint,
       # Start a worker by calling: Panic.Worker.start_link(arg)
       # {Panic.Worker, arg}
-      Finitomata
+      Finitomata,
+      {Task.Supervisor, name: Panic.Platforms.TaskSupervisor}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
