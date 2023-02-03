@@ -16,17 +16,14 @@ defmodule Panic.RunFSMTest do
       send_event_and_sleep(network.id, {:input, "ok, let's kick things off..."})
       assert %Finitomata.State{current: :running} = Finitomata.state(network.id)
 
-      Process.sleep(30_000)
+      seconds = 10
+      IO.puts("about to run the FSM for #{seconds}s... please be patient")
+      Process.sleep(seconds * 1000)
 
       ## this is a bit hard to test due to the async nature of things, but these
       ## things are _necessary_ for asserting that it's worked (not necessarily
       ## _sufficient_)
-
-      ## check we've generated a contiguous sequence of run indexes
-      prediction_indices = Predictions.list_predictions(network) |> Enum.map(& &1.run_index)
-
-      assert Enum.sort(prediction_indices) ==
-               Range.new(0, Enum.max(prediction_indices)) |> Enum.to_list()
+      check_run_invariants(network)
 
       send_event_and_sleep(network.id, {:reset, nil})
       assert %Finitomata.State{current: :waiting} = Finitomata.state(network.id)
@@ -51,5 +48,15 @@ defmodule Panic.RunFSMTest do
   defp load_env_vars(%{network: network} = context) do
     insert_api_tokens_from_env(network.user_id)
     context
+  end
+
+  defp check_run_invariants(network) do
+    [genesis | rest] = Predictions.list_predictions(network)
+    assert genesis.run_index == 0
+
+    assert Enum.map([genesis] ++ rest, & &1.run_index) ==
+             Range.new(0, Enum.count(rest)) |> Enum.to_list()
+
+    assert Enum.all?(rest, fn p -> p.genesis_id == genesis.id end)
   end
 end
