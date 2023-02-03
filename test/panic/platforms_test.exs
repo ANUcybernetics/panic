@@ -10,14 +10,42 @@ defmodule Panic.PlatformsTest do
   alias Panic.Platforms.{OpenAI, Replicate}
 
   describe "OpenAI" do
-    test "davinci GPT3 responds when given a valid prompt" do
-      user = user_fixture()
-      insert_api_tokens_from_env(user)
-      prompt = "why did the chicken cross the road?"
+    setup [:create_user, :load_env_vars]
 
-      output = OpenAI.create("davinci-instruct-beta", prompt, user)
+    test "davinci-instruct-beta responds when given a valid prompt", %{user: user} do
+      input = "explain how a chicken would cross a road."
 
+      output = OpenAI.create("davinci-instruct-beta", input, user)
+
+      IO.inspect(input <> output)
       assert is_binary(output)
     end
+
+    test "text-davinci-003 responds when given a valid prompt", %{user: user} do
+      input = "hello Leonardo, what's your middle name?"
+
+      output = OpenAI.create("text-davinci-003", input, user)
+
+      IO.inspect(input <> output)
+      assert is_binary(output)
+    end
+
+    test "text-ada-001 responds when given a valid prompt", %{user: user} do
+      input = "what year did Ada Lovelace first visit the moon?"
+
+      output = OpenAI.create("text-ada-001", input, user)
+
+      IO.inspect(input <> output)
+      assert is_binary(output)
+    end
+  end
+
+  defp create_user(_context) do
+    %{user: user_fixture()}
+  end
+
+  defp load_env_vars(%{user: user} = context) do
+    insert_api_tokens_from_env(user)
+    context
   end
 end
