@@ -41,6 +41,7 @@ defmodule PanicWeb.APITokenLive.Index do
   end
 
   defp list_api_tokens do
-    Accounts.list_api_tokens()
+    # Accounts.list_api_tokens() # need to pass the user in
+    []
   end
 end
