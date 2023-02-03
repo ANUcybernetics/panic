@@ -51,12 +51,18 @@ defmodule Panic.RunFSMTest do
   end
 
   defp check_run_invariants(network) do
-    [genesis | rest] = Predictions.list_predictions(network)
+    predictions = Predictions.list_predictions(network)
+    [genesis | rest] = predictions
     assert genesis.run_index == 0
 
-    assert Enum.map([genesis] ++ rest, & &1.run_index) ==
+    assert Enum.map(predictions, & &1.run_index) ==
              Range.new(0, Enum.count(rest)) |> Enum.to_list()
 
     assert Enum.all?(rest, fn p -> p.genesis_id == genesis.id end)
+
+    assert Enum.chunk_every(predictions, 2, 1, :discard)
+           |> Enum.all?(fn [a, b] -> a.output == b.input end)
+
+    IO.inspect("successfully checked run invariants on #{Enum.count(predictions)} predictions")
   end
 end
