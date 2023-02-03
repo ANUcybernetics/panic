@@ -17,7 +17,7 @@ defmodule Panic.Platforms.OpenAI do
     end
   end
 
-  def create("davinci-instruct-beta" = model, prompt, user) do
+  def create(model, prompt, user) when model in ["text-davinci-003", "text-ada-001", "davinci-instruct-beta"] do
     request_body = %{
       prompt: prompt,
       max_tokens: @max_response_length,
