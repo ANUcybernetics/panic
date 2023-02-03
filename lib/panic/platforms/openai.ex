@@ -31,7 +31,11 @@ defmodule Panic.Platforms.OpenAI do
       {:ok, %Finch.Response{body: response_body, status: 200}} ->
         %{"choices" => [%{"text" => text} | _choices]} = Jason.decode!(response_body)
 
-        if text == "", do: "GPT-3 could not complete the prompt.", else: String.downcase(text)
+        if text == "" do
+          "model #{model} could not complete the prompt."
+        else
+          text
+        end
     end
   end
 
