@@ -194,7 +194,8 @@ defmodule Panic.Predictions do
       model: model,
       run_index: run_index,
       metadata: %{},
-      network_id: network.id
+      network_id: network.id,
+      genesis_id: previous_prediction.genesis_id
     }
     |> create_prediction()
   end
