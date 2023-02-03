@@ -43,13 +43,16 @@ defmodule Panic.Runs.RunFSM do
       {:ok, prediction} =
         case payload.latest_input do
           nil ->
-            Predictions.create_genesis_prediction(input, payload.network, payload.user)
+            IO.inspect({input, payload.network})
+            Predictions.create_genesis_prediction(input, payload.network)
 
           %Prediction{} = previous_prediction ->
-            Predictions.create_next_prediction(previous_prediction, payload.network, payload.user)
+            Predictions.create_next_prediction(previous_prediction, payload.network)
         end
 
+      IO.inspect("pre-message")
       Finitomata.transition("network:#{payload.network.id}", {:input, prediction.output})
+      IO.inspect("post-message")
 
       if state == :waiting do
         {:ok, state,

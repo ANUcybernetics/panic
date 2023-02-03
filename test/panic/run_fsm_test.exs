@@ -4,12 +4,12 @@ defmodule Panic.RunFSMTest do
   import Panic.{AccountsFixtures, NetworksFixtures}
 
   describe "Run FSM" do
-    setup [:create_user_and_network, :load_env_vars]
+    setup [:create_network, :load_env_vars]
 
-    test "single user, golden path", %{user: user, network: network} do
+    test "single user, golden path", %{network: network} do
       fsm_name = "network:#{network.id}"
 
-      Finitomata.start_fsm(Panic.Runs.RunFSM, fsm_name, %{user: user, network: network})
+      Finitomata.start_fsm(Panic.Runs.RunFSM, fsm_name, %{network: network})
       assert Finitomata.alive?(fsm_name)
       assert %Finitomata.State{current: :waiting} = Finitomata.state(fsm_name)
 
@@ -36,14 +36,12 @@ defmodule Panic.RunFSMTest do
     Process.sleep(sleep_dur)
   end
 
-  defp create_user_and_network(_context) do
-    user = user_fixture()
-    network = network_fixture(%{user_id: user.id})
-    %{user: user, network: network}
+  defp create_network(_context) do
+    %{network: network_fixture()}
   end
 
-  defp load_env_vars(%{user: user} = context) do
-    insert_api_tokens_from_env(user)
+  defp load_env_vars(%{network: network} = context) do
+    insert_api_tokens_from_env(network.user_id)
     context
   end
 end
