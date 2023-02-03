@@ -111,7 +111,7 @@ defmodule Panic.PredictionsTest do
       assert {:ok, %Prediction{} = genesis_prediction} =
                Predictions.create_genesis_prediction(input, network, user)
 
-      assert {:ok, %Prediction{} = next_prediction} =
+      assert {:ok, %Prediction{} = _next_prediction} =
                Predictions.create_next_prediction(genesis_prediction, network, user)
     end
   end
