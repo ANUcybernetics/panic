@@ -6,12 +6,14 @@ defmodule Panic.Runs.RunFSM do
 
   @fsm """
   pre_run --> |init!| waiting
-  waiting --> |prediction| running
-  running --> |prediction| running
+  waiting --> |input| running
+  running --> |input| running
+  waiting --> |pause| waiting
+  running --> |pause| waiting
+  waiting --> |reset| waiting
   running --> |reset| waiting
-  waiting --> |end_run| post_run
-  running --> |pause| post_run
-  waiting --> |pause| post_run
+  waiting --> |shut_down| post_run
+  running --> |shut_down| post_run
   """
 
   use Finitomata, fsm: @fsm, auto_terminate: true
@@ -20,49 +22,49 @@ defmodule Panic.Runs.RunFSM do
 
   @impl Finitomata
   def on_transition(:pre_run, :init!, _event_payload, payload) do
-    payload =
-      payload
-      |> Map.put(:last_prediction, nil)
-      |> Map.put(:lockout_time, NaiveDateTime.utc_now())
-
-    {:ok, :waiting, payload}
+    {:ok, :waiting,
+     payload
+     |> Map.put(:lockout_time, NaiveDateTime.utc_now())
+     |> Map.put(:latest_input, nil)}
   end
 
   @impl Finitomata
-  def on_transition(:running, :reset, _event_payload, payload) do
-    {:ok, :waiting, %{payload | last_prediction: nil, lockout_time: NaiveDateTime.utc_now()}}
+  def on_transition(_state, :reset, _event_payload, payload) do
+    {:ok, :waiting, %{payload | lockout_time: NaiveDateTime.utc_now(), latest_input: nil}}
   end
 
   @impl Finitomata
-  def on_transition(:waiting, :prediction, prediction, payload) do
-    payload =
-      payload
-      |> Map.put(:last_prediction, prediction)
-      |> Map.put(:lockout_time, NaiveDateTime.utc_now() |> NaiveDateTime.add(30, :second))
+  def on_transition(state, :input, input, payload) do
+    if locked_out_now?(payload.lockout_time) do
+      IO.inspect("locked out, dropping input: #{input}")
 
-    {:ok, :running, payload}
-  end
+      {:ok, state, payload}
+    else
+      {:ok, prediction} =
+        case payload.latest_input do
+          nil ->
+            Predictions.create_genesis_prediction(input, payload.network, payload.user)
 
-  @impl Finitomata
-  def on_transition(:running, :prediction, prediction, payload) do
-    case {prediction, NaiveDateTime.utc_now()} do
-      {%Prediction{run_index: 0}, now} when now > payload.lockout_time ->
-        {:ok, :running, %{payload | last_prediction: prediction}}
+          %Prediction{} = previous_prediction ->
+            Predictions.create_next_prediction(previous_prediction, payload.network, payload.user)
+        end
 
-      _ ->
-        {:ok, :running, payload}
+      Finitomata.transition("network:#{payload.network.id}", {:input, prediction.output})
+
+      if state == :waiting do
+        {:ok, state,
+         %{
+           payload
+           | lockout_time: NaiveDateTime.utc_now() |> NaiveDateTime.add(30),
+             latest_input: prediction
+         }}
+      else
+        {:ok, state, %{payload | latest_input: prediction}}
+      end
     end
   end
 
-  @impl Finitomata
-  def on_enter(:running, %Finitomata.State{
-        payload: %{last_prediction: last_prediction, network: network}
-      }) do
-    {:ok, prediction} = Predictions.create_next_prediction(last_prediction)
-    IO.inspect("API call goes here, current run index #{last_prediction.run_index + 1}")
-    Process.sleep(1_000)
-    Finitomata.transition("network:#{network.id}", {:prediction, prediction})
-
-    :ok
+  defp locked_out_now?(lockout_time) do
+    lockout_time > NaiveDateTime.utc_now()
   end
 end
