@@ -32,6 +32,32 @@ defmodule Panic.RunFSMTest do
       ## here, at the end of all things
       assert not Finitomata.alive?(network.id)
     end
+
+    test "receive new input in initial lockout period (first 10 cycles)", %{network: network} do
+      # genesis input
+      first_input = "tell me a story about a bunny"
+      send_event_and_sleep(network.id, {:input, first_input})
+
+      assert %Finitomata.State{current: :running} = Finitomata.state(network.id)
+
+      second_input = "a second input, hot on the heels of the first"
+      send_event_and_sleep(network.id, {:input, second_input})
+
+      seconds = 10
+      IO.puts("about to run the FSM for #{seconds}s, please be patient...")
+      Process.sleep(seconds * 1000)
+
+      # check we only got one genesis input (because the second input came during the lockout period)
+      assert [genesis] =
+               Predictions.list_predictions(network) |> Enum.filter(fn p -> p.run_index == 0 end)
+
+      assert genesis.input == first_input
+
+      ## this is a bit hard to test due to the async nature of things, but these
+      ## things are _necessary_ for asserting that it's worked (not necessarily
+      ## _sufficient_)
+      check_run_invariants(network)
+    end
   end
 
   # helper function for testing FSMs (because it takes a bit for them to finish transitioning)
