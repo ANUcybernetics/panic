@@ -20,15 +20,21 @@ defmodule Panic.Runs.RunFSM do
   alias Panic.Predictions
   alias Panic.Predictions.Prediction
 
+  @lockout_seconds 30
+
   @impl Finitomata
   def on_transition(:pre_run, :init!, _event_payload, payload) do
-    {:ok, :waiting, Map.put(payload, :last_input, nil)}
+    {:ok, :waiting,
+     payload
+     |> Map.put(:last_input, nil)
+     ## make sure this is in the past
+     |> Map.put(:lockout_time, later(-1, :day))}
   end
 
   @impl Finitomata
   def on_transition(state, :input, input, %{network: network} = payload) do
     ## first 10 cycles is the "lockout period"
-    if next_in_run?(input, payload.last_input) do
+    if accept_new_input?(input, payload) do
       Task.Supervisor.start_child(
         Panic.Platforms.TaskSupervisor,
         fn ->
@@ -46,7 +52,12 @@ defmodule Panic.Runs.RunFSM do
         restart: :transient
       )
 
-      {:ok, :running, %{payload | last_input: input}}
+      if state == :waiting do
+        IO.puts("setting lockout time 30s into the future")
+        {:ok, :running, %{payload | last_input: input, lockout_time: later(@lockout_seconds)}}
+      else
+        {:ok, :running, %{payload | last_input: input}}
+      end
     else
       {:ok, state, payload}
     end
@@ -66,7 +77,11 @@ defmodule Panic.Runs.RunFSM do
 
   @impl Finitomata
   def on_transition(_state, :reset, _event_payload, payload) do
-    {:ok, :waiting, payload}
+    {:ok, :waiting,
+     payload
+     |> Map.put(:last_input, nil)
+     ## make sure this is in the past
+     |> Map.put(:lockout_time, later(-1, :day))}
   end
 
   defp next_in_run?(input, last_input) do
@@ -77,4 +92,17 @@ defmodule Panic.Runs.RunFSM do
       _ -> false
     end
   end
+
+  defp accept_new_input?(input, payload) do
+    cond do
+      next_in_run?(input, payload.last_input) -> true
+      is_binary(input) -> now() > payload.lockout_time
+      true -> false
+    end
+  end
+
+  defp now(), do: NaiveDateTime.utc_now()
+
+  defp later(amount_to_add, unit \\ :second),
+    do: NaiveDateTime.utc_now() |> NaiveDateTime.add(amount_to_add, unit)
 end
