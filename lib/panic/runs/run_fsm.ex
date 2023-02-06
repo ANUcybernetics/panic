@@ -37,7 +37,8 @@ defmodule Panic.Runs.RunFSM do
         :new_prediction,
         %Prediction{} = new_prediction,
         %{network: network} = payload
-      ) do
+      )
+      when state in [:waiting, :running] do
     cond do
       ## a new genesis prediction
       new_prediction.run_index == 0 and NaiveDateTime.compare(now(), payload.lockout_time) == :gt ->
