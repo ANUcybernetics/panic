@@ -6,8 +6,8 @@ defmodule Panic.Runs.RunFSM do
 
   @fsm """
   pre_run --> |init!| waiting
-  waiting --> |input| running
-  running --> |input| running
+  waiting --> |new_prediction| running
+  running --> |new_prediction| running
   running --> |reset| waiting
   waiting --> |lock| locked
   running --> |lock| locked
@@ -26,40 +26,39 @@ defmodule Panic.Runs.RunFSM do
   def on_transition(:pre_run, :init!, _event_payload, payload) do
     {:ok, :waiting,
      payload
-     |> Map.put(:last_input, nil)
+     ## the "head" prediction is the most recent prediction in the current run
+     ## (it's sortof the opposite of the genesis prediction)
+     |> Map.put(:head_prediction, nil)
      ## make sure this is in the past
-     |> Map.put(:lockout_time, later(-1, :day))}
+     |> Map.put(:lockout_time, from_now(-1, :day))}
   end
 
   @impl Finitomata
-  def on_transition(state, :input, input, %{network: network} = payload) do
-    ## first 10 cycles is the "lockout period"
-    if accept_new_input?(input, payload) do
-      Task.Supervisor.start_child(
-        Panic.Platforms.TaskSupervisor,
-        fn ->
-          {:ok, prediction} =
-            case input do
-              input when is_binary(input) ->
-                Predictions.create_genesis_prediction(input, network)
+  def on_transition(
+        state,
+        :new_prediction,
+        %Prediction{} = new_prediction,
+        %{network: network} = payload
+      ) do
+    cond do
+      ## a new genesis prediction
+      new_prediction.run_index == 0 and now() > payload.lockout_time ->
+        create_new_prediction_async(new_prediction, network)
 
-              %Prediction{} = previous_prediction ->
-                Predictions.create_next_prediction(previous_prediction, network)
-            end
+        {:ok, :running,
+         %{payload | head_prediction: new_prediction, lockout_time: from_now(@lockout_seconds)}}
 
-          Finitomata.transition(network.id, {:input, prediction})
-        end,
-        restart: :transient
-      )
+      ## continuing on with things
+      next_in_run?(new_prediction, payload.head_prediction) ->
+        create_new_prediction_async(new_prediction, network)
 
-      if state == :waiting do
-        IO.puts("setting lockout time 30s into the future")
-        {:ok, :running, %{payload | last_input: input, lockout_time: later(@lockout_seconds)}}
-      else
-        {:ok, :running, %{payload | last_input: input}}
-      end
-    else
-      {:ok, state, payload}
+        {:ok, :running,
+         %{payload | head_prediction: new_prediction, lockout_time: from_now(@lockout_seconds)}}
+
+      ## otherwise, ignore and delete orphaned prediction
+      true ->
+        Predictions.delete_prediction(new_prediction)
+        {:ok, state, payload}
     end
   end
 
@@ -79,30 +78,32 @@ defmodule Panic.Runs.RunFSM do
   def on_transition(_state, :reset, _event_payload, payload) do
     {:ok, :waiting,
      payload
-     |> Map.put(:last_input, nil)
+     |> Map.put(:head_prediction, nil)
      ## make sure this is in the past
-     |> Map.put(:lockout_time, later(-1, :day))}
+     |> Map.put(:lockout_time, from_now(-1, :day))}
   end
 
-  defp next_in_run?(input, last_input) do
-    case {input, last_input} do
-      {input, nil} when is_binary(input) -> true
-      {%Prediction{run_index: 0}, <<>>} -> true
-      {%Prediction{run_index: current}, %Prediction{run_index: last}} -> current == last + 1
-      _ -> false
-    end
-  end
-
-  defp accept_new_input?(input, payload) do
-    cond do
-      next_in_run?(input, payload.last_input) -> true
-      is_binary(input) -> now() > payload.lockout_time
-      true -> false
-    end
+  defp create_new_prediction_async(%Prediction{} = new_prediction, network) do
+    Task.Supervisor.start_child(
+      Panic.Platforms.TaskSupervisor,
+      fn ->
+        {:ok, next_prediction} = Predictions.create_next_prediction(new_prediction, network)
+        Finitomata.transition(network.id, {:new_prediction, next_prediction})
+      end,
+      restart: :transient
+    )
   end
 
   defp now(), do: NaiveDateTime.utc_now()
 
-  defp later(amount_to_add, unit \\ :second),
+  defp from_now(amount_to_add, unit \\ :second),
     do: NaiveDateTime.utc_now() |> NaiveDateTime.add(amount_to_add, unit)
+
+  defp next_in_run?(%Prediction{}, nil), do: true
+
+  defp next_in_run?(%Prediction{run_index: new_index}, %Prediction{run_index: head_index}) do
+    new_index == head_index + 1
+  end
+
+  defp next_in_run?(_new_prediction, _head_prediction), do: false
 end

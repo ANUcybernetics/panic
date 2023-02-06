@@ -54,7 +54,10 @@ defmodule Panic.RunFSMTest do
       assert %Finitomata.State{current: :waiting} = Finitomata.state(network.id)
 
       ## genesis input
-      send_event_and_sleep(network.id, {:input, "ok, let's kick things off..."})
+      {:ok, genesis_prediction} =
+        Predictions.create_genesis_prediction("ok, let's kick things off...", network)
+
+      send_event_and_sleep(network.id, {:new_prediction, genesis_prediction})
       assert %Finitomata.State{current: :running} = Finitomata.state(network.id)
 
       seconds = 10
@@ -72,23 +75,29 @@ defmodule Panic.RunFSMTest do
 
     test "receive new input in initial lockout period", %{network: network} do
       # genesis input
-      first_input = "tell me a story about a bunny"
-      send_event_and_sleep(network.id, {:input, first_input})
+      {:ok, first_genesis_prediction} =
+        Predictions.create_genesis_prediction("tell me a story about a bunny", network)
+
+      send_event_and_sleep(network.id, {:new_prediction, first_genesis_prediction})
 
       assert %Finitomata.State{current: :running} = Finitomata.state(network.id)
 
-      second_input = "a second input, hot on the heels of the first"
+      {:ok, second_genesis_prediction} =
+        Predictions.create_genesis_prediction(
+          "a second input, hot on the heels of the first",
+          network
+        )
 
       seconds = 10
       IO.puts("about to run the FSM for #{seconds}s, please be patient...")
-      send_event_and_sleep(network.id, {:input, second_input})
+      send_event_and_sleep(network.id, {:new_prediction, second_genesis_prediction})
       Process.sleep(seconds * 1000)
 
       # check we only got one genesis input (because the second input came during the lockout period)
       assert [genesis] =
                Predictions.list_predictions(network) |> Enum.filter(fn p -> p.run_index == 0 end)
 
-      assert genesis.input == first_input
+      assert genesis.input == first_genesis_prediction.input
 
       ## this is a bit hard to test due to the async nature of things, but these
       ## things are _necessary_ for asserting that it's worked (not necessarily
