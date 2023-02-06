@@ -10,19 +10,6 @@ defmodule Panic.Predictions do
   alias Panic.Networks.Network
 
   @doc """
-  Returns the list of predictions.
-
-  ## Examples
-
-  iex> list_predictions()
-  [%Prediction{}, ...]
-
-  """
-  def list_predictions do
-    Repo.all(Prediction)
-  end
-
-  @doc """
   Returns the list of predictions for a given `network`.
 
   Results are ordered by the `:run_index` field
