@@ -20,8 +20,6 @@ defmodule Panic.Runs.RunFSM do
   alias Panic.Predictions
   alias Panic.Predictions.Prediction
 
-  @lockout_seconds 30
-
   @impl Finitomata
   def on_transition(:pre_run, :init!, _event_payload, payload) do
     {:ok, :waiting,
@@ -42,22 +40,23 @@ defmodule Panic.Runs.RunFSM do
       ) do
     cond do
       ## a new genesis prediction
-      new_prediction.run_index == 0 and now() > payload.lockout_time ->
+      new_prediction.run_index == 0 and NaiveDateTime.compare(now(), payload.lockout_time) == :gt ->
+        # debug_helper("genesis", new_prediction)
         create_new_prediction_async(new_prediction, network)
 
-        {:ok, :running,
-         %{payload | head_prediction: new_prediction, lockout_time: from_now(@lockout_seconds)}}
+        {:ok, :running, %{payload | head_prediction: new_prediction, lockout_time: from_now(30)}}
 
       ## continuing on with things
       next_in_run?(new_prediction, payload.head_prediction) ->
+        # debug_helper("next", new_prediction)
         create_new_prediction_async(new_prediction, network)
 
-        {:ok, :running,
-         %{payload | head_prediction: new_prediction, lockout_time: from_now(@lockout_seconds)}}
+        {:ok, :running, %{payload | head_prediction: new_prediction}}
 
       ## otherwise, ignore and delete orphaned prediction
       true ->
-        Predictions.delete_prediction(new_prediction)
+        # debug_helper("orphan", new_prediction)
+        {:ok, %Prediction{}} = Predictions.delete_prediction(new_prediction)
         {:ok, state, payload}
     end
   end
@@ -106,4 +105,10 @@ defmodule Panic.Runs.RunFSM do
   end
 
   defp next_in_run?(_new_prediction, _head_prediction), do: false
+
+  # defp debug_helper(state, prediction) do
+  #   IO.puts(
+  #     "#{state}: #{prediction.id}-#{prediction.run_index}-#{prediction.genesis_id} #{prediction.input}"
+  #   )
+  # end
 end

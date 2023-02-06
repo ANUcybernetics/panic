@@ -41,6 +41,6 @@ defmodule PanicWeb.PredictionLive.Index do
   end
 
   defp list_predictions do
-    Predictions.list_predictions()
+    # Predictions.list_predictions()
   end
 end
