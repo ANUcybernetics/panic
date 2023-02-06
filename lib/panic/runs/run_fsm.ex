@@ -105,10 +105,4 @@ defmodule Panic.Runs.RunFSM do
   end
 
   defp next_in_run?(_new_prediction, _head_prediction), do: false
-
-  # defp debug_helper(state, prediction) do
-  #   IO.puts(
-  #     "#{state}: #{prediction.id}-#{prediction.run_index}-#{prediction.genesis_id} #{prediction.input}"
-  #   )
-  # end
 end
