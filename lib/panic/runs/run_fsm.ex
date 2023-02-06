@@ -98,7 +98,7 @@ defmodule Panic.Runs.RunFSM do
   defp from_now(amount_to_add, unit \\ :second),
     do: NaiveDateTime.utc_now() |> NaiveDateTime.add(amount_to_add, unit)
 
-  defp next_in_run?(%Prediction{}, nil), do: true
+  defp next_in_run?(%Prediction{run_index: 0}, nil), do: true
 
   defp next_in_run?(%Prediction{run_index: new_index}, %Prediction{run_index: head_index}) do
     new_index == head_index + 1
