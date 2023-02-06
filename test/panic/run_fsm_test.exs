@@ -110,6 +110,13 @@ defmodule Panic.RunFSMTest do
     end
   end
 
+  describe "static FSM checks" do
+    test "transitions" do
+      {:ok, transitions} = Finitomata.Mermaid.parse(Panic.Runs.RunFSM.fsm_description())
+      assert Finitomata.Transition.allowed(transitions, :waiting, :waiting)
+    end
+  end
+
   # helper function for testing FSMs (because it takes a bit for them to finish transitioning)
   defp send_event_and_sleep(network_id, event, sleep_dur) do
     Finitomata.transition(network_id, event)
