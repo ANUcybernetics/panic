@@ -35,7 +35,9 @@ defmodule Panic.Predictions do
   """
   def list_predictions(%Network{id: network_id}) do
     Repo.all(
-      from p in Prediction, where: p.network_id == ^network_id, order_by: [asc: p.run_index]
+      from p in Prediction,
+        where: p.network_id == ^network_id,
+        order_by: [asc: p.genesis_id, asc: p.run_index]
     )
   end
 
