@@ -111,7 +111,7 @@ defmodule Panic.RunFSMTest do
   end
 
   # helper function for testing FSMs (because it takes a bit for them to finish transitioning)
-  defp send_event_and_sleep(network_id, event, sleep_dur \\ 200) do
+  defp send_event_and_sleep(network_id, event, sleep_dur) do
     Finitomata.transition(network_id, event)
     Process.sleep(sleep_dur)
   end
