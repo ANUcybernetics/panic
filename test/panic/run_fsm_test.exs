@@ -6,9 +6,6 @@ defmodule Panic.RunFSMTest do
   alias Panic.Predictions
   import Panic.{AccountsFixtures, NetworksFixtures}
 
-  # when we need to let the thing run, how long to let it run for?
-  @fsm_runtime 10_000
-
   setup_with_mocks([
     {Panic.Platforms, [],
      [
@@ -47,10 +44,8 @@ defmodule Panic.RunFSMTest do
       {:ok, genesis_prediction} =
         Predictions.create_genesis_prediction("ok, let's kick things off...", network)
 
-      send_event_and_sleep(network.id, {:new_prediction, genesis_prediction})
+      send_event_and_sleep(network.id, {:new_prediction, genesis_prediction}, 10_000)
       assert %Finitomata.State{current: :running} = Finitomata.state(network.id)
-
-      Process.sleep(@fsm_runtime)
 
       ## this is a bit hard to test due to the async nature of things, but these
       ## things are _necessary_ for asserting that it's worked (not necessarily
@@ -74,9 +69,7 @@ defmodule Panic.RunFSMTest do
         )
 
       send_event_and_sleep(network.id, {:new_prediction, first_genesis_prediction}, 0)
-      send_event_and_sleep(network.id, {:new_prediction, second_genesis_prediction})
-
-      Process.sleep(@fsm_runtime)
+      send_event_and_sleep(network.id, {:new_prediction, second_genesis_prediction}, 10_000)
 
       # check we only kept the first genesis input
       assert [first_genesis] =
@@ -88,6 +81,30 @@ defmodule Panic.RunFSMTest do
 
       # check we didn't keep any of the runs from the second genesis prediction
       assert [] = Predictions.list_predictions(network, second_genesis_prediction.id)
+
+      check_network_invariants(network)
+    end
+
+    test "receive new genesis prediction after of lockout period ends", %{network: network} do
+      # genesis input
+      {:ok, first_genesis_prediction} =
+        Predictions.create_genesis_prediction("tell me a story about a bunny", network)
+
+      {:ok, second_genesis_prediction} =
+        Predictions.create_genesis_prediction(
+          "a second input, hot on the heels of the first",
+          network
+        )
+
+      send_event_and_sleep(network.id, {:new_prediction, first_genesis_prediction}, 31_000)
+      send_event_and_sleep(network.id, {:new_prediction, second_genesis_prediction}, 10_000)
+
+      # check there's at least one prediction in each run two new runs
+      assert [first | _] = Predictions.list_predictions(network, first_genesis_prediction.id)
+      assert first.input == first_genesis_prediction.input
+
+      assert [second | _] = Predictions.list_predictions(network, second_genesis_prediction.id)
+      assert second.input == second_genesis_prediction.input
 
       check_network_invariants(network)
     end
