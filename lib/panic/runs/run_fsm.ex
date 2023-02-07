@@ -6,8 +6,8 @@ defmodule Panic.Runs.RunFSM do
 
   @fsm """
   pre_run --> |init!| waiting
-  waiting --> |new_prediction?| running
-  running --> |new_prediction?| running
+  waiting --> |new_prediction| running
+  running --> |new_prediction| running
   running --> |reset| waiting
   waiting --> |lock| locked
   running --> |lock| locked
@@ -45,7 +45,7 @@ defmodule Panic.Runs.RunFSM do
   @impl Finitomata
   def on_transition(
         state,
-        :new_prediction?,
+        :new_prediction,
         %Prediction{} = new_prediction,
         %{network: network} = payload
       )
@@ -84,7 +84,7 @@ defmodule Panic.Runs.RunFSM do
       Panic.Platforms.TaskSupervisor,
       fn ->
         {:ok, next_prediction} = Predictions.create_next_prediction(new_prediction, network)
-        Finitomata.transition(network.id, {:new_prediction?, next_prediction})
+        Finitomata.transition(network.id, {:new_prediction, next_prediction})
       end,
       restart: :transient
     )
