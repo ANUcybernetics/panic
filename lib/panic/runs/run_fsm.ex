@@ -9,10 +9,11 @@ defmodule Panic.Runs.RunFSM do
   waiting --> |new_prediction| waiting
   waiting --> |new_prediction| running
   running --> |new_prediction| running
+  locked -->  |new_prediction| locked
   running --> |reset| waiting
   waiting --> |lock| locked
   running --> |lock| locked
-  locked -->  |unlock| running
+  locked -->  |unlock| waiting
   waiting --> |shut_down| post_run
   running --> |shut_down| post_run
   """
@@ -75,6 +76,12 @@ defmodule Panic.Runs.RunFSM do
   end
 
   @impl Finitomata
+  def on_transition(:locked, :new_prediction, %Prediction{} = new_prediction, payload) do
+    {:ok, %Prediction{}} = Predictions.delete_prediction(new_prediction)
+    {:ok, :locked, payload}
+  end
+
+  @impl Finitomata
   def on_transition(state, :lock, duration_in_seconds, payload) do
     Finitomata.transition(payload.network.id, {:unlock, state}, duration_in_seconds * 1000)
     {:ok, :locked, payload}
@@ -104,6 +111,8 @@ defmodule Panic.Runs.RunFSM do
 
   defp next_in_run?(_new_prediction, _head_prediction), do: false
 
+  ## TODO to avoid confusion with actual "locked" state, perhaps change
+  ## lockout_time to debounce_time?
   defp reset_payload(payload) do
     {:ok, :waiting,
      payload
