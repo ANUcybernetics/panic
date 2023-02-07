@@ -44,7 +44,7 @@ defmodule Panic.RunFSMTest do
       {:ok, genesis_prediction} =
         Predictions.create_genesis_prediction("ok, let's kick things off...", network)
 
-      send_event_and_sleep(network.id, {:new_prediction?, genesis_prediction}, 10_000)
+      send_event_and_sleep(network.id, {:new_prediction, genesis_prediction}, 10_000)
       assert %Finitomata.State{current: :running} = Finitomata.state(network.id)
 
       ## this is a bit hard to test due to the async nature of things, but these
@@ -69,8 +69,8 @@ defmodule Panic.RunFSMTest do
           network
         )
 
-      send_event_and_sleep(network.id, {:new_prediction?, first_genesis_prediction}, 0)
-      send_event_and_sleep(network.id, {:new_prediction?, second_genesis_prediction}, 10_000)
+      send_event_and_sleep(network.id, {:new_prediction, first_genesis_prediction}, 0)
+      send_event_and_sleep(network.id, {:new_prediction, second_genesis_prediction}, 10_000)
 
       # check we only kept the first genesis input
       assert [first_genesis] =
@@ -97,15 +97,15 @@ defmodule Panic.RunFSMTest do
           network
         )
 
-      send_event_and_sleep(network.id, {:new_prediction?, first_genesis_prediction}, 31_000)
-      send_event_and_sleep(network.id, {:new_prediction?, second_genesis_prediction}, 10_000)
+      send_event_and_sleep(network.id, {:new_prediction, first_genesis_prediction}, 31_000)
+      send_event_and_sleep(network.id, {:new_prediction, second_genesis_prediction}, 10_000)
 
       # check there's at least one prediction in each run two new runs
       assert [first | _] = Predictions.list_predictions(network, first_genesis_prediction.id)
-      assert first.input == first_genesis_prediction.input
+      assert first == first_genesis_prediction
 
       assert [second | _] = Predictions.list_predictions(network, second_genesis_prediction.id)
-      assert second.input == second_genesis_prediction.input
+      assert second == second_genesis_prediction
 
       check_network_invariants(network)
     end
