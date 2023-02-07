@@ -36,6 +36,7 @@ defmodule Panic.RunFSMTest do
 
   describe "Run FSM" do
     test "golden path", %{network: network} do
+      IO.puts("this test takes about 15s")
       assert [] = Predictions.list_predictions(network)
       assert Finitomata.alive?(network.id)
       assert %Finitomata.State{current: :waiting} = Finitomata.state(network.id)
@@ -58,6 +59,7 @@ defmodule Panic.RunFSMTest do
     end
 
     test "receive new genesis prediction in lockout period", %{network: network} do
+      IO.puts("this test takes about 10s")
       assert [] = Predictions.list_predictions(network)
       # genesis input
       {:ok, first_genesis_prediction} =
@@ -86,7 +88,9 @@ defmodule Panic.RunFSMTest do
       check_network_invariants(network)
     end
 
-    test "receive new genesis prediction after of lockout period ends", %{network: network} do
+    test "receive new genesis prediction after lockout period ends", %{network: network} do
+      IO.puts("this test takes about 15s")
+
       # genesis input
       {:ok, first_genesis_prediction} =
         Predictions.create_genesis_prediction("tell me a story about a bunny", network)
