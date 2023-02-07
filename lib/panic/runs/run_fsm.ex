@@ -6,6 +6,7 @@ defmodule Panic.Runs.RunFSM do
 
   @fsm """
   pre_run --> |init!| waiting
+  waiting --> |new_prediction| waiting
   waiting --> |new_prediction| running
   running --> |new_prediction| running
   running --> |reset| waiting
