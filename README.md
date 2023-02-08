@@ -103,6 +103,19 @@ mix phx.gen.context Models Run runs platform:enum:replicate:huggingface:openai m
 mix petal.gen.live Networks Network networks owner_id:references:users name:string models:array:integer loop:boolean
 ``````
 
+## TODO
+
+- [ ] add BLIP model (from Replicate)
+- [ ] update routes as per notebook
+- [ ] add QR code dep
+- [ ] add rolling cookie/URL param to QR code
+- [ ] add metadata to prediction
+- [ ] port vestaboards code, add (as array) to prediction model
+- [ ] add "slow down over time" logic to runs
+- [ ] get web tests working
+- [ ] port view code
+- [ ] remove dead view on /
+
 ## Licence
 
 (c) Ben Swift
