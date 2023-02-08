@@ -55,7 +55,9 @@ defmodule Panic.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:finitomata, "~> 0.1"},
       {:slugify, "~> 1.3"},
-      {:mock, "~> 0.3.0", only: :test}
+      {:mock, "~> 0.3.0", only: :test},
+      {:sobelow, "~> 0.11", only: :dev},
+      {:content_security_policy, "~> 1.0"}
     ]
   end
 

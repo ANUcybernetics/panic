@@ -59,6 +59,25 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+config :panic, :content_security_policy, %{
+  default_src: [
+    "'unsafe-inline'",
+    "'unsafe-eval'",
+    "'self'",
+    "data:",
+    "ws://localhost:4000",
+    # for fly.io deployment
+    "wss://panic.fly.dev",
+    "wss://panic.fly.dev/live/websocket",
+    # cloud AI APIS
+    "https://replicate.delivery",
+    "https://simulator.vestaboard.com",
+    # Google Fonts
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com"
+  ]
+}
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
