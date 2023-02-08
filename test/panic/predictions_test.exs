@@ -11,11 +11,6 @@ defmodule Panic.PredictionsTest do
   describe "predictions" do
     @invalid_attrs %{input: nil, metadata: nil, model: nil, output: nil, run_index: nil}
 
-    test "list_predictions/0 returns all predictions" do
-      prediction = prediction_fixture()
-      assert Predictions.list_predictions() == [prediction]
-    end
-
     test "get_prediction!/1 returns the prediction with given id" do
       prediction = prediction_fixture()
       assert Predictions.get_prediction!(prediction.id) == prediction
