@@ -85,8 +85,10 @@ defmodule Panic.Platforms.Replicate do
       height: 576
     }
 
-    {:ok, %{"output" => [image_url]}} = create_and_wait(model, input_params, user)
-    {:ok, image_url}
+    case create_and_wait(model, input_params, user) do
+      {:ok, %{"output" => [image_url]}} -> {:ok, image_url}
+      {:error, reason} -> {:error, reason}
+    end
   end
 
   ## text to image
