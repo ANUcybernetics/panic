@@ -144,6 +144,40 @@ defmodule Panic.RunFSMTest do
 
       check_network_invariants(network)
     end
+
+    test "start run, then lock network, then 'manually' unlock ahead of time and resume", %{
+      network: network
+    } do
+      IO.puts("this test takes about 35s")
+      # genesis input
+      {:ok, p1} = Predictions.create_genesis_prediction("tell me a story about a bunny", network)
+
+      {:ok, p2} =
+        Predictions.create_genesis_prediction(
+          "a second input, hot on the heels of the first",
+          network
+        )
+
+      {:ok, p3} =
+        Predictions.create_genesis_prediction(
+          "a third input, hot on the heels of the first",
+          network
+        )
+
+      send_event_and_sleep(network.id, {:new_prediction, p1}, 200)
+      send_event_and_sleep(network.id, {:lock, 20}, 200)
+      send_event_and_sleep(network.id, {:new_prediction, p2}, 1000)
+      send_event_and_sleep(network.id, {:unlock, nil}, 200)
+      send_event_and_sleep(network.id, {:new_prediction, p3}, 10_000)
+
+      # check we only kept the first genesis input
+      predictions = Predictions.list_predictions(network)
+      assert p1 in predictions
+      assert p2 not in predictions
+      assert p3 in predictions
+
+      check_network_invariants(network)
+    end
   end
 
   describe "static FSM checks" do
