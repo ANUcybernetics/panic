@@ -46,9 +46,8 @@ defmodule Panic.PlatformsTest do
 
       output = Replicate.create("stability-ai/stable-diffusion", input, user)
 
-      assert is_binary(output)
+      assert Regex.match?(~r|https://.*|, output)
     end
-
   end
 
   defp create_user(_context) do
