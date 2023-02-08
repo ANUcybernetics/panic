@@ -51,6 +51,39 @@ defmodule Panic.PlatformsTest do
 
       assert {:error, :nsfw} = Replicate.create("stability-ai/stable-diffusion", input, user)
     end
+
+    test "kyrick/prompt-parrot works", %{user: user} do
+      input = "sheep grazing on a grassy meadow"
+      assert {:ok, output} = Replicate.create("kyrick/prompt-parrot", input, user)
+      assert String.starts_with?(output, input)
+    end
+
+    test "2feet6inches/cog-prompt-parrot works", %{user: user} do
+      input = "sheep grazing on a grassy meadow"
+      assert {:ok, output} = Replicate.create("2feet6inches/cog-prompt-parrot", input, user)
+      assert String.starts_with?(output, input)
+    end
+
+    test "stable diffusion image -> rmokady/clip_prefix_caption cycle works",
+         %{user: user} do
+      input = "sheep grazing on a grassy meadow"
+
+      assert {:ok, image_url} = Replicate.create("stability-ai/stable-diffusion", input, user)
+
+      assert {:ok, image_caption} =
+               Replicate.create("rmokady/clip_prefix_caption", image_url, user)
+
+      assert is_binary(image_caption)
+    end
+
+    test "stable diffusion image -> j-min/clip-caption-reward cycle works",
+         %{user: user} do
+      input = "sheep grazing on a grassy meadow"
+
+      assert {:ok, image_url} = Replicate.create("stability-ai/stable-diffusion", input, user)
+      assert {:ok, image_caption} = Replicate.create("j-min/clip-caption-reward", image_url, user)
+      assert is_binary(image_caption)
+    end
   end
 
   defp create_user(_context) do
