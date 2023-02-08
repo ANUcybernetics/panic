@@ -37,12 +37,26 @@ defmodule Panic.PlatformsTest do
     end
   end
 
+  describe "Replicate" do
+    setup [:create_user, :load_env_vars]
+
+    test "stable diffusion returns a URL (probably to an image, but untested here) when given a valid input",
+         %{user: user} do
+      input = "sheep grazing on a grassy meadow"
+
+      output = Replicate.create("stability-ai/stable-diffusion", input, user)
+
+      assert is_binary(output)
+    end
+
+  end
+
   defp create_user(_context) do
     %{user: user_fixture()}
   end
 
   defp load_env_vars(%{user: user} = context) do
-    insert_api_tokens_from_env(user)
+    insert_api_tokens_from_env(user.id)
     context
   end
 end
