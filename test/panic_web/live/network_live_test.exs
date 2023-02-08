@@ -3,6 +3,7 @@ defmodule PanicWeb.NetworkLiveTest do
 
   import Phoenix.LiveViewTest
   import Panic.NetworksFixtures
+  import Panic.AccountsFixtures
 
   @create_attrs %{
     description: "some description",
@@ -16,13 +17,28 @@ defmodule PanicWeb.NetworkLiveTest do
   }
   @invalid_attrs %{description: nil, models: [], name: nil}
 
-  defp create_network(_) do
-    network = network_fixture()
-    %{network: network}
+  defp create_and_log_in_user(%{conn: conn} = context) do
+    password = "123456789abcd"
+    user = user_fixture(%{password: password})
+
+    {:ok, lv, _html} = live(conn, ~p"/users/log_in")
+
+    form =
+      form(lv, "#login_form", user: %{email: user.email, password: password, remember_me: true})
+
+    conn = submit_form(form, conn)
+
+    context
+    |> Map.put(:user, user)
+    |> Map.put(:conn, conn)
+  end
+
+  defp create_network(%{user: user} = context) do
+    Map.put(context, :network, network_fixture(%{user_id: user.id}))
   end
 
   describe "Index" do
-    setup [:create_network]
+    setup [:create_and_log_in_user, :create_network]
 
     test "lists all networks", %{conn: conn, network: network} do
       {:ok, _index_live, html} = live(conn, ~p"/networks")
@@ -84,7 +100,7 @@ defmodule PanicWeb.NetworkLiveTest do
   end
 
   describe "Show" do
-    setup [:create_network]
+    setup [:create_and_log_in_user, :create_network]
 
     test "displays network", %{conn: conn, network: network} do
       {:ok, _show_live, html} = live(conn, ~p"/networks/#{network}")
