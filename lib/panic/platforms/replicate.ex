@@ -68,7 +68,7 @@ defmodule Panic.Platforms.Replicate do
     Finch.build(:post, "#{@url}/predictions", headers(user), Jason.encode!(request_body))
     |> Finch.request(Panic.Finch)
     |> case do
-      {:ok, %Finch.Response{body: response_body, status: 200}} ->
+      {:ok, %Finch.Response{body: response_body, status: 201}} ->
         %{"id" => id} = Jason.decode!(response_body)
 
         case get(id, user) do
