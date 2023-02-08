@@ -1,6 +1,5 @@
 defmodule Panic.Platforms.Replicate do
   @url "https://api.replicate.com/v1"
-  @nsfw_placeholder "https://res.cloudinary.com/teepublic/image/private/s--XZyAQb6t--/t_Preview/b_rgb:191919,c_lpad,f_jpg,h_630,q_90,w_1200/v1532173190/production/designs/2918923_0.jpg"
   # @recv_timeout 10_000
 
   def get_model_versions(model, user) do
