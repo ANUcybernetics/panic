@@ -44,6 +44,13 @@ defmodule Panic.PlatformsTest do
       assert {:ok, output} = Replicate.create("stability-ai/stable-diffusion", input, user)
       assert Regex.match?(~r|https://.*|, output)
     end
+
+    test "stable diffusion NSFW filter works (this test isn't 100% reliable)",
+         %{user: user} do
+      input = "a sexy naked woman"
+
+      assert {:error, :nsfw} = Replicate.create("stability-ai/stable-diffusion", input, user)
+    end
   end
 
   defp create_user(_context) do
