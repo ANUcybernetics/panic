@@ -118,7 +118,7 @@ defmodule Panic.Predictions do
     ## valid apart from the output before making the API call (to avoid making
     ## the API call if the other params were invalid)
     model = Enum.at(network.models, 0)
-    output = Panic.Platforms.api_call(model, input, network.user_id)
+    {:ok, output} = Panic.Platforms.api_call(model, input, network.user_id)
 
     %{
       input: input,
@@ -175,7 +175,7 @@ defmodule Panic.Predictions do
     run_index = previous_prediction.run_index + 1
     model = Enum.at(network.models, Integer.mod(run_index, Enum.count(network.models)))
     input = previous_prediction.output
-    output = Panic.Platforms.api_call(model, input, network.user_id)
+    {:ok, output} = Panic.Platforms.api_call(model, input, network.user_id)
 
     %{
       input: input,

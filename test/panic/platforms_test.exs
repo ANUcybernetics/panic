@@ -15,24 +15,21 @@ defmodule Panic.PlatformsTest do
     test "davinci-instruct-beta responds when given a valid prompt", %{user: user} do
       input = "explain how a chicken would cross a road."
 
-      output = OpenAI.create("davinci-instruct-beta", input, user)
-
+      {:ok, output} = OpenAI.create("davinci-instruct-beta", input, user)
       assert is_binary(output)
     end
 
     test "text-davinci-003 responds when given a valid prompt", %{user: user} do
       input = "hello Leonardo, what's your middle name?"
 
-      output = OpenAI.create("text-davinci-003", input, user)
-
+      assert {:ok, output} = OpenAI.create("text-davinci-003", input, user)
       assert is_binary(output)
     end
 
     test "text-ada-001 responds when given a valid prompt", %{user: user} do
       input = "what year did Ada Lovelace first visit the moon?"
 
-      output = OpenAI.create("text-ada-001", input, user)
-
+      assert {:ok, output} = OpenAI.create("text-ada-001", input, user)
       assert is_binary(output)
     end
   end
@@ -44,8 +41,7 @@ defmodule Panic.PlatformsTest do
          %{user: user} do
       input = "sheep grazing on a grassy meadow"
 
-      output = Replicate.create("stability-ai/stable-diffusion", input, user)
-
+      assert {:ok, output} = Replicate.create("stability-ai/stable-diffusion", input, user)
       assert Regex.match?(~r|https://.*|, output)
     end
   end

@@ -32,9 +32,9 @@ defmodule Panic.Platforms.OpenAI do
         %{"choices" => [%{"text" => text} | _choices]} = Jason.decode!(response_body)
 
         if text == "" do
-          "model #{model} could not complete the prompt."
+          {:error, :blank_output}
         else
-          text
+          {:ok, text}
         end
     end
   end

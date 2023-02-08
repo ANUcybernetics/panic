@@ -11,7 +11,7 @@ defmodule Panic.RunFSMTest do
      [
        api_call: fn model, _input, _user ->
          Process.sleep(1000)
-         "result of API call to #{model}"
+         {:ok, "result of API call to #{model}"}
        end
      ]}
   ]) do

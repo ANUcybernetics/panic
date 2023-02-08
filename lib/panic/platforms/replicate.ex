@@ -69,12 +69,9 @@ defmodule Panic.Platforms.Replicate do
     |> Finch.request(Panic.Finch)
     |> case do
       {:ok, %Finch.Response{body: response_body, status: 201}} ->
-        %{"id" => id} = Jason.decode!(response_body)
-
-        case get(id, user) do
-          {:ok, body} -> body
-          {:error, :nsfw} -> %{"output" => [@nsfw_placeholder]}
-        end
+        Jason.decode!(response_body)
+        |> Map.get("id")
+        |> get(user)
     end
   end
 
@@ -88,8 +85,8 @@ defmodule Panic.Platforms.Replicate do
       height: 576
     }
 
-    %{"output" => [image_url]} = create_and_wait(model, input_params, user)
-    image_url
+    {:ok, %{"output" => [image_url]}} = create_and_wait(model, input_params, user)
+    {:ok, image_url}
   end
 
   ## text to image
@@ -102,8 +99,8 @@ defmodule Panic.Platforms.Replicate do
       height: 576
     }
 
-    %{"output" => [image_url]} = create_and_wait(model, input_params, user)
-    image_url
+    {:ok, %{"output" => [image_url]}} = create_and_wait(model, input_params, user)
+    {:ok, image_url}
   end
 
   ## text to image
@@ -116,22 +113,22 @@ defmodule Panic.Platforms.Replicate do
       ori_height: 256
     }
 
-    %{"output" => image_url} = create_and_wait(model, input_params, user)
-    image_url
+    {:ok, %{"output" => image_url}} = create_and_wait(model, input_params, user)
+    {:ok, image_url}
   end
 
   def create("kuprel/min-dalle" = model, prompt, user) do
-    %{"output" => [image_url]} =
+    {:ok, %{"output" => [image_url]}} =
       create_and_wait(model, %{text: prompt, grid_size: 1, progressive_outputs: 0}, user)
 
-    image_url
+    {:ok, image_url}
   end
 
   def create("benswift/min-dalle" = model, prompt, user) do
-    %{"output" => [image_url]} =
+    {:ok, %{"output" => [image_url]}} =
       create_and_wait(model, %{text: prompt, grid_size: 1, progressive_outputs: 0}, user)
 
-    image_url
+    {:ok, image_url}
   end
 
   def create("afiaka87/retrieval-augmented-diffusion" = model, prompt, user) do
@@ -139,63 +136,57 @@ defmodule Panic.Platforms.Replicate do
   end
 
   def create("laion-ai/ongo" = model, prompt, user) do
-    %{"output" => image_urls} =
+    {:ok, %{"output" => image_urls}} =
       create_and_wait(
         model,
         %{text: prompt, batch_size: 1, height: 256, width: 256, intermediate_outputs: 0},
         user
       )
 
-    List.last(image_urls)
+    {:ok, List.last(image_urls)}
   end
 
   ## image to text
   def create("methexis-inc/img2prompt" = model, image_url, user) do
-    %{"output" => text} = create_and_wait(model, %{image: image_url}, user)
-    text
+    {:ok, %{"output" => text}} = create_and_wait(model, %{image: image_url}, user)
+    {:ok, text}
   end
 
   def create("charlesfrye/text-recognizer-gpu" = model, image_url, user) do
-    %{"output" => text} = create_and_wait(model, %{image: image_url}, user)
-    text
+    {:ok, %{"output" => text}} = create_and_wait(model, %{image: image_url}, user)
+    {:ok, text}
   end
 
   def create("rmokady/clip_prefix_caption" = model, image_url, user) do
-    %{"output" => text} = create_and_wait(model, %{image: image_url}, user)
-    text
+    {:ok, %{"output" => text}} = create_and_wait(model, %{image: image_url}, user)
+    {:ok, text}
   end
 
   def create("j-min/clip-caption-reward" = model, image_url, user) do
-    %{"output" => text} = create_and_wait(model, %{image: image_url}, user)
-    text
+    {:ok, %{"output" => text}} = create_and_wait(model, %{image: image_url}, user)
+    {:ok, text}
   end
 
   ## text to text
   def create("kyrick/prompt-parrot" = model, prompt, user) do
-    %{"output" => text} = create_and_wait(model, %{prompt: prompt}, user)
-
+    {:ok, %{"output" => text}} = create_and_wait(model, %{prompt: prompt}, user)
     ## for some reason this model returns multiple prompts, but separated by a
     ## "separator" string rather than in a list, so we split it here and choose
     ## one at random
-    text
-    |> String.split("\n------------------------------------------\n")
-    |> Enum.random()
+    {:ok, text |> String.split("\n------------------------------------------\n") |> Enum.random()}
   end
 
   def create("2feet6inches/cog-prompt-parrot" = model, prompt, user) do
-    %{"output" => text} = create_and_wait(model, %{prompt: prompt}, user)
-
-    text
-    |> String.split("\n")
-    |> Enum.random()
+    {:ok, %{"output" => text}} = create_and_wait(model, %{prompt: prompt}, user)
+    {:ok, text |> String.split("\n") |> Enum.random()}
   end
 
   ## image to image
   def create("netease-gameai/spatchgan-selfie2anime" = model, image_url, user) do
-    %{"output" => [%{"file" => image_url} | _]} =
+    {:ok, %{"output" => [%{"file" => image_url} | _]}} =
       create_and_wait(model, %{image: image_url}, user)
 
-    image_url
+    {:ok, image_url}
   end
 
   ## text to audio
@@ -210,15 +201,15 @@ defmodule Panic.Platforms.Replicate do
     emotion = Enum.max_by(emotion_opts, fn emotion -> String.bag_distance(emotion, prompt) end)
     seed = string_to_seed(prompt)
 
-    %{"output" => [%{"file" => audio_url} | _]} =
+    {:ok, %{"output" => [%{"file" => audio_url} | _]}} =
       create_and_wait(model, %{emotion: emotion, seed: seed}, user)
 
-    audio_url
+    {:ok, audio_url}
   end
 
   def create("afiaka87/tortoise-tts" = model, prompt, user) do
-    %{"output" => output} = create_and_wait(model, %{text: prompt}, user)
-    output
+    {:ok, %{"output" => output}} = create_and_wait(model, %{text: prompt}, user)
+    {:ok, output}
   end
 
   defp headers(user) do
