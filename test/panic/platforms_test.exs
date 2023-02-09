@@ -9,6 +9,8 @@ defmodule Panic.PlatformsTest do
   import Panic.AccountsFixtures
   alias Panic.Platforms.{OpenAI, Replicate}
 
+  @moduletag :real_platform_api_calls
+
   describe "OpenAI" do
     setup [:create_user, :load_env_vars]
 
