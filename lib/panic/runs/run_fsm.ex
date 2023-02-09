@@ -22,6 +22,8 @@ defmodule Panic.Runs.RunFSM do
   alias Panic.Predictions
   alias Panic.Predictions.Prediction
 
+  require Logger
+
   @doc "return the FSM (in Mermaid syntax)"
   def fsm_description do
     @fsm
@@ -124,7 +126,7 @@ defmodule Panic.Runs.RunFSM do
   end
 
   defp debug_helper(label, state, prediction) do
-    IO.puts(
+    Logger.info(
       "#{label}: (#{state}) #{prediction.id}-#{prediction.run_index}-#{prediction.genesis_id} #{prediction.input}"
     )
   end
