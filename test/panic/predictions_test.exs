@@ -7,6 +7,7 @@ defmodule Panic.PredictionsTest do
   import Panic.PredictionsFixtures
   import Panic.NetworksFixtures
   import Panic.AccountsFixtures
+  import Mock
 
   describe "predictions" do
     @invalid_attrs %{input: nil, metadata: nil, model: nil, output: nil, run_index: nil}
@@ -88,7 +89,14 @@ defmodule Panic.PredictionsTest do
   describe "create predictions with real API calls" do
     setup [:create_network, :load_env_vars]
 
-    test "create_genesis_prediction/2 works with valid params", %{network: network} do
+    test_with_mock "create_genesis_prediction/2 works with valid params",
+                   %{network: network},
+                   Panic.Platforms,
+                   [],
+                   api_call: fn model, _input, _user ->
+                     Process.sleep(1000)
+                     {:ok, "result of API call to #{model}"}
+                   end do
       input = "Tell me a joke about potatoes."
 
       assert {:ok, %Prediction{output: output}} =
@@ -97,9 +105,16 @@ defmodule Panic.PredictionsTest do
       assert is_binary(output)
     end
 
-    test "create_genesis_prediction/2 followed by create_next_prediction/2 works", %{
-      network: network
-    } do
+    test_with_mock "create_genesis_prediction/2 followed by create_next_prediction/2 works",
+                   %{
+                     network: network
+                   },
+                   Panic.Platforms,
+                   [],
+                   api_call: fn model, _input, _user ->
+                     Process.sleep(1000)
+                     {:ok, "result of API call to #{model}"}
+                   end do
       input = "Tell me a joke about potatoes."
 
       assert {:ok, %Prediction{run_index: 0} = genesis} =
