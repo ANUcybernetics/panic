@@ -107,6 +107,7 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 - [ ] add BLIP model (from Replicate)
 - [ ] update routes as per notebook
+- [ ] split routes up between auth required/not required
 - [ ] add QR code dep
 - [ ] add rolling cookie/URL param to QR code
 - [ ] add metadata to prediction
