@@ -6,7 +6,7 @@ defmodule PanicWeb.NetworkLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :networks, list_networks())}
+    {:ok, assign(socket, :networks, list_networks(socket.assigns.current_user))}
   end
 
   @impl true
@@ -37,10 +37,10 @@ defmodule PanicWeb.NetworkLive.Index do
     network = Networks.get_network!(id)
     {:ok, _} = Networks.delete_network(network)
 
-    {:noreply, assign(socket, :networks, list_networks())}
+    {:noreply, assign(socket, :networks, list_networks(socket.assigns.current_user))}
   end
 
-  defp list_networks do
-    Networks.list_networks()
+  defp list_networks(%Panic.Accounts.User{} = user) do
+    Accounts.list_networks(user)
   end
 end
