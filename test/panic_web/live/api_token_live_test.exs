@@ -36,7 +36,7 @@ defmodule PanicWeb.APITokenLiveTest do
   describe "Index" do
     setup [:create_and_log_in_user, :create_network, :create_api_token]
 
-    test "lists all api_token", %{conn: conn, api_token: api_token} do
+    test "lists all api_tokens", %{conn: conn, api_token: api_token} do
       {:ok, _index_live, html} = live(conn, ~p"/api_tokens")
 
       assert html =~ "Listing Api tokens"
@@ -46,8 +46,8 @@ defmodule PanicWeb.APITokenLiveTest do
     test "saves new api_token", %{conn: conn} do
       {:ok, index_live, _html} = live(conn, ~p"/api_tokens")
 
-      assert index_live |> element("a", "New Api tokens") |> render_click() =~
-               "New Api tokens"
+      assert index_live |> element("a", "New Api token") |> render_click() =~
+               "New Api token"
 
       assert_patch(index_live, ~p"/api_tokens/new")
 
@@ -61,15 +61,15 @@ defmodule PanicWeb.APITokenLiveTest do
         |> render_submit()
         |> follow_redirect(conn, ~p"/api_tokens")
 
-      assert html =~ "Api tokens created successfully"
+      assert html =~ "Api token created successfully"
       assert html =~ "some name"
     end
 
     test "updates api_token in listing", %{conn: conn, api_token: api_token} do
       {:ok, index_live, _html} = live(conn, ~p"/api_tokens")
 
-      assert index_live |> element("#api_token-#{api_token.id} a", "Edit") |> render_click() =~
-               "Edit Api tokens"
+      assert index_live |> element("#api_tokens-#{api_token.id} a", "Edit") |> render_click() =~
+               "Edit Api token"
 
       assert_patch(index_live, ~p"/api_tokens/#{api_token}/edit")
 
@@ -83,25 +83,25 @@ defmodule PanicWeb.APITokenLiveTest do
         |> render_submit()
         |> follow_redirect(conn, ~p"/api_tokens")
 
-      assert html =~ "Api tokens updated successfully"
+      assert html =~ "Api token updated successfully"
       assert html =~ "some updated name"
     end
 
     test "deletes api_token in listing", %{conn: conn, api_token: api_token} do
       {:ok, index_live, _html} = live(conn, ~p"/api_tokens")
 
-      assert index_live |> element("#api_token-#{api_token.id} a", "Delete") |> render_click()
+      assert index_live |> element("#api_tokens-#{api_token.id} a", "Delete") |> render_click()
       refute has_element?(index_live, "#api_token-#{api_token.id}")
     end
   end
 
   describe "Show" do
-    setup [:create_and_log_in_user, :create_network, :create_api_token]
+    setup [:create_api_token]
 
     test "displays api_token", %{conn: conn, api_token: api_token} do
       {:ok, _show_live, html} = live(conn, ~p"/api_tokens/#{api_token}")
 
-      assert html =~ "Show Api tokens"
+      assert html =~ "Show Api token"
       assert html =~ api_token.name
     end
 
@@ -109,7 +109,7 @@ defmodule PanicWeb.APITokenLiveTest do
       {:ok, show_live, _html} = live(conn, ~p"/api_tokens/#{api_token}")
 
       assert show_live |> element("a", "Edit") |> render_click() =~
-               "Edit Api tokens"
+               "Edit Api token"
 
       assert_patch(show_live, ~p"/api_tokens/#{api_token}/show/edit")
 
@@ -123,7 +123,7 @@ defmodule PanicWeb.APITokenLiveTest do
         |> render_submit()
         |> follow_redirect(conn, ~p"/api_tokens/#{api_token}")
 
-      assert html =~ "Api tokens updated successfully"
+      assert html =~ "Api token updated successfully"
       assert html =~ "some updated name"
     end
   end

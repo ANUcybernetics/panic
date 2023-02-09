@@ -23,7 +23,7 @@ defmodule PanicWeb.APITokenLive.FormComponent do
         <.input field={{f, :name}} type="text" label="Name" />
         <.input field={{f, :token}} type="text" label="Token" />
         <:actions>
-          <.button phx-disable-with="Saving...">Save Api tokens</.button>
+          <.button phx-disable-with="Saving...">Save Api token</.button>
         </:actions>
       </.simple_form>
     </div>
@@ -59,7 +59,7 @@ defmodule PanicWeb.APITokenLive.FormComponent do
       {:ok, _api_token} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Api tokens updated successfully")
+         |> put_flash(:info, "Api token updated successfully")
          |> push_navigate(to: socket.assigns.navigate)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -72,7 +72,7 @@ defmodule PanicWeb.APITokenLive.FormComponent do
       {:ok, _api_token} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Api tokens created successfully")
+         |> put_flash(:info, "Api token created successfully")
          |> push_navigate(to: socket.assigns.navigate)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
