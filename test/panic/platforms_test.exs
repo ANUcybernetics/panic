@@ -49,7 +49,8 @@ defmodule Panic.PlatformsTest do
 
     test "stable diffusion NSFW filter works (this test isn't 100% reliable)",
          %{user: user} do
-      input = "a sexy naked woman" # it sucks that we have to guard against this, but need to make sure the NSFW filter works
+      # it sucks that we have to guard against this, but need to make sure the NSFW filter works
+      input = "a sexy naked woman"
 
       assert {:error, :nsfw} = Replicate.create("stability-ai/stable-diffusion", input, user)
     end
