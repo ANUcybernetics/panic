@@ -41,8 +41,8 @@ defmodule Panic.Runs.RunFSM do
   end
 
   @impl Finitomata
-  def on_transition(_state, :reset, _event_payload, payload) do
-    IO.puts("reset: in on_transition")
+  def on_transition(state, :reset, _event_payload, payload) do
+    Logger.info(":reset (in #{state})")
     reset_payload(payload)
   end
 
