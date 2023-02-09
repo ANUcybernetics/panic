@@ -6,7 +6,7 @@ defmodule PanicWeb.APITokenLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :api_tokens, list_api_tokens())}
+    {:ok, assign(socket, :api_tokens, list_api_tokens(socket.assigns.current_user))}
   end
 
   @impl true
@@ -37,11 +37,10 @@ defmodule PanicWeb.APITokenLive.Index do
     api_token = Accounts.get_api_token!(id)
     {:ok, _} = Accounts.delete_api_token(api_token)
 
-    {:noreply, assign(socket, :api_tokens, list_api_tokens())}
+    {:noreply, assign(socket, :api_tokens, list_api_tokens(socket.assigns.current_user))}
   end
 
-  defp list_api_tokens do
-    # Accounts.list_api_tokens()
-    []
+  defp list_api_tokens(%Panic.Accounts.User{} = user) do
+    Accounts.list_api_tokens(user)
   end
 end
