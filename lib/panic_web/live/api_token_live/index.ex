@@ -16,19 +16,19 @@ defmodule PanicWeb.APITokenLive.Index do
 
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
-    |> assign(:page_title, "Edit Api token")
+    |> assign(:page_title, "Edit API token")
     |> assign(:api_token, Accounts.get_api_token!(id))
   end
 
   defp apply_action(socket, :new, _params) do
     socket
-    |> assign(:page_title, "New Api token")
+    |> assign(:page_title, "New API token")
     |> assign(:api_token, %APIToken{})
   end
 
   defp apply_action(socket, :index, _params) do
     socket
-    |> assign(:page_title, "Listing Api tokens")
+    |> assign(:page_title, "Listing API tokens")
     |> assign(:api_token, nil)
   end
 
@@ -41,6 +41,7 @@ defmodule PanicWeb.APITokenLive.Index do
   end
 
   defp list_api_tokens do
-    Accounts.list_api_tokens()
+    # Accounts.list_api_tokens()
+    []
   end
 end

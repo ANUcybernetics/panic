@@ -16,6 +16,6 @@ defmodule PanicWeb.APITokenLive.Show do
      |> assign(:api_token, Accounts.get_api_token!(id))}
   end
 
-  defp page_title(:show), do: "Show Api token"
-  defp page_title(:edit), do: "Edit Api token"
+  defp page_title(:show), do: "Show API token"
+  defp page_title(:edit), do: "Edit API token"
 end

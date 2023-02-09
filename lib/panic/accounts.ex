@@ -369,7 +369,7 @@ defmodule Panic.Accounts do
   @doc """
   Gets a single api_token.
 
-  Raises `Ecto.NoResultsError` if the Api tokens does not exist.
+  Raises `Ecto.NoResultsError` if the API token does not exist.
 
   ## Examples
 
@@ -385,7 +385,7 @@ defmodule Panic.Accounts do
   @doc """
   Gets a single api_token.
 
-  Raises `Ecto.NoResultsError` if the Api tokens does not exist.
+  Raises `Ecto.NoResultsError` if the API token does not exist.
 
   ## Examples
 
