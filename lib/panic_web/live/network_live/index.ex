@@ -41,6 +41,6 @@ defmodule PanicWeb.NetworkLive.Index do
   end
 
   defp list_networks(%Panic.Accounts.User{} = user) do
-    Accounts.list_networks(user)
+    Networks.list_networks(user)
   end
 end
