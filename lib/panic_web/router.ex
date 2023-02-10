@@ -70,7 +70,8 @@ defmodule PanicWeb.Router do
   scope "/", PanicWeb do
     pipe_through [:browser]
 
-    live_session :public_network_routes do
+    live_session :public_network_routes,
+      on_mount: [{PanicWeb.UserAuth, :mount_current_user}] do
       live "/", HomeLive.Index, :index
 
       ## "running grid" view
