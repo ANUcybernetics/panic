@@ -96,7 +96,7 @@ defmodule PanicWeb.APITokenLiveTest do
   end
 
   describe "Show" do
-    setup [:create_api_token]
+    setup [:create_and_log_in_user, :create_network, :create_api_token]
 
     test "displays api_token", %{conn: conn, api_token: api_token} do
       {:ok, _show_live, html} = live(conn, ~p"/api_tokens/#{api_token}")
