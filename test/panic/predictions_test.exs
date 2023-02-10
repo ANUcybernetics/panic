@@ -86,7 +86,7 @@ defmodule Panic.PredictionsTest do
     end
   end
 
-  describe "create predictions with real API calls" do
+  describe "create genesis/next predictions (mocked platform API calls)" do
     setup [:create_network, :load_env_vars]
 
     test_with_mock "create_genesis_prediction/2 works with valid params",
@@ -125,7 +125,7 @@ defmodule Panic.PredictionsTest do
       genesis_id = genesis.id
 
       assert {:ok, %Prediction{run_index: 1, genesis_id: ^genesis_id}} =
-               Predictions.create_next_prediction(genesis, network)
+               Predictions.create_next_prediction(genesis)
     end
   end
 

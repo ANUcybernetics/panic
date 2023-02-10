@@ -51,6 +51,8 @@ defmodule Panic.Predictions do
   @doc """
   Gets a single prediction.
 
+  This function preloads the `:network` association.
+
   Raises `Ecto.NoResultsError` if the Prediction does not exist.
 
   ## Examples
@@ -62,7 +64,7 @@ defmodule Panic.Predictions do
       ** (Ecto.NoResultsError)
 
   """
-  def get_prediction!(id), do: Repo.get!(Prediction, id)
+  def get_prediction!(id), do: Repo.get!(Prediction, id) |> Repo.preload([:network])
 
   @doc """
   Creates a prediction.
@@ -81,10 +83,14 @@ defmodule Panic.Predictions do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_prediction(attrs \\ %{}) do
+  def create_prediction(attrs) do
     %Prediction{}
     |> Prediction.changeset(attrs)
     |> Repo.insert()
+    |> case do
+      {:ok, prediction} -> {:ok, Repo.preload(prediction, [:network])}
+      {:error, changeset} -> {:error, changeset}
+    end
   end
 
   @doc """
@@ -165,16 +171,15 @@ defmodule Panic.Predictions do
       {:platform_error, reason}
 
   """
-  def create_next_prediction(
-        %Prediction{} = previous_prediction,
-        %Network{} = network
-      ) do
+  def create_next_prediction(%Prediction{} = previous_prediction) do
     ## TODO it would be better if this function checked if the changeset were
     ## valid apart from the output before making the API call (to avoid making
     ## the API call if the other params were invalid)
     run_index = previous_prediction.run_index + 1
+    network = previous_prediction.network
     model = Enum.at(network.models, Integer.mod(run_index, Enum.count(network.models)))
     input = previous_prediction.output
+
     {:ok, output} = Panic.Platforms.api_call(model, input, network.user_id)
 
     %{
