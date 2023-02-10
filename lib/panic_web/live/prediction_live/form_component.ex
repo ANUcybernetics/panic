@@ -23,7 +23,6 @@ defmodule PanicWeb.PredictionLive.FormComponent do
         <.input field={{f, :model}} type="text" label="Model" />
         <.input field={{f, :input}} type="text" label="Input" />
         <.input field={{f, :output}} type="text" label="Output" />
-        <.input field={{f, :metadata}} type="text" label="Metadata" />
         <.input field={{f, :run_index}} type="number" label="Run index" />
         <:actions>
           <.button phx-disable-with="Saving...">Save Prediction</.button>

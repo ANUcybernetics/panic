@@ -1,23 +1,26 @@
 <.header>
   Listing Predictions
   <:actions>
-    <.link patch={~p"/predictions/new"}>
+    <.link patch={~p"/networks/#{@network}/predictions/new"}>
       <.button>New Prediction</.button>
     </.link>
   </:actions>
 </.header>
 
-<.table id="predictions" rows={@predictions} row_click={&JS.navigate(~p"/predictions/#{&1}")}>
+<.table
+  id="predictions"
+  rows={@predictions}
+  row_click={&JS.navigate(~p"/networks/#{@network}/predictions/#{&1}")}
+>
   <:col :let={prediction} label="Model"><%= prediction.model %></:col>
   <:col :let={prediction} label="Input"><%= prediction.input %></:col>
   <:col :let={prediction} label="Output"><%= prediction.output %></:col>
-  <:col :let={prediction} label="Metadata"><%= prediction.metadata %></:col>
   <:col :let={prediction} label="Run index"><%= prediction.run_index %></:col>
   <:action :let={prediction}>
     <div class="sr-only">
-      <.link navigate={~p"/predictions/#{prediction}"}>Show</.link>
+      <.link navigate={~p"/networks/#{@network}/predictions/#{prediction}"}>Show</.link>
     </div>
-    <.link patch={~p"/predictions/#{prediction}/edit"}>Edit</.link>
+    <.link patch={~p"/networks/#{@network}/predictions/#{prediction}/edit"}>Edit</.link>
   </:action>
   <:action :let={prediction}>
     <.link phx-click={JS.push("delete", value: %{id: prediction.id})} data-confirm="Are you sure?">
@@ -30,7 +33,7 @@
   :if={@live_action in [:new, :edit]}
   id="prediction-modal"
   show
-  on_cancel={JS.navigate(~p"/predictions")}
+  on_cancel={JS.navigate(~p"/networks/#{@network}/predictions")}
 >
   <.live_component
     module={PanicWeb.PredictionLive.FormComponent}
@@ -38,6 +41,6 @@
     title={@page_title}
     action={@live_action}
     prediction={@prediction}
-    navigate={~p"/predictions"}
+    navigate={~p"/networks/#{@network}/predictions"}
   />
 </.modal>

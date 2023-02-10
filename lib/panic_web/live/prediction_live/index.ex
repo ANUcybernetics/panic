@@ -3,15 +3,20 @@ defmodule PanicWeb.PredictionLive.Index do
 
   alias Panic.Predictions
   alias Panic.Predictions.Prediction
+  alias Panic.Networks
+  alias Panic.Networks.Network
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :predictions, list_predictions())}
+    {:ok, socket}
   end
 
   @impl true
-  def handle_params(params, _url, socket) do
-    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+  def handle_params(%{"network_id" => network_id} = params, _, socket) do
+    network = network_id |> String.to_integer() |> Networks.get_network!()
+
+    {:noreply,
+     apply_action(assign(socket, :network, network), socket.assigns.live_action, params)}
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
@@ -26,10 +31,10 @@ defmodule PanicWeb.PredictionLive.Index do
     |> assign(:prediction, %Prediction{})
   end
 
-  defp apply_action(socket, :index, _params) do
+  defp apply_action(socket, :index, _) do
     socket
     |> assign(:page_title, "Listing Predictions")
-    |> assign(:prediction, nil)
+    |> assign(:predictions, list_predictions(socket.assigns.network))
   end
 
   @impl true
@@ -37,10 +42,10 @@ defmodule PanicWeb.PredictionLive.Index do
     prediction = Predictions.get_prediction!(id)
     {:ok, _} = Predictions.delete_prediction(prediction)
 
-    {:noreply, assign(socket, :predictions, list_predictions())}
+    {:noreply, assign(socket, :predictions, list_predictions(socket.assigns.network))}
   end
 
-  defp list_predictions do
-    # Predictions.list_predictions()
+  defp list_predictions(%Network{} = network) do
+    Predictions.list_predictions(network)
   end
 end

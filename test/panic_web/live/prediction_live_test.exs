@@ -47,20 +47,20 @@ defmodule PanicWeb.PredictionLiveTest do
   describe "Index" do
     setup [:create_and_log_in_user, :create_network, :create_prediction]
 
-    test "lists all predictions", %{conn: conn, prediction: prediction} do
-      {:ok, _index_live, html} = live(conn, ~p"/predictions")
+    test "lists all predictions", %{conn: conn, network: network, prediction: prediction} do
+      {:ok, _index_live, html} = live(conn, ~p"/networks/#{network}/predictions")
 
       assert html =~ "Listing Predictions"
       assert html =~ prediction.input
     end
 
-    test "saves new prediction", %{conn: conn} do
-      {:ok, index_live, _html} = live(conn, ~p"/predictions")
+    test "saves new prediction", %{conn: conn, network: network} do
+      {:ok, index_live, _html} = live(conn, ~p"/networks/#{network}/predictions")
 
       assert index_live |> element("a", "New Prediction") |> render_click() =~
                "New Prediction"
 
-      assert_patch(index_live, ~p"/predictions/new")
+      assert_patch(index_live, ~p"/networks/#{network}/predictions/new")
 
       assert index_live
              |> form("#prediction-form", prediction: @invalid_attrs)
@@ -70,19 +70,19 @@ defmodule PanicWeb.PredictionLiveTest do
         index_live
         |> form("#prediction-form", prediction: @create_attrs)
         |> render_submit()
-        |> follow_redirect(conn, ~p"/predictions")
+        |> follow_redirect(conn, ~p"/networks/#{network}/predictions")
 
       assert html =~ "Prediction created successfully"
       assert html =~ "some input"
     end
 
-    test "updates prediction in listing", %{conn: conn, prediction: prediction} do
-      {:ok, index_live, _html} = live(conn, ~p"/predictions")
+    test "updates prediction in listing", %{conn: conn, network: network, prediction: prediction} do
+      {:ok, index_live, _html} = live(conn, ~p"/networks/#{network}/predictions")
 
       assert index_live |> element("#predictions-#{prediction.id} a", "Edit") |> render_click() =~
                "Edit Prediction"
 
-      assert_patch(index_live, ~p"/predictions/#{prediction}/edit")
+      assert_patch(index_live, ~p"/networks/#{network}/predictions/#{prediction}/edit")
 
       assert index_live
              |> form("#prediction-form", prediction: @invalid_attrs)
@@ -92,14 +92,14 @@ defmodule PanicWeb.PredictionLiveTest do
         index_live
         |> form("#prediction-form", prediction: @update_attrs)
         |> render_submit()
-        |> follow_redirect(conn, ~p"/predictions")
+        |> follow_redirect(conn, ~p"/networks/#{network}/predictions")
 
       assert html =~ "Prediction updated successfully"
       assert html =~ "some updated input"
     end
 
-    test "deletes prediction in listing", %{conn: conn, prediction: prediction} do
-      {:ok, index_live, _html} = live(conn, ~p"/predictions")
+    test "deletes prediction in listing", %{conn: conn, network: network, prediction: prediction} do
+      {:ok, index_live, _html} = live(conn, ~p"/networks/#{network}/predictions")
 
       assert index_live |> element("#predictions-#{prediction.id} a", "Delete") |> render_click()
       refute has_element?(index_live, "#prediction-#{prediction.id}")
@@ -109,20 +109,24 @@ defmodule PanicWeb.PredictionLiveTest do
   describe "Show" do
     setup [:create_and_log_in_user, :create_network, :create_prediction]
 
-    test "displays prediction", %{conn: conn, prediction: prediction} do
-      {:ok, _show_live, html} = live(conn, ~p"/predictions/#{prediction}")
+    test "displays prediction", %{conn: conn, network: network, prediction: prediction} do
+      {:ok, _show_live, html} = live(conn, ~p"/networks/#{network}/predictions/#{prediction}")
 
       assert html =~ "Show Prediction"
       assert html =~ prediction.input
     end
 
-    test "updates prediction within modal", %{conn: conn, prediction: prediction} do
-      {:ok, show_live, _html} = live(conn, ~p"/predictions/#{prediction}")
+    test "updates prediction within modal", %{
+      conn: conn,
+      network: network,
+      prediction: prediction
+    } do
+      {:ok, show_live, _html} = live(conn, ~p"/networks/#{network}/predictions/#{prediction}")
 
       assert show_live |> element("a", "Edit") |> render_click() =~
                "Edit Prediction"
 
-      assert_patch(show_live, ~p"/predictions/#{prediction}/show/edit")
+      assert_patch(show_live, ~p"/networks/#{network}/predictions/#{prediction}/show/edit")
 
       assert show_live
              |> form("#prediction-form", prediction: @invalid_attrs)
@@ -132,7 +136,7 @@ defmodule PanicWeb.PredictionLiveTest do
         show_live
         |> form("#prediction-form", prediction: @update_attrs)
         |> render_submit()
-        |> follow_redirect(conn, ~p"/predictions/#{prediction}")
+        |> follow_redirect(conn, ~p"/networks/#{network}/predictions/#{prediction}")
 
       assert html =~ "Prediction updated successfully"
       assert html =~ "some updated input"

@@ -79,19 +79,22 @@ defmodule PanicWeb.Router do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
 
-      live "/predictions", PredictionLive.Index, :index
-      live "/predictions/new", PredictionLive.Index, :new
-      live "/predictions/:id/edit", PredictionLive.Index, :edit
-
-      live "/predictions/:id", PredictionLive.Show, :show
-      live "/predictions/:id/show/edit", PredictionLive.Show, :edit
-
       live "/networks", NetworkLive.Index, :index
       live "/networks/new", NetworkLive.Index, :new
+      live "/networks/latest", NetworkLive.Index, :latest
       live "/networks/:id/edit", NetworkLive.Index, :edit
 
       live "/networks/:id", NetworkLive.Show, :show
+      # could this one be the terminal?
       live "/networks/:id/show/edit", NetworkLive.Show, :edit
+      live "/networks/:id/qrcode", NetworkLive.Show, :qrcode
+
+      live "/networks/:network_id/predictions", PredictionLive.Index, :index
+      live "/networks/:network_id/predictions/new", PredictionLive.Index, :new
+      # live "/networks/:network_id/predictions/:id/edit", PredictionLive.Index, :edit
+
+      live "/networks/:network_id/predictions/:id", PredictionLive.Show, :show
+      live "/networks/:network_id/predictions/:id/show/edit", PredictionLive.Show, :edit
 
       live "/api_tokens", APITokenLive.Index, :index
       live "/api_tokens/new", APITokenLive.Index, :new

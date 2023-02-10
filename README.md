@@ -116,6 +116,7 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 - [ ] get web tests working
 - [ ] port view code
 - [ ] remove dead view on /
+- [ ] check that access control works for the network & prediction views
 
 ## Licence
 
