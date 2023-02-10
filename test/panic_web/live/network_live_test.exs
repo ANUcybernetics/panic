@@ -7,12 +7,12 @@ defmodule PanicWeb.NetworkLiveTest do
 
   @create_attrs %{
     description: "some description",
-    models: ["option1", "option2"],
+    models: ["openai:text-davinci-003", "replicate:stability-ai/stable-diffusion"],
     name: "some name"
   }
   @update_attrs %{
     description: "some updated description",
-    models: ["option1"],
+    models: ["openai:text-davinci-003"],
     name: "some updated name"
   }
   @invalid_attrs %{description: nil, models: [], name: nil}

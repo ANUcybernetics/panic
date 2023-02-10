@@ -26,14 +26,19 @@ defmodule Panic.NetworksTest do
 
       valid_attrs = %{
         description: "some description",
-        models: ["option1", "option2"],
+        models: ["openai:text-davinci-003", "replicate:stability-ai/stable-diffusion"],
         name: "some name",
         user_id: user.id
       }
 
       assert {:ok, %Network{} = network} = Networks.create_network(valid_attrs)
       assert network.description == "some description"
-      assert network.models == ["option1", "option2"]
+
+      assert network.models == [
+               "openai:text-davinci-003",
+               "replicate:stability-ai/stable-diffusion"
+             ]
+
       assert network.name == "some name"
       assert network.user_id == user.id
     end
@@ -47,13 +52,13 @@ defmodule Panic.NetworksTest do
 
       update_attrs = %{
         description: "some updated description",
-        models: ["option1"],
+        models: ["openai:text-davinci-003"],
         name: "some updated name"
       }
 
       assert {:ok, %Network{} = network} = Networks.update_network(network, update_attrs)
       assert network.description == "some updated description"
-      assert network.models == ["option1"]
+      assert network.models == ["openai:text-davinci-003"]
       assert network.name == "some updated name"
     end
 

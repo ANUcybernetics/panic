@@ -16,6 +16,21 @@ defmodule Panic.Networks.Network do
     network
     |> cast(attrs, [:models, :name, :description, :user_id])
     |> validate_required([:models, :name, :description, :user_id])
+    |> validate_model_array()
     |> foreign_key_constraint(:user)
+  end
+
+  defp validate_model_array(changeset) do
+    validate_change(changeset, :models, fn :models, model_array ->
+      all_models = Panic.Platforms.list_model_info() |> Enum.map(fn {model, _, _} -> model end)
+
+      for model <- model_array, model not in all_models do
+        model
+      end
+      |> case do
+        [] -> []
+        unsupported -> [{:models, "unsupported models: #{Enum.join(unsupported, " ")}"}]
+      end
+    end)
   end
 end
