@@ -27,12 +27,6 @@ defmodule PanicWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", PanicWeb do
-    pipe_through :browser
-
-    get "/", PageController, :home
-  end
-
   # Other scopes may use custom stacks.
   # scope "/api", PanicWeb do
   #   pipe_through :api
@@ -77,6 +71,8 @@ defmodule PanicWeb.Router do
     pipe_through [:browser]
 
     live_session :public_network_routes do
+      live "/", HomeLive.Index, :index
+
       ## "running grid" view
       live "/networks/:id", NetworkLive.Show, :show
 
