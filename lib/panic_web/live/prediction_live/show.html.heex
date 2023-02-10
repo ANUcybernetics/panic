@@ -18,7 +18,7 @@
   <:item title="Run index"><%= @prediction.run_index %></:item>
 </.list>
 
-<.back navigate={~p"/networks/#{@network}//predictions"}>Back to predictions</.back>
+<.back navigate={~p"/networks/#{@network}/predictions"}>Back to predictions</.back>
 
 <.modal
   :if={@live_action == :edit}
