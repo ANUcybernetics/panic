@@ -40,7 +40,7 @@ defmodule PanicWeb.APITokenLive.Index do
     {:noreply, assign(socket, :api_tokens, list_api_tokens(socket.assigns.current_user))}
   end
 
-  defp list_api_tokens(%Panic.Accounts.User{} = user) do
+  defp list_api_tokens(%Accounts.User{} = user) do
     Accounts.list_api_tokens(user)
   end
 end
