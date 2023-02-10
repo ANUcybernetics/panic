@@ -20,7 +20,6 @@
     <div class="sr-only">
       <.link navigate={~p"/networks/#{@network}/predictions/#{prediction}"}>Show</.link>
     </div>
-    <.link patch={~p"/networks/#{@network}/predictions/#{prediction}/edit"}>Edit</.link>
   </:action>
   <:action :let={prediction}>
     <.link phx-click={JS.push("delete", value: %{id: prediction.id})} data-confirm="Are you sure?">
