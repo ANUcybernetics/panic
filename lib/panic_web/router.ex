@@ -55,7 +55,7 @@ defmodule PanicWeb.Router do
     end
   end
 
-  ## Authentication routes
+  ## Account management routes
 
   scope "/", PanicWeb do
     pipe_through [:browser, :redirect_if_user_is_authenticated]
@@ -71,10 +71,29 @@ defmodule PanicWeb.Router do
     post "/users/log_in", UserSessionController, :create
   end
 
+  ## public network routes
+
+  scope "/", PanicWeb do
+    pipe_through [:browser]
+
+    live_session :public_network_routes do
+      ## "running grid" view
+      live "/networks/:id", NetworkLive.Show, :show
+
+      # redirect to the latest network (although not by-user, so I'm not sure this is going to work)
+      live "/networks/latest", NetworkLive.Index, :latest
+      ## also accepts query params for screen/grid_mod and will live update as
+      ## new predictions come in
+      live "/networks/:network_id/predictions/:id", PredictionLive.Show, :show
+    end
+  end
+
+  ## authenticated network routes
+
   scope "/", PanicWeb do
     pipe_through [:browser, :require_authenticated_user]
 
-    live_session :require_authenticated_user,
+    live_session :authenticated_network_routes,
       on_mount: [{PanicWeb.UserAuth, :ensure_authenticated}] do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
@@ -82,21 +101,14 @@ defmodule PanicWeb.Router do
       live "/networks", NetworkLive.Index, :index
       live "/networks/new", NetworkLive.Index, :new
       live "/networks/:id/edit", NetworkLive.Index, :edit
-      ## "running grid" view
-      live "/networks/:id", NetworkLive.Show, :show
       ## the "all in one" terminal plus running grid view
       live "/networks/:id/show/edit", NetworkLive.Show, :edit
 
-      # redirect to the latest network (although not by-user, so I'm not sure this is going to work)
-      live "/networks/latest", NetworkLive.Index, :latest
       live "/networks/:id/qrcode", NetworkLive.Show, :qrcode
 
       live "/networks/:network_id/predictions", PredictionLive.Index, :index
       # the "terminal"
       live "/networks/:network_id/predictions/new", PredictionLive.Index, :new
-      ## also accepts query params for screen/grid_mod and will live update as
-      ## new predictions come in
-      live "/networks/:network_id/predictions/:id", PredictionLive.Show, :show
 
       live "/api_tokens", APITokenLive.Index, :index
       live "/api_tokens/new", APITokenLive.Index, :new
