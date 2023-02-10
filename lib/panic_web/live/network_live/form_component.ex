@@ -2,6 +2,14 @@ defmodule PanicWeb.NetworkLive.FormComponent do
   use PanicWeb, :live_component
 
   alias Panic.Networks
+  alias Panic.Platforms
+
+  defp model_options() do
+    for {model, _input_type, _output_type} <- Platforms.list_model_info() do
+      ## TODO add a "pretty name" field to those tuples
+      {model, model}
+    end
+  end
 
   @impl true
   def render(assigns) do
@@ -20,13 +28,7 @@ defmodule PanicWeb.NetworkLive.FormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input
-          field={{f, :models}}
-          type="select"
-          multiple
-          label="Models"
-          options={[{"Option 1", "option1"}, {"Option 2", "option2"}]}
-        />
+        <.input field={{f, :models}} type="select" multiple label="Models" options={model_options()} />
         <.input field={{f, :name}} type="text" label="Name" />
         <.input field={{f, :description}} type="text" label="Description" />
         <:actions>
