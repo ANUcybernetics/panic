@@ -81,20 +81,22 @@ defmodule PanicWeb.Router do
 
       live "/networks", NetworkLive.Index, :index
       live "/networks/new", NetworkLive.Index, :new
-      live "/networks/latest", NetworkLive.Index, :latest
       live "/networks/:id/edit", NetworkLive.Index, :edit
-
+      ## "running grid" view
       live "/networks/:id", NetworkLive.Show, :show
-      # could this one be the terminal?
+      ## the "all in one" terminal plus running grid view
       live "/networks/:id/show/edit", NetworkLive.Show, :edit
+
+      # redirect to the latest network (although not by-user, so I'm not sure this is going to work)
+      live "/networks/latest", NetworkLive.Index, :latest
       live "/networks/:id/qrcode", NetworkLive.Show, :qrcode
 
       live "/networks/:network_id/predictions", PredictionLive.Index, :index
+      # the "terminal"
       live "/networks/:network_id/predictions/new", PredictionLive.Index, :new
-      # live "/networks/:network_id/predictions/:id/edit", PredictionLive.Index, :edit
-
+      ## also accepts query params for screen/grid_mod and will live update as
+      ## new predictions come in
       live "/networks/:network_id/predictions/:id", PredictionLive.Show, :show
-      live "/networks/:network_id/predictions/:id/show/edit", PredictionLive.Show, :edit
 
       live "/api_tokens", APITokenLive.Index, :index
       live "/api_tokens/new", APITokenLive.Index, :new
