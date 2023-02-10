@@ -1,14 +1,6 @@
 <.header>
   Prediction <%= @prediction.id %>
   <:subtitle>This is a prediction record from your database.</:subtitle>
-  <:actions>
-    <.link
-      patch={~p"/networks/#{@network}/predictions/#{@prediction}/show/edit"}
-      phx-click={JS.push_focus()}
-    >
-      <.button>Edit prediction</.button>
-    </.link>
-  </:actions>
 </.header>
 
 <.list>
@@ -19,20 +11,3 @@
 </.list>
 
 <.back navigate={~p"/networks/#{@network}/predictions"}>Back to predictions</.back>
-
-<.modal
-  :if={@live_action == :edit}
-  id="prediction-modal"
-  show
-  on_cancel={JS.patch(~p"/networks/#{@network}/predictions/#{@prediction}")}
->
-  <.live_component
-    module={PanicWeb.PredictionLive.FormComponent}
-    id={@prediction.id}
-    title={@page_title}
-    action={@live_action}
-    network={@network}
-    prediction={@prediction}
-    navigate={~p"/networks/#{@network}/predictions/#{@prediction}"}
-  />
-</.modal>

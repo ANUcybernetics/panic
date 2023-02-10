@@ -76,28 +76,6 @@ defmodule PanicWeb.PredictionLiveTest do
       assert html =~ "some input"
     end
 
-    test "updates prediction in listing", %{conn: conn, network: network, prediction: prediction} do
-      {:ok, index_live, _html} = live(conn, ~p"/networks/#{network}/predictions")
-
-      assert index_live |> element("#predictions-#{prediction.id} a", "Edit") |> render_click() =~
-               "Edit Prediction"
-
-      assert_patch(index_live, ~p"/networks/#{network}/predictions/#{prediction}/edit")
-
-      assert index_live
-             |> form("#prediction-form", prediction: @invalid_attrs)
-             |> render_change() =~ "can&#39;t be blank"
-
-      {:ok, _, html} =
-        index_live
-        |> form("#prediction-form", prediction: @update_attrs)
-        |> render_submit()
-        |> follow_redirect(conn, ~p"/networks/#{network}/predictions")
-
-      assert html =~ "Prediction updated successfully"
-      assert html =~ "some updated input"
-    end
-
     test "deletes prediction in listing", %{conn: conn, network: network, prediction: prediction} do
       {:ok, index_live, _html} = live(conn, ~p"/networks/#{network}/predictions")
 
@@ -114,32 +92,6 @@ defmodule PanicWeb.PredictionLiveTest do
 
       assert html =~ "Show Prediction"
       assert html =~ prediction.input
-    end
-
-    test "updates prediction within modal", %{
-      conn: conn,
-      network: network,
-      prediction: prediction
-    } do
-      {:ok, show_live, _html} = live(conn, ~p"/networks/#{network}/predictions/#{prediction}")
-
-      assert show_live |> element("a", "Edit") |> render_click() =~
-               "Edit Prediction"
-
-      assert_patch(show_live, ~p"/networks/#{network}/predictions/#{prediction}/show/edit")
-
-      assert show_live
-             |> form("#prediction-form", prediction: @invalid_attrs)
-             |> render_change() =~ "can&#39;t be blank"
-
-      {:ok, _, html} =
-        show_live
-        |> form("#prediction-form", prediction: @update_attrs)
-        |> render_submit()
-        |> follow_redirect(conn, ~p"/networks/#{network}/predictions/#{prediction}")
-
-      assert html =~ "Prediction updated successfully"
-      assert html =~ "some updated input"
     end
   end
 end
