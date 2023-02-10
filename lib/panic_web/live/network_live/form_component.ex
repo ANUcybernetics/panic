@@ -9,7 +9,7 @@ defmodule PanicWeb.NetworkLive.FormComponent do
     <div>
       <.header>
         <%= @title %>
-        <:subtitle>Use this form to manage network records in your database.</:subtitle>
+        <:subtitle>Manage your networks for AI funtimes.</:subtitle>
       </.header>
 
       <.simple_form
