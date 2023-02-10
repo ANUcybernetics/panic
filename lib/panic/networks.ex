@@ -7,6 +7,7 @@ defmodule Panic.Networks do
   alias Panic.Repo
 
   alias Panic.Networks.Network
+  alias Panic.Accounts.User
 
   @doc """
   Returns the list of networks.
@@ -19,6 +20,19 @@ defmodule Panic.Networks do
   """
   def list_networks do
     Repo.all(Network)
+  end
+
+  @doc """
+  Returns the list of networks for a given user.
+
+  ## Examples
+
+      iex> list_networks(%User{})
+      [%Network{}, ...]
+
+  """
+  def list_networks(%User{id: user_id}) do
+    Repo.all(from n in Network, where: n.user_id == ^user_id)
   end
 
   @doc """
