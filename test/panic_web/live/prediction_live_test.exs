@@ -11,13 +11,6 @@ defmodule PanicWeb.PredictionLiveTest do
     output: "some output",
     run_index: 42
   }
-  @update_attrs %{
-    input: "some updated input",
-    metadata: %{},
-    model: "some updated model",
-    output: "some updated output",
-    run_index: 43
-  }
   @invalid_attrs %{input: nil, metadata: nil, model: nil, output: nil, run_index: nil}
 
   def create_and_log_in_user(%{conn: conn} = context) do
