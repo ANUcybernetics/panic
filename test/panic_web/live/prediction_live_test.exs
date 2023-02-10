@@ -2,7 +2,7 @@ defmodule PanicWeb.PredictionLiveTest do
   use PanicWeb.ConnCase
 
   import Phoenix.LiveViewTest
-  import Panic.PredictionsFixtures
+  import Panic.{AccountsFixtures, NetworksFixtures, PredictionsFixtures}
 
   @create_attrs %{
     input: "some input",
@@ -20,13 +20,32 @@ defmodule PanicWeb.PredictionLiveTest do
   }
   @invalid_attrs %{input: nil, metadata: nil, model: nil, output: nil, run_index: nil}
 
-  defp create_prediction(_) do
-    prediction = prediction_fixture()
-    %{prediction: prediction}
+  def create_and_log_in_user(%{conn: conn} = context) do
+    password = "123456789abcd"
+    user = user_fixture(%{password: password})
+
+    {:ok, lv, _html} = live(conn, ~p"/users/log_in")
+
+    form =
+      form(lv, "#login_form", user: %{email: user.email, password: password, remember_me: true})
+
+    conn = submit_form(form, conn)
+
+    context
+    |> Map.put(:user, user)
+    |> Map.put(:conn, conn)
+  end
+
+  def create_network(%{user: user} = context) do
+    Map.put(context, :network, network_fixture(%{user_id: user.id}))
+  end
+
+  defp create_prediction(%{network: network} = context) do
+    Map.put(context, :prediction, prediction_fixture(%{network_id: network.id}))
   end
 
   describe "Index" do
-    setup [:create_prediction]
+    setup [:create_and_log_in_user, :create_network, :create_prediction]
 
     test "lists all predictions", %{conn: conn, prediction: prediction} do
       {:ok, _index_live, html} = live(conn, ~p"/predictions")
@@ -88,7 +107,7 @@ defmodule PanicWeb.PredictionLiveTest do
   end
 
   describe "Show" do
-    setup [:create_prediction]
+    setup [:create_and_log_in_user, :create_network, :create_prediction]
 
     test "displays prediction", %{conn: conn, prediction: prediction} do
       {:ok, _show_live, html} = live(conn, ~p"/predictions/#{prediction}")
