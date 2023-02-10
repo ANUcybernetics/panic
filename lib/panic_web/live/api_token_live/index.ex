@@ -24,6 +24,7 @@ defmodule PanicWeb.APITokenLive.Index do
     socket
     |> assign(:page_title, "New API token")
     |> assign(:api_token, %APIToken{})
+    |> push_patch(to: ~p"/api_tokens")
   end
 
   defp apply_action(socket, :index, _params) do
