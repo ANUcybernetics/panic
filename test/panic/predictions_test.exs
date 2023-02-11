@@ -89,7 +89,7 @@ defmodule Panic.PredictionsTest do
   describe "create genesis/next predictions (mocked platform API calls)" do
     setup [:create_network, :load_env_vars]
 
-    test_with_mock "create_genesis_prediction/2 works with valid params",
+    test_with_mock "create_prediction/2 works with valid params",
                    %{network: network},
                    Panic.Platforms,
                    [:passthrough],
@@ -100,12 +100,12 @@ defmodule Panic.PredictionsTest do
       input = "Tell me a joke about potatoes."
 
       assert {:ok, %Prediction{output: output}} =
-               Predictions.create_genesis_prediction(input, network)
+               Predictions.create_prediction(%{input: input}, :genesis, network)
 
       assert is_binary(output)
     end
 
-    test_with_mock "create_genesis_prediction/2 followed by create_next_prediction/2 works",
+    test_with_mock "create_prediction/2 followed by create_next_prediction/2 works",
                    %{
                      network: network
                    },
@@ -118,14 +118,14 @@ defmodule Panic.PredictionsTest do
       input = "Tell me a joke about potatoes."
 
       assert {:ok, %Prediction{run_index: 0} = genesis} =
-               Predictions.create_genesis_prediction(input, network)
+               Predictions.create_prediction(%{input: input}, :genesis, network)
 
       assert is_binary(genesis.output)
 
       genesis_id = genesis.id
 
       assert {:ok, %Prediction{run_index: 1, genesis_id: ^genesis_id}} =
-               Predictions.create_next_prediction(genesis)
+               Predictions.create_prediction(genesis, :next)
     end
   end
 

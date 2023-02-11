@@ -88,7 +88,7 @@ defmodule Panic.Runs.RunFSM do
     Task.Supervisor.start_child(
       Panic.Platforms.TaskSupervisor,
       fn ->
-        {:ok, next_prediction} = Predictions.create_next_prediction(new_prediction)
+        {:ok, next_prediction} = Predictions.create_prediction(new_prediction, :next)
         Finitomata.transition(next_prediction.network.id, {:new_prediction, next_prediction})
       end,
       restart: :transient

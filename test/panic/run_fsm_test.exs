@@ -43,7 +43,11 @@ defmodule Panic.RunFSMTest do
 
       ## genesis input
       {:ok, genesis_prediction} =
-        Predictions.create_genesis_prediction("ok, let's kick things off...", network)
+        Predictions.create_prediction(
+          %{input: "ok, let's kick things off..."},
+          :genesis,
+          network
+        )
 
       send_event_and_sleep(network.id, {:new_prediction, genesis_prediction}, 10_000)
       assert %Finitomata.State{current: :running} = Finitomata.state(network.id)
@@ -63,11 +67,16 @@ defmodule Panic.RunFSMTest do
       assert [] = Predictions.list_predictions(network)
       # genesis input
       {:ok, first_genesis_prediction} =
-        Predictions.create_genesis_prediction("tell me a story about a bunny", network)
+        Predictions.create_prediction(
+          %{input: "tell me a story about a bunny"},
+          :genesis,
+          network
+        )
 
       {:ok, second_genesis_prediction} =
-        Predictions.create_genesis_prediction(
-          "a second input, hot on the heels of the first",
+        Predictions.create_prediction(
+          %{input: "a second input, hot on the heels of the first"},
+          :genesis,
           network
         )
 
@@ -93,11 +102,16 @@ defmodule Panic.RunFSMTest do
 
       # genesis input
       {:ok, first_genesis_prediction} =
-        Predictions.create_genesis_prediction("tell me a story about a bunny", network)
+        Predictions.create_prediction(
+          %{input: "tell me a story about a bunny"},
+          :genesis,
+          network
+        )
 
       {:ok, second_genesis_prediction} =
-        Predictions.create_genesis_prediction(
-          "a second input, hot on the heels of the first",
+        Predictions.create_prediction(
+          %{input: "a second input, hot on the heels of the first"},
+          :genesis,
           network
         )
 
@@ -117,17 +131,24 @@ defmodule Panic.RunFSMTest do
     test "start run, then lock network, then receive a new input and resume", %{network: network} do
       IO.puts("this test takes about 35s")
       # genesis input
-      {:ok, p1} = Predictions.create_genesis_prediction("tell me a story about a bunny", network)
+      {:ok, p1} =
+        Predictions.create_prediction(
+          %{input: "tell me a story about a bunny"},
+          :genesis,
+          network
+        )
 
       {:ok, p2} =
-        Predictions.create_genesis_prediction(
-          "a second input, hot on the heels of the first",
+        Predictions.create_prediction(
+          %{input: "a second input, hot on the heels of the first"},
+          :genesis,
           network
         )
 
       {:ok, p3} =
-        Predictions.create_genesis_prediction(
-          "a second input, hot on the heels of the first",
+        Predictions.create_prediction(
+          %{input: "a second input, hot on the heels of the first"},
+          :genesis,
           network
         )
 
@@ -150,17 +171,24 @@ defmodule Panic.RunFSMTest do
     } do
       IO.puts("this test takes about 35s")
       # genesis input
-      {:ok, p1} = Predictions.create_genesis_prediction("tell me a story about a bunny", network)
+      {:ok, p1} =
+        Predictions.create_prediction(
+          %{input: "tell me a story about a bunny"},
+          :genesis,
+          network
+        )
 
       {:ok, p2} =
-        Predictions.create_genesis_prediction(
-          "a second input, hot on the heels of the first",
+        Predictions.create_prediction(
+          %{input: "a second input, hot on the heels of the first"},
+          :genesis,
           network
         )
 
       {:ok, p3} =
-        Predictions.create_genesis_prediction(
-          "a third input, hot on the heels of the first",
+        Predictions.create_prediction(
+          %{input: "a third input, hot on the heels of the first"},
+          :genesis,
           network
         )
 
