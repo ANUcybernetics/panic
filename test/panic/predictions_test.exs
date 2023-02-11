@@ -92,7 +92,7 @@ defmodule Panic.PredictionsTest do
     test_with_mock "create_genesis_prediction/2 works with valid params",
                    %{network: network},
                    Panic.Platforms,
-                   [],
+                   [:passthrough],
                    api_call: fn model, _input, _user ->
                      Process.sleep(1000)
                      {:ok, "result of API call to #{model}"}
@@ -110,7 +110,7 @@ defmodule Panic.PredictionsTest do
                      network: network
                    },
                    Panic.Platforms,
-                   [],
+                   [:passthrough],
                    api_call: fn model, _input, _user ->
                      Process.sleep(1000)
                      {:ok, "result of API call to #{model}"}

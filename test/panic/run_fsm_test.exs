@@ -7,7 +7,7 @@ defmodule Panic.RunFSMTest do
   import Panic.{AccountsFixtures, NetworksFixtures}
 
   setup_with_mocks([
-    {Panic.Platforms, [],
+    {Panic.Platforms, [:passthrough],
      [
        api_call: fn model, _input, _user ->
          Process.sleep(1000)
