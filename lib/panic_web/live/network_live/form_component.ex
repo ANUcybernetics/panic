@@ -17,7 +17,7 @@ defmodule PanicWeb.NetworkLive.FormComponent do
     <div>
       <.header>
         <%= @title %>
-        <:subtitle>Manage your networks for AI funtimes.</:subtitle>
+        <:subtitle>Create a new network of AI models.</:subtitle>
       </.header>
 
       <.simple_form
@@ -28,7 +28,6 @@ defmodule PanicWeb.NetworkLive.FormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={{f, :models}} type="select" multiple label="Models" options={model_options()} />
         <.input field={{f, :name}} type="text" label="Name" />
         <.input field={{f, :description}} type="text" label="Description" />
         <:actions>

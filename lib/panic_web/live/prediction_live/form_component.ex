@@ -9,7 +9,7 @@ defmodule PanicWeb.PredictionLive.FormComponent do
     <div>
       <.header>
         <%= @title %>
-        <:subtitle>Use this form to manage prediction records in your database.</:subtitle>
+        <:subtitle>Start a new Panic! run by creating a new AI prediction.</:subtitle>
       </.header>
 
       <.simple_form
@@ -20,13 +20,10 @@ defmodule PanicWeb.PredictionLive.FormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={{f, :model}} type="text" label="Model" />
         <.input field={{f, :input}} type="text" label="Input" />
-        <.input field={{f, :output}} type="text" label="Output" />
-        <.input field={{f, :run_index}} type="number" label="Run index" />
         <:actions>
-          <.button phx-disable-with="Saving...">Save Prediction</.button>
-        </:actions>
+          <.button phx-disable-with="Creating...">Create Prediction</.button>
+          </:actions>
       </.simple_form>
     </div>
     """
