@@ -105,20 +105,21 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 ## TODO
 
-- [ ] add BLIP model (from Replicate)
-- [ ] update routes as per notebook
-- [ ] split routes up between auth required/not required
-- [ ] add QR code dep
-- [ ] add rolling cookie/URL param to QR code
-- [ ] add metadata to prediction
-- [ ] port vestaboards code, add (as array) to prediction model
-- [ ] add "slow down over time" logic to runs
-- [ ] get web tests working
-- [ ] port view code
-- [ ] remove dead view on /
-- [ ] check that access control works for the network & prediction
-- [ ] port panic v2 code to the form components, including passing in assigns
-- [ ] maybe use cast_assoc wherever it makes sense, e.g. API tokens?
+- add rolling cookie/URL param to QR code
+- add metadata to prediction
+- port vestaboards code, add (as array) to prediction model
+- add "slow down over time" logic to runs
+- get web tests working
+- port view code
+- check that access control works for the network & prediction
+- port panic v2 code to the form components, including passing in assigns
+- maybe use cast_assoc wherever it makes sense, e.g. API tokens?
+- sort out the preloads (maybe even do them in the query wherever possible)
+- add replicate models:
+  - https://replicate.com/cloneofsimo/lora
+  - https://replicate.com/22-hours/vintedois-diffusion
+  - https://replicate.com/salesforce/blip
+  - https://replicate.com/pharmapsychotic/clip-interrogator
 
 ## Licence
 
