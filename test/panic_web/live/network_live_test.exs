@@ -15,7 +15,7 @@ defmodule PanicWeb.NetworkLiveTest do
     models: ["openai:text-davinci-003"],
     name: "some updated name"
   }
-  @invalid_attrs %{description: nil, models: [], name: nil}
+  @invalid_attrs %{description: nil, models: ["bad-model"], name: nil}
 
   defp create_and_log_in_user(%{conn: conn} = context) do
     password = "123456789abcd"
