@@ -2,6 +2,66 @@ defmodule Panic.Platforms.Replicate do
   @url "https://api.replicate.com/v1"
   # @recv_timeout 10_000
 
+  @doc """
+  Map of model info
+
+  Keys are binaries of the form `platform:user/model-name`, and values are maps
+  the following keys:
+
+  - `name`: human readable name for the model
+  - `description`: brief description of the model (supports markdown)
+  - `io_types`: an `{input_type, output_type}` tuple where each is either `:text`, `:image` or `:audio`
+
+  This information is stored in code (rather than in the database) because each
+  model requires bespoke code to pull out the relevant return value (see the
+  various versions of `create/3` in this module) and trying to keep that code in
+  sync with this info in the database would be a nightmare.
+  """
+  def model_info do
+    %{
+      "replicate:charlesfrye/text-recognizer-gpu" => %{
+        name: "Text Regogniser",
+        description: "",
+        io_types: {:image, :text}
+      },
+      "replicate:kuprel/min-dalle" => %{
+        name: "DALL·E Mini",
+        description: "",
+        io_types: {:text, :image}
+      },
+      "replicate:kyrick/prompt-parrot" => %{
+        name: "Prompt Parrot",
+        description: "",
+        io_types: {:text, :text}
+      },
+      "replicate:2feet6inches/cog-prompt-parrot" => %{
+        name: "Cog Prompt Parrot",
+        description: "",
+        io_types: {:text, :text}
+      },
+      "replicate:methexis-inc/img2prompt" => %{
+        name: "Image2Prompt",
+        description: "",
+        io_types: {:image, :text}
+      },
+      "replicate:rmokady/clip_prefix_caption" => %{
+        name: "Clip Prefix Caption",
+        description: "",
+        io_types: {:image, :text}
+      },
+      "replicate:j-min/clip-caption-reward" => %{
+        name: "Clip Caption Reward",
+        description: "",
+        io_types: {:image, :text}
+      },
+      "replicate:stability-ai/stable-diffusion" => %{
+        name: "Stable Diffusion",
+        description: "",
+        io_types: {:text, :image}
+      }
+    }
+  end
+
   def get_model_versions(model, user) do
     Finch.build(:get, "#{@url}/models/#{model}/versions", headers(user))
     |> Finch.request(Panic.Finch)

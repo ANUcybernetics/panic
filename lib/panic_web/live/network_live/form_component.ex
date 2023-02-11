@@ -2,14 +2,6 @@ defmodule PanicWeb.NetworkLive.FormComponent do
   use PanicWeb, :live_component
 
   alias Panic.Networks
-  alias Panic.Platforms
-
-  defp model_options() do
-    for {model, _input_type, _output_type} <- Platforms.list_model_info() do
-      ## TODO add a "pretty name" field to those tuples
-      {model, model}
-    end
-  end
 
   @impl true
   def render(assigns) do

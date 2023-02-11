@@ -7,9 +7,26 @@ defmodule Panic.PlatformsTest do
   use Panic.DataCase
 
   import Panic.AccountsFixtures
+  alias Panic.Platforms
   alias Panic.Platforms.{OpenAI, Replicate}
 
   @moduletag :real_platform_api_calls
+
+  describe "Platform helpers" do
+    test "model info" do
+      for %{name: name, description: description, io_types: {input_type, output_type}} <-
+            Platforms.model_info() do
+        assert is_binary(name)
+        assert is_binary(description)
+        assert input_type in [:text, :image, :audio]
+        assert output_type in [:text, :image, :audio]
+      end
+    end
+
+    test "list models" do
+      assert is_list(Platforms.models())
+    end
+  end
 
   describe "OpenAI" do
     setup [:create_user, :load_env_vars]

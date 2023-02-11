@@ -22,7 +22,7 @@ defmodule Panic.Networks.Network do
 
   defp validate_model_array(changeset) do
     validate_change(changeset, :models, fn :models, model_array ->
-      all_models = Panic.Platforms.list_model_info() |> Enum.map(fn {model, _, _} -> model end)
+      all_models = Panic.Platforms.models()
 
       for model <- model_array, model not in all_models do
         model

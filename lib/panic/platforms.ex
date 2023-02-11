@@ -10,35 +10,14 @@ defmodule Panic.Platforms do
     [Panic.Platforms.OpenAI, Panic.Platforms.Replicate]
   end
 
-  @doc """
-  List model info tuples
+  def model_info do
+    for platform <- list_platforms(), reduce: %{} do
+      acc -> Map.merge(acc, platform.model_info())
+    end
+  end
 
-  Each one has the form `{model, input_type, output_type}`.
-
-  `model` is a binary matching the pattern `platform:user/model-name`
-
-  The actual API implementation details (e.g munging input/output parameters if
-  necessary) are in the respective `create(model, input, user)` function in the
-  respective Platform module.
-
-  """
-  def list_model_info do
-    [
-      # {"huggingface:facebook/fastspeech2-en-ljspeech", :text, :audio},
-      # {"huggingface:facebook/wav2vec2-base-960h", :audio, :text},
-      {"openai:text-davinci-003", :text, :text},
-      {"openai:text-ada-001", :text, :text},
-      {"openai:davinci-instruct-beta", :text, :text},
-      {"replicate:charlesfrye/text-recognizer-gpu", :image, :text},
-      {"replicate:kuprel/min-dalle", :text, :image},
-      {"replicate:kyrick/prompt-parrot", :text, :text},
-      {"replicate:2feet6inches/cog-prompt-parrot", :text, :text},
-      {"replicate:methexis-inc/img2prompt", :image, :text},
-      {"replicate:rmokady/clip_prefix_caption", :image, :text},
-      {"replicate:j-min/clip-caption-reward", :image, :text},
-      {"replicate:stability-ai/stable-diffusion", :text, :image},
-      {"replicate:prompthero/openjourney", :text, :image}
-    ]
+  def models do
+    Map.keys(model_info())
   end
 
   def api_call(model, input, user) do
