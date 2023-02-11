@@ -23,7 +23,7 @@ defmodule PanicWeb.PredictionLive.FormComponent do
         <.input field={{f, :input}} type="text" label="Input" />
         <:actions>
           <.button phx-disable-with="Creating...">Create Prediction</.button>
-          </:actions>
+        </:actions>
       </.simple_form>
     </div>
     """
