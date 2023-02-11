@@ -9,7 +9,7 @@ defmodule PanicWeb.APITokenLive.FormComponent do
     <div>
       <.header>
         <%= @title %>
-        <:subtitle>Use this form to manage api_token records in your database.</:subtitle>
+        <:subtitle>Manage your AI platform API tokens.</:subtitle>
       </.header>
 
       <.simple_form
