@@ -105,6 +105,10 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 ## TODO
 
+- add a "details" view for each network with:
+  - list & descriptions of each model (possibly live-updating with latest output
+    each one)
+  - stats (time to camels, rainbows, etc.)
 - add rolling cookie/URL param to QR code
 - add metadata to prediction
 - port vestaboards code, add (as array) to prediction model
