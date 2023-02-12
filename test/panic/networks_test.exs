@@ -11,9 +11,10 @@ defmodule Panic.NetworksTest do
 
     @invalid_attrs %{description: nil, models: nil, name: nil}
 
-    test "list_networks/0 returns all networks" do
+    test "list_networks/1 returns all networks" do
       network = network_fixture()
-      assert Networks.list_networks() == [network]
+      user = Panic.Accounts.get_user!(network.user_id)
+      assert Networks.list_networks(user) == [network]
     end
 
     test "get_network!/1 returns the network with given id" do
