@@ -21,7 +21,7 @@ defmodule PanicWeb.NetworkLive.FormComponent do
         phx-submit="save"
       >
         <.input field={{f, :name}} type="text" label="Name" />
-        <.input field={{f, :description}} type="text" label="Description" />
+        <.input field={{f, :description}} type="textarea" label="Description (markdown)" />
         <:actions>
           <.button phx-disable-with="Saving...">Save Network</.button>
         </:actions>
