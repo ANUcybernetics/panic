@@ -77,8 +77,8 @@ defmodule PanicWeb.Router do
       ## "running grid" view
       live "/networks/:id", NetworkLive.Show, :show
 
-      # redirect to the latest network (although not by-user, so I'm not sure this is going to work)
-      live "/networks/latest", NetworkLive.Index, :latest
+      # should be an option for networks to be given a (public) permalink
+      live "/networks/permalink", NetworkLive.Index, :latest
       ## also accepts query params for screen/grid_mod and will live update as
       ## new predictions come in
       live "/networks/:network_id/predictions/:id", PredictionLive.Show, :show
