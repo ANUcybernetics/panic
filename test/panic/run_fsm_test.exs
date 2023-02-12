@@ -98,7 +98,7 @@ defmodule Panic.RunFSMTest do
     end
 
     test "receive new genesis prediction after lockout period ends", %{network: network} do
-      IO.puts("this test takes about 15s")
+      IO.puts("this test takes about 45s")
 
       # genesis input
       {:ok, first_genesis_prediction} =
@@ -120,10 +120,10 @@ defmodule Panic.RunFSMTest do
 
       # check there's at least one prediction in each run two new runs
       assert [first | _] = Predictions.list_predictions(network, first_genesis_prediction.id)
-      assert first == first_genesis_prediction
+      assert Panic.Repo.preload(first, [:network]) == first_genesis_prediction
 
       assert [second | _] = Predictions.list_predictions(network, second_genesis_prediction.id)
-      assert second == second_genesis_prediction
+      assert Panic.Repo.preload(second, [:network]) == second_genesis_prediction
 
       check_network_invariants(network)
     end
