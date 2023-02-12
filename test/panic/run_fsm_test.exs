@@ -158,10 +158,9 @@ defmodule Panic.RunFSMTest do
       send_event_and_sleep(network.id, {:new_prediction, p3}, 10_000)
 
       # check we only kept the first genesis input
-      predictions = Predictions.list_predictions(network)
-      assert p1 in predictions
-      assert p2 not in predictions
-      assert p3 in predictions
+      assert Predictions.get_prediction!(p1.id)
+      assert_raise Ecto.NoResultsError, fn -> Predictions.get_prediction!(p2.id) end
+      assert Predictions.get_prediction!(p3.id)
 
       check_network_invariants(network)
     end
@@ -199,10 +198,9 @@ defmodule Panic.RunFSMTest do
       send_event_and_sleep(network.id, {:new_prediction, p3}, 10_000)
 
       # check we only kept the first genesis input
-      predictions = Predictions.list_predictions(network)
-      assert p1 in predictions
-      assert p2 not in predictions
-      assert p3 in predictions
+      assert Predictions.get_prediction!(p1.id)
+      assert_raise Ecto.NoResultsError, fn -> Predictions.get_prediction!(p2.id) end
+      assert Predictions.get_prediction!(p3.id)
 
       check_network_invariants(network)
     end
