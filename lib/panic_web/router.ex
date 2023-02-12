@@ -65,26 +65,6 @@ defmodule PanicWeb.Router do
     post "/users/log_in", UserSessionController, :create
   end
 
-  ## public network routes
-
-  scope "/", PanicWeb do
-    pipe_through [:browser]
-
-    live_session :public_network_routes,
-      on_mount: [{PanicWeb.UserAuth, :mount_current_user}] do
-      live "/", HomeLive.Index, :index
-
-      ## "running grid" view
-      live "/networks/:id", NetworkLive.Show, :show
-
-      # should be an option for networks to be given a (public) permalink
-      live "/networks/permalink", NetworkLive.Index, :latest
-      ## also accepts query params for screen/grid_mod and will live update as
-      ## new predictions come in
-      live "/networks/:network_id/predictions/:id", PredictionLive.Show, :show
-    end
-  end
-
   ## authenticated network routes
 
   scope "/", PanicWeb do
@@ -113,6 +93,26 @@ defmodule PanicWeb.Router do
 
       live "/api_tokens/:id", APITokenLive.Show, :show
       live "/api_tokens/:id/show/edit", APITokenLive.Show, :edit
+    end
+  end
+
+  ## public network routes
+
+  scope "/", PanicWeb do
+    pipe_through [:browser]
+
+    live_session :public_network_routes,
+      on_mount: [{PanicWeb.UserAuth, :mount_current_user}] do
+      live "/", HomeLive.Index, :index
+
+      ## "running grid" view
+      live "/networks/:id", NetworkLive.Show, :show
+
+      # should be an option for networks to be given a (public) permalink
+      live "/networks/permalink", NetworkLive.Index, :latest
+      ## also accepts query params for screen/grid_mod and will live update as
+      ## new predictions come in
+      live "/networks/:network_id/predictions/:id", PredictionLive.Show, :show
     end
   end
 
