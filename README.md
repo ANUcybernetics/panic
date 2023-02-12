@@ -105,7 +105,6 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 ## TODO
 
-- get all test/panic/ tests working again (add new transitions to FSM?)
 - add rolling cookie/URL param to QR code
 - add metadata to prediction
 - port vestaboards code, add (as array) to prediction model
