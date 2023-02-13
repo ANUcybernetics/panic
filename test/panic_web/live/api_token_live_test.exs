@@ -5,9 +5,9 @@ defmodule PanicWeb.APITokenLiveTest do
   import Panic.NetworksFixtures
   import Panic.AccountsFixtures
 
-  @create_attrs %{name: "some name", token: "some token"}
-  @update_attrs %{name: "some updated name", token: "some updated token"}
-  @invalid_attrs %{name: nil, token: nil}
+  defp random_ascii(count) do
+    (Enum.to_list(65..90) ++ Enum.to_list(97..122)) |> Enum.take_random(count)
+  end
 
   defp create_and_log_in_user(%{conn: conn} = context) do
     password = "123456789abcd"
@@ -52,17 +52,17 @@ defmodule PanicWeb.APITokenLiveTest do
       assert_patch(index_live, ~p"/api_tokens/new")
 
       assert index_live
-             |> form("#api_token-form", api_token: @invalid_attrs)
+             |> form("#api_token-form", api_token: %{name: nil, token: nil})
              |> render_change() =~ "can&#39;t be blank"
 
       {:ok, _, html} =
         index_live
-        |> form("#api_token-form", api_token: @create_attrs)
+        |> form("#api_token-form", api_token: %{name: "some new name", token: "some token"})
         |> render_submit()
         |> follow_redirect(conn, ~p"/api_tokens")
 
       assert html =~ "API token created successfully"
-      assert html =~ "some name"
+      assert html =~ "some new name"
     end
 
     test "updates api_token in listing", %{conn: conn, api_token: api_token} do
@@ -74,17 +74,17 @@ defmodule PanicWeb.APITokenLiveTest do
       assert_patch(index_live, ~p"/api_tokens/#{api_token}/edit")
 
       assert index_live
-             |> form("#api_token-form", api_token: @invalid_attrs)
+             |> form("#api_token-form", api_token: %{name: nil, token: nil})
              |> render_change() =~ "can&#39;t be blank"
 
       {:ok, _, html} =
         index_live
-        |> form("#api_token-form", api_token: @update_attrs)
+        |> form("#api_token-form", api_token: %{name: "new name", token: "new token"})
         |> render_submit()
         |> follow_redirect(conn, ~p"/api_tokens")
 
       assert html =~ "API token updated successfully"
-      assert html =~ "some updated name"
+      assert html =~ "new name"
     end
 
     test "deletes api_token in listing", %{conn: conn, api_token: api_token} do
@@ -114,17 +114,17 @@ defmodule PanicWeb.APITokenLiveTest do
       assert_patch(show_live, ~p"/api_tokens/#{api_token}/show/edit")
 
       assert show_live
-             |> form("#api_token-form", api_token: @invalid_attrs)
+             |> form("#api_token-form", api_token: %{name: nil, token: nil})
              |> render_change() =~ "can&#39;t be blank"
 
       {:ok, _, html} =
         show_live
-        |> form("#api_token-form", api_token: @update_attrs)
+        |> form("#api_token-form", api_token: %{name: "another name", token: "another token"})
         |> render_submit()
         |> follow_redirect(conn, ~p"/api_tokens/#{api_token}")
 
       assert html =~ "API token updated successfully"
-      assert html =~ "some updated name"
+      assert html =~ "another name"
     end
   end
 end
