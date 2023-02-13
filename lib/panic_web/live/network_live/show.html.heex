@@ -8,20 +8,9 @@
   </:actions>
 </.header>
 
-<section class="p-4 mt-4 bg-zinc-100 rounded-lg">
-  <h2 class="text-md font-semibold">Append Model</h2>
-  <div class="mt-4 grid grid-cols-3 gap-2">
-    <.button
-      :for={{model, info} <- Platforms.all_model_info()}
-      class={button_colour(info.input)}
-      phx-click={JS.push("append-model", value: %{model: model})}
-    >
-      <%= info.name %>
-    </.button>
-  </div>
-</section>
+<.append_model_widget current_models={@network.models} />
 
-<h2 class="text-md font-semibold">Network Models</h2>
+<h2 class="mt-8 text-md font-semibold">Network Models</h2>
 
 <.table id="networks" rows={@network.models}>
   <:col :let={model} label="Name"><%= Platforms.model_info(model) |> Map.get(:name) %></:col>

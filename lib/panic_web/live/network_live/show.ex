@@ -38,6 +38,29 @@ defmodule PanicWeb.NetworkLive.Show do
     end)
   end
 
-  defp button_colour(:text), do: "bg-emerald-600"
-  defp button_colour(:image), do: "bg-violet-700"
+  defp button_colour(input, last_output) when input == last_output, do: "bg-zinc-300"
+  defp button_colour(:text, _), do: "bg-emerald-600"
+  defp button_colour(:image, _), do: "bg-violet-700"
+
+  def append_model_widget(assigns) do
+    ~H"""
+    <section class="p-4 mt-4 bg-zinc-100 rounded-lg">
+      <h2 class="text-md font-semibold">Append Model</h2>
+      <div class="mt-4 grid grid-cols-3 gap-2">
+        <.button
+          :for={{model, %{name: name, input: input}} <- Platforms.all_model_info()}
+          class={
+            button_colour(
+              input,
+              @current_models |> List.last() |> Platforms.model_info() |> Map.get(:output)
+            )
+          }
+          phx-click={JS.push("append-model", value: %{model: model})}
+        >
+          <%= name %>
+        </.button>
+      </div>
+    </section>
+    """
+  end
 end
