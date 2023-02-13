@@ -35,19 +35,6 @@ defmodule PanicWeb.NetworkLive.Show do
   defp page_title(:show), do: "Show Network"
   defp page_title(:edit), do: "Edit Network"
 
-  ## TODO this is too clever by half... fix it
-  defp grouped_model_options do
-    Panic.Platforms.all_model_info()
-    |> Enum.map(fn {model, info} -> Map.put(info, :model, model) end)
-    |> Enum.group_by(
-      fn %{input: input} -> input end,
-      fn %{model: model, name: name} -> {name, model} end
-    )
-    |> Enum.map(fn {group, values} ->
-      {"#{group |> Atom.to_string() |> String.capitalize()} input", values}
-    end)
-  end
-
   defp last_model_output_type(%Network{models: []}), do: :text ## input prompt is always text
   defp last_model_output_type(%Network{models: models}), do: models |> List.last() |> Platforms.model_info() |> Map.get(:output)
 
