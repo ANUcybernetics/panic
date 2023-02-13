@@ -14,12 +14,12 @@ defmodule Panic.PlatformsTest do
 
   describe "Platform helpers" do
     test "return map of all model info Maps" do
-      for %{name: name, description: description, io_types: {input_type, output_type}} <-
+      for %{name: name, description: description, input: input, output: output} <-
             Platforms.all_model_info() do
         assert is_binary(name)
         assert is_binary(description)
-        assert input_type in [:text, :image, :audio]
-        assert output_type in [:text, :image, :audio]
+        assert input in [:text, :image, :audio]
+        assert output in [:text, :image, :audio]
       end
     end
 
@@ -32,7 +32,8 @@ defmodule Panic.PlatformsTest do
       sd_info = %{
         name: "Stable Diffusion",
         description: "",
-        io_types: {:text, :image}
+        input: :text,
+        output: :image
       }
 
       assert Platforms.model_info("replicate:stability-ai/stable-diffusion") == sd_info

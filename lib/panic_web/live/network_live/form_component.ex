@@ -85,7 +85,7 @@ defmodule PanicWeb.NetworkLive.FormComponent do
     Panic.Platforms.all_model_info()
     |> Enum.map(fn {model, info} -> Map.put(info, :model, model) end)
     |> Enum.group_by(
-      fn %{io_types: {input_type, _}} -> input_type end,
+      fn %{input: input} -> input end,
       fn %{model: model, name: name} -> {name, model} end
     )
     |> Enum.map(fn {group, values} ->

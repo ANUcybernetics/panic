@@ -10,7 +10,8 @@ defmodule Panic.Platforms.Replicate do
 
   - `name`: human readable name for the model
   - `description`: brief description of the model (supports markdown)
-  - `io_types`: an `{input_type, output_type}` tuple where each is either `:text`, `:image` or `:audio`
+  - `input`: input type (either `:text`, `:image` or `:audio`)
+  - `output`: output type (either `:text`, `:image` or `:audio`)
 
   This information is stored in code (rather than in the database) because each
   model requires bespoke code to pull out the relevant return value (see the
@@ -22,42 +23,50 @@ defmodule Panic.Platforms.Replicate do
       "replicate:charlesfrye/text-recognizer-gpu" => %{
         name: "Text Recogniser",
         description: "",
-        io_types: {:image, :text}
+        input: :image,
+        output: :text
       },
       "replicate:kuprel/min-dalle" => %{
         name: "DALL·E Mini",
         description: "",
-        io_types: {:text, :image}
+        input: :text,
+        output: :image
       },
       "replicate:kyrick/prompt-parrot" => %{
         name: "Prompt Parrot",
         description: "",
-        io_types: {:text, :text}
+        input: :text,
+        output: :text
       },
       "replicate:2feet6inches/cog-prompt-parrot" => %{
         name: "Cog Prompt Parrot",
         description: "",
-        io_types: {:text, :text}
+        input: :text,
+        output: :text
       },
       "replicate:methexis-inc/img2prompt" => %{
         name: "Image2Prompt",
         description: "",
-        io_types: {:image, :text}
+        input: :image,
+        output: :text
       },
       "replicate:rmokady/clip_prefix_caption" => %{
         name: "Clip Prefix Caption",
         description: "",
-        io_types: {:image, :text}
+        input: :image,
+        output: :text
       },
       "replicate:j-min/clip-caption-reward" => %{
         name: "Clip Caption Reward",
         description: "",
-        io_types: {:image, :text}
+        input: :image,
+        output: :text
       },
       "replicate:stability-ai/stable-diffusion" => %{
         name: "Stable Diffusion",
         description: "",
-        io_types: {:text, :image}
+        input: :text,
+        output: :image
       }
     }
   end

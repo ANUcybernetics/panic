@@ -12,25 +12,23 @@ defmodule Panic.Platforms.OpenAI do
 
   - `name`: human readable name for the model
   - `description`: brief description of the model (supports markdown)
-  - `io_types`: an `{input_type, output_type}` tuple where each is either `:text`, `:image` or `:audio`
-
-  This information is stored in code (rather than in the database) because each
-  model requires bespoke code to pull out the relevant return value (see the
-  various versions of `create/3` in this module) and trying to keep that code in
-  sync with this info in the database would be a nightmare.
+  - `input`: input type (either `:text`, `:image` or `:audio`)
+  - `output`: output type (either `:text`, `:image` or `:audio`)
   """
   def all_model_info do
     %{
       "openai:text-davinci-003" => %{
         name: "GPT-3 Davinci",
         description: "",
-        io_types: {:text, :text}
+        input: :text,
+        output: :text
       },
-      "openai:text-ada-001" => %{name: "GPT-3 Ada", description: "", io_types: {:text, :text}},
+      "openai:text-ada-001" => %{name: "GPT-3 Ada", description: "", input: :text, output: :text},
       "openai:davinci-instruct-beta" => %{
         name: "GPT-3 Davinci Instruct",
         description: "",
-        io_types: {:text, :text}
+        input: :text,
+        output: :text
       }
     }
   end
