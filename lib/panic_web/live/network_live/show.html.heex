@@ -10,9 +10,15 @@
 
 <section class="p-4 mt-4 bg-zinc-100 rounded-lg">
   <h2 class="text-md font-semibold">Append Model</h2>
-<div class="mt-4 grid grid-cols-3 gap-2">
-  <.button :for={{model, info} <- Platforms.all_model_info()} class={button_colour(info.input)} phx-click={JS.push("append-model", value: %{model: model})}><%= info.name %></.button>
-</div>
+  <div class="mt-4 grid grid-cols-3 gap-2">
+    <.button
+      :for={{model, info} <- Platforms.all_model_info()}
+      class={button_colour(info.input)}
+      phx-click={JS.push("append-model", value: %{model: model})}
+    >
+      <%= info.name %>
+    </.button>
+  </div>
 </section>
 
 <h2 class="text-md font-semibold">Network Models</h2>
