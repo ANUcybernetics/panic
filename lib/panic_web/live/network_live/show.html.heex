@@ -1,18 +1,27 @@
 <.header>
-  Network <%= @network.id %>
-  <:subtitle>This is a network record from your database.</:subtitle>
+  <%= @network.name %>
+  <:subtitle><%= @network.description %></:subtitle>
   <:actions>
     <.link patch={~p"/networks/#{@network}/show/edit"} phx-click={JS.push_focus()}>
-      <.button>Edit network</.button>
+      <.button>Edit details</.button>
     </.link>
   </:actions>
 </.header>
 
-<.list>
-  <:item title="Models"><%= @network.models %></:item>
-  <:item title="Name"><%= @network.name %></:item>
-  <:item title="Description"><%= @network.description %></:item>
+<section class="p-4 mt-4 bg-zinc-100 rounded-lg">
+  <h2 class="text-md font-semibold">Append Model</h2>
+<div class="mt-4 grid grid-cols-3 gap-2">
+  <.button :for={{model, info} <- Platforms.all_model_info()} class={button_colour(info.input)} phx-click={JS.push("append-model", value: %{model: model})}><%= info.name %></.button>
+</div>
+</section>
+
+<.list :for={model <- Enum.map(@network.models, &Platforms.model_info/1)}>
+  <:item title="Name"><%= model.name %></:item>
+  <:item title="Input"><%= model.input %></:item>
+  <:item title="Output"><%= model.output %></:item>
 </.list>
+
+<h2 class="text-md font-semibold">Network Models</h2>
 
 <.back navigate={~p"/networks"}>Back to networks</.back>
 
@@ -25,6 +34,7 @@
   <.live_component
     module={PanicWeb.NetworkLive.FormComponent}
     id={@network.id}
+    user={@current_user}
     title={@page_title}
     action={@live_action}
     network={@network}

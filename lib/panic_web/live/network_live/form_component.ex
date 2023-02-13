@@ -51,6 +51,7 @@ defmodule PanicWeb.NetworkLive.FormComponent do
   end
 
   def handle_event("save", %{"network" => network_params}, socket) do
+    network_params = Map.put(network_params, "user_id", socket.assigns.user.id)
     save_network(socket, socket.assigns.action, network_params)
   end
 
@@ -78,18 +79,5 @@ defmodule PanicWeb.NetworkLive.FormComponent do
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, changeset: changeset)}
     end
-  end
-
-  ## TODO this is too clever by half... fix it
-  defp grouped_model_options do
-    Panic.Platforms.all_model_info()
-    |> Enum.map(fn {model, info} -> Map.put(info, :model, model) end)
-    |> Enum.group_by(
-      fn %{input: input} -> input end,
-      fn %{model: model, name: name} -> {name, model} end
-    )
-    |> Enum.map(fn {group, values} ->
-      {"#{group |> Atom.to_string() |> String.capitalize()} input", values}
-    end)
   end
 end

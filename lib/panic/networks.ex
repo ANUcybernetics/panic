@@ -75,6 +75,13 @@ defmodule Panic.Networks do
   end
 
   @doc """
+  Helper function for appending a model to the network's model array.
+  """
+  def append_model(%Network{models: models} = network, model) do
+    update_network(network, %{models: models ++ [model]})
+  end
+
+  @doc """
   Deletes a network.
 
   ## Examples

@@ -110,6 +110,7 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
     each one)
   - stats (time to camels, rainbows, etc.)
 - add rolling cookie/URL param to QR code
+- use (only) a form to manage the models in the network (create/edit network)
 - add metadata to prediction
 - port vestaboards code, add (as array) to prediction model
 - add "slow down over time" logic to runs
@@ -119,6 +120,9 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 - port panic v2 code to the form components, including passing in assigns
 - maybe use cast_assoc wherever it makes sense, e.g. API tokens?
 - sort out the preloads (maybe even do them in the query wherever possible)
+- can probably simplify some of the get api token/get network code by just using
+  the assoc on a %User{} (can still do it inside context module)
+- add `has_many :networks, Panic.Networks.Network` to user
 - add replicate models:
   - https://replicate.com/cloneofsimo/lora
   - https://replicate.com/22-hours/vintedois-diffusion
