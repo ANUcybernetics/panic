@@ -42,6 +42,8 @@ defmodule PanicWeb.APITokenLive.FormComponent do
 
   @impl true
   def handle_event("validate", %{"api_token" => api_token_params}, socket) do
+    api_token_params = add_user_id(api_token_params, socket)
+
     changeset =
       socket.assigns.api_token
       |> Accounts.change_api_token(api_token_params)
@@ -51,7 +53,7 @@ defmodule PanicWeb.APITokenLive.FormComponent do
   end
 
   def handle_event("save", %{"api_token" => api_token_params}, socket) do
-    api_token_params = Map.put(api_token_params, "user_id", socket.assigns.user.id)
+    api_token_params = add_user_id(api_token_params, socket)
     save_api_token(socket, socket.assigns.action, api_token_params)
   end
 
@@ -79,5 +81,9 @@ defmodule PanicWeb.APITokenLive.FormComponent do
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, changeset: changeset)}
     end
+  end
+
+  defp add_user_id(params, socket) do
+    Map.put(params, "user_id", socket.assigns.user.id)
   end
 end
