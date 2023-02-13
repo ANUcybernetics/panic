@@ -13,9 +13,9 @@ defmodule Panic.PlatformsTest do
   @moduletag :real_platform_api_calls
 
   describe "Platform helpers" do
-    test "model info" do
+    test "return map of all model info Maps" do
       for %{name: name, description: description, io_types: {input_type, output_type}} <-
-            Platforms.model_info() do
+            Platforms.all_model_info() do
         assert is_binary(name)
         assert is_binary(description)
         assert input_type in [:text, :image, :audio]
@@ -24,7 +24,18 @@ defmodule Panic.PlatformsTest do
     end
 
     test "list models" do
-      assert is_list(Platforms.models())
+      assert is_list(Platforms.list_models())
+    end
+
+    test "get info for a single model" do
+      ## manually cribbed from lib/panic/platforms/replicate.ex:57
+      sd_info = %{
+        name: "Stable Diffusion",
+        description: "",
+        io_types: {:text, :image}
+      }
+
+      assert Platforms.model_info("replicate:stability-ai/stable-diffusion") == sd_info
     end
   end
 

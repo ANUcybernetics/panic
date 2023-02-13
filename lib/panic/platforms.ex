@@ -10,14 +10,18 @@ defmodule Panic.Platforms do
     [Panic.Platforms.OpenAI, Panic.Platforms.Replicate]
   end
 
-  def model_info do
+  def all_model_info do
     for platform <- list_platforms(), reduce: %{} do
-      acc -> Map.merge(acc, platform.model_info())
+      acc -> Map.merge(acc, platform.all_model_info())
     end
   end
 
-  def models do
-    Map.keys(model_info())
+  def list_models do
+    Map.keys(all_model_info())
+  end
+
+  def model_info(model) do
+    all_model_info() |> Map.get(model)
   end
 
   def api_call(model, input, user) do

@@ -82,7 +82,7 @@ defmodule PanicWeb.NetworkLive.FormComponent do
 
   ## TODO this is too clever by half... fix it
   defp grouped_model_options do
-    Panic.Platforms.model_info()
+    Panic.Platforms.all_model_info()
     |> Enum.map(fn {model, info} -> Map.put(info, :model, model) end)
     |> Enum.group_by(
       fn %{io_types: {input_type, _}} -> input_type end,

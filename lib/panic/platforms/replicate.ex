@@ -17,7 +17,7 @@ defmodule Panic.Platforms.Replicate do
   various versions of `create/3` in this module) and trying to keep that code in
   sync with this info in the database would be a nightmare.
   """
-  def model_info do
+  def all_model_info do
     %{
       "replicate:charlesfrye/text-recognizer-gpu" => %{
         name: "Text Recogniser",
