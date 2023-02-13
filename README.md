@@ -109,6 +109,10 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
   - list & descriptions of each model (possibly live-updating with latest output
     each one)
   - stats (time to camels, rainbows, etc.)
+- instead of a table, use a flex container (with that cool forwards-bacwards
+  flow direction thing) for the network models
+- in append_model_widget, disable all the buttons for models which don't have
+  the right input type
 - add rolling cookie/URL param to QR code
 - use (only) a form to manage the models in the network (create/edit network)
 - add metadata to prediction
@@ -119,7 +123,6 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 - check that access control works for the network & prediction
 - port panic v2 code to the form components, including passing in assigns
 - maybe use cast_assoc wherever it makes sense, e.g. API tokens?
-- sort out the preloads (maybe even do them in the query wherever possible)
 - can probably simplify some of the get api token/get network code by just using
   the assoc on a %User{} (can still do it inside context module)
 - add `has_many :networks, Panic.Networks.Network` to user
