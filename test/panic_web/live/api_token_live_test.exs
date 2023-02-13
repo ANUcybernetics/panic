@@ -57,7 +57,7 @@ defmodule PanicWeb.APITokenLiveTest do
 
       {:ok, _, html} =
         index_live
-        |> form("#api_token-form", api_token: %{name: "some new name", token: "some token"})
+        |> form("#api_token-form", api_token: %{name: "some new name", token: "aasdflkjww1234"})
         |> render_submit()
         |> follow_redirect(conn, ~p"/api_tokens")
 
@@ -92,6 +92,22 @@ defmodule PanicWeb.APITokenLiveTest do
 
       assert index_live |> element("#api_tokens-#{api_token.id} a", "Delete") |> render_click()
       refute has_element?(index_live, "#api_token-#{api_token.id}")
+    end
+
+    test "graceful error when attempting to create a duplicate token", %{conn: conn} do
+      {:ok, index_live, _html} = live(conn, ~p"/api_tokens/new")
+
+      assert index_live
+             |> form("#api_token-form", api_token: %{name: "token name", token: ";laskdfh"})
+             |> render_submit()
+             |> follow_redirect(conn, ~p"/api_tokens")
+
+      # try again with the same token name
+      {:ok, index_live, _html} = live(conn, ~p"/api_tokens/new")
+
+      assert index_live
+             |> form("#api_token-form", api_token: %{name: "token name", token: "1234567890"})
+             |> render_change() =~ "an API Token with that name already exists"
     end
   end
 
