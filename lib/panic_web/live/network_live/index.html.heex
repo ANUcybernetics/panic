@@ -8,7 +8,6 @@
 </.header>
 
 <.table id="networks" rows={@networks} row_click={&JS.navigate(~p"/networks/#{&1}")}>
-  <:col :let={network} label="Models"><%= network.models %></:col>
   <:col :let={network} label="Name"><%= network.name %></:col>
   <:col :let={network} label="Description"><%= network.description %></:col>
   <:action :let={network}>
