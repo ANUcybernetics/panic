@@ -7,15 +7,13 @@ defmodule PanicWeb.NetworkLiveTest do
 
   @create_attrs %{
     description: "some description",
-    models: ["openai:text-davinci-003", "replicate:stability-ai/stable-diffusion"],
     name: "some name"
   }
   @update_attrs %{
     description: "some updated description",
-    models: ["openai:text-davinci-003"],
     name: "some updated name"
   }
-  @invalid_attrs %{description: nil, models: ["bad-model"], name: nil}
+  @invalid_attrs %{description: nil, name: nil}
 
   defp create_and_log_in_user(%{conn: conn} = context) do
     password = "123456789abcd"
