@@ -8,17 +8,12 @@
   </:actions>
 </.header>
 
-<.append_model_widget current_models={@network.models} />
+<.append_model_widget network={@network} />
 
 <h2 class="mt-8 text-md font-semibold">Network Models</h2>
 
-<.table id="networks" rows={@network.models}>
+<.table id="networks" rows={@models}>
   <:col :let={model} label="Name"><%= Platforms.model_info(model) |> Map.get(:name) %></:col>
-  <:action :let={model}>
-    <.link phx-click={JS.push("remove-model", value: %{id: model})}>
-      Remove
-    </.link>
-  </:action>
 </.table>
 
 <.back navigate={~p"/networks"}>Back to networks</.back>

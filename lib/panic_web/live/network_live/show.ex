@@ -2,6 +2,7 @@ defmodule PanicWeb.NetworkLive.Show do
   use PanicWeb, :live_view
 
   alias Panic.{Networks, Platforms}
+  alias Panic.Networks.Network
 
   @impl true
   def mount(_params, _session, socket) do
@@ -10,16 +11,25 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
+    network = Networks.get_network!(id)
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:network, Networks.get_network!(id))}
+     |> assign(:network, network)
+     |> assign(:models, network.models)
+    }
   end
 
   @impl true
   def handle_event("append-model", %{"model" => model}, socket) do
     {:ok, network} = Networks.append_model(socket.assigns.network, model)
-    {:noreply, assign(socket, :network, network)}
+    {:noreply, assign(socket, network: network, models: network.models)}
+  end
+
+  @impl true
+  def handle_event("remove-last-model", _, socket) do
+    {:ok, network} = Networks.remove_last_model(socket.assigns.network)
+    {:noreply, assign(socket, network: network, models: network.models)}
   end
 
   defp page_title(:show), do: "Show Network"
@@ -38,7 +48,10 @@ defmodule PanicWeb.NetworkLive.Show do
     end)
   end
 
-  defp button_colour(input, last_output) when input == last_output, do: "bg-zinc-300"
+  defp last_model_output_type(%Network{models: []}), do: :text ## input prompt is always text
+  defp last_model_output_type(%Network{models: models}), do: models |> List.last() |> Platforms.model_info() |> Map.get(:output)
+
+  defp button_colour(input, last_output) when input != last_output, do: "bg-zinc-300"
   defp button_colour(:text, _), do: "bg-emerald-600"
   defp button_colour(:image, _), do: "bg-violet-700"
 
@@ -52,7 +65,7 @@ defmodule PanicWeb.NetworkLive.Show do
           class={
             button_colour(
               input,
-              @current_models |> List.last() |> Platforms.model_info() |> Map.get(:output)
+              last_model_output_type(@network)
             )
           }
           phx-click={JS.push("append-model", value: %{model: model})}
@@ -60,6 +73,9 @@ defmodule PanicWeb.NetworkLive.Show do
           <%= name %>
         </.button>
       </div>
+      <.button class="mt-4 bg-red-700" phx-click="remove-last-model">
+        Remove last
+      </.button>
     </section>
     """
   end

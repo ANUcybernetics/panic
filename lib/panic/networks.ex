@@ -82,6 +82,15 @@ defmodule Panic.Networks do
   end
 
   @doc """
+  Helper function for removing the final model in the network's model array.
+
+  This is the opposite of `append_model/2`.
+  """
+  def remove_last_model(%Network{models: models} = network) do
+    update_network(network, %{models: List.delete_at(models, -1)})
+  end
+
+  @doc """
   Deletes a network.
 
   ## Examples
