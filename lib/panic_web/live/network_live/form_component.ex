@@ -89,5 +89,6 @@ defmodule PanicWeb.NetworkLive.FormComponent do
       fn %{io_types: {input_type, _}} -> input_type end,
       fn %{model: model, name: name} -> {name, model} end
     )
+    |> Enum.map(fn {group, values} -> {"#{group |> Atom.to_string |> String.capitalize} input", values} end)
   end
 end
