@@ -20,7 +20,7 @@ defmodule Panic.Platforms.Replicate do
   def model_info do
     %{
       "replicate:charlesfrye/text-recognizer-gpu" => %{
-        name: "Text Regogniser",
+        name: "Text Recogniser",
         description: "",
         io_types: {:image, :text}
       },
