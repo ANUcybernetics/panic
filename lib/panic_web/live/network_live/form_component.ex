@@ -22,6 +22,7 @@ defmodule PanicWeb.NetworkLive.FormComponent do
       >
         <.input field={{f, :name}} type="text" label="Name" />
         <.input field={{f, :description}} type="textarea" label="Description (markdown)" />
+        <.input field={{f, :models}} type="select" label="Models" options={grouped_model_options()} />
         <:actions>
           <.button phx-disable-with="Saving...">Save Network</.button>
         </:actions>
@@ -78,5 +79,15 @@ defmodule PanicWeb.NetworkLive.FormComponent do
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, changeset: changeset)}
     end
+  end
+
+  ## TODO this is too clever by half... fix it
+  defp grouped_model_options do
+    Panic.Platforms.model_info()
+    |> Enum.map(fn {model, info} -> Map.put(info, :model, model) end)
+    |> Enum.group_by(
+      fn %{io_types: {input_type, _}} -> input_type end,
+      fn %{model: model, name: name} -> {name, model} end
+    )
   end
 end
