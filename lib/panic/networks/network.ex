@@ -4,7 +4,7 @@ defmodule Panic.Networks.Network do
 
   schema "networks" do
     field :description, :string
-    field :models, {:array, :string}
+    field :models, {:array, :string}, default: []
     field :name, :string
     belongs_to :user, Panic.Accounts.User
 

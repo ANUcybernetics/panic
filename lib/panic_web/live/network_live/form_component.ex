@@ -22,7 +22,6 @@ defmodule PanicWeb.NetworkLive.FormComponent do
       >
         <.input field={{f, :name}} type="text" label="Name" />
         <.input field={{f, :description}} type="textarea" label="Description (markdown)" />
-        <.input field={{f, :models}} type="select" label="Models" options={grouped_model_options()} />
         <:actions>
           <.button phx-disable-with="Saving...">Save Network</.button>
         </:actions>
