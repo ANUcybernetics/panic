@@ -51,6 +51,7 @@ defmodule PanicWeb.APITokenLive.FormComponent do
   end
 
   def handle_event("save", %{"api_token" => api_token_params}, socket) do
+    api_token_params = Map.put(api_token_params, "user_id", socket.assigns.user.id)
     save_api_token(socket, socket.assigns.action, api_token_params)
   end
 
