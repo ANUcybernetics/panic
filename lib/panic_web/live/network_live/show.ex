@@ -12,12 +12,12 @@ defmodule PanicWeb.NetworkLive.Show do
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
     network = Networks.get_network!(id)
+
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
      |> assign(:network, network)
-     |> assign(:models, network.models)
-    }
+     |> assign(:models, network.models)}
   end
 
   @impl true
@@ -35,8 +35,11 @@ defmodule PanicWeb.NetworkLive.Show do
   defp page_title(:show), do: "Show Network"
   defp page_title(:edit), do: "Edit Network"
 
-  defp last_model_output_type(%Network{models: []}), do: :text ## input prompt is always text
-  defp last_model_output_type(%Network{models: models}), do: models |> List.last() |> Platforms.model_info() |> Map.get(:output)
+  ## input prompt is always text
+  defp last_model_output_type(%Network{models: []}), do: :text
+
+  defp last_model_output_type(%Network{models: models}),
+    do: models |> List.last() |> Platforms.model_info() |> Map.get(:output)
 
   defp button_colour(input, last_output) when input != last_output, do: "bg-zinc-300"
   defp button_colour(:text, _), do: "bg-emerald-600"
