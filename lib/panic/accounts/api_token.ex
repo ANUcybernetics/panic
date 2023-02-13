@@ -16,6 +16,9 @@ defmodule Panic.Accounts.APIToken do
     |> cast(attrs, [:name, :token, :user_id])
     |> validate_required([:name, :token, :user_id])
     |> foreign_key_constraint(:user)
-    |> unique_constraint([:user_id, :name])
+    |> unsafe_validate_unique([:name, :user_id], Panic.Repo,
+      message: "an API Token with that name already exists"
+    )
+    |> unique_constraint([:name, :user_id])
   end
 end
