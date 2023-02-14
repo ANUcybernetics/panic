@@ -37,7 +37,7 @@ defmodule Panic.RunFSMTest do
   describe "Run FSM" do
     test "golden path", %{network: network} do
       IO.puts("this test takes about 15s")
-      assert [] = Predictions.list_predictions(network)
+      assert [] = Predictions.list_predictions(network, 100)
       assert Finitomata.alive?(network.id)
       assert %Finitomata.State{current: :waiting} = Finitomata.state(network.id)
 
@@ -64,7 +64,7 @@ defmodule Panic.RunFSMTest do
 
     test "receive new genesis prediction in lockout period", %{network: network} do
       IO.puts("this test takes about 10s")
-      assert [] = Predictions.list_predictions(network)
+      assert [] = Predictions.list_predictions(network, 100)
       # genesis input
       {:ok, first_genesis_prediction} =
         Predictions.create_prediction(
@@ -221,7 +221,7 @@ defmodule Panic.RunFSMTest do
 
   ## these should be invariants for any network
   defp check_network_invariants(network) do
-    predictions = Predictions.list_predictions(network)
+    predictions = Predictions.list_predictions(network, 100)
 
     assert Enum.chunk_by(predictions, fn p -> p.genesis_id end)
            |> Enum.each(&check_run_invariants/1)
