@@ -21,5 +21,4 @@ defmodule PanicWeb.PredictionLive.Show do
   end
 
   defp page_title(:show), do: "Show Prediction"
-  defp page_title(:edit), do: "Edit Prediction"
 end

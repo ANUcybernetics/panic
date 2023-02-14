@@ -29,7 +29,7 @@
 </.table>
 
 <.modal
-  :if={@live_action in [:new, :edit]}
+  :if={@live_action in [:new]}
   id="prediction-modal"
   show
   on_cancel={JS.navigate(~p"/networks/#{@network}/predictions")}

@@ -19,12 +19,6 @@ defmodule PanicWeb.PredictionLive.Index do
      apply_action(assign(socket, :network, network), socket.assigns.live_action, params)}
   end
 
-  defp apply_action(socket, :edit, %{"id" => id}) do
-    socket
-    |> assign(:page_title, "Edit Prediction")
-    |> assign(:prediction, Predictions.get_prediction!(id))
-  end
-
   defp apply_action(socket, :new, _params) do
     socket
     |> assign(:page_title, "New Prediction")

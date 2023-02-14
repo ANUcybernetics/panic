@@ -53,19 +53,6 @@ defmodule PanicWeb.PredictionLive.FormComponent do
     save_prediction(socket, socket.assigns.action, prediction_params)
   end
 
-  defp save_prediction(socket, :edit, prediction_params) do
-    case Predictions.update_prediction(socket.assigns.prediction, prediction_params) do
-      {:ok, _prediction} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Prediction updated successfully")
-         |> push_navigate(to: socket.assigns.navigate)}
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, :changeset, changeset)}
-    end
-  end
-
   defp save_prediction(socket, :new, prediction_params) do
     case Predictions.create_prediction(prediction_params) do
       {:ok, _prediction} ->
