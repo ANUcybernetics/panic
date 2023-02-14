@@ -89,10 +89,10 @@ defmodule Panic.RunFSMTest do
                |> Enum.filter(fn p -> p.run_index == 0 end)
 
       assert first_genesis.input == first_genesis_prediction.input
-      assert [] = Predictions.list_predictions(network, second_genesis_prediction.id)
+      assert [] = Predictions.list_predictions_in_run(network, second_genesis_prediction.id)
 
       # check we didn't keep any of the runs from the second genesis prediction
-      assert [] = Predictions.list_predictions(network, second_genesis_prediction.id)
+      assert [] = Predictions.list_predictions_in_run(network, second_genesis_prediction.id)
 
       check_network_invariants(network)
     end
@@ -122,7 +122,9 @@ defmodule Panic.RunFSMTest do
       assert [first | _] = Predictions.list_predictions(network, first_genesis_prediction.id)
       assert Panic.Repo.preload(first, [:network]) == first_genesis_prediction
 
-      assert [second | _] = Predictions.list_predictions(network, second_genesis_prediction.id)
+      assert [second | _] =
+               Predictions.list_predictions_in_run(network, second_genesis_prediction.id)
+
       assert Panic.Repo.preload(second, [:network]) == second_genesis_prediction
 
       check_network_invariants(network)
