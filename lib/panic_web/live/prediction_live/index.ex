@@ -13,7 +13,7 @@ defmodule PanicWeb.PredictionLive.Index do
 
   @impl true
   def handle_params(%{"network_id" => network_id} = params, _, socket) do
-    network = network_id |> String.to_integer() |> Networks.get_network!()
+    network = Networks.get_network!(network_id)
 
     {:noreply,
      apply_action(assign(socket, :network, network), socket.assigns.live_action, params)}

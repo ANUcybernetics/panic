@@ -11,7 +11,7 @@ defmodule PanicWeb.PredictionLive.Show do
 
   @impl true
   def handle_params(%{"network_id" => network_id, "id" => id}, _, socket) do
-    network = network_id |> String.to_integer() |> Networks.get_network!()
+    network = Networks.get_network!(network_id)
 
     {:noreply,
      socket
