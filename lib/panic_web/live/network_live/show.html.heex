@@ -16,6 +16,10 @@
   <:col :let={model} label="Name"><%= Platforms.model_info(model) |> Map.get(:name) %></:col>
 </.table>
 
+<.link navigate={~p"/networks/#{@network}/predictions/new"}>
+  <.button class="mt-4 text-xl leading-8 bg-rose-700">Start new run</.button>
+</.link>
+
 <.back navigate={~p"/networks"}>Back to networks</.back>
 
 <.modal

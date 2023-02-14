@@ -28,6 +28,8 @@
   </:action>
 </.table>
 
+<.back navigate={~p"/networks/#{@network}"}>Back to network</.back>
+
 <.modal
   :if={@live_action in [:new]}
   id="prediction-modal"
