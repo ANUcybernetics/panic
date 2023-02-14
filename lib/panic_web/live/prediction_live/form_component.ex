@@ -42,6 +42,7 @@ defmodule PanicWeb.PredictionLive.FormComponent do
   @impl true
   def handle_event("validate", %{"prediction" => prediction_params}, socket) do
     prediction_params = add_user_id(prediction_params, socket)
+
     changeset =
       socket.assigns.prediction
       |> Predictions.change_prediction(prediction_params)
@@ -56,7 +57,7 @@ defmodule PanicWeb.PredictionLive.FormComponent do
   end
 
   defp save_prediction(socket, :new, prediction_params) do
-    case Predictions.create_prediction(prediction_params) do
+    case Predictions.create_prediction(prediction_params, :genesis, socket.assigns.network) do
       {:ok, _prediction} ->
         {:noreply,
          socket
@@ -68,7 +69,14 @@ defmodule PanicWeb.PredictionLive.FormComponent do
     end
   end
 
+  ## these functions are all to deal with the "cast error: mixed atom and string
+  ## keys" problem. If I find a nicer way to do this I'll change it
+  defp to_atom(x) when is_binary(x), do: String.to_atom(x)
+  defp to_atom(x) when is_atom(x), do: x
+
   defp add_user_id(params, socket) do
-    Map.put(params, "user_id", socket.assigns.user.id)
+    for {k, v} <- Map.put(params, :user_id, socket.assigns.user.id), into: %{} do
+      {to_atom(k), v}
+    end
   end
 end
