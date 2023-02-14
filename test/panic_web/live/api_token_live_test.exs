@@ -5,10 +5,6 @@ defmodule PanicWeb.APITokenLiveTest do
   import Panic.NetworksFixtures
   import Panic.AccountsFixtures
 
-  defp random_ascii(count) do
-    (Enum.to_list(65..90) ++ Enum.to_list(97..122)) |> Enum.take_random(count)
-  end
-
   defp create_and_log_in_user(%{conn: conn} = context) do
     password = "123456789abcd"
     user = user_fixture(%{password: password})
