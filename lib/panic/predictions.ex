@@ -20,11 +20,12 @@ defmodule Panic.Predictions do
       [%Prediction{}, ...]
 
   """
-  def list_predictions(%Network{id: network_id}) do
+  def list_predictions(%Network{id: network_id}, limit) do
     Repo.all(
       from p in Prediction,
         where: p.network_id == ^network_id,
-        order_by: [asc: p.genesis_id, asc: p.run_index]
+        order_by: [asc: p.genesis_id, asc: p.run_index],
+        limit: ^limit
     )
   end
 
@@ -40,11 +41,13 @@ defmodule Panic.Predictions do
   [%Prediction{}, ...]
 
   """
-  def list_predictions(%Network{id: network_id}, genesis_id) when is_integer(genesis_id) do
+  def list_predictions(%Network{id: network_id}, genesis_id, limit)
+      when is_integer(genesis_id) do
     Repo.all(
       from p in Prediction,
         where: p.network_id == ^network_id and p.genesis_id == ^genesis_id,
-        order_by: [asc: p.run_index]
+        order_by: [asc: p.run_index],
+        limit: ^limit
     )
   end
 

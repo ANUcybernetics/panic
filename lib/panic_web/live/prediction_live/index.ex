@@ -40,6 +40,6 @@ defmodule PanicWeb.PredictionLive.Index do
   end
 
   defp list_predictions(%Network{} = network) do
-    Predictions.list_predictions(network)
+    Predictions.list_predictions(network, 100)
   end
 end
