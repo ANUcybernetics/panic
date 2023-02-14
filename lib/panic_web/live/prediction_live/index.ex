@@ -8,7 +8,17 @@ defmodule PanicWeb.PredictionLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    if has_all_required_api_tokens?(socket.assigns.current_user) do
+      {:ok, socket}
+    else
+      {:ok,
+       socket
+       |> put_flash(
+         :info,
+         ~s("OpenAI" and "Replicate" API tokens are required to run Panic!, please add them now)
+       )
+       |> push_navigate(to: ~p"/api_tokens/new")}
+    end
   end
 
   @impl true
@@ -23,6 +33,7 @@ defmodule PanicWeb.PredictionLive.Index do
     socket
     |> assign(:page_title, "New Prediction")
     |> assign(:prediction, %Prediction{})
+    |> assign(:predictions, list_predictions(socket.assigns.network))
   end
 
   defp apply_action(socket, :index, _) do
@@ -41,5 +52,15 @@ defmodule PanicWeb.PredictionLive.Index do
 
   defp list_predictions(%Network{} = network) do
     Predictions.list_predictions(network, 100)
+  end
+
+  defp has_all_required_api_tokens?(user) do
+    token_names =
+      user
+      |> Panic.Repo.preload([:api_tokens])
+      |> Map.get(:api_tokens)
+      |> Enum.map(& &1.name)
+
+    "OpenAI" in token_names and "Replicate" in token_names
   end
 end
