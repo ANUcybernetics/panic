@@ -41,6 +41,7 @@ defmodule PanicWeb.PredictionLive.FormComponent do
 
   @impl true
   def handle_event("validate", %{"prediction" => prediction_params}, socket) do
+    prediction_params = add_user_id(prediction_params, socket)
     changeset =
       socket.assigns.prediction
       |> Predictions.change_prediction(prediction_params)
@@ -50,6 +51,7 @@ defmodule PanicWeb.PredictionLive.FormComponent do
   end
 
   def handle_event("save", %{"prediction" => prediction_params}, socket) do
+    prediction_params = add_user_id(prediction_params, socket)
     save_prediction(socket, socket.assigns.action, prediction_params)
   end
 
@@ -64,5 +66,9 @@ defmodule PanicWeb.PredictionLive.FormComponent do
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, changeset: changeset)}
     end
+  end
+
+  defp add_user_id(params, socket) do
+    Map.put(params, "user_id", socket.assigns.user.id)
   end
 end
