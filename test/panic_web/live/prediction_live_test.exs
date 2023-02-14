@@ -4,18 +4,13 @@ defmodule PanicWeb.PredictionLiveTest do
   import Phoenix.LiveViewTest
   import Panic.{AccountsFixtures, NetworksFixtures, PredictionsFixtures}
 
-  @create_attrs %{
-    input: "some input",
-    metadata: %{},
-    model: "some model",
-    output: "some output",
-    run_index: 42
-  }
-  @invalid_attrs %{input: nil, metadata: nil, model: nil, output: nil, run_index: nil}
+  @create_attrs %{input: "why did the chicken cross the road?"}
+  @invalid_attrs %{input: nil}
 
   def create_and_log_in_user(%{conn: conn} = context) do
     password = "123456789abcd"
     user = user_fixture(%{password: password})
+    insert_api_tokens_from_env(user.id)
 
     {:ok, lv, _html} = live(conn, ~p"/users/log_in")
 
