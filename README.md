@@ -126,6 +126,9 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 - can probably simplify some of the get api token/get network code by just using
   the assoc on a %User{} (can still do it inside context module)
 - add `has_many :networks, Panic.Networks.Network` to user
+- rather than API token names being free strings, hardcode the specific ones we
+  need, and change the API token /new page to list them all (and show green/red
+  for which ones we have, and maybe even hit an endpoint to verify?)
 - add replicate models:
   - https://replicate.com/cloneofsimo/lora
   - https://replicate.com/22-hours/vintedois-diffusion
