@@ -77,15 +77,13 @@ defmodule PanicWeb.Router do
 
       live "/networks", NetworkLive.Index, :index
       live "/networks/new", NetworkLive.Index, :new
-      live "/networks/:id/edit", NetworkLive.Index, :edit
-      ## the "all in one" terminal plus running grid view
+
+      ## the "all in one" control panel plus running grid view
       live "/networks/:id/show/edit", NetworkLive.Show, :edit
 
       live "/networks/:id/qrcode", NetworkLive.Show, :qrcode
 
       live "/networks/:network_id/predictions", PredictionLive.Index, :index
-      # the "terminal"
-      live "/networks/:network_id/predictions/new", PredictionLive.Index, :new
 
       live "/api_tokens", APITokenLive.Index, :index
       live "/api_tokens/new", APITokenLive.Index, :new
@@ -110,6 +108,9 @@ defmodule PanicWeb.Router do
 
       # should be an option for networks to be given a (public) permalink
       live "/networks/permalink", NetworkLive.Index, :latest
+
+      # the "terminal"
+      live "/networks/:network_id/predictions/new", PredictionLive.Index, :new
       ## also accepts query params for screen/grid_mod and will live update as
       ## new predictions come in
       live "/networks/:network_id/predictions/:id", PredictionLive.Show, :show
