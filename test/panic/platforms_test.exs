@@ -84,6 +84,13 @@ defmodule Panic.PlatformsTest do
       assert {:error, :nsfw} = Replicate.create("stability-ai/stable-diffusion", input, user)
     end
 
+    test "vintedois diffusion returns a URL when given a valid input", %{user: user} do
+      input = "sheep grazing on a grassy meadow"
+
+      assert {:ok, output} = Replicate.create("22-hours/vintedois-diffusion", input, user)
+      assert Regex.match?(~r|https://.*|, output)
+    end
+
     test "kyrick/prompt-parrot works", %{user: user} do
       input = "sheep grazing on a grassy meadow"
       assert {:ok, output} = Replicate.create("kyrick/prompt-parrot", input, user)
@@ -106,6 +113,25 @@ defmodule Panic.PlatformsTest do
                Replicate.create("rmokady/clip_prefix_caption", image_url, user)
 
       assert is_binary(image_caption)
+    end
+
+    test "stable diffusion image -> BLIP2 cycle works", %{user: user} do
+      input = "sheep grazing on a grassy meadow"
+
+      assert {:ok, image_url} = Replicate.create("stability-ai/stable-diffusion", input, user)
+
+      assert {:ok, image_caption} = Replicate.create("salesforce/blip-2", image_url, user)
+
+      assert is_binary(image_caption)
+    end
+
+    test "stable diffusion image -> Instruct pix2pix cycle works", %{user: user} do
+      input = "sheep grazing on a grassy meadow"
+
+      assert {:ok, image_url} = Replicate.create("stability-ai/stable-diffusion", input, user)
+
+      assert {:ok, output} = Replicate.create("timothybrooks/instruct-pix2pix", image_url, user)
+      assert Regex.match?(~r|https://.*|, output)
     end
 
     test "stable diffusion image -> j-min/clip-caption-reward cycle works",

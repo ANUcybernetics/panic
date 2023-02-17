@@ -50,10 +50,28 @@ defmodule Panic.Platforms.Replicate do
         input: :image,
         output: :text
       },
+      "salesforce/blip-2" => %{
+        name: "BLIP2",
+        description: "",
+        input: :image,
+        output: :text
+      },
       "replicate:stability-ai/stable-diffusion" => %{
         name: "Stable Diffusion",
         description: "",
         input: :text,
+        output: :image
+      },
+      "22-hours/vintedois-diffusion" => %{
+        name: "Vintedois Stable Diffusion",
+        description: "",
+        input: :text,
+        output: :image
+      },
+      "timothybrooks/instruct-pix2pix" => %{
+        name: "Instruct pix2pix",
+        description: "",
+        input: :image,
         output: :image
       }
     }
@@ -147,6 +165,20 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
+  def create("22-hours/vintedois-diffusion" = model, prompt, user) do
+    input_params = %{
+      prompt: prompt,
+      num_inference_steps: 25,
+      width: 640,
+      height: 448
+    }
+
+    case create_and_wait(model, input_params, user) do
+      {:ok, %{"output" => [image_url]}} -> {:ok, image_url}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
   def create("kuprel/min-dalle" = model, prompt, user) do
     {:ok, %{"output" => [image_url]}} =
       create_and_wait(model, %{text: prompt, grid_size: 1, progressive_outputs: 0}, user)
@@ -162,6 +194,25 @@ defmodule Panic.Platforms.Replicate do
   def create("j-min/clip-caption-reward" = model, image_url, user) do
     {:ok, %{"output" => text}} = create_and_wait(model, %{image: image_url}, user)
     {:ok, text}
+  end
+
+  def create("salesforce/blip-2" = model, image_url, user) do
+    {:ok, %{"output" => text}} = create_and_wait(model, %{image: image_url, caption: true}, user)
+    {:ok, text}
+  end
+
+  def create("timothybrooks/instruct-pix2pix" = model, input_image_url, user) do
+    {:ok, %{"output" => [output_image_url]}} =
+      create_and_wait(
+        model,
+        %{
+          image: input_image_url,
+          prompt: "change the environment, keep the human and technology"
+        },
+        user
+      )
+
+    {:ok, output_image_url}
   end
 
   ## text to text
