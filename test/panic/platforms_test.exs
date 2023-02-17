@@ -8,7 +8,7 @@ defmodule Panic.PlatformsTest do
 
   import Panic.AccountsFixtures
   alias Panic.Platforms
-  alias Panic.Platforms.{OpenAI, Replicate}
+  alias Panic.Platforms.{OpenAI, Replicate, Vestaboard}
 
   @moduletag :real_platform_api_calls
 
@@ -115,6 +115,25 @@ defmodule Panic.PlatformsTest do
       assert {:ok, image_url} = Replicate.create("stability-ai/stable-diffusion", input, user)
       assert {:ok, image_caption} = Replicate.create("j-min/clip-caption-reward", image_url, user)
       assert is_binary(image_caption)
+    end
+  end
+
+  describe "Vestaboard" do
+    setup [:create_user, :load_env_vars]
+
+    test "list_subscriptions for Panic 1", %{user: user} do
+      assert %{"subscriptions" => [_]} = Vestaboard.list_subscriptions("Panic 1", user)
+    end
+
+    test "send text to Panic 1 (for real, so make sure it's not doing something important)", %{
+      user: user
+    } do
+      assert {:ok, _} =
+               Vestaboard.send_text(
+                 "Panic 1",
+                 "ANU School of Cybernetics\n\n#{NaiveDateTime.utc_now() |> NaiveDateTime.to_string()}",
+                 user
+               )
     end
   end
 

@@ -63,5 +63,14 @@ defmodule Panic.AccountsFixtures do
         token: System.get_env("REPLICATE_API_TOKEN"),
         user_id: user_id
       })
+
+    {:ok, _token} =
+      Panic.Accounts.create_api_token(%{
+        name: "Panic 1",
+        token:
+          "ba16996e-154f-4f31-83b7-ae0a8f13ecaf:d7b69bfe-1d60-4e8d-a36f-5ecb78fa70a0:880d3547-6cef-4f36-a81b-2ab0b7120505:" <>
+            System.get_env("VESTABOARD_API_SECRET_1"),
+        user_id: user_id
+      })
   end
 end
