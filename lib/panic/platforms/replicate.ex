@@ -20,12 +20,6 @@ defmodule Panic.Platforms.Replicate do
   """
   def all_model_info do
     %{
-      "replicate:charlesfrye/text-recognizer-gpu" => %{
-        name: "Text Recogniser",
-        description: "",
-        input: :image,
-        output: :text
-      },
       "replicate:kuprel/min-dalle" => %{
         name: "DALL·E Mini",
         description: "",
@@ -42,12 +36,6 @@ defmodule Panic.Platforms.Replicate do
         name: "Cog Prompt Parrot",
         description: "",
         input: :text,
-        output: :text
-      },
-      "replicate:methexis-inc/img2prompt" => %{
-        name: "Image2Prompt",
-        description: "",
-        input: :image,
         output: :text
       },
       "replicate:rmokady/clip_prefix_caption" => %{
@@ -159,72 +147,11 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
-  ## text to image
-  def create("prompthero/openjourney" = model, prompt, user) do
-    input_params = %{
-      prompt: prompt,
-      num_inference_steps: 50,
-      guidance_scale: 7.5,
-      width: 1024,
-      height: 576
-    }
-
-    {:ok, %{"output" => [image_url]}} = create_and_wait(model, input_params, user)
-    {:ok, image_url}
-  end
-
-  ## text to image
-  def create("cjwbw/stable-diffusion-high-resolution" = model, prompt, user) do
-    input_params = %{
-      prompt: prompt,
-      steps: 50,
-      scale: 7.5,
-      ori_width: 256,
-      ori_height: 256
-    }
-
-    {:ok, %{"output" => image_url}} = create_and_wait(model, input_params, user)
-    {:ok, image_url}
-  end
-
   def create("kuprel/min-dalle" = model, prompt, user) do
     {:ok, %{"output" => [image_url]}} =
       create_and_wait(model, %{text: prompt, grid_size: 1, progressive_outputs: 0}, user)
 
     {:ok, image_url}
-  end
-
-  def create("benswift/min-dalle" = model, prompt, user) do
-    {:ok, %{"output" => [image_url]}} =
-      create_and_wait(model, %{text: prompt, grid_size: 1, progressive_outputs: 0}, user)
-
-    {:ok, image_url}
-  end
-
-  def create("afiaka87/retrieval-augmented-diffusion" = model, prompt, user) do
-    create_and_wait(model, %{prompt: prompt, width: 256, height: 256}, user)
-  end
-
-  def create("laion-ai/ongo" = model, prompt, user) do
-    {:ok, %{"output" => image_urls}} =
-      create_and_wait(
-        model,
-        %{text: prompt, batch_size: 1, height: 256, width: 256, intermediate_outputs: 0},
-        user
-      )
-
-    {:ok, List.last(image_urls)}
-  end
-
-  ## image to text
-  def create("methexis-inc/img2prompt" = model, image_url, user) do
-    {:ok, %{"output" => text}} = create_and_wait(model, %{image: image_url}, user)
-    {:ok, text}
-  end
-
-  def create("charlesfrye/text-recognizer-gpu" = model, image_url, user) do
-    {:ok, %{"output" => text}} = create_and_wait(model, %{image: image_url}, user)
-    {:ok, text}
   end
 
   def create("rmokady/clip_prefix_caption" = model, image_url, user) do
@@ -249,37 +176,6 @@ defmodule Panic.Platforms.Replicate do
   def create("2feet6inches/cog-prompt-parrot" = model, prompt, user) do
     {:ok, %{"output" => text}} = create_and_wait(model, %{prompt: prompt}, user)
     {:ok, text |> String.split("\n") |> Enum.random()}
-  end
-
-  ## image to image
-  def create("netease-gameai/spatchgan-selfie2anime" = model, image_url, user) do
-    {:ok, %{"output" => [%{"file" => image_url} | _]}} =
-      create_and_wait(model, %{image: image_url}, user)
-
-    {:ok, image_url}
-  end
-
-  ## text to audio
-  def create("annahung31/emopia" = model, prompt, user) do
-    emotion_opts = [
-      "High valence, high arousal",
-      "Low valence, high arousal",
-      "High valence, low arousal",
-      "Low valence, low arousal"
-    ]
-
-    emotion = Enum.max_by(emotion_opts, fn emotion -> String.bag_distance(emotion, prompt) end)
-    seed = string_to_seed(prompt)
-
-    {:ok, %{"output" => [%{"file" => audio_url} | _]}} =
-      create_and_wait(model, %{emotion: emotion, seed: seed}, user)
-
-    {:ok, audio_url}
-  end
-
-  def create("afiaka87/tortoise-tts" = model, prompt, user) do
-    {:ok, %{"output" => output}} = create_and_wait(model, %{text: prompt}, user)
-    {:ok, output}
   end
 
   defp headers(user) do
