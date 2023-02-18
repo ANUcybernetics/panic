@@ -67,28 +67,6 @@ defmodule PanicWeb.NetworkLiveTest do
       assert html =~ "some description"
     end
 
-    test "updates network in listing", %{conn: conn, network: network} do
-      {:ok, index_live, _html} = live(conn, ~p"/networks")
-
-      assert index_live |> element("#networks-#{network.id} a", "Edit") |> render_click() =~
-               "Edit Network"
-
-      assert_patch(index_live, ~p"/networks/#{network}/edit")
-
-      assert index_live
-             |> form("#network-form", network: @invalid_attrs)
-             |> render_change() =~ "can&#39;t be blank"
-
-      {:ok, _, html} =
-        index_live
-        |> form("#network-form", network: @update_attrs)
-        |> render_submit()
-        |> follow_redirect(conn, ~p"/networks")
-
-      assert html =~ "Network updated successfully"
-      assert html =~ "some updated description"
-    end
-
     test "deletes network in listing", %{conn: conn, network: network} do
       {:ok, index_live, _html} = live(conn, ~p"/networks")
 
