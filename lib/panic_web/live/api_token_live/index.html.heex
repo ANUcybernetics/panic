@@ -7,7 +7,12 @@
   </:actions>
 </.header>
 
-<.table id="api_tokens" rows={@api_tokens} row_click={&JS.navigate(~p"/api_tokens/#{&1}")}>
+<.table
+  id="api_tokens"
+  rows={@api_tokens}
+  row_id={&"api_tokens-#{&1.id}"}
+  row_click={&JS.navigate(~p"/api_tokens/#{&1}")}
+>
   <:col :let={api_token} label="Name"><%= api_token.name %></:col>
   <:col :let={api_token} label="Token"><%= api_token.token %></:col>
   <:action :let={api_token}>

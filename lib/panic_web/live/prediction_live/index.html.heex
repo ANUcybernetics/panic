@@ -10,6 +10,7 @@
 <.table
   id="predictions"
   rows={@predictions}
+  row_id={&"predictions-#{&1.id}"}
   row_click={&JS.navigate(~p"/networks/#{@network}/predictions/#{&1}")}
 >
   <:col :let={prediction} label="Model"><%= prediction.model %></:col>
