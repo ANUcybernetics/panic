@@ -13,15 +13,14 @@ defmodule PanicWeb.APITokenLive.FormComponent do
       </.header>
 
       <.simple_form
-        :let={f}
-        for={@changeset}
+        for={@form}
         id="api_token-form"
         phx-target={@myself}
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={{f, :name}} type="text" label="Name" />
-        <.input field={{f, :token}} type="text" label="Token" />
+        <.input field={@form[:name]} type="text" label="Name" />
+        <.input field={@form[:token]} type="text" label="Token" />
         <:actions>
           <.button phx-disable-with="Saving...">Save API token</.button>
         </:actions>
@@ -37,7 +36,7 @@ defmodule PanicWeb.APITokenLive.FormComponent do
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(:changeset, changeset)}
+     |> assign(:form, to_form(changeset))}
   end
 
   @impl true
@@ -49,7 +48,7 @@ defmodule PanicWeb.APITokenLive.FormComponent do
       |> Accounts.change_api_token(api_token_params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, :changeset, changeset)}
+    {:noreply, assign(socket, :form, to_form(changeset))}
   end
 
   def handle_event("save", %{"api_token" => api_token_params}, socket) do
@@ -66,7 +65,7 @@ defmodule PanicWeb.APITokenLive.FormComponent do
          |> push_navigate(to: socket.assigns.navigate)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, :changeset, changeset)}
+        {:noreply, assign(socket, :form, to_form(changeset))}
     end
   end
 
@@ -79,7 +78,7 @@ defmodule PanicWeb.APITokenLive.FormComponent do
          |> push_navigate(to: socket.assigns.navigate)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, changeset: changeset)}
+        {:noreply, assign(socket, :form, to_form(changeset))}
     end
   end
 

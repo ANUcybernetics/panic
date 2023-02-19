@@ -49,22 +49,6 @@ defmodule PanicWeb.Router do
     end
   end
 
-  ## Account management routes
-
-  scope "/", PanicWeb do
-    pipe_through [:browser, :redirect_if_user_is_authenticated]
-
-    live_session :redirect_if_user_is_authenticated,
-      on_mount: [{PanicWeb.UserAuth, :redirect_if_user_is_authenticated}] do
-      live "/users/register", UserRegistrationLive, :new
-      live "/users/log_in", UserLoginLive, :new
-      live "/users/reset_password", UserForgotPasswordLive, :new
-      live "/users/reset_password/:token", UserResetPasswordLive, :edit
-    end
-
-    post "/users/log_in", UserSessionController, :create
-  end
-
   ## authenticated network routes
 
   scope "/", PanicWeb do
@@ -72,9 +56,6 @@ defmodule PanicWeb.Router do
 
     live_session :authenticated_network_routes,
       on_mount: [{PanicWeb.UserAuth, :ensure_authenticated}] do
-      live "/users/settings", UserSettingsLive, :edit
-      live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
-
       live "/networks", NetworkLive.Index, :index
       live "/networks/new", NetworkLive.Index, :new
 
@@ -114,6 +95,32 @@ defmodule PanicWeb.Router do
       ## also accepts query params for screen/grid_mod and will live update as
       ## new predictions come in
       live "/networks/:network_id/predictions/:id", PredictionLive.Show, :show
+    end
+  end
+
+  ## Authentication routes
+
+  scope "/", PanicWeb do
+    pipe_through [:browser, :redirect_if_user_is_authenticated]
+
+    live_session :redirect_if_user_is_authenticated,
+      on_mount: [{PanicWeb.UserAuth, :redirect_if_user_is_authenticated}] do
+      live "/users/register", UserRegistrationLive, :new
+      live "/users/log_in", UserLoginLive, :new
+      live "/users/reset_password", UserForgotPasswordLive, :new
+      live "/users/reset_password/:token", UserResetPasswordLive, :edit
+    end
+
+    post "/users/log_in", UserSessionController, :create
+  end
+
+  scope "/", PanicWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    live_session :require_authenticated_user,
+      on_mount: [{PanicWeb.UserAuth, :ensure_authenticated}] do
+      live "/users/settings", UserSettingsLive, :edit
+      live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
     end
   end
 

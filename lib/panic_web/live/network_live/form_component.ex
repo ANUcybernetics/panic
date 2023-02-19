@@ -13,15 +13,14 @@ defmodule PanicWeb.NetworkLive.FormComponent do
       </.header>
 
       <.simple_form
-        :let={f}
-        for={@changeset}
+        for={@form}
         id="network-form"
         phx-target={@myself}
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={{f, :name}} type="text" label="Name" />
-        <.input field={{f, :description}} type="textarea" label="Description (markdown)" />
+        <.input field={@form[:name]} type="text" label="Name" />
+        <.input field={@form[:description]} type="textarea" label="Description (markdown)" />
         <:actions>
           <.button phx-disable-with="Saving...">Save Network</.button>
         </:actions>
@@ -37,7 +36,7 @@ defmodule PanicWeb.NetworkLive.FormComponent do
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(:changeset, changeset)}
+     |> assign(:form, to_form(changeset))}
   end
 
   @impl true
@@ -47,7 +46,7 @@ defmodule PanicWeb.NetworkLive.FormComponent do
       |> Networks.change_network(network_params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, :changeset, changeset)}
+    {:noreply, assign(socket, :form, to_form(changeset))}
   end
 
   def handle_event("save", %{"network" => network_params}, socket) do
@@ -64,7 +63,7 @@ defmodule PanicWeb.NetworkLive.FormComponent do
          |> push_navigate(to: socket.assigns.navigate)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, :changeset, changeset)}
+        {:noreply, assign(socket, :form, to_form(changeset))}
     end
   end
 
@@ -77,7 +76,7 @@ defmodule PanicWeb.NetworkLive.FormComponent do
          |> push_navigate(to: socket.assigns.navigate)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, changeset: changeset)}
+        {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
 end

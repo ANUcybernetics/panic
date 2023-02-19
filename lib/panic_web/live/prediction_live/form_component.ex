@@ -13,14 +13,13 @@ defmodule PanicWeb.PredictionLive.FormComponent do
       </.header>
 
       <.simple_form
-        :let={f}
-        for={@changeset}
+        for={@form}
         id="prediction-form"
         phx-target={@myself}
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={{f, :input}} type="text" label="Input" />
+        <.input field={@form[:input]} type="text" label="Input" />
         <:actions>
           <.button phx-disable-with="Creating...">Create Prediction</.button>
         </:actions>
@@ -36,7 +35,7 @@ defmodule PanicWeb.PredictionLive.FormComponent do
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(:changeset, changeset)}
+     |> assign(:form, to_form(changeset))}
   end
 
   @impl true
@@ -48,7 +47,7 @@ defmodule PanicWeb.PredictionLive.FormComponent do
       |> Predictions.change_prediction(prediction_params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, :changeset, changeset)}
+    {:noreply, assign(socket, form: to_form(changeset))}
   end
 
   def handle_event("save", %{"prediction" => prediction_params}, socket) do
@@ -65,7 +64,7 @@ defmodule PanicWeb.PredictionLive.FormComponent do
          |> push_navigate(to: socket.assigns.navigate)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, changeset: changeset)}
+        {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
 
