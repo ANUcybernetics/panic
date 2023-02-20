@@ -129,6 +129,8 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 - rather than API token names being free strings, hardcode the specific ones we
   need, and change the API token /new page to list them all (and show green/red
   for which ones we have, and maybe even hit an endpoint to verify?)
+- add network permalinks (look in the history - there's some deleted `router.ex`
+  code in there)
 - add models:
   - oblique strategies follower (GPT-3 powered)
   - https://replicate.com/cloneofsimo/lora

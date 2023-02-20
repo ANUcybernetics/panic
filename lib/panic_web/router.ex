@@ -87,9 +87,6 @@ defmodule PanicWeb.Router do
       ## "running grid" view
       live "/networks/:id", NetworkLive.Show, :show
 
-      # should be an option for a user to have networks to be given a (public) permalink
-      live "/networks/permalinks/:id", NetworkLive.Show, :permalink
-
       # the "terminal"
       live "/networks/:network_id/predictions/new", PredictionLive.Index, :new
       ## also accepts query params for screen/grid_mod and will live update as
