@@ -24,6 +24,14 @@ defmodule Panic.Platforms do
     all_model_info() |> Map.get(model)
   end
 
+  def model_input_type(model) do
+    model_info() |> Map.get(:input)
+  end
+
+  def model_output_type(model) do
+    model_info() |> Map.get(:output)
+  end
+
   def api_call(model, input, user) do
     [platform, model_name] = String.split(model, ":")
 
