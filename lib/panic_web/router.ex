@@ -94,7 +94,7 @@ defmodule PanicWeb.Router do
       live "/networks/:network_id/predictions/new", PredictionLive.Index, :new
       ## also accepts query params for screen/grid_mod and will live update as
       ## new predictions come in
-      live "/networks/:network_id/predictions/:id", PredictionLive.Show, :show
+      live "/networks/:network_id/predictions/:prediction_id", PredictionLive.Show, :show
     end
   end
 
