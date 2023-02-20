@@ -25,11 +25,11 @@ defmodule Panic.Platforms do
   end
 
   def model_input_type(model) do
-    model_info() |> Map.get(:input)
+    model |> model_info() |> Map.get(:input)
   end
 
   def model_output_type(model) do
-    model_info() |> Map.get(:output)
+    model |> model_info() |> Map.get(:output)
   end
 
   def api_call(model, input, user) do
