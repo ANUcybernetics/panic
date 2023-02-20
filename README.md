@@ -105,10 +105,6 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 ## TODO
 
-- add a "details" view for each network with:
-  - list & descriptions of each model (possibly live-updating with latest output
-    each one)
-  - stats (time to camels, rainbows, etc.)
 - instead of a table, use a flex container (with that cool forwards-bacwards
   flow direction thing) for the network models
 - in append_model_widget, disable all the buttons for models which don't have
@@ -118,7 +114,6 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 - add metadata to prediction
 - port vestaboards code, add (as array) to prediction model
 - add "slow down over time" logic to runs
-- get web tests working
 - port view code
 - check that access control works for the network & prediction
 - port panic v2 code to the form components, including passing in assigns
