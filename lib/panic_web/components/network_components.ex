@@ -161,7 +161,7 @@ defmodule PanicWeb.NetworkComponents do
         <:col :let={{model, _last?}} label="Name">
           <%= model |> Platforms.model_info() |> Map.get(:name) %>
         </:col>
-        <:action :let={{model, last?}}>
+        <:action :let={{_model, last?}}>
           <.link :if={last?} phx-click={JS.push("remove-last-model")}>Remove</.link>
         </:action>
       </.table>
