@@ -128,7 +128,7 @@ defmodule PanicWeb.NetworkComponents do
     ~H"""
     <section class={[@class]}>
       <h2 class="text-md font-semibold">Append Model</h2>
-      <div class="mt-4 grid grid-cols-3 gap-2">
+      <div class="mt-4 grid md:grid-cols-3 xl:grid-cols-6 gap-2">
         <.button
           :for={{model, %{name: name, input: input}} <- Platforms.all_model_info()}
           class="disabled:bg-zinc-300"
@@ -157,13 +157,21 @@ defmodule PanicWeb.NetworkComponents do
     ~H"""
     <section class={[@class]}>
       <h2 class="text-md font-semibold">Network Models</h2>
-      <.table id={@table_id} rows={@models}>
-        <:col :let={model} label="Name">
+      <.table id={@table_id} rows={models_and_last?(@models)}>
+        <:col :let={{model, _last?}} label="Name">
           <%= model |> Platforms.model_info() |> Map.get(:name) %>
         </:col>
+        <:action :let={{model, last?}}>
+          <.link :if={last?} phx-click={JS.push("remove-last-model")}>Remove</.link>
+        </:action>
       </.table>
     </section>
     """
+  end
+
+  defp models_and_last?(models) do
+    last_idx = Enum.count(models) - 1
+    Enum.with_index(models, fn model, i -> {model, i == last_idx} end)
   end
 
   defp strip_platform(model) do
