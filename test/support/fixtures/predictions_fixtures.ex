@@ -23,7 +23,7 @@ defmodule Panic.PredictionsFixtures do
         %{
           input: "some input",
           metadata: %{},
-          model: "replicate:stability-ai/stable-diffusion",
+          model: List.first(network.models),
           output: "some output",
           run_index: 0,
           network_id: network.id
