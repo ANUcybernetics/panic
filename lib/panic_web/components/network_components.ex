@@ -138,9 +138,6 @@ defmodule PanicWeb.NetworkComponents do
           <%= name %>
         </.button>
       </div>
-      <.button class="mt-4 bg-rose-300" phx-click="remove-last-model">
-        Remove last
-      </.button>
     </section>
     """
   end
