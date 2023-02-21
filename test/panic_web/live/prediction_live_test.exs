@@ -4,6 +4,8 @@ defmodule PanicWeb.PredictionLiveTest do
   import Phoenix.LiveViewTest
   import Panic.{AccountsFixtures, NetworksFixtures, PredictionsFixtures}
 
+  import Mock
+
   @create_attrs %{input: "why did the chicken cross the road?"}
   @invalid_attrs %{input: nil}
 
@@ -46,7 +48,14 @@ defmodule PanicWeb.PredictionLiveTest do
       assert html =~ prediction.output
     end
 
-    test "saves new prediction", %{conn: conn, network: network} do
+    test_with_mock "saves new prediction",
+                   %{conn: conn, network: network},
+                   Panic.Platforms,
+                   [:passthrough],
+                   api_call: fn model, _input, _user ->
+                     Process.sleep(1000)
+                     {:ok, "result of API call to #{model}"}
+                   end do
       {:ok, index_live, _html} = live(conn, ~p"/networks/#{network}/predictions")
 
       assert index_live |> element("a", "New Prediction") |> render_click() =~
@@ -65,6 +74,7 @@ defmodule PanicWeb.PredictionLiveTest do
         |> follow_redirect(conn, ~p"/networks/#{network}/predictions")
 
       assert html =~ "Prediction created successfully"
+      assert html =~ "result of API call to"
     end
   end
 
