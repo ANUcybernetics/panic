@@ -105,16 +105,12 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 ## TODO
 
-- instead of a table, use a flex container (with that cool forwards-bacwards
-  flow direction thing) for the network models
-- in append_model_widget, disable all the buttons for models which don't have
-  the right input type
+- add control panel (FSM state, etc.)
+- connect terminal component controller to FSM - get the "runs running"
 - add rolling cookie/URL param to QR code
-- use (only) a form to manage the models in the network (create/edit network)
 - add metadata to prediction
-- port vestaboards code, add (as array) to prediction model
+- add vestaboards array to %Network{}
 - add "slow down over time" logic to runs
-- port view code
 - check that access control works for the network & prediction
 - port panic v2 code to the form components, including passing in assigns
 - maybe use cast_assoc wherever it makes sense, e.g. API tokens?
@@ -133,7 +129,6 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 - add model links to info maps
 - add the google fonts
 - make the main layout div a w/h-screen affair
-- wire up all the UI subscriptions and other info messages
 
 ## Licence
 
