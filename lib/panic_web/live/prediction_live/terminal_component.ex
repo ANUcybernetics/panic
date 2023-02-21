@@ -12,7 +12,7 @@ defmodule PanicWeb.PredictionLive.TerminalComponent do
         id="prediction-form"
         phx-target={@myself}
         phx-change="validate"
-        phx-submit="save"
+        phx-submit="start-run"
       >
         <.input field={@form[:input]} type="text" label="Input" />
         <:actions>
@@ -40,8 +40,6 @@ defmodule PanicWeb.PredictionLive.TerminalComponent do
 
   @impl true
   def handle_event("validate", %{"prediction" => prediction_params}, socket) do
-    prediction_params = add_user_id(prediction_params, socket)
-
     changeset =
       socket.assigns.prediction
       |> Predictions.change_prediction(prediction_params)
@@ -50,13 +48,12 @@ defmodule PanicWeb.PredictionLive.TerminalComponent do
     {:noreply, assign(socket, form: to_form(changeset))}
   end
 
-  def handle_event("save", %{"prediction" => prediction_params}, socket) do
-    prediction_params = add_user_id(prediction_params, socket)
-    save_prediction(socket, socket.assigns.action, prediction_params)
+  def handle_event("start-run", %{"prediction" => prediction_params}, socket) do
+    save_prediction(socket, prediction_params)
   end
 
-  defp save_prediction(socket, :new, prediction_params) do
-    case Predictions.create_prediction(prediction_params, :genesis, socket.assigns.network) do
+  defp save_prediction(socket, %{"input" => input}) do
+    case Predictions.create_prediction(input, socket.assigns.network) do
       {:ok, _prediction} ->
         {:noreply,
          socket
@@ -65,17 +62,6 @@ defmodule PanicWeb.PredictionLive.TerminalComponent do
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
-    end
-  end
-
-  ## these functions are all to deal with the "cast error: mixed atom and string
-  ## keys" problem. If I find a nicer way to do this I'll change it
-  defp to_atom(x) when is_binary(x), do: String.to_atom(x)
-  defp to_atom(x) when is_atom(x), do: x
-
-  defp add_user_id(params, socket) do
-    for {k, v} <- Map.put(params, :user_id, socket.assigns.user.id), into: %{} do
-      {to_atom(k), v}
     end
   end
 end

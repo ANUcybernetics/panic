@@ -24,7 +24,7 @@ defmodule Panic.PredictionsFixtures do
         },
         attrs
       )
-      |> Panic.Predictions.create_prediction()
+      |> Panic.Predictions.create_prediction_from_attrs()
 
     prediction
   end

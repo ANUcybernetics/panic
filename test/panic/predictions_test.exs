@@ -30,7 +30,9 @@ defmodule Panic.PredictionsTest do
         genesis_id: network.id
       }
 
-      assert {:ok, %Prediction{} = prediction} = Predictions.create_prediction(valid_attrs)
+      assert {:ok, %Prediction{} = prediction} =
+               Predictions.create_prediction_from_attrs(valid_attrs)
+
       assert prediction.input == "some input"
       assert prediction.metadata == %{}
       assert prediction.model == "some model"
@@ -41,7 +43,8 @@ defmodule Panic.PredictionsTest do
     end
 
     test "create_prediction/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Predictions.create_prediction(@invalid_attrs)
+      assert {:error, %Ecto.Changeset{}} =
+               Predictions.create_prediction_from_attrs(@invalid_attrs)
     end
 
     test "update_prediction/2 with valid data updates the prediction" do
@@ -99,8 +102,7 @@ defmodule Panic.PredictionsTest do
                    end do
       input = "Tell me a joke about potatoes."
 
-      assert {:ok, %Prediction{output: output}} =
-               Predictions.create_prediction(%{input: input}, :genesis, network)
+      assert {:ok, %Prediction{output: output}} = Predictions.create_prediction(input, network)
 
       assert is_binary(output)
     end
@@ -118,14 +120,14 @@ defmodule Panic.PredictionsTest do
       input = "Tell me a joke about potatoes."
 
       assert {:ok, %Prediction{run_index: 0} = genesis} =
-               Predictions.create_prediction(%{input: input}, :genesis, network)
+               Predictions.create_prediction(input, network)
 
       assert is_binary(genesis.output)
 
       genesis_id = genesis.id
 
       assert {:ok, %Prediction{run_index: 1, genesis_id: ^genesis_id}} =
-               Predictions.create_prediction(genesis, :next)
+               Predictions.create_prediction(genesis)
     end
   end
 

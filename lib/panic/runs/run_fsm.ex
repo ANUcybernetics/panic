@@ -53,14 +53,20 @@ defmodule Panic.Runs.RunFSM do
       ## a new genesis prediction
       new_prediction.run_index == 0 and NaiveDateTime.compare(now(), payload.lockout_time) == :gt ->
         debug_helper("genesis", state, new_prediction)
-        create_new_prediction_async(new_prediction)
+
+        Predictions.create_prediction_async(new_prediction, fn prediction ->
+          Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
+        end)
 
         {:ok, :running, %{payload | head_prediction: new_prediction, lockout_time: from_now(30)}}
 
       ## continuing on with things
       next_in_run?(new_prediction, payload.head_prediction) ->
         debug_helper("next", state, new_prediction)
-        create_new_prediction_async(new_prediction)
+
+        Predictions.create_prediction_async(new_prediction, fn prediction ->
+          Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
+        end)
 
         {:ok, :running, %{payload | head_prediction: new_prediction}}
 
@@ -82,17 +88,6 @@ defmodule Panic.Runs.RunFSM do
   def on_transition(state, :lock, duration_in_seconds, payload) do
     Finitomata.transition(payload.network.id, {:unlock, state}, duration_in_seconds * 1000)
     {:ok, :locked, payload}
-  end
-
-  defp create_new_prediction_async(%Prediction{} = new_prediction) do
-    Task.Supervisor.start_child(
-      Panic.Platforms.TaskSupervisor,
-      fn ->
-        {:ok, next_prediction} = Predictions.create_prediction(new_prediction, :next)
-        Finitomata.transition(next_prediction.network.id, {:new_prediction, next_prediction})
-      end,
-      restart: :transient
-    )
   end
 
   defp now(), do: NaiveDateTime.utc_now()
