@@ -7,11 +7,6 @@ defmodule PanicWeb.PredictionLive.FormComponent do
   def render(assigns) do
     ~H"""
     <div>
-      <.header>
-        <%= @title %>
-        <:subtitle>Start a new Panic! run by creating a new AI prediction.</:subtitle>
-      </.header>
-
       <.simple_form
         for={@form}
         id="prediction-form"
@@ -21,7 +16,12 @@ defmodule PanicWeb.PredictionLive.FormComponent do
       >
         <.input field={@form[:input]} type="text" label="Input" />
         <:actions>
-          <.button phx-disable-with="Creating...">Create Prediction</.button>
+          <.button
+            class="w-64 h-64 mx-auto rounded-full text-6xl text-white bg-red-700"
+            phx-disable-with="Panicking..."
+          >
+            Panic
+          </.button>
         </:actions>
       </.simple_form>
     </div>
