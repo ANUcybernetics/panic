@@ -13,11 +13,11 @@ defmodule PanicWeb.PredictionLive.Index do
     else
       {:ok,
        socket
+       |> push_navigate(to: ~p"/api_tokens/new")
        |> put_flash(
          :info,
          ~s("OpenAI" and "Replicate" API tokens are required to run Panic!, please add them now)
-       )
-       |> push_navigate(to: ~p"/api_tokens/new")}
+       )}
     end
   end
 
