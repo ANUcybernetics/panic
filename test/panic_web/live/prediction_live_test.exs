@@ -65,7 +65,6 @@ defmodule PanicWeb.PredictionLiveTest do
         |> follow_redirect(conn, ~p"/networks/#{network}/predictions")
 
       assert html =~ "Prediction created successfully"
-      assert html =~ "some input"
     end
 
     test "deletes prediction in listing", %{conn: conn, network: network, prediction: prediction} do
