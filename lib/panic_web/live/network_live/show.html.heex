@@ -10,11 +10,7 @@
 
 <.append_model_buttons class="mt-16" network={@network} />
 
-<h2 class="mt-8 text-md font-semibold">Network Models</h2>
-
-<.table id="networks" rows={@models}>
-  <:col :let={model} label="Name"><%= Platforms.model_info(model) |> Map.get(:name) %></:col>
-</.table>
+<.network_models_table class="mt-16" models={@models} />
 
 <.link navigate={~p"/networks/#{@network}/predictions/new"}>
   <.button class="mt-4 text-xl leading-8 bg-rose-700">Start new run</.button>

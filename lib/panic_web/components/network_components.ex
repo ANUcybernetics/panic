@@ -114,7 +114,6 @@ defmodule PanicWeb.NetworkComponents do
   defp last_model_output_type(%Network{models: models}),
     do: models |> List.last() |> Platforms.model_info() |> Map.get(:output)
 
-
   @doc """
   A list of buttons for appending a model onto the network
 
@@ -142,6 +141,27 @@ defmodule PanicWeb.NetworkComponents do
       <.button class="mt-4 bg-rose-300" phx-click="remove-last-model">
         Remove last
       </.button>
+    </section>
+    """
+  end
+
+  @doc """
+  A table of the models in the network.
+
+  """
+  attr :models, :list, required: true
+  attr :table_id, :string, default: nil
+  attr :class, :string, default: nil
+
+  def network_models_table(assigns) do
+    ~H"""
+    <section class={[@class]}>
+      <h2 class="text-md font-semibold">Network Models</h2>
+      <.table id={@table_id} rows={@models}>
+        <:col :let={model} label="Name">
+          <%= model |> Platforms.model_info() |> Map.get(:name) %>
+        </:col>
+      </.table>
     </section>
     """
   end
