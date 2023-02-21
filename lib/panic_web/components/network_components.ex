@@ -122,8 +122,8 @@ defmodule PanicWeb.NetworkComponents do
   output type of the last (current) model in the network will be enabled.
 
   """
-  attr :class, :string, default: nil
   attr :network, :map, required: true
+  attr :class, :string, default: nil
 
   def append_model_buttons(assigns) do
     ~H"""
