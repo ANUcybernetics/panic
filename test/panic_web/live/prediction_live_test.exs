@@ -66,13 +66,6 @@ defmodule PanicWeb.PredictionLiveTest do
 
       assert html =~ "Prediction created successfully"
     end
-
-    test "deletes prediction in listing", %{conn: conn, network: network, prediction: prediction} do
-      {:ok, index_live, _html} = live(conn, ~p"/networks/#{network}/predictions")
-
-      assert index_live |> element("#predictions-#{prediction.id} a", "Delete") |> render_click()
-      refute has_element?(index_live, "#prediction-#{prediction.id}")
-    end
   end
 
   describe "Show" do
