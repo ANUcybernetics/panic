@@ -43,7 +43,7 @@ defmodule PanicWeb.PredictionLiveTest do
       {:ok, _index_live, html} = live(conn, ~p"/networks/#{network}/predictions")
 
       assert html =~ "Listing Predictions"
-      assert html =~ prediction.input
+      assert html =~ prediction.output
     end
 
     test "saves new prediction", %{conn: conn, network: network} do
