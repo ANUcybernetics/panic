@@ -1,5 +1,8 @@
 defmodule Panic.RunFSMTest do
   use Panic.DataCase, async: false
+
+  @moduletag :fsm_tests
+
   ## requires async: false, above
   import Mock
 
