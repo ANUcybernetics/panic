@@ -114,14 +114,26 @@ defmodule PanicWeb.NetworkComponents do
   defp last_model_output_type(%Network{models: models}),
     do: models |> List.last() |> Platforms.model_info() |> Map.get(:output)
 
+
+  @doc """
+  A list of buttons for appending a model onto the network
+
+  The buttons are "smart" in that only the models whose input type matches the
+  output type of the last (current) model in the network will be enabled.
+
+  """
+  attr :class, :string, default: nil
+  attr :network, :map, required: true
+
   def append_model_buttons(assigns) do
     ~H"""
-    <section class="p-4 mt-4 bg-zinc-100 rounded-lg">
+    <section class={[@class]}>
       <h2 class="text-md font-semibold">Append Model</h2>
       <div class="mt-4 grid grid-cols-3 gap-2">
         <.button
           :for={{model, %{name: name, input: input}} <- Platforms.all_model_info()}
-          disabled={input == last_model_output_type(@network)}
+          class="disabled:bg-zinc-300"
+          disabled={input != last_model_output_type(@network)}
           phx-click={JS.push("append-model", value: %{model: model})}
         >
           <%= name %>
