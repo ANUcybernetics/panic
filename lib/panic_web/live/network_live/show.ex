@@ -1,7 +1,7 @@
 defmodule PanicWeb.NetworkLive.Show do
   use PanicWeb, :live_view
 
-  alias Panic.{Networks, Platforms}
+  alias Panic.Networks
   alias Panic.Networks.Network
   import PanicWeb.NetworkComponents
 
