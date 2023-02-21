@@ -130,6 +130,7 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
   - oblique strategies follower (GPT-3 powered)
   - https://replicate.com/cloneofsimo/lora
   - https://replicate.com/pharmapsychotic/clip-interrogator
+- add model links to info maps
 
 ## Licence
 
