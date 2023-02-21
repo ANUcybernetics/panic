@@ -5,6 +5,7 @@ defmodule PanicWeb.PredictionLive.Index do
   alias Panic.Predictions.Prediction
   alias Panic.Networks
   alias Panic.Networks.Network
+  import PanicWeb.NetworkComponents
 
   @impl true
   def mount(_params, _session, socket) do

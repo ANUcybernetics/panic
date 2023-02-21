@@ -7,27 +7,7 @@
   </:actions>
 </.header>
 
-<.table
-  id="predictions"
-  rows={@predictions}
-  row_id={&"predictions-#{&1.id}"}
-  row_click={&JS.navigate(~p"/networks/#{@network}/predictions/#{&1}")}
->
-  <:col :let={prediction} label="Model"><%= prediction.model %></:col>
-  <:col :let={prediction} label="Input"><%= prediction.input %></:col>
-  <:col :let={prediction} label="Output"><%= prediction.output %></:col>
-  <:col :let={prediction} label="Run index"><%= prediction.run_index %></:col>
-  <:action :let={prediction}>
-    <div class="sr-only">
-      <.link navigate={~p"/networks/#{@network}/predictions/#{prediction}"}>Show</.link>
-    </div>
-  </:action>
-  <:action :let={prediction}>
-    <.link phx-click={JS.push("delete", value: %{id: prediction.id})} data-confirm="Are you sure?">
-      Delete
-    </.link>
-  </:action>
-</.table>
+<.prediction_grid predictions={@predictions} />
 
 <.back navigate={~p"/networks/#{@network}"}>Back to network</.back>
 
