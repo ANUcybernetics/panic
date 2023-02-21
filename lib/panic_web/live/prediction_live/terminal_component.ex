@@ -1,4 +1,4 @@
-defmodule PanicWeb.PredictionLive.FormComponent do
+defmodule PanicWeb.PredictionLive.TerminalComponent do
   use PanicWeb, :live_component
 
   alias Panic.Predictions
@@ -17,7 +17,7 @@ defmodule PanicWeb.PredictionLive.FormComponent do
         <.input field={@form[:input]} type="text" label="Input" />
         <:actions>
           <.button
-            class="w-64 h-64 mx-auto rounded-full text-6xl text-white bg-red-700"
+            class="w-64 h-64 mx-auto rounded-full text-4xl text-white bg-red-700"
             phx-disable-with="Panicking..."
           >
             Panic
