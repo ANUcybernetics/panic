@@ -131,6 +131,9 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
   - https://replicate.com/cloneofsimo/lora
   - https://replicate.com/pharmapsychotic/clip-interrogator
 - add model links to info maps
+- add the google fonts
+- make the main layout div a w/h-screen affair
+- wire up all the UI subscriptions and other info messages
 
 ## Licence
 
