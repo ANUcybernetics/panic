@@ -166,6 +166,16 @@ defmodule PanicWeb.NetworkComponents do
     """
   end
 
+  def control_panel(assigns) do
+    ~H"""
+    <section class={"flex" <> @class}>
+      <span>FSM: <%= @fsm_state %></span>
+      <span>Required API Tokens: <%= @required_api_tokens? %></span>
+      <.button phx-click={JS.push("lock-fsm", value: %{network: @network})}>Lock FSM</.button>
+    </section>
+    """
+  end
+
   defp models_and_last?(models) do
     last_idx = Enum.count(models) - 1
     Enum.with_index(models, fn model, i -> {model, i == last_idx} end)
