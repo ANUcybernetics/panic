@@ -534,11 +534,11 @@ defmodule Panic.AccountsTest do
 
     test "create_api_token/1 with valid data creates a api_token" do
       user = user_fixture()
-      valid_attrs = %{name: "some name", token: "some token", user_id: user.id}
+      valid_attrs = %{name: "replicate", token: "laskdSLKJhdfaslsdkajfk65456", user_id: user.id}
 
       assert {:ok, %APIToken{} = api_token} = Accounts.create_api_token(valid_attrs)
-      assert api_token.name == "some name"
-      assert api_token.token == "some token"
+      assert api_token.name == "replicate"
+      assert api_token.token == "laskdSLKJhdfaslsdkajfk65456"
       assert api_token.user_id == user.id
     end
 
@@ -571,6 +571,27 @@ defmodule Panic.AccountsTest do
     test "change_api_token/1 returns a api_token changeset" do
       api_token = api_token_fixture()
       assert %Ecto.Changeset{} = Accounts.change_api_token(api_token)
+    end
+
+    test "missing_api_tokens/1 correctly returns the names of the missing tokens" do
+      user = user_fixture()
+
+      _api_token =
+        api_token_fixture(%{user_id: user.id, name: "Replicate", token: "lkjlkjijiji8778"})
+
+      assert "OpenAI" in Accounts.missing_api_tokens(user)
+    end
+
+    test "missing_api_tokens/1 returns an empty MapSet when all the module's @required tokens are present" do
+      user = user_fixture()
+
+      _replicate_api_token =
+        api_token_fixture(%{user_id: user.id, name: "Replicate", token: "lkjlkjijiji8778"})
+
+      _openai_api_token =
+        api_token_fixture(%{user_id: user.id, name: "OpenAI", token: "lkjlkjijiji8778"})
+
+      assert user |> Accounts.missing_api_tokens() |> Enum.empty?()
     end
   end
 end

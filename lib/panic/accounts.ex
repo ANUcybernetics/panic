@@ -8,6 +8,8 @@ defmodule Panic.Accounts do
 
   alias Panic.Accounts.{User, UserToken, UserNotifier}
 
+  @required_tokens ~w(OpenAI Replicate)
+
   ## Database getters
 
   @doc """
@@ -467,5 +469,15 @@ defmodule Panic.Accounts do
   """
   def change_api_token(%APIToken{} = api_token, attrs \\ %{}) do
     APIToken.changeset(api_token, attrs)
+  end
+
+  def missing_api_tokens(%User{} = user) do
+    user_token_names =
+      user
+      |> Repo.preload([:api_tokens])
+      |> Map.get(:api_tokens)
+      |> Enum.map(& &1.name)
+
+    MapSet.difference(MapSet.new(@required_tokens), MapSet.new(user_token_names))
   end
 end

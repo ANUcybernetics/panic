@@ -31,6 +31,10 @@ defmodule Panic.AccountsFixtures do
 
   @doc """
   Generate a api_token.
+
+  When `attrs` is empty the generated token won't be a real one, but it's a
+  plausible Replicate token.
+
   """
   def api_token_fixture(attrs \\ %{}) do
     user = user_fixture()
@@ -38,8 +42,8 @@ defmodule Panic.AccountsFixtures do
     {:ok, api_token} =
       Map.merge(
         %{
-          name: "some name",
-          token: "some token",
+          name: "Replicate",
+          token: "laskdSLKJhdfaslsdkajfk65456",
           user_id: user.id
         },
         attrs
