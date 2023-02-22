@@ -95,6 +95,17 @@ defmodule Panic.Predictions do
     end
   end
 
+  def genesis_changeset(%Network{} = network, attrs \\ %{}) do
+    %{
+      model: List.first(network.models),
+      run_index: 0,
+      metadata: %{},
+      network_id: network.id
+    }
+    |> Map.merge(attrs)
+    |> create_prediction_from_attrs()
+  end
+
   @doc """
   Given an initial input, create a genesis (first in a run) prediction.
 
@@ -122,25 +133,20 @@ defmodule Panic.Predictions do
 
   """
   def create_prediction(input, %Network{} = network) when is_binary(input) do
-    model = List.first(network.models)
-
-    attrs = %{
-      input: input,
-      model: model,
-      run_index: 0,
-      metadata: %{},
-      network_id: network.id
-    }
-
-    {:error, changeset} = create_prediction_from_attrs(attrs)
+    {:error, changeset} = genesis_changeset(network, %{input: input})
 
     case changeset do
       # if the only error is the missing output, make the API call
       %{errors: [output: _]} ->
-        {:ok, output} = Panic.Platforms.api_call(model, attrs.input, network.user_id)
+        {:ok, output} =
+          Panic.Platforms.api_call(
+            changeset.changes.model,
+            changeset.changes.input,
+            network.user_id
+          )
 
         {:ok, %Prediction{id: id} = prediction} =
-          create_prediction_from_attrs(Map.put(attrs, :output, output))
+          create_prediction_from_attrs(changeset.changes |> Map.put(:output, output))
 
         ## it's a first run, so set :genesis_id to :id
         update_prediction(prediction, %{genesis_id: id})
