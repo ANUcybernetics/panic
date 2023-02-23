@@ -9,6 +9,26 @@ defmodule PanicWeb.PredictionLive.Terminal do
   """
   use PanicWeb, :live_view
   alias Panic.{Accounts, Predictions, Networks}
+  alias Panic.Runs.StateMachine
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <div>
+      <.simple_form for={@form} id="terminal-input" phx-submit="start-run">
+        <.input field={@form[:input]} type="text" label="Input" />
+        <:actions>
+          <.button
+            class="w-64 h-64 mx-auto rounded-full text-4xl text-white bg-red-700"
+            phx-disable-with="Panicking..."
+          >
+            Panic
+          </.button>
+        </:actions>
+      </.simple_form>
+    </div>
+    """
+  end
 
   @impl true
   def mount(_params, _session, socket) do
@@ -39,6 +59,11 @@ defmodule PanicWeb.PredictionLive.Terminal do
     {:noreply, socket}
   end
 
+  @impl true
+  def handle_info({:state_change, state}, socket) do
+    {:noreply, assign(socket, current_state: state)}
+  end
+
   defp apply_action(socket, :tokens_missing, missing_tokens) do
     socket
     |> put_flash(:info, "#{Enum.join(missing_tokens, "/")} API tokens are required to run Panic!")
@@ -46,9 +71,14 @@ defmodule PanicWeb.PredictionLive.Terminal do
 
   defp apply_action(socket, :new_network, network_id) do
     network = Networks.get_network!(network_id)
+    if connected?(socket), do: Networks.subscribe(network.id)
+
     ## empty and invalid, but we're only pulling out the input string anyway
     changeset = Predictions.change_prediction(%Predictions.Prediction{})
 
-    assign(socket, network: network, form: to_form(changeset))
+    socket
+    |> assign(:network, network)
+    |> assign(:form, to_form(changeset))
+    |> assign(:current_state, StateMachine.current_state(network.id))
   end
 end

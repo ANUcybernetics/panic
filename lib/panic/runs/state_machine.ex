@@ -19,7 +19,7 @@ defmodule Panic.Runs.StateMachine do
   """
 
   use Finitomata, fsm: @fsm, auto_terminate: true
-  alias Panic.Predictions
+  alias Panic.{Networks, Predictions}
   alias Panic.Predictions.Prediction
 
   require Logger
@@ -46,6 +46,7 @@ defmodule Panic.Runs.StateMachine do
     reset_payload(payload)
   end
 
+  # TODO refactor this into a private helper fn for each clause in the `cond do`
   @impl Finitomata
   def on_transition(state, :new_prediction, %Prediction{} = new_prediction, payload)
       when state in [:waiting, :running] do
@@ -56,6 +57,7 @@ defmodule Panic.Runs.StateMachine do
 
         Predictions.create_prediction_async(new_prediction, fn prediction ->
           Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
+          Networks.broadcast(prediction.network.id, {:new_prediction, prediction})
         end)
 
         {:ok, :running, %{payload | head_prediction: new_prediction, lockout_time: from_now(30)}}
@@ -66,6 +68,7 @@ defmodule Panic.Runs.StateMachine do
 
         Predictions.create_prediction_async(new_prediction, fn prediction ->
           Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
+          Networks.broadcast(prediction.network.id, {:new_prediction, prediction})
         end)
 
         {:ok, :running, %{payload | head_prediction: new_prediction}}
@@ -88,6 +91,12 @@ defmodule Panic.Runs.StateMachine do
   def on_transition(state, :lock, duration_in_seconds, payload) do
     Finitomata.transition(payload.network.id, {:unlock, state}, duration_in_seconds * 1000)
     {:ok, :locked, payload}
+  end
+
+  @impl Finitomata
+  def on_enter(state, %Finitomata.State{payload: %{network: network}}) do
+    Networks.broadcast(network.id, {:state_change, state})
+    :ok
   end
 
   defp now(), do: NaiveDateTime.utc_now()
