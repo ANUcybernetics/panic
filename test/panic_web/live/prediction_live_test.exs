@@ -7,7 +7,6 @@ defmodule PanicWeb.PredictionLiveTest do
   import Mock
 
   @create_attrs %{input: "why did the chicken cross the road?"}
-  @invalid_attrs %{input: nil}
 
   def create_and_log_in_user(%{conn: conn} = context) do
     password = "123456789abcd"
