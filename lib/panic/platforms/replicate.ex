@@ -50,7 +50,7 @@ defmodule Panic.Platforms.Replicate do
         input: :image,
         output: :text
       },
-      "salesforce/blip-2" => %{
+      "replicate:salesforce/blip-2" => %{
         name: "BLIP2",
         description: "",
         input: :image,
@@ -62,13 +62,13 @@ defmodule Panic.Platforms.Replicate do
         input: :text,
         output: :image
       },
-      "22-hours/vintedois-diffusion" => %{
+      "replicate:22-hours/vintedois-diffusion" => %{
         name: "Vintedois Stable Diffusion",
         description: "",
         input: :text,
         output: :image
       },
-      "timothybrooks/instruct-pix2pix" => %{
+      "replicate:timothybrooks/instruct-pix2pix" => %{
         name: "Instruct pix2pix",
         description: "",
         input: :image,
