@@ -13,7 +13,11 @@ module.exports = {
     extend: {
       colors: {
         brand: "#FD4F00",
-      }
+      },
+      fontFamily: {
+        'major-mono-display': ['"Major Mono Display"'],
+        'noto-color-emoji': ['"Noto Color Emoji"'],
+      },
     },
   },
   plugins: [
