@@ -6,6 +6,7 @@ defmodule Panic.StateMachineTest do
   ## requires async: false, above
   import Mock
 
+  alias Panic.Accounts
   alias Panic.Predictions
   alias Panic.Runs.StateMachine
   import Panic.{AccountsFixtures, NetworksFixtures}
@@ -24,30 +25,30 @@ defmodule Panic.StateMachineTest do
 
     ## start the FSM
     IO.puts("starting network #{network.id}")
-    Finitomata.start_fsm(StateMachine, network.id, %{network: network})
+    StateMachine.start_if_not_running(network)
 
     on_exit(fn ->
       IO.puts("shutting down network #{network.id}")
       ## to make sure all the API calls come in
       send_event_and_sleep(network.id, {:shut_down, nil}, 5_000)
-      assert not Finitomata.alive?(network.id)
+      assert not StateMachine.alive?(network.id)
 
       check_network_invariants(network)
     end)
 
-    {:ok, network: network}
+    {:ok, network: network, tokens: Accounts.get_api_token_map(network.user_id)}
   end
 
   describe "Run FSM" do
-    test "golden path", %{network: network} do
+    test "golden path", %{network: network, tokens: tokens} do
       IO.puts("this test takes about 15s")
       assert [] = Predictions.list_predictions(network, 100)
-      assert Finitomata.alive?(network.id)
+      assert StateMachine.alive?(network.id)
       assert %Finitomata.State{current: :waiting} = Finitomata.state(network.id)
 
       ## genesis input
       {:ok, genesis_prediction} =
-        Predictions.create_prediction("ok, let's kick things off...", network)
+        Predictions.create_prediction("ok, let's kick things off...", network, tokens)
 
       send_event_and_sleep(network.id, {:new_prediction, genesis_prediction}, 10_000)
       assert %Finitomata.State{current: :running} = Finitomata.state(network.id)
@@ -62,20 +63,22 @@ defmodule Panic.StateMachineTest do
       assert %Finitomata.State{current: :waiting} = Finitomata.state(network.id)
     end
 
-    test "receive new genesis prediction in lockout period", %{network: network} do
+    test "receive new genesis prediction in lockout period", %{network: network, tokens: tokens} do
       IO.puts("this test takes about 10s")
       assert [] = Predictions.list_predictions(network, 100)
       # genesis input
       {:ok, first_genesis_prediction} =
         Predictions.create_prediction(
           "tell me a story about a bunny",
-          network
+          network,
+          tokens
         )
 
       {:ok, second_genesis_prediction} =
         Predictions.create_prediction(
           "a second input, hot on the heels of the first",
-          network
+          network,
+          tokens
         )
 
       send_event_and_sleep(network.id, {:new_prediction, first_genesis_prediction}, 0)
@@ -95,20 +98,25 @@ defmodule Panic.StateMachineTest do
       check_network_invariants(network)
     end
 
-    test "receive new genesis prediction after lockout period ends", %{network: network} do
+    test "receive new genesis prediction after lockout period ends", %{
+      network: network,
+      tokens: tokens
+    } do
       IO.puts("this test takes about 45s")
 
       # genesis input
       {:ok, first_genesis_prediction} =
         Predictions.create_prediction(
           "tell me a story about a bunny",
-          network
+          network,
+          tokens
         )
 
       {:ok, second_genesis_prediction} =
         Predictions.create_prediction(
           "a second input, hot on the heels of the first",
-          network
+          network,
+          tokens
         )
 
       send_event_and_sleep(network.id, {:new_prediction, first_genesis_prediction}, 31_000)
@@ -126,25 +134,31 @@ defmodule Panic.StateMachineTest do
       check_network_invariants(network)
     end
 
-    test "start run, then lock network, then receive a new input and resume", %{network: network} do
+    test "start run, then lock network, then receive a new input and resume", %{
+      network: network,
+      tokens: tokens
+    } do
       IO.puts("this test takes about 35s")
       # genesis input
       {:ok, p1} =
         Predictions.create_prediction(
           "tell me a story about a bunny",
-          network
+          network,
+          tokens
         )
 
       {:ok, p2} =
         Predictions.create_prediction(
           "a second input, hot on the heels of the first",
-          network
+          network,
+          tokens
         )
 
       {:ok, p3} =
         Predictions.create_prediction(
           "a second input, hot on the heels of the first",
-          network
+          network,
+          tokens
         )
 
       send_event_and_sleep(network.id, {:new_prediction, p1}, 200)
@@ -161,26 +175,30 @@ defmodule Panic.StateMachineTest do
     end
 
     test "start run, then lock network, then 'manually' unlock ahead of time and resume", %{
-      network: network
+      network: network,
+      tokens: tokens
     } do
       IO.puts("this test takes about 35s")
       # genesis input
       {:ok, p1} =
         Predictions.create_prediction(
           "tell me a story about a bunny",
-          network
+          network,
+          tokens
         )
 
       {:ok, p2} =
         Predictions.create_prediction(
           "a second input, hot on the heels of the first",
-          network
+          network,
+          tokens
         )
 
       {:ok, p3} =
         Predictions.create_prediction(
           "a third input, hot on the heels of the first",
-          network
+          network,
+          tokens
         )
 
       send_event_and_sleep(network.id, {:new_prediction, p1}, 200)

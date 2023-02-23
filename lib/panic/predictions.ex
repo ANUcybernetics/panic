@@ -120,30 +120,26 @@ defmodule Panic.Predictions do
 
   ## Examples
 
-      iex> create_prediction("this is a text input prompt", %Network{})
+      iex> create_prediction("this is a text input prompt", %Network{}, tokens)
       {:ok, %Prediction{}}
 
       ## if any of the arguments are invalid
-      iex> create_prediction(12345, %Network{})
+      iex> create_prediction(12345, %Network{}, tokens)
       {:error, %Ecto.Changeset{}}
 
       ## if the platform API call fails for some reason
-      iex> create_prediction("valid text input", %Network{})
+      iex> create_prediction("valid text input", %Network{}, tokens)
       {:platform_error, reason}
 
   """
-  def create_prediction(input, %Network{} = network) when is_binary(input) do
+  def create_prediction(input, %Network{} = network, tokens) when is_binary(input) do
     {:error, changeset} = genesis_changeset(network, %{input: input})
 
     case changeset do
       # if the only error is the missing output, make the API call
       %{errors: [output: _]} ->
         {:ok, output} =
-          Panic.Platforms.api_call(
-            changeset.changes.model,
-            changeset.changes.input,
-            network.user_id
-          )
+          Panic.Platforms.api_call(changeset.changes.model, changeset.changes.input, tokens)
 
         {:ok, %Prediction{id: id} = prediction} =
           create_prediction_from_attrs(changeset.changes |> Map.put(:output, output))
@@ -158,7 +154,7 @@ defmodule Panic.Predictions do
   end
 
   @doc """
-  Async version of `create_prediction(input, %Network{})` for creating a "genesis" prediction.
+  Async version of `create_prediction(input, %Network{}, tokens)` for creating a "genesis" prediction.
 
   `on_exit/1` is a function which will be called with the new prediction as the
   sole argument.
@@ -166,11 +162,12 @@ defmodule Panic.Predictions do
   Uses `Panic.Runs.TaskSupervisor` with `restart: transient`, so it'll keep
   re-trying until it exits cleanly.
   """
-  def create_prediction_async(input, %Network{} = network, on_exit) when is_binary(input) do
+  def create_prediction_async(input, %Network{} = network, tokens, on_exit)
+      when is_binary(input) do
     Task.Supervisor.start_child(
       Panic.Runs.TaskSupervisor,
       fn ->
-        {:ok, next_prediction} = create_prediction(input, network)
+        {:ok, next_prediction} = create_prediction(input, network, tokens)
         on_exit.(next_prediction)
       end,
       restart: :transient
@@ -191,19 +188,19 @@ defmodule Panic.Predictions do
 
   ## Examples
 
-      iex> create_prediction(%Prediction{})
+      iex> create_prediction(%Prediction{}, tokens)
       {:ok, %Prediction{}}
 
       ## if any of the arguments are invalid
-      iex> create_prediction(nil)
+      iex> create_prediction(nil, tokens)
       {:error, %Ecto.Changeset{}}
 
       ## if the platform API call fails for some reason
-      iex> create_prediction(%Prediction{})
+      iex> create_prediction(%Prediction{}, tokens)
       {:platform_error, reason}
 
   """
-  def create_prediction(%Prediction{} = previous_prediction) do
+  def create_prediction(%Prediction{} = previous_prediction, tokens) do
     ## TODO it would be better if this function checked if the changeset were
     ## valid apart from the output before making the API call (to avoid making
     ## the API call if the other params were invalid)
@@ -212,7 +209,7 @@ defmodule Panic.Predictions do
     model = Enum.at(network.models, Integer.mod(run_index, Enum.count(network.models)))
     input = previous_prediction.output
 
-    {:ok, output} = Panic.Platforms.api_call(model, input, network.user_id)
+    {:ok, output} = Panic.Platforms.api_call(model, input, tokens)
 
     %{
       input: input,
@@ -227,7 +224,7 @@ defmodule Panic.Predictions do
   end
 
   @doc """
-  Async version of `create_prediction(%Prediction{})` for creating a "next" prediction.
+  Async version of `create_prediction(%Prediction{}, tokens)` for creating a "next" prediction.
 
   `on_exit/1` is a function which will be called with the new prediction as the
   sole argument.
@@ -235,11 +232,11 @@ defmodule Panic.Predictions do
   Uses `Panic.Runs.TaskSupervisor` with `restart: transient`, so it'll keep
   re-trying until it exits cleanly.
   """
-  def create_prediction_async(%Prediction{} = previous_prediction, on_exit) do
+  def create_prediction_async(%Prediction{} = previous_prediction, tokens, on_exit) do
     Task.Supervisor.start_child(
       Panic.Runs.TaskSupervisor,
       fn ->
-        {:ok, next_prediction} = create_prediction(previous_prediction)
+        {:ok, next_prediction} = create_prediction(previous_prediction, tokens)
         on_exit.(next_prediction)
       end,
       restart: :transient

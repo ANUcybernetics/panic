@@ -33,8 +33,8 @@ defmodule Panic.Platforms.OpenAI do
     }
   end
 
-  def list_engines(user) do
-    Finch.build(:get, @url, headers(user))
+  def list_engines(tokens) do
+    Finch.build(:get, @url, headers(tokens))
     |> Finch.request(Panic.Finch)
     |> case do
       {:ok, %Finch.Response{body: response_body, status: 200}} ->
@@ -46,7 +46,7 @@ defmodule Panic.Platforms.OpenAI do
     end
   end
 
-  def create(model, prompt, user)
+  def create(model, prompt, tokens)
       when model in ["text-davinci-003", "text-ada-001", "davinci-instruct-beta"] do
     request_body = %{
       prompt: prompt,
@@ -54,7 +54,12 @@ defmodule Panic.Platforms.OpenAI do
       temperature: @temperature
     }
 
-    Finch.build(:post, "#{@url}/#{model}/completions", headers(user), Jason.encode!(request_body))
+    Finch.build(
+      :post,
+      "#{@url}/#{model}/completions",
+      headers(tokens),
+      Jason.encode!(request_body)
+    )
     |> Finch.request(Panic.Finch)
     |> case do
       {:ok, %Finch.Response{body: response_body, status: 200}} ->
@@ -68,9 +73,7 @@ defmodule Panic.Platforms.OpenAI do
     end
   end
 
-  defp headers(user) do
-    %Panic.Accounts.APIToken{token: token} = Panic.Accounts.get_api_token!(user, "OpenAI")
-
+  defp headers(%{"OpenAI" => token}) do
     %{
       "Authorization" => "Bearer #{token}",
       "Content-Type" => "application/json"

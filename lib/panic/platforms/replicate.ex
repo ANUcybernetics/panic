@@ -77,8 +77,8 @@ defmodule Panic.Platforms.Replicate do
     }
   end
 
-  def get_model_versions(model, user) do
-    Finch.build(:get, "#{@url}/models/#{model}/versions", headers(user))
+  def get_model_versions(model, tokens) do
+    Finch.build(:get, "#{@url}/models/#{model}/versions", headers(tokens))
     |> Finch.request(Panic.Finch)
     |> case do
       {:ok, %Finch.Response{body: response_body, status: 200}} ->
@@ -90,12 +90,12 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
-  def get_latest_model_version(model, user) do
-    get_model_versions(model, user) |> List.first() |> Map.get("id")
+  def get_latest_model_version(model, tokens) do
+    get_model_versions(model, tokens) |> List.first() |> Map.get("id")
   end
 
-  def get_status(prediction_id, user) do
-    Finch.build(:get, "#{@url}/predictions/#{prediction_id}", headers(user))
+  def get_status(prediction_id, tokens) do
+    Finch.build(:get, "#{@url}/predictions/#{prediction_id}", headers(tokens))
     |> Finch.request(Panic.Finch)
     |> case do
       {:ok, %Finch.Response{body: response_body, status: 200}} ->
@@ -103,8 +103,8 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
-  def get(prediction_id, user) do
-    Finch.build(:get, "#{@url}/predictions/#{prediction_id}", headers(user))
+  def get(prediction_id, tokens) do
+    Finch.build(:get, "#{@url}/predictions/#{prediction_id}", headers(tokens))
     |> Finch.request(Panic.Finch)
     |> case do
       {:ok, %Finch.Response{body: response_body, status: 200}} ->
@@ -120,7 +120,7 @@ defmodule Panic.Platforms.Replicate do
 
           %{"status" => status} when status in ~w(starting processing) ->
             ## recursion case; doesn't need a tuple
-            get(prediction_id, user)
+            get(prediction_id, tokens)
         end
 
       {:error, reason} ->
@@ -128,29 +128,29 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
-  def cancel(prediction_id, user) do
-    Finch.build(:post, "#{@url}/predictions/#{prediction_id}/cancel", headers(user), [])
+  def cancel(prediction_id, tokens) do
+    Finch.build(:post, "#{@url}/predictions/#{prediction_id}/cancel", headers(tokens), [])
     |> Finch.request(Panic.Finch)
   end
 
-  def create_and_wait(model, input_params, user) do
+  def create_and_wait(model, input_params, tokens) do
     request_body = %{
-      version: get_latest_model_version(model, user),
+      version: get_latest_model_version(model, tokens),
       input: input_params
     }
 
-    Finch.build(:post, "#{@url}/predictions", headers(user), Jason.encode!(request_body))
+    Finch.build(:post, "#{@url}/predictions", headers(tokens), Jason.encode!(request_body))
     |> Finch.request(Panic.Finch)
     |> case do
       {:ok, %Finch.Response{body: response_body, status: 201}} ->
         Jason.decode!(response_body)
         |> Map.get("id")
-        |> get(user)
+        |> get(tokens)
     end
   end
 
   ## text to image
-  def create("stability-ai/stable-diffusion" = model, prompt, user) do
+  def create("stability-ai/stable-diffusion" = model, prompt, tokens) do
     input_params = %{
       prompt: prompt,
       num_inference_steps: 50,
@@ -159,13 +159,13 @@ defmodule Panic.Platforms.Replicate do
       height: 576
     }
 
-    case create_and_wait(model, input_params, user) do
+    case create_and_wait(model, input_params, tokens) do
       {:ok, %{"output" => [image_url]}} -> {:ok, image_url}
       {:error, reason} -> {:error, reason}
     end
   end
 
-  def create("22-hours/vintedois-diffusion" = model, prompt, user) do
+  def create("22-hours/vintedois-diffusion" = model, prompt, tokens) do
     input_params = %{
       prompt: prompt,
       num_inference_steps: 25,
@@ -173,35 +173,37 @@ defmodule Panic.Platforms.Replicate do
       height: 448
     }
 
-    case create_and_wait(model, input_params, user) do
+    case create_and_wait(model, input_params, tokens) do
       {:ok, %{"output" => [image_url]}} -> {:ok, image_url}
       {:error, reason} -> {:error, reason}
     end
   end
 
-  def create("kuprel/min-dalle" = model, prompt, user) do
+  def create("kuprel/min-dalle" = model, prompt, tokens) do
     {:ok, %{"output" => [image_url]}} =
-      create_and_wait(model, %{text: prompt, grid_size: 1, progressive_outputs: 0}, user)
+      create_and_wait(model, %{text: prompt, grid_size: 1, progressive_outputs: 0}, tokens)
 
     {:ok, image_url}
   end
 
-  def create("rmokady/clip_prefix_caption" = model, image_url, user) do
-    {:ok, %{"output" => text}} = create_and_wait(model, %{image: image_url}, user)
+  def create("rmokady/clip_prefix_caption" = model, image_url, tokens) do
+    {:ok, %{"output" => text}} = create_and_wait(model, %{image: image_url}, tokens)
     {:ok, text}
   end
 
-  def create("j-min/clip-caption-reward" = model, image_url, user) do
-    {:ok, %{"output" => text}} = create_and_wait(model, %{image: image_url}, user)
+  def create("j-min/clip-caption-reward" = model, image_url, tokens) do
+    {:ok, %{"output" => text}} = create_and_wait(model, %{image: image_url}, tokens)
     {:ok, text}
   end
 
-  def create("salesforce/blip-2" = model, image_url, user) do
-    {:ok, %{"output" => text}} = create_and_wait(model, %{image: image_url, caption: true}, user)
+  def create("salesforce/blip-2" = model, image_url, tokens) do
+    {:ok, %{"output" => text}} =
+      create_and_wait(model, %{image: image_url, caption: true}, tokens)
+
     {:ok, text}
   end
 
-  def create("timothybrooks/instruct-pix2pix" = model, input_image_url, user) do
+  def create("timothybrooks/instruct-pix2pix" = model, input_image_url, tokens) do
     {:ok, %{"output" => [output_image_url]}} =
       create_and_wait(
         model,
@@ -209,29 +211,27 @@ defmodule Panic.Platforms.Replicate do
           image: input_image_url,
           prompt: "change the environment, keep the human and technology"
         },
-        user
+        tokens
       )
 
     {:ok, output_image_url}
   end
 
   ## text to text
-  def create("kyrick/prompt-parrot" = model, prompt, user) do
-    {:ok, %{"output" => text}} = create_and_wait(model, %{prompt: prompt}, user)
+  def create("kyrick/prompt-parrot" = model, prompt, tokens) do
+    {:ok, %{"output" => text}} = create_and_wait(model, %{prompt: prompt}, tokens)
     ## for some reason this model returns multiple prompts, but separated by a
     ## "separator" string rather than in a list, so we split it here and choose
     ## one at random
     {:ok, text |> String.split("\n------------------------------------------\n") |> Enum.random()}
   end
 
-  def create("2feet6inches/cog-prompt-parrot" = model, prompt, user) do
-    {:ok, %{"output" => text}} = create_and_wait(model, %{prompt: prompt}, user)
+  def create("2feet6inches/cog-prompt-parrot" = model, prompt, tokens) do
+    {:ok, %{"output" => text}} = create_and_wait(model, %{prompt: prompt}, tokens)
     {:ok, text |> String.split("\n") |> Enum.random()}
   end
 
-  defp headers(user) do
-    %Panic.Accounts.APIToken{token: token} = Panic.Accounts.get_api_token!(user, "Replicate")
-
+  defp headers(%{"Replicate" => token}) do
     %{
       "Authorization" => "Token #{token}",
       "Content-Type" => "application/json"

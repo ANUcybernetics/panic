@@ -32,12 +32,12 @@ defmodule Panic.Platforms do
     model |> model_info() |> Map.get(:output)
   end
 
-  def api_call(model, input, user) do
+  def api_call(model, input, tokens) do
     [platform, model_name] = String.split(model, ":")
 
     case platform do
-      "replicate" -> Panic.Platforms.Replicate.create(model_name, input, user)
-      "openai" -> Panic.Platforms.OpenAI.create(model_name, input, user)
+      "replicate" -> Panic.Platforms.Replicate.create(model_name, input, tokens)
+      "openai" -> Panic.Platforms.OpenAI.create(model_name, input, tokens)
     end
   end
 end

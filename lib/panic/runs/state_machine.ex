@@ -55,10 +55,14 @@ defmodule Panic.Runs.StateMachine do
       new_prediction.run_index == 0 and NaiveDateTime.compare(now(), payload.lockout_time) == :gt ->
         debug_helper("genesis", state, new_prediction)
 
-        Predictions.create_prediction_async(new_prediction, fn prediction ->
-          Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
-          Networks.broadcast(prediction.network.id, {:new_prediction, prediction})
-        end)
+        Predictions.create_prediction_async(
+          new_prediction,
+          payload.tokens,
+          fn prediction ->
+            Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
+            Networks.broadcast(prediction.network.id, {:new_prediction, prediction})
+          end
+        )
 
         {:ok, :running, %{payload | head_prediction: new_prediction, lockout_time: from_now(30)}}
 
@@ -66,7 +70,7 @@ defmodule Panic.Runs.StateMachine do
       next_in_run?(new_prediction, payload.head_prediction) ->
         debug_helper("next", state, new_prediction)
 
-        Predictions.create_prediction_async(new_prediction, fn prediction ->
+        Predictions.create_prediction_async(new_prediction, payload.tokens, fn prediction ->
           Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
           Networks.broadcast(prediction.network.id, {:new_prediction, prediction})
         end)
@@ -151,7 +155,10 @@ defmodule Panic.Runs.StateMachine do
 
   def start_if_not_running(network) do
     unless alive?(network.id) do
-      Finitomata.start_fsm(Panic.Runs.StateMachine, network.id, %{network: network})
+      Finitomata.start_fsm(Panic.Runs.StateMachine, network.id, %{
+        network: network,
+        tokens: Panic.Accounts.get_api_token_map(network.user_id)
+      })
     end
   end
 end

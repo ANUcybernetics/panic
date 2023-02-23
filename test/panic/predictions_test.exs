@@ -1,6 +1,7 @@
 defmodule Panic.PredictionsTest do
   use Panic.DataCase
 
+  alias Panic.Accounts
   alias Panic.Predictions
   alias Panic.Predictions.Prediction
 
@@ -93,7 +94,7 @@ defmodule Panic.PredictionsTest do
     setup [:create_network, :load_env_vars]
 
     test_with_mock "create_prediction/2 works with valid params",
-                   %{network: network},
+                   %{network: network, tokens: tokens},
                    Panic.Platforms,
                    [:passthrough],
                    api_call: fn model, _input, _user ->
@@ -102,14 +103,16 @@ defmodule Panic.PredictionsTest do
                    end do
       input = "Tell me a joke about potatoes."
 
-      assert {:ok, %Prediction{output: output}} = Predictions.create_prediction(input, network)
+      assert {:ok, %Prediction{output: output}} =
+               Predictions.create_prediction(input, network, tokens)
 
       assert is_binary(output)
     end
 
     test_with_mock "create_prediction/2 followed by create_next_prediction/2 works",
                    %{
-                     network: network
+                     network: network,
+                     tokens: tokens
                    },
                    Panic.Platforms,
                    [:passthrough],
@@ -120,14 +123,14 @@ defmodule Panic.PredictionsTest do
       input = "Tell me a joke about potatoes."
 
       assert {:ok, %Prediction{run_index: 0} = genesis} =
-               Predictions.create_prediction(input, network)
+               Predictions.create_prediction(input, network, tokens)
 
       assert is_binary(genesis.output)
 
       genesis_id = genesis.id
 
       assert {:ok, %Prediction{run_index: 1, genesis_id: ^genesis_id}} =
-               Predictions.create_prediction(genesis)
+               Predictions.create_prediction(genesis, tokens)
     end
   end
 
@@ -137,6 +140,8 @@ defmodule Panic.PredictionsTest do
 
   defp load_env_vars(%{network: network} = context) do
     insert_api_tokens_from_env(network.user_id)
+
     context
+    |> Map.put(:tokens, Accounts.get_api_token_map(network.user_id))
   end
 end

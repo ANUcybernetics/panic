@@ -43,7 +43,8 @@ defmodule PanicWeb.PredictionLive.Terminal do
 
   @impl true
   def handle_params(%{"network_id" => network_id}, _, socket) do
-    {:noreply, apply_action(socket, :new_network, network_id)}
+    network = Networks.get_network!(network_id)
+    {:noreply, apply_action(socket, :new_network, network)}
   end
 
   @impl true
@@ -52,7 +53,10 @@ defmodule PanicWeb.PredictionLive.Terminal do
 
   @impl true
   def handle_event("start-run", %{"prediction" => %{"input" => input}}, socket) do
-    Predictions.create_prediction_async(input, socket.assigns.network, fn prediction ->
+    network = socket.assigns.network
+    tokens = Accounts.get_api_token_map(network.user_id)
+
+    Predictions.create_prediction_async(input, network, tokens, fn prediction ->
       Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
     end)
 
@@ -69,8 +73,8 @@ defmodule PanicWeb.PredictionLive.Terminal do
     |> put_flash(:info, "#{Enum.join(missing_tokens, "/")} API tokens are required to run Panic!")
   end
 
-  defp apply_action(socket, :new_network, network_id) do
-    network = Networks.get_network!(network_id)
+  defp apply_action(socket, :new_network, network) do
+    StateMachine.start_if_not_running(network)
     if connected?(socket), do: Networks.subscribe(network.id)
 
     ## empty and invalid, but we're only pulling out the input string anyway

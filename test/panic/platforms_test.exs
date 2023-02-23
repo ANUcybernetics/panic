@@ -7,6 +7,7 @@ defmodule Panic.PlatformsTest do
   use Panic.DataCase
 
   import Panic.AccountsFixtures
+  alias Panic.Accounts
   alias Panic.Platforms
   alias Panic.Platforms.{OpenAI, Replicate, Vestaboard}
 
@@ -43,24 +44,24 @@ defmodule Panic.PlatformsTest do
   describe "OpenAI" do
     setup [:create_user, :load_env_vars]
 
-    test "davinci-instruct-beta responds when given a valid prompt", %{user: user} do
+    test "davinci-instruct-beta responds when given a valid prompt", %{tokens: tokens} do
       input = "explain how a chicken would cross a road."
 
-      {:ok, output} = OpenAI.create("davinci-instruct-beta", input, user)
+      {:ok, output} = OpenAI.create("davinci-instruct-beta", input, tokens)
       assert is_binary(output)
     end
 
-    test "text-davinci-003 responds when given a valid prompt", %{user: user} do
+    test "text-davinci-003 responds when given a valid prompt", %{tokens: tokens} do
       input = "hello Leonardo, what's your middle name?"
 
-      assert {:ok, output} = OpenAI.create("text-davinci-003", input, user)
+      assert {:ok, output} = OpenAI.create("text-davinci-003", input, tokens)
       assert is_binary(output)
     end
 
-    test "text-ada-001 responds when given a valid prompt", %{user: user} do
+    test "text-ada-001 responds when given a valid prompt", %{tokens: tokens} do
       input = "what year did Ada Lovelace first visit the moon?"
 
-      assert {:ok, output} = OpenAI.create("text-ada-001", input, user)
+      assert {:ok, output} = OpenAI.create("text-ada-001", input, tokens)
       assert is_binary(output)
     end
   end
@@ -69,77 +70,80 @@ defmodule Panic.PlatformsTest do
     setup [:create_user, :load_env_vars]
 
     test "stable diffusion returns a URL (probably to an image, but untested here) when given a valid input",
-         %{user: user} do
+         %{tokens: tokens} do
       input = "sheep grazing on a grassy meadow"
 
-      assert {:ok, output} = Replicate.create("stability-ai/stable-diffusion", input, user)
+      assert {:ok, output} = Replicate.create("stability-ai/stable-diffusion", input, tokens)
       assert Regex.match?(~r|https://.*|, output)
     end
 
     test "stable diffusion NSFW filter works (this test isn't 100% reliable)",
-         %{user: user} do
+         %{tokens: tokens} do
       # it sucks that we have to guard against this, but need to make sure the NSFW filter works
       input = "a sexy naked woman"
 
-      assert {:error, :nsfw} = Replicate.create("stability-ai/stable-diffusion", input, user)
+      assert {:error, :nsfw} = Replicate.create("stability-ai/stable-diffusion", input, tokens)
     end
 
-    test "vintedois diffusion returns a URL when given a valid input", %{user: user} do
+    test "vintedois diffusion returns a URL when given a valid input", %{tokens: tokens} do
       input = "sheep grazing on a grassy meadow"
 
-      assert {:ok, output} = Replicate.create("22-hours/vintedois-diffusion", input, user)
+      assert {:ok, output} = Replicate.create("22-hours/vintedois-diffusion", input, tokens)
       assert Regex.match?(~r|https://.*|, output)
     end
 
-    test "kyrick/prompt-parrot works", %{user: user} do
+    test "kyrick/prompt-parrot works", %{tokens: tokens} do
       input = "sheep grazing on a grassy meadow"
-      assert {:ok, output} = Replicate.create("kyrick/prompt-parrot", input, user)
+      assert {:ok, output} = Replicate.create("kyrick/prompt-parrot", input, tokens)
       assert String.starts_with?(output, input)
     end
 
-    test "2feet6inches/cog-prompt-parrot works", %{user: user} do
+    test "2feet6inches/cog-prompt-parrot works", %{tokens: tokens} do
       input = "sheep grazing on a grassy meadow"
-      assert {:ok, output} = Replicate.create("2feet6inches/cog-prompt-parrot", input, user)
+      assert {:ok, output} = Replicate.create("2feet6inches/cog-prompt-parrot", input, tokens)
       assert String.starts_with?(output, input)
     end
 
     test "stable diffusion image -> rmokady/clip_prefix_caption cycle works",
-         %{user: user} do
+         %{tokens: tokens} do
       input = "sheep grazing on a grassy meadow"
 
-      assert {:ok, image_url} = Replicate.create("stability-ai/stable-diffusion", input, user)
+      assert {:ok, image_url} = Replicate.create("stability-ai/stable-diffusion", input, tokens)
 
       assert {:ok, image_caption} =
-               Replicate.create("rmokady/clip_prefix_caption", image_url, user)
+               Replicate.create("rmokady/clip_prefix_caption", image_url, tokens)
 
       assert is_binary(image_caption)
     end
 
-    test "stable diffusion image -> BLIP2 cycle works", %{user: user} do
+    test "stable diffusion image -> BLIP2 cycle works", %{tokens: tokens} do
       input = "sheep grazing on a grassy meadow"
 
-      assert {:ok, image_url} = Replicate.create("stability-ai/stable-diffusion", input, user)
+      assert {:ok, image_url} = Replicate.create("stability-ai/stable-diffusion", input, tokens)
 
-      assert {:ok, image_caption} = Replicate.create("salesforce/blip-2", image_url, user)
+      assert {:ok, image_caption} = Replicate.create("salesforce/blip-2", image_url, tokens)
 
       assert is_binary(image_caption)
     end
 
-    test "stable diffusion image -> Instruct pix2pix cycle works", %{user: user} do
+    test "stable diffusion image -> Instruct pix2pix cycle works", %{tokens: tokens} do
       input = "sheep grazing on a grassy meadow"
 
-      assert {:ok, image_url} = Replicate.create("stability-ai/stable-diffusion", input, user)
+      assert {:ok, image_url} = Replicate.create("stability-ai/stable-diffusion", input, tokens)
 
-      assert {:ok, output} = Replicate.create("timothybrooks/instruct-pix2pix", image_url, user)
+      assert {:ok, output} = Replicate.create("timothybrooks/instruct-pix2pix", image_url, tokens)
       assert Regex.match?(~r|https://.*|, output)
     end
 
     test "stable diffusion image -> j-min/clip-caption-reward cycle works",
-         %{user: user} do
+         %{tokens: tokens} do
       input = "sheep grazing on a grassy meadow"
 
-      assert {:ok, image_url} = Replicate.create("stability-ai/stable-diffusion", input, user)
-      assert {:ok, image_caption} = Replicate.create("j-min/clip-caption-reward", image_url, user)
+      assert {:ok, image_url} = Replicate.create("stability-ai/stable-diffusion", input, tokens)
+
+      assert {:ok, image_caption} =
+               Replicate.create("j-min/clip-caption-reward", image_url, tokens)
+
       assert is_binary(image_caption)
     end
   end
@@ -147,18 +151,18 @@ defmodule Panic.PlatformsTest do
   describe "Vestaboard" do
     setup [:create_user, :load_env_vars]
 
-    test "list_subscriptions for Panic 1", %{user: user} do
-      assert %{"subscriptions" => [_]} = Vestaboard.list_subscriptions("Panic 1", user)
+    test "list_subscriptions for Panic 1", %{tokens: tokens} do
+      assert %{"subscriptions" => [_]} = Vestaboard.list_subscriptions("Panic 1", tokens)
     end
 
     test "send text to Panic 1 (for real, so make sure it's not doing something important)", %{
-      user: user
+      tokens: tokens
     } do
       assert {:ok, _} =
                Vestaboard.send_text(
                  "Panic 1",
                  "ANU School of Cybernetics\n\n#{NaiveDateTime.utc_now() |> NaiveDateTime.to_string()}",
-                 user
+                 tokens
                )
     end
   end
@@ -169,6 +173,8 @@ defmodule Panic.PlatformsTest do
 
   defp load_env_vars(%{user: user} = context) do
     insert_api_tokens_from_env(user.id)
+
     context
+    |> Map.put(:tokens, Accounts.get_api_token_map(user.id))
   end
 end

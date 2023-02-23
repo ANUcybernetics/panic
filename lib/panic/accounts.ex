@@ -385,25 +385,13 @@ defmodule Panic.Accounts do
   def get_api_token!(id), do: Repo.get!(APIToken, id)
 
   @doc """
-  Gets a single api_token.
+  Returns a map of the User's API Tokens
 
-  Raises `Ecto.NoResultsError` if the API token does not exist.
-
-  ## Examples
-
-      iex> get_api_token!(123)
-      %APIToken{}
-
-      iex> get_api_token!(456)
-      ** (Ecto.NoResultsError)
-
+  Each entry is of the form `"Token Name" => "slkjlskdhflkh"`
   """
-  def get_api_token!(%User{id: id}, token_name) when is_binary(token_name) do
-    Repo.one(from tok in APIToken, where: tok.user_id == ^id and tok.name == ^token_name)
-  end
-
-  def get_api_token!(user_id, token_name) when is_integer(user_id) and is_binary(token_name) do
-    Repo.one(from tok in APIToken, where: tok.user_id == ^user_id and tok.name == ^token_name)
+  def get_api_token_map(user_id) when is_integer(user_id) do
+    Repo.all(from t in APIToken, where: t.user_id == ^user_id, select: {t.name, t.token})
+    |> Enum.into(%{})
   end
 
   @doc """

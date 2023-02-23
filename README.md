@@ -114,8 +114,6 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 - check that access control works for the network & prediction
 - port panic v2 code to the form components, including passing in assigns
 - maybe use cast_assoc wherever it makes sense, e.g. API tokens?
-- can probably simplify some of the get api token/get network code by just using
-  the assoc on a %User{} (can still do it inside context module)
 - add `has_many :networks, Panic.Networks.Network` to user
 - rather than API token names being free strings, hardcode the specific ones we
   need, and change the API token /new page to list them all (and show green/red
