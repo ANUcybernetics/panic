@@ -21,7 +21,7 @@ defmodule Panic.Application do
       # Start a worker by calling: Panic.Worker.start_link(arg)
       # {Panic.Worker, arg}
       Finitomata,
-      {Task.Supervisor, name: Panic.Platforms.TaskSupervisor}
+      {Task.Supervisor, name: Panic.Runs.TaskSupervisor}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

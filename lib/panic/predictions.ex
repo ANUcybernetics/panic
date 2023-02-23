@@ -163,12 +163,12 @@ defmodule Panic.Predictions do
   `on_exit/1` is a function which will be called with the new prediction as the
   sole argument.
 
-  Uses `Panic.Platforms.TaskSupervisor` with `restart: transient`, so it'll keep
+  Uses `Panic.Runs.TaskSupervisor` with `restart: transient`, so it'll keep
   re-trying until it exits cleanly.
   """
   def create_prediction_async(input, %Network{} = network, on_exit) when is_binary(input) do
     Task.Supervisor.start_child(
-      Panic.Platforms.TaskSupervisor,
+      Panic.Runs.TaskSupervisor,
       fn ->
         {:ok, next_prediction} = create_prediction(input, network)
         on_exit.(next_prediction)
@@ -232,12 +232,12 @@ defmodule Panic.Predictions do
   `on_exit/1` is a function which will be called with the new prediction as the
   sole argument.
 
-  Uses `Panic.Platforms.TaskSupervisor` with `restart: transient`, so it'll keep
+  Uses `Panic.Runs.TaskSupervisor` with `restart: transient`, so it'll keep
   re-trying until it exits cleanly.
   """
   def create_prediction_async(%Prediction{} = previous_prediction, on_exit) do
     Task.Supervisor.start_child(
-      Panic.Platforms.TaskSupervisor,
+      Panic.Runs.TaskSupervisor,
       fn ->
         {:ok, next_prediction} = create_prediction(previous_prediction)
         on_exit.(next_prediction)

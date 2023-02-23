@@ -1,4 +1,4 @@
-defmodule Panic.Runs.RunFSM do
+defmodule Panic.Runs.StateMachine do
   @moduledoc """
   A Finite State Machine (FSM) to manage a Panic! run
 

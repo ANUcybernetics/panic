@@ -1,4 +1,4 @@
-defmodule Panic.RunFSMTest do
+defmodule Panic.StateMachineTest do
   use Panic.DataCase, async: false
 
   @moduletag :fsm_tests
@@ -23,7 +23,7 @@ defmodule Panic.RunFSMTest do
 
     ## start the FSM
     IO.puts("starting network #{network.id}")
-    Finitomata.start_fsm(Panic.Runs.RunFSM, network.id, %{network: network})
+    Finitomata.start_fsm(Panic.Runs.StateMachine, network.id, %{network: network})
 
     on_exit(fn ->
       IO.puts("shutting down network #{network.id}")
@@ -199,7 +199,7 @@ defmodule Panic.RunFSMTest do
 
   describe "static FSM checks" do
     test "transitions" do
-      {:ok, transitions} = Finitomata.Mermaid.parse(Panic.Runs.RunFSM.fsm_description())
+      {:ok, transitions} = Finitomata.Mermaid.parse(Panic.Runs.StateMachine.fsm_description())
       assert Finitomata.Transition.allowed(transitions, :waiting, :waiting)
     end
   end
