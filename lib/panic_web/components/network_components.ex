@@ -13,7 +13,7 @@ defmodule PanicWeb.NetworkComponents do
   # import PanicWeb.Gettext
 
   alias Panic.Platforms
-  alias Panic.Networks.Network
+  alias Panic.Networks
 
   @doc """
   Renders a single prediction "card"
@@ -108,12 +108,6 @@ defmodule PanicWeb.NetworkComponents do
     """
   end
 
-  ## input prompt is always text
-  defp last_model_output_type(%Network{models: []}), do: :text
-
-  defp last_model_output_type(%Network{models: models}),
-    do: models |> List.last() |> Platforms.model_info() |> Map.get(:output)
-
   @doc """
   A list of buttons for appending a model onto the network
 
@@ -132,7 +126,7 @@ defmodule PanicWeb.NetworkComponents do
         <.button
           :for={{model, %{name: name, input: input}} <- Platforms.all_model_info()}
           class="disabled:bg-zinc-300"
-          disabled={input != last_model_output_type(@network)}
+          disabled={input != Networks.last_model_output_type(@network)}
           phx-click={JS.push("append-model", value: %{model: model})}
         >
           <%= name %>
@@ -166,12 +160,19 @@ defmodule PanicWeb.NetworkComponents do
     """
   end
 
+  attr :current_state, :atom, required: true
+  attr :missing_api_tokens, :list, required: true
+  attr :network, :map, required: true
+  attr :class, :string, default: nil
+
   def control_panel(assigns) do
     ~H"""
-    <section class={"flex" <> @class}>
-      <span>FSM: <%= @fsm_state %></span>
-      <span>Required API Tokens: <%= @required_api_tokens? %></span>
-      <.button phx-click={JS.push("lock-fsm", value: %{network: @network})}>Lock FSM</.button>
+    <section class={["w-full flex justify-between", @class]}>
+      <span>Current state: <%= @current_state %></span>
+      <span :if={@missing_api_tokens != []}>
+        Missing API Tokens: <%= @missing_api_tokens %>
+      </span>
+      <.button phx-click={JS.push("lock", value: %{network: @network})}>Lock</.button>
     </section>
     """
   end

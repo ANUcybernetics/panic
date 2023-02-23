@@ -118,4 +118,19 @@ defmodule Panic.Networks do
   def change_network(%Network{} = network, attrs \\ %{}) do
     Network.changeset(network, attrs)
   end
+
+  ## input prompt is always text
+  def last_model_output_type(%Network{models: []}), do: :text
+
+  def last_model_output_type(%Network{models: models}),
+    do: models |> List.last() |> Panic.Platforms.model_info() |> Map.get(:output)
+
+  # pubsub helpers
+  def subscribe(network_id) do
+    Phoenix.PubSub.subscribe(Panic.PubSub, "network:#{network_id}")
+  end
+
+  def broadcast(network_id, message) do
+    Phoenix.PubSub.broadcast(Panic.PubSub, "network:#{network_id}", message)
+  end
 end

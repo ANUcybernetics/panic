@@ -121,9 +121,28 @@ defmodule Panic.Runs.StateMachine do
     )
   end
 
+  # helper functions - some just pass the args through to the appropriate
+  # Finitomata function, but this way it'll be easier to use a different FSM lib
+  # in future
+
   def current_state(network_id) do
     network_id
     |> Finitomata.state()
     |> Map.get(:current)
+  end
+
+  # this is just a passthrough, but it's handyd
+  def transition(network_id, event_payload, delay \\ 0) do
+    Finitomata.transition(network_id, event_payload, delay)
+  end
+
+  def alive?(network_id) do
+    Finitomata.alive?(network_id)
+  end
+
+  def start_if_not_running(network) do
+    unless alive?(network.id) do
+      Finitomata.start_fsm(Panic.Runs.StateMachine, network.id, %{network: network})
+    end
   end
 end
