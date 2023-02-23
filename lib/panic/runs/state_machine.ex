@@ -7,6 +7,7 @@ defmodule Panic.Runs.StateMachine do
   @fsm """
   initial --> |init!| waiting
 
+  waiting --> |new_prediction| waiting
   waiting --> |new_prediction| running_startup
   waiting --> |lock| locked
   waiting --> |shut_down| final
