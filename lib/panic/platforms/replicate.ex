@@ -237,10 +237,4 @@ defmodule Panic.Platforms.Replicate do
       "Content-Type" => "application/json"
     }
   end
-
-  defp string_to_seed(string) do
-    :crypto.hash(:md5, string)
-    |> :binary.decode_unsigned()
-    |> Integer.mod(65_536)
-  end
 end
