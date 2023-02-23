@@ -101,6 +101,11 @@ defmodule Panic.Runs.StateMachine do
   end
 
   @impl Finitomata
+  def on_transition(:running_startup, :startup_ended, _event_payload, payload) do
+    {:ok, :running_ready, payload}
+  end
+
+  @impl Finitomata
   def on_transition(:locked, :new_prediction, %Prediction{} = new_prediction, payload) do
     {:ok, %Prediction{}} = Predictions.delete_prediction(new_prediction)
     {:ok, :locked, payload}
