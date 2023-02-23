@@ -10,21 +10,3 @@
 <.prediction_grid predictions={@predictions} />
 
 <.back navigate={~p"/networks/#{@network}"}>Back to network</.back>
-
-<.modal
-  :if={@live_action in [:new]}
-  id="prediction-modal"
-  show
-  on_cancel={JS.navigate(~p"/networks/#{@network}/predictions")}
->
-  <.live_component
-    module={PanicWeb.PredictionLive.TerminalComponent}
-    id={@prediction.id || :new}
-    user={@current_user}
-    network={@network}
-    title={@page_title}
-    action={@live_action}
-    prediction={@prediction}
-    navigate={~p"/networks/#{@network}/predictions"}
-  />
-</.modal>

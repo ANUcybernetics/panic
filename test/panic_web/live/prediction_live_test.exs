@@ -64,12 +64,12 @@ defmodule PanicWeb.PredictionLiveTest do
       assert_patch(index_live, ~p"/networks/#{network}/predictions/new")
 
       assert index_live
-             |> form("#prediction-form", prediction: @invalid_attrs)
+             |> form("#terminal-input", prediction: @invalid_attrs)
              |> render_change() =~ "can&#39;t be blank"
 
       {:ok, _, html} =
         index_live
-        |> form("#prediction-form", prediction: @create_attrs)
+        |> form("#terminal-input", prediction: @create_attrs)
         |> render_submit()
         |> follow_redirect(conn, ~p"/networks/#{network}/predictions")
 

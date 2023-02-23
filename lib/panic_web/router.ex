@@ -84,13 +84,13 @@ defmodule PanicWeb.Router do
       on_mount: [{PanicWeb.UserAuth, :mount_current_user}] do
       live "/", HomeLive.Index, :index
 
+      live "/networks/:network_id/predictions/new", PredictionLive.Terminal, :new
+
       ## "running grid" view
       live "/networks/:id", NetworkLive.Show, :show
 
-      # the "terminal"
-      live "/networks/:network_id/predictions/new", PredictionLive.Index, :new
-      ## also accepts query params for screen/grid_mod and will live update as
-      ## new predictions come in
+      ## "screen" view - also accepts query params for screen/grid_mod and will
+      ## live update as new predictions come in
       live "/networks/:network_id/predictions/:prediction_id", PredictionLive.Show, :show
     end
   end
