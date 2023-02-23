@@ -5,17 +5,26 @@ defmodule Panic.Runs.StateMachine do
   """
 
   @fsm """
-  pre_run --> |init!| waiting
-  waiting --> |new_prediction| waiting
-  waiting --> |new_prediction| running
-  running --> |new_prediction| running
-  locked -->  |new_prediction| locked
-  running --> |reset| waiting
+  initial --> |init!| waiting
+
+  waiting --> |new_prediction| running_startup
   waiting --> |lock| locked
-  running --> |lock| locked
-  locked -->  |unlock| waiting
-  waiting --> |shut_down| post_run
-  running --> |shut_down| post_run
+  waiting --> |shut_down| final
+
+  running_startup --> |new_prediction| running_startup
+  running_startup --> |stop| waiting
+  running_startup --> |lock| locked
+  running_startup --> |shut_down| final
+  running_startup --> |startup_ended| running_ready
+
+  running_ready --> |new_prediction| running_ready
+  running_ready --> |stop| waiting
+  running_ready --> |lock| locked
+  running_ready --> |shut_down| final
+
+  locked --> |new_prediction| locked
+  locked --> |unlock| waiting
+  locked --> |shut_down| final
   """
 
   use Finitomata, fsm: @fsm, auto_terminate: true
@@ -24,13 +33,15 @@ defmodule Panic.Runs.StateMachine do
 
   require Logger
 
+  @startup_duration 30_000
+
   @doc "return the FSM (in Mermaid syntax)"
   def fsm_description do
     @fsm
   end
 
   @impl Finitomata
-  def on_transition(:pre_run, :init!, _event_payload, payload) do
+  def on_transition(:initial, :init!, _event_payload, payload) do
     reset_payload(payload)
   end
 
@@ -41,18 +52,18 @@ defmodule Panic.Runs.StateMachine do
   end
 
   @impl Finitomata
-  def on_transition(state, :reset, _event_payload, payload) do
-    Logger.info(":reset (in #{state})")
+  def on_transition(state, :stop, _event_payload, payload) do
+    Logger.info(":stop (in #{state})")
     reset_payload(payload)
   end
 
   # TODO refactor this into a private helper fn for each clause in the `cond do`
   @impl Finitomata
   def on_transition(state, :new_prediction, %Prediction{} = new_prediction, payload)
-      when state in [:waiting, :running] do
+      when state in [:waiting, :running_startup, :running_ready] do
     cond do
       ## a new genesis prediction
-      new_prediction.run_index == 0 and NaiveDateTime.compare(now(), payload.lockout_time) == :gt ->
+      new_prediction.run_index == 0 and state in [:waiting, :running_ready] ->
         debug_helper("genesis", state, new_prediction)
 
         Predictions.create_prediction_async(
@@ -64,7 +75,10 @@ defmodule Panic.Runs.StateMachine do
           end
         )
 
-        {:ok, :running, %{payload | head_prediction: new_prediction, lockout_time: from_now(30)}}
+        Finitomata.transition(payload.network.id, {:startup_ended, nil}, @startup_duration)
+
+        {:ok, :running_startup,
+         %{payload | genesis_prediction: new_prediction, head_prediction: new_prediction}}
 
       ## continuing on with things
       next_in_run?(new_prediction, payload.head_prediction) ->
@@ -75,7 +89,7 @@ defmodule Panic.Runs.StateMachine do
           Networks.broadcast(prediction.network.id, {:new_prediction, prediction})
         end)
 
-        {:ok, :running, %{payload | head_prediction: new_prediction}}
+        {:ok, state, %{payload | head_prediction: new_prediction}}
 
       ## otherwise, ignore and delete orphaned prediction
       true ->
@@ -103,11 +117,6 @@ defmodule Panic.Runs.StateMachine do
     :ok
   end
 
-  defp now(), do: NaiveDateTime.utc_now()
-
-  defp from_now(amount_to_add, unit \\ :second),
-    do: NaiveDateTime.utc_now() |> NaiveDateTime.add(amount_to_add, unit)
-
   defp next_in_run?(%Prediction{run_index: 0}, nil), do: true
 
   defp next_in_run?(%Prediction{run_index: new_index}, %Prediction{run_index: head_index}) do
@@ -121,11 +130,10 @@ defmodule Panic.Runs.StateMachine do
   defp reset_payload(payload) do
     {:ok, :waiting,
      payload
+     |> Map.put(:genesis_prediction, nil)
      ## the "head" prediction is the most recent prediction in the current run
      ## (it's sortof the opposite of the genesis prediction)
-     |> Map.put(:head_prediction, nil)
-     ## make sure this is in the past
-     |> Map.put(:lockout_time, from_now(-1, :day))}
+     |> Map.put(:head_prediction, nil)}
   end
 
   defp debug_helper(label, state, prediction) do
