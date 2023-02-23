@@ -34,7 +34,7 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   @impl true
-  def handle_event("stop", %{"network" => network}, socket) do
+  def handle_event("reset", %{"network" => network}, socket) do
     StateMachine.transition(network.id, {:reset, nil})
     {:noreply, socket}
   end
