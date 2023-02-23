@@ -167,7 +167,7 @@ defmodule PanicWeb.NetworkComponents do
 
   def control_panel(assigns) do
     ~H"""
-    <section class={["w-full flex justify-between", @class]}>
+    <section class={["flex justify-between", @class]}>
       <span>Current state: <%= @current_state %></span>
       <span :if={@missing_api_tokens != []}>
         Missing API Tokens: <%= @missing_api_tokens %>
