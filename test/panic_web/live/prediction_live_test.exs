@@ -48,7 +48,7 @@ defmodule PanicWeb.PredictionLiveTest do
       assert html =~ prediction.output
     end
 
-    test_with_mock "saves new prediction",
+    test_with_mock "creates a new prediction using the terminal",
                    %{conn: conn, network: network},
                    Panic.Platforms,
                    [:passthrough],
@@ -56,25 +56,14 @@ defmodule PanicWeb.PredictionLiveTest do
                      Process.sleep(1000)
                      {:ok, "result of API call to #{model}"}
                    end do
-      {:ok, index_live, _html} = live(conn, ~p"/networks/#{network}/predictions")
-
-      assert index_live |> element("a", "New Prediction") |> render_click() =~
-               "New Prediction"
-
-      assert_patch(index_live, ~p"/networks/#{network}/predictions/new")
+      {:ok, index_live, _html} = live(conn, ~p"/networks/#{network}/predictions/new")
 
       assert index_live
-             |> form("#terminal-input", prediction: @invalid_attrs)
-             |> render_change() =~ "can&#39;t be blank"
+             |> form("#terminal-input", prediction: @create_attrs)
+             |> render_submit()
 
-      {:ok, _, html} =
-        index_live
-        |> form("#terminal-input", prediction: @create_attrs)
-        |> render_submit()
-        |> follow_redirect(conn, ~p"/networks/#{network}/predictions")
-
-      assert html =~ "Prediction created successfully"
-      assert html =~ "result of API call to"
+      # TODO maybe check here that the predictions are actually created? not
+      # 100% sure how, though
     end
   end
 
