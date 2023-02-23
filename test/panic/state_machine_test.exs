@@ -51,15 +51,15 @@ defmodule Panic.StateMachineTest do
         Predictions.create_prediction("ok, let's kick things off...", network, tokens)
 
       send_event_and_sleep(network.id, {:new_prediction, genesis_prediction}, 10_000)
-      assert %Finitomata.State{current: :running} = Finitomata.state(network.id)
+      assert %Finitomata.State{current: :running_startup} = Finitomata.state(network.id)
 
       ## this is a bit hard to test due to the async nature of things, but these
       ## things are _necessary_ for asserting that it's worked (not necessarily
       ## _sufficient_)
       check_network_invariants(network)
 
-      assert %Finitomata.State{current: :running} = Finitomata.state(network.id)
-      send_event_and_sleep(network.id, {:reset, nil}, 1000)
+      # when startup time is 30s, network *should* still be in startup mode at this point
+      send_event_and_sleep(network.id, {:stop, nil}, 1000)
       assert %Finitomata.State{current: :waiting} = Finitomata.state(network.id)
     end
 
