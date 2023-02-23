@@ -34,6 +34,12 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   @impl true
+  def handle_event("stop", %{"network" => network}, socket) do
+    StateMachine.transition(network.id, {:reset, nil})
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info({:new_prediction, %Prediction{run_index: 0} = prediction}, socket) do
     {:noreply, assign(socket, genesis: prediction)}
   end

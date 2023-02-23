@@ -172,6 +172,7 @@ defmodule PanicWeb.NetworkComponents do
       <span :if={@missing_api_tokens != []}>
         Missing API Tokens: <%= @missing_api_tokens %>
       </span>
+      <.button phx-click={JS.push("stop", value: %{network: @network})}>Stop</.button>
       <.button phx-click={JS.push("lock", value: %{network: @network})}>Lock</.button>
     </section>
     """
