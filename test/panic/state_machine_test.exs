@@ -7,6 +7,7 @@ defmodule Panic.StateMachineTest do
   import Mock
 
   alias Panic.Predictions
+  alias Panic.Runs.StateMachine
   import Panic.{AccountsFixtures, NetworksFixtures}
 
   setup_with_mocks([
@@ -23,7 +24,7 @@ defmodule Panic.StateMachineTest do
 
     ## start the FSM
     IO.puts("starting network #{network.id}")
-    Finitomata.start_fsm(Panic.Runs.StateMachine, network.id, %{network: network})
+    Finitomata.start_fsm(StateMachine, network.id, %{network: network})
 
     on_exit(fn ->
       IO.puts("shutting down network #{network.id}")
@@ -195,11 +196,16 @@ defmodule Panic.StateMachineTest do
 
       check_network_invariants(network)
     end
+
+    test "current_state/1 helper fn returns a valid state", %{network: network} do
+      {:ok, transitions} = Finitomata.Mermaid.parse(StateMachine.fsm_description())
+      assert StateMachine.current_state(network.id) in Finitomata.Transition.states(transitions)
+    end
   end
 
   describe "static FSM checks" do
     test "transitions" do
-      {:ok, transitions} = Finitomata.Mermaid.parse(Panic.Runs.StateMachine.fsm_description())
+      {:ok, transitions} = Finitomata.Mermaid.parse(StateMachine.fsm_description())
       assert Finitomata.Transition.allowed(transitions, :waiting, :waiting)
     end
   end

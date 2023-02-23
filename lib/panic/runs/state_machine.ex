@@ -120,4 +120,10 @@ defmodule Panic.Runs.StateMachine do
       "#{label}: (#{state}) #{prediction.id}-#{prediction.run_index}-#{prediction.genesis_id} #{prediction.input}"
     )
   end
+
+  def current_state(network_id) do
+    network_id
+    |> Finitomata.state()
+    |> Map.get(:current)
+  end
 end
