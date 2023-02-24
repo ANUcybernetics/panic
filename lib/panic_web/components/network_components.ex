@@ -29,13 +29,15 @@ defmodule PanicWeb.NetworkComponents do
   def prediction_card(assigns) do
     ~H"""
     <.card>
-      <%= case Platforms.model_output_type(@prediction.model) do %>
+      <%= case @prediction && Platforms.model_output_type(@prediction.model) do %>
         <% :text -> %>
           <.text_prediction text={@prediction.output} />
         <% :image -> %>
           <.image_prediction image_url={@prediction.output} />
+        <% nil -> %>
+          <.empty_slot />
       <% end %>
-      <div class="absolute right-2 bottom-2">
+      <div :if={@prediction} class="absolute right-2 bottom-2">
         <%= strip_platform(@prediction.model) %>
       </div>
     </.card>
@@ -52,11 +54,18 @@ defmodule PanicWeb.NetworkComponents do
     """
   end
 
+  attr :genesis, :map
+  attr :predictions, :list, required: true
+  attr :class, :string, default: nil
+
   def prediction_grid(assigns) do
     ~H"""
-    <div class="grid grid-cols-1 gap-8 md:grid-cols-3 xl:grid-cols-6">
+    <section class={[@class]}>
+    <h2 class="text-md font-semibold">Input: <span :if={@genesis}><%= @genesis.input %></span></h2>
+    <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-6">
       <.prediction_card :for={prediction <- @predictions} prediction={prediction} />
     </div>
+    </section>
     """
   end
 
@@ -162,6 +171,7 @@ defmodule PanicWeb.NetworkComponents do
 
   attr :state, :atom, required: true
   attr :missing_api_tokens, :list, required: true
+  attr :api_listing, :any, required: true
   attr :network, :map, required: true
   attr :class, :string, default: nil
 

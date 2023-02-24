@@ -6,6 +6,9 @@ defmodule PanicWeb.NetworkLive.Show do
   alias Panic.Runs.StateMachine
   import PanicWeb.NetworkComponents
 
+  # TODO pull these from params
+  @num_grid_slots 18
+
   @impl true
   def mount(_params, _session, socket) do
     {:ok, socket}
@@ -46,8 +49,8 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   @impl true
-  def handle_info({:new_prediction, %Prediction{run_index: 0} = prediction}, socket) do
-    {:noreply, assign(socket, genesis: prediction)}
+  def handle_info({:new_prediction, prediction}, socket) do
+    {:noreply, apply_action(socket, :new_prediction, prediction)}
   end
 
   @impl true
@@ -69,7 +72,22 @@ defmodule PanicWeb.NetworkLive.Show do
     socket
     |> assign(:network, network)
     |> assign(:models, network.models)
+    |> assign(:genesis, nil)
+    |> assign(:grid_slots, List.duplicate(nil, @num_grid_slots))
     |> assign(:missing_api_tokens, Panic.Accounts.missing_api_tokens(socket.assigns.current_user))
     |> assign(:state, StateMachine.current_state(network.id))
+  end
+
+  defp apply_action(socket, :new_prediction, %Prediction{run_index: 0} = prediction) do
+    socket
+    |> assign(:genesis, prediction)
+    |> update(:grid_slots, fn slots -> List.replace_at(slots, 0, prediction) end)
+  end
+
+  defp apply_action(socket, :new_prediction, %Prediction{run_index: idx} = prediction) do
+    socket
+    |> update(:grid_slots, fn slots ->
+      List.replace_at(slots, Integer.mod(idx, @num_grid_slots), prediction)
+    end)
   end
 end
