@@ -13,10 +13,10 @@ defmodule Panic.Runs.StateMachine do
   waiting --> |shut_down| final
 
   running_startup --> |new_prediction| running_startup
+  running_startup --> |new_prediction| running_ready
   running_startup --> |stop| waiting
   running_startup --> |lock| locked
   running_startup --> |shut_down| final
-  running_startup --> |startup_ended| running_ready
 
   running_ready --> |new_prediction| running_ready
   running_ready --> |stop| waiting
@@ -33,8 +33,6 @@ defmodule Panic.Runs.StateMachine do
   alias Panic.Predictions.Prediction
 
   require Logger
-
-  @startup_duration 30_000
 
   @doc "return the FSM (in Mermaid syntax)"
   def fsm_description do
@@ -58,57 +56,48 @@ defmodule Panic.Runs.StateMachine do
     reset_payload(payload)
   end
 
-  # TODO refactor this into a private helper fn for each clause in the `cond do`
+  # genesis prediction handler
   @impl Finitomata
-  def on_transition(state, :new_prediction, %Prediction{} = new_prediction, payload)
-      when state in [:waiting, :running_startup, :running_ready] do
-    cond do
-      ## a new genesis prediction
-      new_prediction.run_index == 0 and state in [:waiting, :running_ready] ->
-        debug_helper("genesis", state, new_prediction)
+  def on_transition(state, :new_prediction, %Prediction{run_index: 0} = new_prediction, payload)
+      when state in [:waiting, :running_ready] do
+    Predictions.create_prediction_async(
+      new_prediction,
+      payload.tokens,
+      fn prediction ->
+        Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
+        Networks.broadcast(prediction.network.id, {:new_prediction, prediction})
+      end
+    )
 
-        Predictions.create_prediction_async(
-          new_prediction,
-          payload.tokens,
-          fn prediction ->
-            Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
-            Networks.broadcast(prediction.network.id, {:new_prediction, prediction})
-          end
-        )
-
-        Finitomata.transition(payload.network.id, {:startup_ended, nil}, @startup_duration)
-
-        {:ok, :running_startup,
-         %{payload | genesis_prediction: new_prediction, head_prediction: new_prediction}}
-
-      ## continuing on with things
-      next_in_run?(new_prediction, payload.head_prediction) ->
-        debug_helper("next", state, new_prediction)
-
-        Predictions.create_prediction_async(new_prediction, payload.tokens, fn prediction ->
-          Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
-          Networks.broadcast(prediction.network.id, {:new_prediction, prediction})
-        end)
-
-        {:ok, state, %{payload | head_prediction: new_prediction}}
-
-      ## otherwise, ignore and delete orphaned prediction
-      true ->
-        debug_helper("orphan", state, new_prediction)
-        {:ok, %Prediction{}} = Predictions.delete_prediction(new_prediction)
-        {:ok, state, payload}
-    end
+    {:ok, next_state(state),
+     %{payload | genesis_prediction: new_prediction, head_prediction: new_prediction}}
   end
 
+  # next run prediction handler. this approach - trying to do it all in the
+  # guard clauses - might be a code smell? maybe I can write a new guard?
   @impl Finitomata
-  def on_transition(:running_startup, :startup_ended, _event_payload, payload) do
-    {:ok, :running_ready, payload}
+  def on_transition(
+        state,
+        :new_prediction,
+        %Prediction{run_index: new_index} = new_prediction,
+        %{head_prediction: %Prediction{run_index: head_index}} = payload
+      )
+      when state in [:running_startup, :running_ready] and new_index == head_index + 1 do
+    debug_helper("next", state, new_prediction)
+
+    Predictions.create_prediction_async(new_prediction, payload.tokens, fn prediction ->
+      Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
+      Networks.broadcast(prediction.network.id, {:new_prediction, prediction})
+    end)
+
+    {:ok, next_state(state, payload), %{payload | head_prediction: new_prediction}}
   end
 
+  # orphan prediction handler
   @impl Finitomata
-  def on_transition(:locked, :new_prediction, %Prediction{} = new_prediction, payload) do
+  def on_transition(state, :new_prediction, %Prediction{} = new_prediction, payload) do
     {:ok, %Prediction{}} = Predictions.delete_prediction(new_prediction)
-    {:ok, :locked, payload}
+    {:ok, state, payload}
   end
 
   @impl Finitomata
@@ -123,13 +112,25 @@ defmodule Panic.Runs.StateMachine do
     :ok
   end
 
-  defp next_in_run?(%Prediction{run_index: 0}, nil), do: true
+  ####################
+  # helper functions #
+  ####################
 
-  defp next_in_run?(%Prediction{run_index: new_index}, %Prediction{run_index: head_index}) do
-    new_index == head_index + 1
+  ## because we've coalesced a couple of from->to transitions in the
+  ## :new_prediction handlers, it's useful to have these functions
+  defp next_state(:waiting), do: :running_startup
+  defp next_state(:running_ready), do: :running_ready
+
+  defp next_state(_state, payload) do
+    if seconds_since_prediction(payload.genesis_prediction) > 30 do
+      :running_ready
+    else
+      :running_startup
+    end
   end
 
-  defp next_in_run?(_new_prediction, _head_prediction), do: false
+  defp seconds_since_prediction(%Prediction{inserted_at: inserted_at}),
+    do: NaiveDateTime.utc_now() |> NaiveDateTime.diff(inserted_at, :second)
 
   ## TODO to avoid confusion with actual "locked" state, perhaps change
   ## lockout_time to debounce_time?
@@ -143,14 +144,10 @@ defmodule Panic.Runs.StateMachine do
   end
 
   defp debug_helper(label, state, prediction) do
-    Logger.info(
+    IO.puts(
       "#{label}: (#{state}) #{prediction.id}-#{prediction.run_index}-#{prediction.genesis_id} #{prediction.input}"
     )
   end
-
-  # helper functions - some just pass the args through to the appropriate
-  # Finitomata function, but this way it'll be easier to use a different FSM lib
-  # in future
 
   def current_state(network_id) do
     network_id

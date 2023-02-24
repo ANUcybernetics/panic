@@ -83,6 +83,7 @@ defmodule Panic.StateMachineTest do
 
       send_event_and_sleep(network.id, {:new_prediction, first_genesis_prediction}, 0)
       send_event_and_sleep(network.id, {:new_prediction, second_genesis_prediction}, 10_000)
+      assert %Finitomata.State{current: :running_startup} = Finitomata.state(network.id)
 
       # check we only kept the first genesis input
       assert [first_genesis] =
@@ -102,7 +103,7 @@ defmodule Panic.StateMachineTest do
       network: network,
       tokens: tokens
     } do
-      IO.puts("this test takes about 45s")
+      IO.puts("this test takes about 60s")
 
       # genesis input
       {:ok, first_genesis_prediction} =
@@ -119,7 +120,7 @@ defmodule Panic.StateMachineTest do
           tokens
         )
 
-      send_event_and_sleep(network.id, {:new_prediction, first_genesis_prediction}, 31_000)
+      send_event_and_sleep(network.id, {:new_prediction, first_genesis_prediction}, 45_000)
       send_event_and_sleep(network.id, {:new_prediction, second_genesis_prediction}, 10_000)
 
       # check there's at least one prediction in each run two new runs
@@ -163,7 +164,7 @@ defmodule Panic.StateMachineTest do
 
       send_event_and_sleep(network.id, {:new_prediction, p1}, 200)
       send_event_and_sleep(network.id, {:lock, 20}, 200)
-      send_event_and_sleep(network.id, {:new_prediction, p2}, 20_000)
+      send_event_and_sleep(network.id, {:new_prediction, p2}, 30_000)
       send_event_and_sleep(network.id, {:new_prediction, p3}, 10_000)
 
       # check we only kept the first genesis input
