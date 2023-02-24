@@ -144,7 +144,7 @@ defmodule Panic.Runs.StateMachine do
   end
 
   defp debug_helper(label, state, prediction) do
-    IO.puts(
+    Logger.debug(
       "#{label}: (#{state}) #{prediction.id}-#{prediction.run_index}-#{prediction.genesis_id} #{prediction.input}"
     )
   end
