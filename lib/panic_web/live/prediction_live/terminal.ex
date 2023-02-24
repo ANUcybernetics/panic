@@ -60,7 +60,7 @@ defmodule PanicWeb.PredictionLive.Terminal do
       Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
     end)
 
-    {:noreply, socket}
+    {:noreply, assign(socket, form: empty_form())}
   end
 
   @impl true
@@ -78,11 +78,16 @@ defmodule PanicWeb.PredictionLive.Terminal do
     if connected?(socket), do: Networks.subscribe(network.id)
 
     ## empty and invalid, but we're only pulling out the input string anyway
-    changeset = Predictions.change_prediction(%Predictions.Prediction{})
 
     socket
     |> assign(:network, network)
-    |> assign(:form, to_form(changeset))
+    |> assign(:form, empty_form())
     |> assign(:state, StateMachine.current_state(network.id))
+  end
+
+  defp empty_form() do
+    %Predictions.Prediction{}
+    |> Predictions.change_prediction()
+    |> to_form()
   end
 end
