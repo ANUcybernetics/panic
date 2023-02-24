@@ -167,16 +167,20 @@ defmodule PanicWeb.NetworkComponents do
 
   def control_panel(assigns) do
     ~H"""
-    <section class={["flex justify-between", @class]}>
-      <span>Current state: <%= @state %></span>
-      <span :if={@missing_api_tokens != []}>
-        Missing API Tokens: <%= @missing_api_tokens %>
-      </span>
+    <section class={["flex space-x-4", @class]}>
+      <.button class={button_colour(@state)}><%= @state %></.button>
+      <.button class={Enum.empty?(@missing_api_tokens) && "bg-emerald-500" || "bg-rose-600"}>
+        API Tokens
+      </.button>
       <.button phx-click={JS.push("reset", value: %{network_id: @network.id})}>Reset</.button>
       <.button phx-click={JS.push("lock", value: %{network_id: @network.id})}>Lock</.button>
     </section>
     """
   end
+
+  defp button_colour(:waiting), do: "bg-pink-500"
+  defp button_colour(state) when state in [:running_startup, :running_ready], do: "bg-emerald-500"
+  defp button_colour(_state), do: "bg-zinc-900"
 
   defp models_and_last?(models) do
     last_idx = Enum.count(models) - 1
