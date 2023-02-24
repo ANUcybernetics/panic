@@ -54,7 +54,6 @@ defmodule Panic.Runs.StateMachine do
 
   @impl Finitomata
   def on_transition(state, :reset, _event_payload, payload) do
-    Logger.info(":reset (in #{state})")
     reset_payload(payload)
   end
 
