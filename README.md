@@ -105,13 +105,20 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 ## TODO
 
-- add rolling cookie/URL param to QR code
-- add metadata to prediction
+- clear the terminal input when a new prediction is triggered
+- figure out why it seems to not work with repeated runs (maybe need to have the
+  "launch genesis prediction" call in the StateMachine helper code?)
+- add screen mod params
 - add vestaboards array to %Network{}
+- when viewing a grid for a running network, initially pull the latest
+  @num_grid_slots from the db (based on :genesis_id) and pre-populate the grid slots
 - add "slow down over time" logic to runs
+- add rolling cookie/URL param to QR code
+- change model info to not just dispatch the URL directly on ID - just in case
+  we want to have multiple things which hit the same model, but with different
+  other params (e.g. different finetuned LORA, different prefixes for GPT3)
+- add metadata to prediction (maybe `with` is our friend here?)
 - check that access control works for the network & prediction
-- port panic v2 code to the form components, including passing in assigns
-- maybe use cast_assoc wherever it makes sense, e.g. API tokens?
 - add `has_many :networks, Panic.Networks.Network` to user
 - rather than API token names being free strings, hardcode the specific ones we
   need, and change the API token /new page to list them all (and show green/red
