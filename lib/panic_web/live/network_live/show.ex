@@ -2,6 +2,7 @@ defmodule PanicWeb.NetworkLive.Show do
   use PanicWeb, :live_view
 
   alias Panic.Networks
+  alias Panic.Predictions
   alias Panic.Predictions.Prediction
   alias Panic.Runs.StateMachine
   import PanicWeb.NetworkComponents
@@ -11,7 +12,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, assign(socket, form: empty_form())}
   end
 
   @impl true
@@ -39,12 +40,28 @@ defmodule PanicWeb.NetworkLive.Show do
   @impl true
   def handle_event("reset", %{"network_id" => network_id}, socket) do
     StateMachine.transition(network_id, {:reset, nil})
-    {:noreply, socket}
+    {:noreply, assign(socket, grid_slots: List.duplicate(nil, @num_grid_slots))}
   end
 
   @impl true
   def handle_event("lock", %{"network_id" => network_id}, socket) do
     StateMachine.transition(network_id, {:lock, 30})
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("start-run", %{"prediction" => %{"input" => ""}}, socket),
+    do: {:noreply, socket}
+
+  @impl true
+  def handle_event("start-run", %{"prediction" => %{"input" => input}}, socket) do
+    network = socket.assigns.network
+    tokens = Panic.Accounts.get_api_token_map(network.user_id)
+
+    Predictions.create_prediction_async(input, network, tokens, fn prediction ->
+      Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
+    end)
+
     {:noreply, socket}
   end
 
@@ -89,5 +106,11 @@ defmodule PanicWeb.NetworkLive.Show do
     |> update(:grid_slots, fn slots ->
       List.replace_at(slots, Integer.mod(idx, @num_grid_slots), prediction)
     end)
+  end
+
+  defp empty_form() do
+    %Predictions.Prediction{}
+    |> Predictions.change_prediction()
+    |> to_form()
   end
 end

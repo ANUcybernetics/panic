@@ -61,7 +61,7 @@ defmodule PanicWeb.NetworkComponents do
   def prediction_grid(assigns) do
     ~H"""
     <section class={[@class]}>
-      <h2 class="text-md font-semibold">Input: <span :if={@genesis}><%= @genesis.input %></span></h2>
+      <h2 class="text-md font-semibold">Current Input: <span :if={@genesis}><%= @genesis.input %></span></h2>
       <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-6">
         <.prediction_card :for={prediction <- @predictions} prediction={prediction} />
       </div>
