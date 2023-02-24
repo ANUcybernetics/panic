@@ -10,23 +10,12 @@ defmodule PanicWeb.PredictionLive.Terminal do
   use PanicWeb, :live_view
   alias Panic.{Accounts, Predictions, Networks}
   alias Panic.Runs.StateMachine
+  import PanicWeb.NetworkComponents
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
-      <.simple_form for={@form} id="terminal-input" phx-submit="start-run">
-        <.input field={@form[:input]} type="text" label="Input" />
-        <:actions>
-          <.button
-            class="w-64 h-64 mx-auto rounded-full text-4xl text-white bg-red-700"
-            phx-disable-with="Panicking..."
-          >
-            Panic
-          </.button>
-        </:actions>
-      </.simple_form>
-    </div>
+    <.terminal_input form={@form} panic_button?={true}/>
     """
   end
 

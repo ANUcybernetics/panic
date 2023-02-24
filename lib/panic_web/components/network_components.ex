@@ -190,6 +190,29 @@ defmodule PanicWeb.NetworkComponents do
     """
   end
 
+  attr :form, :any, required: true
+  attr :panic_button?, :boolean, default: false
+  attr :class, :string, default: nil
+
+  def terminal_input(assigns) do
+    ~H"""
+    <section class={[@class]}>
+      <.simple_form for={@form} id="terminal-input" phx-submit="start-run">
+        <.input field={@form[:input]} type="text" label="Input" />
+        <:actions>
+          <.button
+            :if={@panic_button?}
+            class="mt-16 w-64 h-64 mx-auto rounded-full text-4xl text-white bg-red-700"
+            phx-disable-with="Panicking..."
+          >
+            Panic
+          </.button>
+        </:actions>
+      </.simple_form>
+    </section>
+    """
+  end
+
   defp button_colour(:waiting), do: "bg-pink-500"
   defp button_colour(state) when state in [:running_startup, :running_ready], do: "bg-emerald-500"
   defp button_colour(_state), do: "bg-zinc-900"
