@@ -105,8 +105,6 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 ## TODO
 
-- add control panel (FSM state, etc.)
-- connect terminal component controller to FSM - get the "runs running"
 - add rolling cookie/URL param to QR code
 - add metadata to prediction
 - add vestaboards array to %Network{}
@@ -122,11 +120,8 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
   code in there)
 - add models:
   - oblique strategies follower (GPT-3 powered)
-  - https://replicate.com/cloneofsimo/lora
   - https://replicate.com/pharmapsychotic/clip-interrogator
 - add model links to info maps
-- add the google fonts
-- make the main layout div a w/h-screen affair
 
 ## Licence
 
