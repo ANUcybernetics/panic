@@ -83,6 +83,6 @@ defmodule PanicWeb.PredictionLive.Terminal do
     socket
     |> assign(:network, network)
     |> assign(:form, to_form(changeset))
-    |> assign(:current_state, StateMachine.current_state(network.id))
+    |> assign(:state, StateMachine.current_state(network.id))
   end
 end

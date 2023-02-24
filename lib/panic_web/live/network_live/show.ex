@@ -34,14 +34,25 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   @impl true
-  def handle_event("reset", %{"network" => network}, socket) do
-    StateMachine.transition(network.id, {:reset, nil})
+  def handle_event("reset", %{"network_id" => network_id}, socket) do
+    StateMachine.transition(network_id, {:reset, nil})
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("lock", %{"network_id" => network_id}, socket) do
+    StateMachine.transition(network_id, {:lock, 30})
     {:noreply, socket}
   end
 
   @impl true
   def handle_info({:new_prediction, %Prediction{run_index: 0} = prediction}, socket) do
     {:noreply, assign(socket, genesis: prediction)}
+  end
+
+  @impl true
+  def handle_info({:state_change, state}, socket) do
+    {:noreply, assign(socket, state: state)}
   end
 
   # pokemon
@@ -59,6 +70,6 @@ defmodule PanicWeb.NetworkLive.Show do
     |> assign(:network, network)
     |> assign(:models, network.models)
     |> assign(:missing_api_tokens, Panic.Accounts.missing_api_tokens(socket.assigns.current_user))
-    |> assign(:current_state, StateMachine.current_state(network.id))
+    |> assign(:state, StateMachine.current_state(network.id))
   end
 end

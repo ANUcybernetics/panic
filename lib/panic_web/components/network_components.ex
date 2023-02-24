@@ -160,7 +160,7 @@ defmodule PanicWeb.NetworkComponents do
     """
   end
 
-  attr :current_state, :atom, required: true
+  attr :state, :atom, required: true
   attr :missing_api_tokens, :list, required: true
   attr :network, :map, required: true
   attr :class, :string, default: nil
@@ -168,12 +168,12 @@ defmodule PanicWeb.NetworkComponents do
   def control_panel(assigns) do
     ~H"""
     <section class={["flex justify-between", @class]}>
-      <span>Current state: <%= @current_state %></span>
+      <span>Current state: <%= @state %></span>
       <span :if={@missing_api_tokens != []}>
         Missing API Tokens: <%= @missing_api_tokens %>
       </span>
-      <.button phx-click={JS.push("reset", value: %{network: @network})}>Reset</.button>
-      <.button phx-click={JS.push("lock", value: %{network: @network})}>Lock</.button>
+      <.button phx-click={JS.push("reset", value: %{network_id: @network.id})}>Reset</.button>
+      <.button phx-click={JS.push("lock", value: %{network_id: @network.id})}>Lock</.button>
     </section>
     """
   end

@@ -10,21 +10,23 @@ defmodule Panic.Runs.StateMachine do
   waiting --> |new_prediction| waiting
   waiting --> |new_prediction| running_startup
   waiting --> |lock| locked
+  waiting --> |reset| waiting
   waiting --> |shut_down| final
 
   running_startup --> |new_prediction| running_startup
   running_startup --> |new_prediction| running_ready
-  running_startup --> |stop| waiting
+  running_startup --> |reset| waiting
   running_startup --> |lock| locked
   running_startup --> |shut_down| final
 
   running_ready --> |new_prediction| running_ready
-  running_ready --> |stop| waiting
+  running_ready --> |reset| waiting
   running_ready --> |lock| locked
   running_ready --> |shut_down| final
 
   locked --> |new_prediction| locked
   locked --> |unlock| waiting
+  locked --> |reset| waiting
   locked --> |shut_down| final
   """
 
@@ -51,8 +53,8 @@ defmodule Panic.Runs.StateMachine do
   end
 
   @impl Finitomata
-  def on_transition(state, :stop, _event_payload, payload) do
-    Logger.info(":stop (in #{state})")
+  def on_transition(state, :reset, _event_payload, payload) do
+    Logger.info(":reset (in #{state})")
     reset_payload(payload)
   end
 
