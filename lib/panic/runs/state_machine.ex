@@ -134,8 +134,6 @@ defmodule Panic.Runs.StateMachine do
   defp seconds_since_prediction(%Prediction{inserted_at: inserted_at}),
     do: NaiveDateTime.utc_now() |> NaiveDateTime.diff(inserted_at, :second)
 
-  ## TODO to avoid confusion with actual "locked" state, perhaps change
-  ## lockout_time to debounce_time?
   defp reset_payload(payload) do
     {:ok, :waiting,
      payload
