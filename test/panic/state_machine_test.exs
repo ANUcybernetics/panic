@@ -59,7 +59,7 @@ defmodule Panic.StateMachineTest do
       check_network_invariants(network)
 
       # when startup time is 30s, network *should* still be in startup mode at this point
-      send_event_and_sleep(network.id, {:stop, nil}, 1000)
+      send_event_and_sleep(network.id, {:reset, nil}, 1000)
       assert %Finitomata.State{current: :waiting} = Finitomata.state(network.id)
     end
 
