@@ -15,7 +15,7 @@ defmodule PanicWeb.PredictionLive.Terminal do
   @impl true
   def render(assigns) do
     ~H"""
-    <.terminal_input form={@form} panic_button?={true}/>
+    <.terminal_input form={@form} panic_button?={true} />
     """
   end
 

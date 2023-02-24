@@ -61,7 +61,9 @@ defmodule PanicWeb.NetworkComponents do
   def prediction_grid(assigns) do
     ~H"""
     <section class={[@class]}>
-      <h2 class="text-md font-semibold">Current Input: <span :if={@genesis}><%= @genesis.input %></span></h2>
+      <h2 class="text-md font-semibold">
+        Current Input: <span :if={@genesis}><%= @genesis.input %></span>
+      </h2>
       <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-6">
         <.prediction_card :for={prediction <- @predictions} prediction={prediction} />
       </div>
@@ -171,7 +173,8 @@ defmodule PanicWeb.NetworkComponents do
 
   attr :state, :atom, required: true
   attr :missing_api_tokens, :list, required: true
-  attr :api_listing, :any, required: true
+  attr :api_navigate, :any, required: true
+  attr :terminal_navigate, :any, required: true
   attr :network, :map, required: true
   attr :class, :string, default: nil
 
@@ -179,10 +182,13 @@ defmodule PanicWeb.NetworkComponents do
     ~H"""
     <section class={["flex space-x-4", @class]}>
       <.button class={button_colour(@state)}><%= @state %></.button>
-      <.link navigate={@api_listing}>
+      <.link navigate={@api_navigate}>
         <.button class={(Enum.empty?(@missing_api_tokens) && "bg-emerald-500") || "bg-rose-600"}>
           API Tokens
         </.button>
+      </.link>
+      <.link navigate={@terminal_navigate}>
+        <.button class="bg-red-700">Terminal</.button>
       </.link>
       <.button phx-click={JS.push("reset", value: %{network_id: @network.id})}>Reset</.button>
       <.button phx-click={JS.push("lock", value: %{network_id: @network.id})}>Lock</.button>

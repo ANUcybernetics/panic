@@ -11,22 +11,19 @@
 <.control_panel
   class="mt-16"
   missing_api_tokens={MapSet.to_list(@missing_api_tokens)}
-  api_listing={~p"/api_tokens/"}
+  api_navigate={~p"/api_tokens/"}
+  terminal_navigate={~p"/networks/#{@network}/predictions/new"}
   state={@state}
   network={@network}
 />
 
-<.terminal_input class="mt-16" form={@form} panic_button?={false}/>
+<.terminal_input class="mt-16" form={@form} panic_button?={false} />
 
 <.prediction_grid class="mt-16" genesis={@genesis} predictions={@grid_slots} />
 
 <.append_model_buttons class="mt-16" network={@network} />
 
 <.network_models_table class="mt-16" models={@models} />
-
-<.link navigate={~p"/networks/#{@network}/predictions/new"}>
-  <.button class="mt-16 font-semibold bg-emerald-500">Start new run</.button>
-</.link>
 
 <.back navigate={~p"/networks"}>Back to networks</.back>
 
