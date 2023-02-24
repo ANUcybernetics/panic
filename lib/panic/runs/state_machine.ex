@@ -5,28 +5,36 @@ defmodule Panic.Runs.StateMachine do
   """
 
   @fsm """
-  initial --> |init!| waiting
+  initial --> |init!| ready
 
-  waiting --> |new_prediction| waiting
-  waiting --> |new_prediction| running_startup
-  waiting --> |lock| locked
-  waiting --> |reset| waiting
-  waiting --> |shut_down| final
+  ready --> |genesis_input| running_genesis
+  ready --> |new_prediction| ready
+  ready --> |reset| ready
+  ready --> |lock| locked
+  ready --> |shut_down| final
 
-  running_startup --> |new_prediction| running_startup
-  running_startup --> |new_prediction| running_ready
-  running_startup --> |reset| waiting
-  running_startup --> |lock| locked
-  running_startup --> |shut_down| final
+  running_genesis --> |new_prediction| uninterruptable
+  running_genesis --> |new_prediction| running_genesis
+  running_genesis --> |reset| ready
+  running_genesis --> |lock| locked
+  running_genesis --> |shut_down| final
 
-  running_ready --> |new_prediction| running_ready
-  running_ready --> |reset| waiting
-  running_ready --> |lock| locked
-  running_ready --> |shut_down| final
+  uninterruptable --> |new_prediction| uninterruptable
+  uninterruptable --> |new_prediction| interruptable
+  uninterruptable --> |reset| ready
+  uninterruptable --> |lock| locked
+  uninterruptable --> |shut_down| final
 
+  interruptable --> |genesis_input| running_genesis
+  interruptable --> |new_prediction| interruptable
+  interruptable --> |reset| ready
+  interruptable --> |lock| locked
+  interruptable --> |shut_down| final
+
+  locked --> |running_genesis| locked
   locked --> |new_prediction| locked
-  locked --> |unlock| waiting
-  locked --> |reset| waiting
+  locked --> |unlock| ready
+  locked --> |reset| ready
   locked --> |shut_down| final
   """
 
@@ -47,31 +55,24 @@ defmodule Panic.Runs.StateMachine do
   end
 
   @impl Finitomata
-  def on_transition(_state, :unlock, _prev_state, payload) do
-    ## TODO figure out how to re-start the run if prev_state == :running
-    reset_payload(payload)
-  end
-
-  @impl Finitomata
-  def on_transition(state, :reset, _event_payload, payload) do
-    reset_payload(payload)
+  def on_transition(_state, :genesis_input, input, payload) do
+    create_prediction_async(input, payload.network, payload.tokens)
+    {:ok, :running_genesis, %{payload | genesis_prediction: nil, head_prediction: nil}}
   end
 
   # genesis prediction handler
   @impl Finitomata
-  def on_transition(state, :new_prediction, %Prediction{run_index: 0} = new_prediction, payload)
-      when state in [:waiting, :running_ready] do
-    Networks.broadcast(new_prediction.network.id, {:new_prediction, new_prediction})
+  def on_transition(
+        :running_genesis,
+        :new_prediction,
+        %Prediction{run_index: 0} = new_prediction,
+        payload
+      ) do
+    Networks.broadcast(new_prediction.network_id, {:new_prediction, new_prediction})
 
-    Predictions.create_prediction_async(
-      new_prediction,
-      payload.tokens,
-      fn prediction ->
-        Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
-      end
-    )
+    create_prediction_async(new_prediction, payload.tokens)
 
-    {:ok, next_state(state),
+    {:ok, :uninterruptable,
      %{payload | genesis_prediction: new_prediction, head_prediction: new_prediction}}
   end
 
@@ -84,12 +85,10 @@ defmodule Panic.Runs.StateMachine do
         %Prediction{run_index: new_index} = new_prediction,
         %{head_prediction: %Prediction{run_index: head_index}} = payload
       )
-      when state in [:running_startup, :running_ready] and new_index == head_index + 1 do
-    Networks.broadcast(new_prediction.network.id, {:new_prediction, new_prediction})
+      when state in [:uninterruptable, :interruptable] and new_index == head_index + 1 do
+    Networks.broadcast(new_prediction.network_id, {:new_prediction, new_prediction})
 
-    Predictions.create_prediction_async(new_prediction, payload.tokens, fn prediction ->
-      Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
-    end)
+    create_prediction_async(new_prediction, payload.tokens)
 
     {:ok, next_state(state, payload), %{payload | head_prediction: new_prediction}}
   end
@@ -108,6 +107,17 @@ defmodule Panic.Runs.StateMachine do
   end
 
   @impl Finitomata
+  def on_transition(_state, :unlock, _prev_state, payload) do
+    ## TODO figure out how to re-start the run if prev_state == :running
+    reset_payload(payload)
+  end
+
+  @impl Finitomata
+  def on_transition(_state, :reset, _event_payload, payload) do
+    reset_payload(payload)
+  end
+
+  @impl Finitomata
   def on_enter(state, %Finitomata.State{payload: %{network: network}}) do
     Networks.broadcast(network.id, {:state_change, state})
     :ok
@@ -117,16 +127,28 @@ defmodule Panic.Runs.StateMachine do
   # helper functions #
   ####################
 
+  def create_prediction_async(input, network, tokens) when is_binary(input) do
+    Predictions.create_prediction_async(input, network, tokens, fn prediction ->
+      Finitomata.transition(prediction.network_id, {:new_prediction, prediction})
+    end)
+  end
+
+  def create_prediction_async(%Prediction{} = prediction, tokens) do
+    Predictions.create_prediction_async(prediction, tokens, fn prediction ->
+      Finitomata.transition(prediction.network_id, {:new_prediction, prediction})
+    end)
+  end
+
   ## because we've coalesced a couple of from->to transitions in the
   ## :new_prediction handlers, it's useful to have these functions
-  defp next_state(:waiting), do: :running_startup
-  defp next_state(:running_ready), do: :running_ready
+  defp next_state(:ready), do: :uninterruptable
+  defp next_state(:interruptable), do: :interruptable
 
   defp next_state(_state, payload) do
     if seconds_since_prediction(payload.genesis_prediction) > 30 do
-      :running_ready
+      :interruptable
     else
-      :running_startup
+      :uninterruptable
     end
   end
 
@@ -134,7 +156,7 @@ defmodule Panic.Runs.StateMachine do
     do: NaiveDateTime.utc_now() |> NaiveDateTime.diff(inserted_at, :second)
 
   defp reset_payload(payload) do
-    {:ok, :waiting,
+    {:ok, :ready,
      payload
      |> Map.put(:genesis_prediction, nil)
      ## the "head" prediction is the most recent prediction in the current run
@@ -148,10 +170,14 @@ defmodule Panic.Runs.StateMachine do
   #   )
   # end
 
-  def current_state(network_id) do
-    network_id
-    |> Finitomata.state()
-    |> Map.get(:current)
+  def get_current_state(network_id) do
+    %Finitomata.State{current: state} = Finitomata.state(network_id)
+    state
+  end
+
+  def get_tokens(network_id) do
+    %Finitomata.State{payload: %{tokens: tokens}} = Finitomata.state(network_id)
+    tokens
   end
 
   # this is just a passthrough, but it's handyd

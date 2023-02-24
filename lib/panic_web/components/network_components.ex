@@ -219,8 +219,8 @@ defmodule PanicWeb.NetworkComponents do
     """
   end
 
-  defp button_colour(:waiting), do: "bg-pink-500"
-  defp button_colour(state) when state in [:running_startup, :running_ready], do: "bg-emerald-500"
+  defp button_colour(:ready), do: "bg-pink-500"
+  defp button_colour(state) when state in [:uninterruptable, :interruptable], do: "bg-emerald-500"
   defp button_colour(_state), do: "bg-zinc-900"
 
   defp models_and_last?(models) do

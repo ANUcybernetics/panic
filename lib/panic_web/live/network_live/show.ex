@@ -62,7 +62,7 @@ defmodule PanicWeb.NetworkLive.Show do
       Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
     end)
 
-    {:noreply, socket}
+    {:noreply, assign(socket, form: empty_form())}
   end
 
   @impl true
@@ -92,7 +92,7 @@ defmodule PanicWeb.NetworkLive.Show do
     |> assign(:genesis, nil)
     |> assign(:grid_slots, List.duplicate(nil, @num_grid_slots))
     |> assign(:missing_api_tokens, Panic.Accounts.missing_api_tokens(socket.assigns.current_user))
-    |> assign(:state, StateMachine.current_state(network.id))
+    |> assign(:state, StateMachine.get_current_state(network.id))
   end
 
   defp apply_action(socket, :new_prediction, %Prediction{run_index: 0} = prediction) do

@@ -6,7 +6,6 @@ defmodule Panic.StateMachineTest do
   ## requires async: false, above
   import Mock
 
-  alias Panic.Accounts
   alias Panic.Predictions
   alias Panic.Runs.StateMachine
   import Panic.{AccountsFixtures, NetworksFixtures}
@@ -36,22 +35,18 @@ defmodule Panic.StateMachineTest do
       check_network_invariants(network)
     end)
 
-    {:ok, network: network, tokens: Accounts.get_api_token_map(network.user_id)}
+    {:ok, network: network}
   end
 
   describe "Run FSM" do
-    test "golden path", %{network: network, tokens: tokens} do
+    test "golden path", %{network: network} do
       IO.puts("this test takes about 15s")
       assert [] = Predictions.list_predictions(network, 100)
       assert StateMachine.alive?(network.id)
-      assert %Finitomata.State{current: :waiting} = Finitomata.state(network.id)
+      assert %Finitomata.State{current: :ready} = Finitomata.state(network.id)
 
-      ## genesis input
-      {:ok, genesis_prediction} =
-        Predictions.create_prediction("ok, let's kick things off...", network, tokens)
-
-      send_event_and_sleep(network.id, {:new_prediction, genesis_prediction}, 10_000)
-      assert %Finitomata.State{current: :running_startup} = Finitomata.state(network.id)
+      new_genesis_input(network.id, "ok, let's kick things off...", 10_000)
+      assert %Finitomata.State{current: :uninterruptable} = Finitomata.state(network.id)
 
       ## this is a bit hard to test due to the async nature of things, but these
       ## things are _necessary_ for asserting that it's worked (not necessarily
@@ -60,178 +55,119 @@ defmodule Panic.StateMachineTest do
 
       # when startup time is 30s, network *should* still be in startup mode at this point
       send_event_and_sleep(network.id, {:reset, nil}, 1000)
-      assert %Finitomata.State{current: :waiting} = Finitomata.state(network.id)
+      assert %Finitomata.State{current: :ready} = Finitomata.state(network.id)
     end
 
-    test "receive new genesis prediction in lockout period", %{network: network, tokens: tokens} do
+    test "receive new genesis prediction in uninterruptable period", %{network: network} do
       IO.puts("this test takes about 10s")
       assert [] = Predictions.list_predictions(network, 100)
-      # genesis input
-      {:ok, first_genesis_prediction} =
-        Predictions.create_prediction(
-          "tell me a story about a bunny",
-          network,
-          tokens
-        )
 
-      {:ok, second_genesis_prediction} =
-        Predictions.create_prediction(
-          "a second input, hot on the heels of the first",
-          network,
-          tokens
-        )
+      new_genesis_input(network.id, "tell me a story about a bunny")
+      new_genesis_input(network.id, "a second input, hot on the heels of the first", 10_000)
 
-      send_event_and_sleep(network.id, {:new_prediction, first_genesis_prediction}, 0)
-      send_event_and_sleep(network.id, {:new_prediction, second_genesis_prediction}, 10_000)
-      assert %Finitomata.State{current: :running_startup} = Finitomata.state(network.id)
+      assert %Finitomata.State{current: :uninterruptable} = Finitomata.state(network.id)
 
-      # check we only kept the first genesis input
+      # check we only kept one first genesis input
       assert [first_genesis] =
-               Predictions.list_predictions(network, first_genesis_prediction.id)
+               Predictions.list_predictions(network, 100)
                |> Enum.filter(fn p -> p.run_index == 0 end)
 
-      assert first_genesis.input == first_genesis_prediction.input
-      assert [] = Predictions.list_predictions_in_run(network, second_genesis_prediction.id)
-
-      # check we didn't keep any of the runs from the second genesis prediction
-      assert [] = Predictions.list_predictions_in_run(network, second_genesis_prediction.id)
+      assert first_genesis.input == "tell me a story about a bunny"
 
       check_network_invariants(network)
     end
 
-    test "receive new genesis prediction after lockout period ends", %{
-      network: network,
-      tokens: tokens
+    test "receive new genesis prediction after uninterruptable period ends", %{
+      network: network
     } do
       IO.puts("this test takes about 60s")
 
-      # genesis input
-      {:ok, first_genesis_prediction} =
-        Predictions.create_prediction(
-          "tell me a story about a bunny",
-          network,
-          tokens
-        )
+      new_genesis_input(network.id, "tell me a story about a bunny")
+      new_genesis_input(network.id, "a second input, hot on the heels of the first", 45_000)
 
-      {:ok, second_genesis_prediction} =
-        Predictions.create_prediction(
-          "a second input, hot on the heels of the first",
-          network,
-          tokens
-        )
+      new_genesis_input(
+        network.id,
+        "a third input, after the uninterruptable period has ended",
+        10_000
+      )
 
-      send_event_and_sleep(network.id, {:new_prediction, first_genesis_prediction}, 45_000)
-      send_event_and_sleep(network.id, {:new_prediction, second_genesis_prediction}, 10_000)
+      assert [first_genesis, third_genesis] =
+               Predictions.list_predictions(network, 100)
+               |> Enum.filter(fn p -> p.run_index == 0 end)
 
-      # check there's at least one prediction in each run two new runs
-      assert [first | _] = Predictions.list_predictions(network, first_genesis_prediction.id)
-      assert Panic.Repo.preload(first, [:network]) == first_genesis_prediction
-
-      assert [second | _] =
-               Predictions.list_predictions_in_run(network, second_genesis_prediction.id)
-
-      assert Panic.Repo.preload(second, [:network]) == second_genesis_prediction
+      assert first_genesis.input == "tell me a story about a bunny"
+      assert third_genesis.input == "a third input, after the uninterruptable period has ended"
 
       check_network_invariants(network)
     end
 
     test "start run, then lock network, then receive a new input and resume", %{
-      network: network,
-      tokens: tokens
+      network: network
     } do
-      IO.puts("this test takes about 35s")
-      # genesis input
-      {:ok, p1} =
-        Predictions.create_prediction(
-          "tell me a story about a bunny",
-          network,
-          tokens
-        )
+      IO.puts("this test takes about 30s")
 
-      {:ok, p2} =
-        Predictions.create_prediction(
-          "a second input, hot on the heels of the first",
-          network,
-          tokens
-        )
+      new_genesis_input(network.id, "tell me a story about a bunny", 5_000)
+      send_event_and_sleep(network.id, {:lock, 10})
+      new_genesis_input(network.id, "a second input, hot on the heels of the first", 15_000)
+      assert %Finitomata.State{current: :ready} = Finitomata.state(network.id)
+      new_genesis_input(network.id, "a third input", 10_000)
 
-      {:ok, p3} =
-        Predictions.create_prediction(
-          "a second input, hot on the heels of the first",
-          network,
-          tokens
-        )
+      assert [first_genesis, third_genesis] =
+               Predictions.list_predictions(network, 100)
+               |> Enum.filter(fn p -> p.run_index == 0 end)
 
-      send_event_and_sleep(network.id, {:new_prediction, p1}, 200)
-      send_event_and_sleep(network.id, {:lock, 20}, 200)
-      send_event_and_sleep(network.id, {:new_prediction, p2}, 30_000)
-      send_event_and_sleep(network.id, {:new_prediction, p3}, 10_000)
-
-      # check we only kept the first genesis input
-      assert Predictions.get_prediction!(p1.id)
-      assert_raise Ecto.NoResultsError, fn -> Predictions.get_prediction!(p2.id) end
-      assert Predictions.get_prediction!(p3.id)
+      assert first_genesis.input == "tell me a story about a bunny"
+      assert third_genesis.input == "a third input"
 
       check_network_invariants(network)
     end
 
     test "start run, then lock network, then 'manually' unlock ahead of time and resume", %{
-      network: network,
-      tokens: tokens
+      network: network
     } do
       IO.puts("this test takes about 35s")
-      # genesis input
-      {:ok, p1} =
-        Predictions.create_prediction(
-          "tell me a story about a bunny",
-          network,
-          tokens
-        )
 
-      {:ok, p2} =
-        Predictions.create_prediction(
-          "a second input, hot on the heels of the first",
-          network,
-          tokens
-        )
+      new_genesis_input(network.id, "tell me a story about a bunny", 5_000)
+      send_event_and_sleep(network.id, {:lock, 10})
+      new_genesis_input(network.id, "a second input, hot on the heels of the first", 1000)
+      send_event_and_sleep(network.id, {:unlock, nil})
+      new_genesis_input(network.id, "a third input", 10_000)
 
-      {:ok, p3} =
-        Predictions.create_prediction(
-          "a third input, hot on the heels of the first",
-          network,
-          tokens
-        )
+      assert [first_genesis, third_genesis] =
+               Predictions.list_predictions(network, 100)
+               |> Enum.filter(fn p -> p.run_index == 0 end)
 
-      send_event_and_sleep(network.id, {:new_prediction, p1}, 200)
-      send_event_and_sleep(network.id, {:lock, 20}, 200)
-      send_event_and_sleep(network.id, {:new_prediction, p2}, 1000)
-      send_event_and_sleep(network.id, {:unlock, nil}, 200)
-      send_event_and_sleep(network.id, {:new_prediction, p3}, 10_000)
-
-      # check we only kept the first genesis input
-      assert Predictions.get_prediction!(p1.id)
-      assert_raise Ecto.NoResultsError, fn -> Predictions.get_prediction!(p2.id) end
-      assert Predictions.get_prediction!(p3.id)
+      assert first_genesis.input == "tell me a story about a bunny"
+      assert third_genesis.input == "a third input"
 
       check_network_invariants(network)
     end
 
-    test "current_state/1 helper fn returns a valid state", %{network: network} do
+    test "get_current_state/1 helper fn returns a valid state", %{network: network} do
       {:ok, transitions} = Finitomata.Mermaid.parse(StateMachine.fsm_description())
-      assert StateMachine.current_state(network.id) in Finitomata.Transition.states(transitions)
+
+      assert StateMachine.get_current_state(network.id) in Finitomata.Transition.states(
+               transitions
+             )
     end
   end
 
   describe "static FSM checks" do
     test "transitions" do
       {:ok, transitions} = Finitomata.Mermaid.parse(StateMachine.fsm_description())
-      assert Finitomata.Transition.allowed(transitions, :waiting, :waiting)
+      assert Finitomata.Transition.allowed(transitions, :ready, :ready)
     end
   end
 
   # helper function for testing FSMs (because it takes a bit for them to finish transitioning)
-  defp send_event_and_sleep(network_id, event, sleep_dur) do
+  defp send_event_and_sleep(network_id, event, sleep_dur \\ 0) do
     Finitomata.transition(network_id, event)
+    Process.sleep(sleep_dur)
+  end
+
+  # helper function for testing FSMs (because it takes a bit for them to finish transitioning)
+  defp new_genesis_input(network_id, input, sleep_dur \\ 0) do
+    Finitomata.transition(network_id, {:genesis_input, input})
     Process.sleep(sleep_dur)
   end
 
