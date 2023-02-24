@@ -85,7 +85,6 @@ defmodule Panic.Runs.StateMachine do
         %{head_prediction: %Prediction{run_index: head_index}} = payload
       )
       when state in [:running_startup, :running_ready] and new_index == head_index + 1 do
-    debug_helper("next", state, new_prediction)
 
     Networks.broadcast(new_prediction.network.id, {:new_prediction, new_prediction})
 
@@ -146,11 +145,11 @@ defmodule Panic.Runs.StateMachine do
      |> Map.put(:head_prediction, nil)}
   end
 
-  defp debug_helper(label, state, prediction) do
-    Logger.debug(
-      "#{label}: (#{state}) #{prediction.id}-#{prediction.run_index}-#{prediction.genesis_id} #{prediction.input}"
-    )
-  end
+  # defp debug_helper(label, state, prediction) do
+  #   Logger.debug(
+  #     "#{label}: (#{state}) #{prediction.id}-#{prediction.run_index}-#{prediction.genesis_id} #{prediction.input}"
+  #   )
+  # end
 
   def current_state(network_id) do
     network_id
