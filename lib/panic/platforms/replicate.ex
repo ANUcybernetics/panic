@@ -190,11 +190,11 @@ defmodule Panic.Platforms.Replicate do
       prompt: "#{prompt} in the style of <1>",
       width: 1024,
       height: 576,
-      lora_urls: "https://replicate.delivery/pbxt/eIfm9M0WYEnnjUKQxyumkqiPtr6Pi0D8ee1bGufE74ieUpXIE/tmp5xnilpplHEADER20IMAGESzip.safetensors"
+      lora_urls:
+        "https://replicate.delivery/pbxt/eIfm9M0WYEnnjUKQxyumkqiPtr6Pi0D8ee1bGufE74ieUpXIE/tmp5xnilpplHEADER20IMAGESzip.safetensors"
     }
 
-    {:ok, %{"output" => [image_url]}} =
-      create_and_wait(model, input_params, tokens)
+    {:ok, %{"output" => [image_url]}} = create_and_wait(model, input_params, tokens)
 
     {:ok, image_url}
   end

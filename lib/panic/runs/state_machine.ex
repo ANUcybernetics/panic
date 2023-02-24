@@ -85,7 +85,6 @@ defmodule Panic.Runs.StateMachine do
         %{head_prediction: %Prediction{run_index: head_index}} = payload
       )
       when state in [:running_startup, :running_ready] and new_index == head_index + 1 do
-
     Networks.broadcast(new_prediction.network.id, {:new_prediction, new_prediction})
 
     Predictions.create_prediction_async(new_prediction, payload.tokens, fn prediction ->
