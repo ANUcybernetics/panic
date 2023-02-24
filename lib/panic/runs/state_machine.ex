@@ -60,12 +60,13 @@ defmodule Panic.Runs.StateMachine do
   @impl Finitomata
   def on_transition(state, :new_prediction, %Prediction{run_index: 0} = new_prediction, payload)
       when state in [:waiting, :running_ready] do
+    Networks.broadcast(new_prediction.network.id, {:new_prediction, new_prediction})
+
     Predictions.create_prediction_async(
       new_prediction,
       payload.tokens,
       fn prediction ->
         Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
-        Networks.broadcast(prediction.network.id, {:new_prediction, prediction})
       end
     )
 
@@ -85,9 +86,10 @@ defmodule Panic.Runs.StateMachine do
       when state in [:running_startup, :running_ready] and new_index == head_index + 1 do
     debug_helper("next", state, new_prediction)
 
+    Networks.broadcast(new_prediction.network.id, {:new_prediction, new_prediction})
+
     Predictions.create_prediction_async(new_prediction, payload.tokens, fn prediction ->
       Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
-      Networks.broadcast(prediction.network.id, {:new_prediction, prediction})
     end)
 
     {:ok, next_state(state, payload), %{payload | head_prediction: new_prediction}}
