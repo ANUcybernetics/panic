@@ -15,7 +15,8 @@ defmodule PanicWeb.PredictionLive.Terminal do
   @impl true
   def render(assigns) do
     ~H"""
-    <.terminal_input form={@form} panic_button?={true} />
+    <.terminal_input form={@form} panic_button?={@state in [:waiting, :running_ready]} />
+    <div class="fixed bottom-8 left-8 text-lg"><%= state_label(@state) %></div>
     """
   end
 
@@ -54,8 +55,11 @@ defmodule PanicWeb.PredictionLive.Terminal do
 
   @impl true
   def handle_info({:state_change, state}, socket) do
-    {:noreply, assign(socket, current_state: state)}
+    {:noreply, assign(socket, state: state)}
   end
+
+  @impl true
+  def handle_info(_, socket), do: {:noreply, socket}
 
   defp apply_action(socket, :tokens_missing, missing_tokens) do
     socket
@@ -79,4 +83,8 @@ defmodule PanicWeb.PredictionLive.Terminal do
     |> Predictions.change_prediction()
     |> to_form()
   end
+
+  defp state_label(:running_startup), do: "locked"
+  defp state_label(:running_ready), do: "ready"
+  defp state_label(state), do: Atom.to_string(state)
 end
