@@ -62,6 +62,12 @@ defmodule Panic.Platforms.Replicate do
         input: :text,
         output: :image
       },
+      "replicate:cloneofsimo/lora" => %{
+        name: "SOCY-style SD",
+        description: "",
+        input: :text,
+        output: :image
+      },
       "replicate:22-hours/vintedois-diffusion" => %{
         name: "Vintedois Stable Diffusion",
         description: "",
@@ -177,6 +183,20 @@ defmodule Panic.Platforms.Replicate do
       {:ok, %{"output" => [image_url]}} -> {:ok, image_url}
       {:error, reason} -> {:error, reason}
     end
+  end
+
+  def create("cloneofsimo/lora" = model, prompt, tokens) do
+    input_params = %{
+      prompt: "#{prompt} in the style of <1>",
+      width: 1024,
+      height: 576,
+      lora_urls: "https://replicate.delivery/pbxt/eIfm9M0WYEnnjUKQxyumkqiPtr6Pi0D8ee1bGufE74ieUpXIE/tmp5xnilpplHEADER20IMAGESzip.safetensors"
+    }
+
+    {:ok, %{"output" => [image_url]}} =
+      create_and_wait(model, input_params, tokens)
+
+    {:ok, image_url}
   end
 
   def create("kuprel/min-dalle" = model, prompt, tokens) do
