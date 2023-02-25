@@ -209,18 +209,25 @@ defmodule Panic.Predictions do
     model = Enum.at(network.models, Integer.mod(run_index, Enum.count(network.models)))
     input = previous_prediction.output
 
-    {:ok, output} = Panic.Platforms.api_call(model, input, tokens)
+    case Panic.Platforms.api_call(model, input, tokens) do
+      {:ok, output} ->
+        create_prediction_from_attrs(%{
+          input: input,
+          output: output,
+          model: model,
+          run_index: run_index,
+          metadata: %{},
+          network_id: network.id,
+          genesis_id: previous_prediction.genesis_id
+        })
 
-    %{
-      input: input,
-      output: output,
-      model: model,
-      run_index: run_index,
-      metadata: %{},
-      network_id: network.id,
-      genesis_id: previous_prediction.genesis_id
-    }
-    |> create_prediction_from_attrs()
+      {:error, :nsfw} ->
+        %{
+          previous_prediction
+          | output: "You have been a bad user. This incident has been reported."
+        }
+        |> create_prediction(tokens)
+    end
   end
 
   @doc """
