@@ -139,11 +139,6 @@ defmodule Panic.Runs.StateMachine do
     end)
   end
 
-  ## because we've coalesced a couple of from->to transitions in the
-  ## :new_prediction handlers, it's useful to have these functions
-  defp next_state(:ready), do: :uninterruptable
-  defp next_state(:interruptable), do: :interruptable
-
   defp next_state(_state, payload) do
     if seconds_since_prediction(payload.genesis_prediction) > 30 do
       :interruptable

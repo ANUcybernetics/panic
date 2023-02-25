@@ -1,12 +1,15 @@
 <.header>
-  Listing Predictions
-  <:actions>
-    <.link patch={~p"/networks/#{@network}/predictions/new"}>
-      <.button>New Prediction</.button>
-    </.link>
-  </:actions>
+  <%= @network.name %> predictions
 </.header>
 
-<.prediction_grid predictions={@predictions} />
+<.prediction_grid
+  :for={
+    {genesis, group_predictions} <-
+      group_by_run(@predictions)
+  }
+  class="mt-8"
+  genesis={genesis}
+  predictions={group_predictions}
+/>
 
 <.back navigate={~p"/networks/#{@network}"}>Back to network</.back>

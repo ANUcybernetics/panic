@@ -11,28 +11,27 @@ defmodule PanicWeb.PredictionLive.Index do
   end
 
   @impl true
-  def handle_params(%{"network_id" => network_id} = params, _, socket) do
+  def handle_params(%{"network_id" => network_id}, _, socket) do
     network = Networks.get_network!(network_id)
+    # if connected?(socket), do: Networks.subscribe(network.id)
 
-    {:noreply,
-     apply_action(assign(socket, :network, network), socket.assigns.live_action, params)}
+    {:noreply, apply_action(socket, socket.assigns.live_action, network)}
   end
 
-  defp apply_action(socket, :index, _) do
+  defp list_predictions(%Networks.Network{} = network, limit \\ 100) do
+    Predictions.list_predictions(network, limit)
+  end
+
+  defp apply_action(socket, :index, network) do
     socket
     |> assign(:page_title, "Listing Predictions")
-    |> assign(:predictions, list_predictions(socket.assigns.network))
+    |> assign(:network, network)
+    |> assign(:predictions, list_predictions(network))
   end
 
-  @impl true
-  def handle_event("delete", %{"id" => id}, socket) do
-    prediction = Predictions.get_prediction!(id)
-    {:ok, _} = Predictions.delete_prediction(prediction)
-
-    {:noreply, assign(socket, :predictions, list_predictions(socket.assigns.network))}
-  end
-
-  defp list_predictions(%Networks.Network{} = network) do
-    Predictions.list_predictions(network, 100)
+  defp group_by_run(predictions) do
+    predictions
+    |> Enum.chunk_by(fn p -> p.genesis_id end)
+    |> Enum.map(fn [genesis | _] = preds -> {genesis, preds} end)
   end
 end
