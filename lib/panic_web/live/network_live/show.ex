@@ -8,7 +8,7 @@ defmodule PanicWeb.NetworkLive.Show do
   import PanicWeb.NetworkComponents
 
   # TODO pull these from params
-  @num_grid_slots 18
+  @num_grid_slots 12
 
   @impl true
   def mount(_params, _session, socket) do
