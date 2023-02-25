@@ -165,9 +165,8 @@ defmodule Panic.Platforms.Replicate do
       height: 576
     }
 
-    case create_and_wait(model, input_params, tokens) do
-      {:ok, %{"output" => [image_url]}} -> {:ok, image_url}
-      {:error, reason} -> {:error, reason}
+    with {:ok, %{"output" => [image_url]}} <- create_and_wait(model, input_params, tokens) do
+      {:ok, image_url}
     end
   end
 
@@ -179,9 +178,8 @@ defmodule Panic.Platforms.Replicate do
       height: 448
     }
 
-    case create_and_wait(model, input_params, tokens) do
-      {:ok, %{"output" => [image_url]}} -> {:ok, image_url}
-      {:error, reason} -> {:error, reason}
+    with {:ok, %{"output" => [image_url]}} <- create_and_wait(model, input_params, tokens) do
+      {:ok, image_url}
     end
   end
 
@@ -200,55 +198,60 @@ defmodule Panic.Platforms.Replicate do
   end
 
   def create("kuprel/min-dalle" = model, prompt, tokens) do
-    {:ok, %{"output" => [image_url]}} =
-      create_and_wait(model, %{text: prompt, grid_size: 1, progressive_outputs: 0}, tokens)
-
-    {:ok, image_url}
+    with {:ok, %{"output" => [image_url]}} <-
+           create_and_wait(model, %{text: prompt, grid_size: 1, progressive_outputs: 0}, tokens) do
+      {:ok, image_url}
+    end
   end
 
   def create("rmokady/clip_prefix_caption" = model, image_url, tokens) do
-    {:ok, %{"output" => text}} = create_and_wait(model, %{image: image_url}, tokens)
-    {:ok, text}
+    with {:ok, %{"output" => text}} <- create_and_wait(model, %{image: image_url}, tokens) do
+      {:ok, text}
+    end
   end
 
   def create("j-min/clip-caption-reward" = model, image_url, tokens) do
-    {:ok, %{"output" => text}} = create_and_wait(model, %{image: image_url}, tokens)
-    {:ok, text}
+    with {:ok, %{"output" => text}} <- create_and_wait(model, %{image: image_url}, tokens) do
+      {:ok, text}
+    end
   end
 
   def create("salesforce/blip-2" = model, image_url, tokens) do
-    {:ok, %{"output" => text}} =
-      create_and_wait(model, %{image: image_url, caption: true}, tokens)
-
-    {:ok, text}
+    with {:ok, %{"output" => text}} <-
+           create_and_wait(model, %{image: image_url, caption: true}, tokens) do
+      {:ok, text}
+    end
   end
 
   def create("timothybrooks/instruct-pix2pix" = model, input_image_url, tokens) do
-    {:ok, %{"output" => [output_image_url]}} =
-      create_and_wait(
-        model,
-        %{
-          image: input_image_url,
-          prompt: "change the environment, keep the human and technology"
-        },
-        tokens
-      )
-
-    {:ok, output_image_url}
+    with {:ok, %{"output" => [output_image_url]}} <-
+           create_and_wait(
+             model,
+             %{
+               image: input_image_url,
+               prompt: "change the environment, keep the human and technology"
+             },
+             tokens
+           ) do
+      {:ok, output_image_url}
+    end
   end
 
   ## text to text
   def create("kyrick/prompt-parrot" = model, prompt, tokens) do
-    {:ok, %{"output" => text}} = create_and_wait(model, %{prompt: prompt}, tokens)
-    ## for some reason this model returns multiple prompts, but separated by a
-    ## "separator" string rather than in a list, so we split it here and choose
-    ## one at random
-    {:ok, text |> String.split("\n------------------------------------------\n") |> Enum.random()}
+    with {:ok, %{"output" => text}} <- create_and_wait(model, %{prompt: prompt}, tokens) do
+      ## for some reason this model returns multiple prompts, but separated by a
+      ## "separator" string rather than in a list, so we split it here and choose
+      ## one at random
+      {:ok,
+       text |> String.split("\n------------------------------------------\n") |> Enum.random()}
+    end
   end
 
   def create("2feet6inches/cog-prompt-parrot" = model, prompt, tokens) do
-    {:ok, %{"output" => text}} = create_and_wait(model, %{prompt: prompt}, tokens)
-    {:ok, text |> String.split("\n") |> Enum.random()}
+    with {:ok, %{"output" => text}} <- create_and_wait(model, %{prompt: prompt}, tokens) do
+      {:ok, text |> String.split("\n") |> Enum.random()}
+    end
   end
 
   defp headers(%{"Replicate" => token}) do
