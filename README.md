@@ -105,6 +105,7 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 ## TODO
 
+- don't crash when the NSFW filter is triggered - handle it gracefully
 - clear the terminal input when a new prediction is triggered
 - figure out why it seems to not work with repeated runs (maybe need to have the
   "launch genesis prediction" call in the StateMachine helper code?)
