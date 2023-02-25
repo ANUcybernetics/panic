@@ -55,13 +55,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_event("start-run", %{"prediction" => %{"input" => input}}, socket) do
-    network = socket.assigns.network
-    tokens = Panic.Accounts.get_api_token_map(network.user_id)
-
-    Predictions.create_prediction_async(input, network, tokens, fn prediction ->
-      Finitomata.transition(prediction.network.id, {:new_prediction, prediction})
-    end)
-
+    Finitomata.transition(socket.assigns.network.id, {:genesis_input, input})
     {:noreply, assign(socket, form: empty_form())}
   end
 
