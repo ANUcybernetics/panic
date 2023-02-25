@@ -65,6 +65,14 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   @impl true
+  def handle_info({:state_change, :running_genesis = state}, socket) do
+    {:noreply,
+     socket
+     |> assign(state: state)
+     |> apply_action(:reset_slots)}
+  end
+
+  @impl true
   def handle_info({:state_change, state}, socket) do
     {:noreply, assign(socket, state: state)}
   end
@@ -83,8 +91,7 @@ defmodule PanicWeb.NetworkLive.Show do
     socket
     |> assign(:network, network)
     |> assign(:models, network.models)
-    |> assign(:genesis, nil)
-    |> assign(:grid_slots, List.duplicate(nil, @num_grid_slots))
+    |> apply_action(:reset_slots)
     |> assign(:missing_api_tokens, Panic.Accounts.missing_api_tokens(socket.assigns.current_user))
     |> assign(:state, StateMachine.get_current_state(network.id))
   end
@@ -100,6 +107,12 @@ defmodule PanicWeb.NetworkLive.Show do
     |> update(:grid_slots, fn slots ->
       List.replace_at(slots, Integer.mod(idx, @num_grid_slots), prediction)
     end)
+  end
+
+  defp apply_action(socket, :reset_slots) do
+    socket
+    |> assign(:genesis, nil)
+    |> assign(:grid_slots, List.duplicate(nil, @num_grid_slots))
   end
 
   defp empty_form() do
