@@ -12,6 +12,7 @@ defmodule Panic.PlatformsTest do
   alias Panic.Platforms.{OpenAI, Replicate, Vestaboard}
 
   @moduletag :real_platform_api_calls
+  @moduletag timeout: 5 * 60 * 1000
 
   describe "Platform helpers" do
     test "return map of all model info Maps" do
