@@ -194,9 +194,9 @@ defmodule Panic.Platforms.Replicate do
         "https://replicate.delivery/pbxt/eIfm9M0WYEnnjUKQxyumkqiPtr6Pi0D8ee1bGufE74ieUpXIE/tmp5xnilpplHEADER20IMAGESzip.safetensors"
     }
 
-    {:ok, %{"output" => [image_url]}} = create_and_wait(model, input_params, tokens)
-
-    {:ok, image_url}
+    with {:ok, %{"output" => [image_url]}} <- create_and_wait(model, input_params, tokens) do
+      {:ok, image_url}
+    end
   end
 
   def create("kuprel/min-dalle" = model, prompt, tokens) do

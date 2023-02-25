@@ -138,14 +138,20 @@ defmodule Panic.Predictions do
     case changeset do
       # if the only error is the missing output, make the API call
       %{errors: [output: _]} ->
-        {:ok, output} =
-          Panic.Platforms.api_call(changeset.changes.model, changeset.changes.input, tokens)
+        case Panic.Platforms.api_call(changeset.changes.model, changeset.changes.input, tokens) do
+          {:ok, output} ->
+            {:ok, %Prediction{id: id} = prediction} =
+              create_prediction_from_attrs(changeset.changes |> Map.put(:output, output))
 
-        {:ok, %Prediction{id: id} = prediction} =
-          create_prediction_from_attrs(changeset.changes |> Map.put(:output, output))
+            update_prediction(prediction, %{genesis_id: id})
 
-        ## it's a first run, so set :genesis_id to :id
-        update_prediction(prediction, %{genesis_id: id})
+          {:error, :nsfw} ->
+            create_prediction(
+              "You have been a bad user. This incident has been reported.",
+              network,
+              tokens
+            )
+        end
 
       # otherwise just return the error changeset
       _ ->
