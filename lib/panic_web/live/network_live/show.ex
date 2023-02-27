@@ -63,8 +63,12 @@ defmodule PanicWeb.NetworkLive.Show do
   def handle_info({:state_change, :running_genesis = state}, socket) do
     {:noreply,
      socket
+     |> apply_action(:reset_slots)
      |> assign(state: state)
-     |> apply_action(:reset_slots)}
+     # this hack required because the :state_change event comes after
+     # :prediction_incoming and clobbers it back to nil
+     |> assign(:slot_incoming, 0)
+    }
   end
 
   @impl true
