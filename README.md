@@ -105,8 +105,6 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 ## TODO
 
-- clear the terminal input when a new prediction is triggered (works for
-  terminal, but not in Networks.ShowLive 🤷)
 - flashing "Panic!" indicator (maybe a border this time?)
 - update all colours & look/feel from old app
 - separate model id binary and URL path in model_info (maybe make it an actual
@@ -130,7 +128,9 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 - add models:
   - oblique strategies follower (GPT-3 powered)
   - https://replicate.com/pharmapsychotic/clip-interrogator
-- add model links to info maps
+- add model links to info maps, write model descriptions
+- clear the terminal input when a new prediction is triggered (well, actually
+  it's [this issue](https://github.com/phoenixframework/phoenix_live_view/issues/624), so maybe not worth getting bogged down on)
 
 ## Licence
 
