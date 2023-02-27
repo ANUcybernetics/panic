@@ -8,14 +8,17 @@ defmodule PanicWeb.PredictionLive.Terminal do
 
   """
   use PanicWeb, :live_view
-  alias Panic.{Accounts, Predictions, Networks}
+  alias Panic.{Accounts, Networks}
   alias Panic.Runs.StateMachine
-  import PanicWeb.NetworkComponents
 
   @impl true
   def render(assigns) do
     ~H"""
-    <.terminal_input form={@form} panic_button?={@state in [:ready, :interruptable]} />
+    <.live_component
+      id="terminal-input"
+      module={PanicWeb.PredictionLive.GensisInputComponent}
+      panic_button?={@state in [:ready, :interruptable]}
+    />
     <div class="fixed bottom-8 left-8 text-lg"><%= state_label(@state) %></div>
     """
   end
@@ -38,13 +41,9 @@ defmodule PanicWeb.PredictionLive.Terminal do
   end
 
   @impl true
-  def handle_event("start-run", %{"prediction" => %{"input" => ""}}, socket),
-    do: {:noreply, socket}
-
-  @impl true
-  def handle_event("start-run", %{"prediction" => %{"input" => input}}, socket) do
-    Finitomata.transition(socket.assigns.network.id, {:genesis_input, input})
-    {:noreply, assign(socket, form: empty_form())}
+  def handle_info({:genesis_input, _input} = payload, socket) do
+    Finitomata.transition(socket.assigns.network.id, payload)
+    {:noreply, socket}
   end
 
   @impl true
@@ -64,18 +63,9 @@ defmodule PanicWeb.PredictionLive.Terminal do
     StateMachine.start_if_not_running(network)
     if connected?(socket), do: Networks.subscribe(network.id)
 
-    ## empty and invalid, but we're only pulling out the input string anyway
-
     socket
     |> assign(:network, network)
-    |> assign(:form, empty_form())
     |> assign(:state, StateMachine.get_current_state(network.id))
-  end
-
-  defp empty_form() do
-    %Predictions.Prediction{}
-    |> Predictions.change_prediction()
-    |> to_form()
   end
 
   defp state_label(state) when state in [:running_genesis, :uninterruptable], do: "please wait"

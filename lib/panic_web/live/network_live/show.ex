@@ -2,18 +2,12 @@ defmodule PanicWeb.NetworkLive.Show do
   use PanicWeb, :live_view
 
   alias Panic.Networks
-  alias Panic.Predictions
   alias Panic.Predictions.Prediction
   alias Panic.Runs.StateMachine
   import PanicWeb.NetworkComponents
 
   # TODO pull these from params
   @num_grid_slots 12
-
-  @impl true
-  def mount(_params, _session, socket) do
-    {:ok, assign(socket, form: empty_form())}
-  end
 
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
@@ -50,13 +44,9 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   @impl true
-  def handle_event("start-run", %{"prediction" => %{"input" => ""}}, socket),
-    do: {:noreply, socket}
-
-  @impl true
-  def handle_event("start-run", %{"prediction" => %{"input" => input}}, socket) do
-    Finitomata.transition(socket.assigns.network.id, {:genesis_input, input})
-    {:noreply, assign(socket, form: empty_form())}
+  def handle_info({:genesis_input, _input} = payload, socket) do
+    Finitomata.transition(socket.assigns.network.id, payload)
+    {:noreply, socket}
   end
 
   @impl true
@@ -113,11 +103,5 @@ defmodule PanicWeb.NetworkLive.Show do
     socket
     |> assign(:genesis, nil)
     |> assign(:grid_slots, List.duplicate(nil, @num_grid_slots))
-  end
-
-  defp empty_form() do
-    %Predictions.Prediction{}
-    |> Predictions.change_prediction()
-    |> to_form()
   end
 end
