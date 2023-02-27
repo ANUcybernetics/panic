@@ -78,7 +78,7 @@ defmodule PanicWeb.PredictionLive.Terminal do
     |> to_form()
   end
 
-  defp state_label(:uninterruptable), do: "locked"
+  defp state_label(state) when state in [:running_genesis, :uninterruptable], do: "please wait"
   defp state_label(:interruptable), do: "ready"
   defp state_label(state), do: Atom.to_string(state)
 end
