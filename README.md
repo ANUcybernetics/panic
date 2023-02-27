@@ -105,25 +105,26 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 ## TODO
 
-- don't crash when the NSFW filter is triggered - handle it gracefully
-- clear the terminal input when a new prediction is triggered
-- figure out why it seems to not work with repeated runs (maybe need to have the
-  "launch genesis prediction" call in the StateMachine helper code?)
-- add screen mod params
-- add vestaboards array to %Network{}
+- clear the terminal input when a new prediction is triggered (works for
+  terminal, but not in Networks.ShowLive 🤷)
+- flashing "Panic!" indicator (maybe a border this time?)
+- update all colours & look/feel from old app
+- separate model id binary and URL path in model_info (maybe make it an actual
+  Schema, perhaps embedded?)
+- add screen mod query params
+- add vestaboards array to %Network{} (could validate based on board names from
+  tokens map - see idea below)
 - when viewing a grid for a running network, initially pull the latest
   @num_grid_slots from the db (based on :genesis_id) and pre-populate the grid slots
 - add "slow down over time" logic to runs
+- add QR code view
 - add rolling cookie/URL param to QR code
-- change model info to not just dispatch the URL directly on ID - just in case
-  we want to have multiple things which hit the same model, but with different
-  other params (e.g. different finetuned LORA, different prefixes for GPT3)
 - add metadata to prediction (maybe `with` is our friend here?)
 - check that access control works for the network & prediction
 - add `has_many :networks, Panic.Networks.Network` to user
-- rather than API token names being free strings, hardcode the specific ones we
-  need, and change the API token /new page to list them all (and show green/red
-  for which ones we have, and maybe even hit an endpoint to verify?)
+- **maybe** just have one tokens map per user, which they speficy as JSON or
+  whatever (and therefore we don't need that whole Schema). we'll manually
+  verify the required keys (e.g. Vestaboard could have one extra level of nesting)
 - add network permalinks (look in the history - there's some deleted `router.ex`
   code in there)
 - add models:
