@@ -6,7 +6,6 @@ defmodule Panic.PredictionsFixtures do
 
   import Panic.NetworksFixtures
   alias Panic.Predictions
-  alias Panic.Predictions.Prediction
 
   @doc """
   Generate a (genesis) prediction.
