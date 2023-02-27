@@ -48,10 +48,7 @@ defmodule Panic.StateMachineTest do
       new_genesis_input(network.id, "ok, let's kick things off...", 10_000)
       assert %Finitomata.State{current: :uninterruptable} = Finitomata.state(network.id)
 
-      ## this is a bit hard to test due to the async nature of things, but these
-      ## things are _necessary_ for asserting that it's worked (not necessarily
-      ## _sufficient_)
-      check_network_invariants(network)
+      assert network |> unique_genesis_ids() |> Enum.count() == 1
 
       # when startup time is 30s, network *should* still be in startup mode at this point
       send_event_and_sleep(network.id, {:reset, nil}, 1000)
@@ -74,7 +71,7 @@ defmodule Panic.StateMachineTest do
 
       assert first_genesis.input == "tell me a story about a bunny"
 
-      check_network_invariants(network)
+      assert network |> unique_genesis_ids() |> Enum.count() == 1
     end
 
     test "receive new genesis prediction after uninterruptable period ends", %{
@@ -98,7 +95,7 @@ defmodule Panic.StateMachineTest do
       assert first_genesis.input == "tell me a story about a bunny"
       assert third_genesis.input == "a third input, after the uninterruptable period has ended"
 
-      check_network_invariants(network)
+      assert network |> unique_genesis_ids() |> Enum.count() == 2
     end
 
     test "start run, then lock network, then receive a new input and resume", %{
@@ -119,7 +116,7 @@ defmodule Panic.StateMachineTest do
       assert first_genesis.input == "tell me a story about a bunny"
       assert third_genesis.input == "a third input"
 
-      check_network_invariants(network)
+      assert network |> unique_genesis_ids() |> Enum.count() == 2
     end
 
     test "start run, then lock network, then 'manually' unlock ahead of time and resume", %{
@@ -140,7 +137,7 @@ defmodule Panic.StateMachineTest do
       assert first_genesis.input == "tell me a story about a bunny"
       assert third_genesis.input == "a third input"
 
-      check_network_invariants(network)
+      assert network |> unique_genesis_ids() |> Enum.count() == 2
     end
 
     test "get_current_state/1 helper fn returns a valid state", %{network: network} do
@@ -178,6 +175,8 @@ defmodule Panic.StateMachineTest do
     assert Enum.chunk_by(predictions, fn p -> p.genesis_id end)
            |> Enum.each(&check_run_invariants/1)
 
+    assert Enum.count(all_genesis_predictions(network)) == Enum.count(unique_genesis_ids(network))
+
     IO.puts(
       "successfully checked invariants on network #{network.id} (#{Enum.count(predictions)} predictions)"
     )
@@ -193,5 +192,20 @@ defmodule Panic.StateMachineTest do
 
     assert Enum.chunk_every(predictions, 2, 1, :discard)
            |> Enum.all?(fn [a, b] -> a.output == b.input end)
+  end
+
+  defp all_genesis_predictions(network) do
+    network
+    |> Predictions.list_predictions(100_000)
+    |> Stream.filter(fn p -> p.run_index == 0 end)
+    |> Enum.sort_by(fn p -> p.id end)
+  end
+
+  defp unique_genesis_ids(network) do
+    network
+    |> Predictions.list_predictions(100_000)
+    |> Enum.reduce(MapSet.new(), fn p, acc -> MapSet.put(acc, p.genesis_id) end)
+    |> MapSet.to_list()
+    |> Enum.sort()
   end
 end
