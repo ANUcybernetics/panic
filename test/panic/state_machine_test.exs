@@ -41,7 +41,6 @@ defmodule Panic.StateMachineTest do
 
   describe "Run FSM" do
     test "golden path", %{network: network} do
-      IO.puts("this test takes about 15s")
       assert [] = Predictions.list_predictions(network, 100)
       assert StateMachine.alive?(network.id)
       assert %Finitomata.State{current: :ready} = Finitomata.state(network.id)
@@ -57,7 +56,6 @@ defmodule Panic.StateMachineTest do
     end
 
     test "receive new genesis prediction in uninterruptable period", %{network: network} do
-      IO.puts("this test takes about 10s")
       assert [] = Predictions.list_predictions(network, 100)
 
       new_genesis_input(network.id, "tell me a story about a bunny")
@@ -78,8 +76,6 @@ defmodule Panic.StateMachineTest do
     test "receive new genesis prediction after uninterruptable period ends", %{
       network: network
     } do
-      IO.puts("this test takes about 60s")
-
       new_genesis_input(network.id, "tell me a story about a bunny")
       new_genesis_input(network.id, "a second input, hot on the heels of the first", 45_000)
 
@@ -102,8 +98,6 @@ defmodule Panic.StateMachineTest do
     test "start run, then lock network, then receive a new input and resume", %{
       network: network
     } do
-      IO.puts("this test takes about 30s")
-
       new_genesis_input(network.id, "tell me a story about a bunny", 5_000)
       send_event_and_sleep(network.id, {:lock, 10})
       new_genesis_input(network.id, "a second input, hot on the heels of the first", 15_000)
@@ -123,8 +117,6 @@ defmodule Panic.StateMachineTest do
     test "start run, then lock network, then 'manually' unlock ahead of time and resume", %{
       network: network
     } do
-      IO.puts("this test takes about 35s")
-
       new_genesis_input(network.id, "tell me a story about a bunny", 5_000)
       send_event_and_sleep(network.id, {:lock, 10})
       new_genesis_input(network.id, "a second input, hot on the heels of the first", 1000)
