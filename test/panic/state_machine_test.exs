@@ -5,6 +5,7 @@ defmodule Panic.StateMachineTest do
 
   ## requires async: false, above
   import Mock
+  require Logger
 
   alias Panic.Predictions
   alias Panic.Runs.StateMachine
@@ -23,11 +24,11 @@ defmodule Panic.StateMachineTest do
     insert_api_tokens_from_env(network.user_id)
 
     ## start the FSM
-    IO.puts("starting network #{network.id}")
+    Logger.info("starting network #{network.id}")
     StateMachine.start_if_not_running(network)
 
     on_exit(fn ->
-      IO.puts("shutting down network #{network.id}")
+      Logger.info("shutting down network #{network.id}")
       ## to make sure all the API calls come in
       send_event_and_sleep(network.id, {:shut_down, nil}, 5_000)
       assert not StateMachine.alive?(network.id)
@@ -177,7 +178,7 @@ defmodule Panic.StateMachineTest do
 
     assert Enum.count(all_genesis_predictions(network)) == Enum.count(unique_genesis_ids(network))
 
-    IO.puts(
+    Logger.info(
       "successfully checked invariants on network #{network.id} (#{Enum.count(predictions)} predictions)"
     )
   end
