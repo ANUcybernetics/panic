@@ -80,9 +80,9 @@ defmodule PanicWeb.NetworkComponents do
       </h2>
       <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <.prediction_card
-          :for={{prediction, slot_idx} <- Enum.with_index(@predictions)}
+          :for={{prediction, idx} <- Enum.with_index(@predictions)}
           prediction={prediction}
-          incoming={@slot_incoming && @slot_incoming == slot_idx}
+          incoming={@slot_incoming && @slot_incoming == idx}
         />
       </div>
     </section>
