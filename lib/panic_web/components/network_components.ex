@@ -23,7 +23,6 @@ defmodule PanicWeb.NetworkComponents do
 
   """
 
-  ## not really a map
   attr :prediction, :map, required: true
 
   def prediction_card(assigns) do
