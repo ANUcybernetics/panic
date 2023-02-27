@@ -160,27 +160,6 @@ defmodule Panic.Predictions do
   end
 
   @doc """
-  Async version of `create_prediction(input, %Network{}, tokens)` for creating a "genesis" prediction.
-
-  `on_exit/1` is a function which will be called with the new prediction as the
-  sole argument.
-
-  Uses `Panic.Runs.TaskSupervisor` with `restart: transient`, so it'll keep
-  re-trying until it exits cleanly.
-  """
-  def create_prediction_async(input, %Network{} = network, tokens, on_exit)
-      when is_binary(input) do
-    Task.Supervisor.start_child(
-      Panic.Runs.TaskSupervisor,
-      fn ->
-        {:ok, next_prediction} = create_prediction(input, network, tokens)
-        on_exit.(next_prediction)
-      end,
-      restart: :transient
-    )
-  end
-
-  @doc """
   Given a prediction, creates the next one in the Run.
 
   This function will make the call to the relevant model API (based on the
@@ -207,9 +186,6 @@ defmodule Panic.Predictions do
 
   """
   def create_prediction(%Prediction{} = previous_prediction, tokens) do
-    ## TODO it would be better if this function checked if the changeset were
-    ## valid apart from the output before making the API call (to avoid making
-    ## the API call if the other params were invalid)
     run_index = previous_prediction.run_index + 1
     network = previous_prediction.network
     model = Enum.at(network.models, Integer.mod(run_index, Enum.count(network.models)))
@@ -234,26 +210,6 @@ defmodule Panic.Predictions do
         }
         |> create_prediction(tokens)
     end
-  end
-
-  @doc """
-  Async version of `create_prediction(%Prediction{}, tokens)` for creating a "next" prediction.
-
-  `on_exit/1` is a function which will be called with the new prediction as the
-  sole argument.
-
-  Uses `Panic.Runs.TaskSupervisor` with `restart: transient`, so it'll keep
-  re-trying until it exits cleanly.
-  """
-  def create_prediction_async(%Prediction{} = previous_prediction, tokens, on_exit) do
-    Task.Supervisor.start_child(
-      Panic.Runs.TaskSupervisor,
-      fn ->
-        {:ok, next_prediction} = create_prediction(previous_prediction, tokens)
-        on_exit.(next_prediction)
-      end,
-      restart: :transient
-    )
   end
 
   @doc """

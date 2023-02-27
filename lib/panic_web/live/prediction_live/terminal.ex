@@ -41,6 +41,11 @@ defmodule PanicWeb.PredictionLive.Terminal do
   end
 
   @impl true
+  def handle_info({:prediction_incoming, run_index}, socket) do
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info({:genesis_input, _input} = payload, socket) do
     Finitomata.transition(socket.assigns.network.id, payload)
     {:noreply, socket}

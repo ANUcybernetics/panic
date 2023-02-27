@@ -40,6 +40,7 @@ defmodule Panic.Runs.StateMachine do
 
   use Finitomata, fsm: @fsm, auto_terminate: true
   alias Panic.{Networks, Predictions}
+  alias Panic.Networks.Network
   alias Panic.Predictions.Prediction
 
   require Logger
@@ -56,7 +57,14 @@ defmodule Panic.Runs.StateMachine do
 
   @impl Finitomata
   def on_transition(_state, :genesis_input, input, payload) do
-    create_prediction_async(input, payload.network, payload.tokens)
+    Task.Supervisor.start_child(
+      Panic.Runs.TaskSupervisor,
+      Panic.Runs.StateMachine,
+      :create_prediction_and_transition,
+      [input, payload.network, payload.tokens],
+      restart: :transient
+    )
+
     {:ok, :running_genesis, %{payload | genesis_prediction: nil, head_prediction: nil}}
   end
 
@@ -70,7 +78,13 @@ defmodule Panic.Runs.StateMachine do
       ) do
     Networks.broadcast(new_prediction.network_id, {:new_prediction, new_prediction})
 
-    create_prediction_async(new_prediction, payload.tokens)
+    Task.Supervisor.start_child(
+      Panic.Runs.TaskSupervisor,
+      Panic.Runs.StateMachine,
+      :create_prediction_and_transition,
+      [new_prediction, payload.tokens],
+      restart: :transient
+    )
 
     {:ok, :uninterruptable,
      %{payload | genesis_prediction: new_prediction, head_prediction: new_prediction}}
@@ -88,7 +102,13 @@ defmodule Panic.Runs.StateMachine do
       when state in [:uninterruptable, :interruptable] and new_index == head_index + 1 do
     Networks.broadcast(new_prediction.network_id, {:new_prediction, new_prediction})
 
-    create_prediction_async(new_prediction, payload.tokens)
+    Task.Supervisor.start_child(
+      Panic.Runs.TaskSupervisor,
+      Panic.Runs.StateMachine,
+      :create_prediction_and_transition,
+      [new_prediction, payload.tokens],
+      restart: :transient
+    )
 
     {:ok, next_state(state, payload), %{payload | head_prediction: new_prediction}}
   end
@@ -127,16 +147,24 @@ defmodule Panic.Runs.StateMachine do
   # helper functions #
   ####################
 
-  def create_prediction_async(input, network, tokens) when is_binary(input) do
-    Predictions.create_prediction_async(input, network, tokens, fn prediction ->
+  def create_prediction_and_transition(input, %Network{} = network, tokens)
+      when is_binary(input) do
+    Networks.broadcast(network.id, {:prediction_incoming, 0})
+
+    with {:ok, prediction} <- Predictions.create_prediction(input, network, tokens) do
       Finitomata.transition(prediction.network_id, {:new_prediction, prediction})
-    end)
+    end
   end
 
-  def create_prediction_async(%Prediction{} = prediction, tokens) do
-    Predictions.create_prediction_async(prediction, tokens, fn prediction ->
+  def create_prediction_and_transition(%Prediction{} = previous_prediction, tokens) do
+    Networks.broadcast(
+      previous_prediction.network_id,
+      {:prediction_incoming, previous_prediction.run_index + 1}
+    )
+
+    with {:ok, prediction} <- Predictions.create_prediction(previous_prediction, tokens) do
       Finitomata.transition(prediction.network_id, {:new_prediction, prediction})
-    end)
+    end
   end
 
   defp next_state(_state, payload) do

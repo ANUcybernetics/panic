@@ -17,7 +17,11 @@
   network={@network}
 />
 
-<.live_component id="terminal-input" class="mt-16" module={PanicWeb.PredictionLive.GensisInputComponent} />
+<.live_component
+  id="terminal-input"
+  class="mt-16"
+  module={PanicWeb.PredictionLive.GensisInputComponent}
+/>
 
 <.prediction_grid class="mt-16" genesis={@genesis} predictions={@grid_slots} />
 
