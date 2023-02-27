@@ -34,7 +34,7 @@ defmodule PanicWeb.NetworkLive.Show do
   @impl true
   def handle_event("reset", %{"network_id" => network_id}, socket) do
     StateMachine.transition(network_id, {:reset, nil})
-    {:noreply, assign(socket, grid_slots: List.duplicate(nil, @num_grid_slots))}
+    {:noreply, apply_action(socket, :reset_slots)}
   end
 
   @impl true
@@ -45,7 +45,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_info({:prediction_incoming, run_index}, socket) do
-    {:noreply, socket}
+    {:noreply, assign(socket, :slot_incoming, Integer.mod(run_index, @num_grid_slots))}
   end
 
   @impl true
@@ -108,5 +108,6 @@ defmodule PanicWeb.NetworkLive.Show do
     socket
     |> assign(:genesis, nil)
     |> assign(:grid_slots, List.duplicate(nil, @num_grid_slots))
+    |> assign(:slot_incoming, nil)
   end
 end

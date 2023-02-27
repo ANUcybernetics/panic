@@ -42,7 +42,7 @@ defmodule PanicWeb.PredictionLive.Terminal do
 
   @impl true
   def handle_info({:prediction_incoming, run_index}, socket) do
-    {:noreply, socket}
+    {:noreply, assign(socket, :slot_incoming, Integer.mod(run_index, @num_grid_slots))}
   end
 
   @impl true

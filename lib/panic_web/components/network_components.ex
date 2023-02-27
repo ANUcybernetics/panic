@@ -25,6 +25,10 @@ defmodule PanicWeb.NetworkComponents do
 
   attr :prediction, :map, required: true
 
+  attr :incoming, :boolean,
+    default: false,
+    doc: "is there a new prediction incoming into this slot soon?"
+
   def prediction_card(assigns) do
     ~H"""
     <.card>
@@ -36,8 +40,13 @@ defmodule PanicWeb.NetworkComponents do
         <% nil -> %>
           <.empty_slot />
       <% end %>
-      <div :if={@prediction} class="absolute right-2 bottom-2">
+      <div :if={@prediction} class="absolute right-1 bottom-1">
         <%= strip_platform(@prediction.model) %>
+      </div>
+      <div :if={@incoming} class="absolute right-2 top-2">
+        <div class="w-6 h-6 rounded-full text-white text-xs bg-rose-600 ring-1 ring-white animate-pulse grid place-items-center">
+          P
+        </div>
       </div>
     </.card>
     """
@@ -56,6 +65,11 @@ defmodule PanicWeb.NetworkComponents do
   attr :id, :string, default: nil
   attr :genesis, :map, default: nil
   attr :predictions, :list, required: true
+
+  attr :slot_incoming, :any,
+    default: nil,
+    doc: "index of the slot which has an incoming prediction, or `nil`"
+
   attr :class, :string, default: nil
 
   def prediction_grid(assigns) do
@@ -65,7 +79,11 @@ defmodule PanicWeb.NetworkComponents do
         <span class="text-zinc-400">Initial input:</span><span :if={@genesis}> <%= @genesis.input %></span>
       </h2>
       <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <.prediction_card :for={prediction <- @predictions} prediction={prediction} />
+        <.prediction_card
+          :for={{prediction, slot_idx} <- Enum.with_index(@predictions)}
+          prediction={prediction}
+          incoming={@slot_incoming && @slot_incoming == slot_idx}
+        />
       </div>
     </section>
     """

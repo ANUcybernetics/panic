@@ -105,17 +105,19 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 ## TODO
 
-- flashing "Panic!" indicator (maybe a border this time?)
 - update all colours & look/feel from old app
 - separate model id binary and URL path in model_info (maybe make it an actual
   Schema, perhaps embedded?)
 - add screen mod query params
+- if new_prediction comes in and genesis isn't set (i.e. if you've navigated to
+  a running network) the pull genesis from the db
 - add vestaboards array to %Network{} (could validate based on board names from
   tokens map - see idea below)
 - when viewing a grid for a running network, initially pull the latest
   @num_grid_slots from the db (based on :genesis_id) and pre-populate the grid slots
 - add "slow down over time" logic to runs
 - add QR code view
+- write more tests for the new view things
 - add rolling cookie/URL param to QR code
 - add metadata to prediction (maybe `with` is our friend here?)
 - check that access control works for the network & prediction
