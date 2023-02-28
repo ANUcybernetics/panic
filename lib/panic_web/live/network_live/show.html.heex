@@ -30,10 +30,6 @@
   slot_incoming={@slot_incoming}
 />
 
-<.append_model_buttons class="mt-16" network={@network} />
-
-<.network_models_table class="mt-16" models={@models} />
-
 <.back navigate={~p"/networks"}>Back to networks</.back>
 
 <.modal
@@ -51,4 +47,8 @@
     network={@network}
     navigate={~p"/networks/#{@network}"}
   />
+
+  <.append_model_buttons class="mt-16" network={@network} />
+
+  <.network_models_table class="mt-16" models={@models} />
 </.modal>
