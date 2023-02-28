@@ -1,7 +1,7 @@
 defmodule PanicWeb.NetworkLive.Show do
   use PanicWeb, :live_view
 
-  alias Panic.Networks
+  alias Panic.{Networks, Predictions}
   alias Panic.Predictions.Prediction
   alias Panic.Runs.StateMachine
   import PanicWeb.NetworkComponents
@@ -104,6 +104,9 @@ defmodule PanicWeb.NetworkLive.Show do
     socket
     |> update(:grid_slots, fn slots ->
       List.replace_at(slots, Integer.mod(idx, @num_grid_slots), prediction)
+    end)
+    |> update(:genesis, fn genesis ->
+      genesis || Predictions.get_prediction!(prediction.genesis_id)
     end)
   end
 
