@@ -106,8 +106,6 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 ## TODO
 
 - update all colours & look/feel from old app
-- separate model id binary and URL path in model_info (maybe make it an actual
-  Schema, perhaps embedded?)
 - add vestaboards array to %Network{} (could validate based on board names from
   tokens map - see idea below)
 - when viewing a grid for a running network, initially pull the latest
