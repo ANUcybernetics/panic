@@ -2,6 +2,11 @@ defmodule PanicWeb.HomeLive.Index do
   use PanicWeb, :live_view
 
   @impl true
+  def mount(_params, _session, %{assigns: %{current_user: user}} = socket) do
+    {:ok, push_navigate(socket, to: ~p"/networks")}
+  end
+
+  @impl true
   def mount(_params, _session, socket) do
     {:ok, socket}
   end

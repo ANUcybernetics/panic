@@ -19,13 +19,13 @@ defmodule PanicWeb.PredictionLive.GensisInputComponent do
       <.simple_form for={@form} id={@id} phx-target={@myself} phx-submit="new-genesis-input">
         <.input field={@form[:input]} type="text" label="Input" />
         <:actions>
-          <.button
-            :if={@panic_button?}
-            class="mt-16 w-64 h-64 mx-auto rounded-full text-4xl text-white bg-red-700"
-            phx-disable-with="Panicking..."
-          >
-            Panic
-          </.button>
+          <button :if={@panic_button?} class="mt-16 mx-auto relative w-64 h-64">
+            <div class="absolute rounded-full inset-0 z-50 animate-spin border-t-4 border-b-4 border-white/25">
+            </div>
+            <div class="absolute rounded-full inset-0 text-6xl text-white bg-rose-600 grid place-items-center">
+              P
+            </div>
+          </button>
         </:actions>
       </.simple_form>
     </section>

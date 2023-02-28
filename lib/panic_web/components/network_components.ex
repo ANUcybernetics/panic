@@ -52,7 +52,7 @@ defmodule PanicWeb.NetworkComponents do
 
   def card(assigns) do
     ~H"""
-    <div class="aspect-w-16 aspect-h-9 overflow-hidden relative block w-full text-center text-gray-200 bg-gray-900 shadow-lg">
+    <div class="aspect-w-16 aspect-h-9 overflow-hidden relative block w-full text-center text-purple-300 bg-zinc-800 shadow-lg">
       <div class="absolute inset-0 grid place-items-center">
         <%= render_slot(@inner_block) %>
       </div>
@@ -74,7 +74,7 @@ defmodule PanicWeb.NetworkComponents do
     ~H"""
     <section id={@id} class={[@class]}>
       <h2 class="text-md font-semibold">
-        <span class="text-zinc-400">Initial input:</span><span :if={@genesis}> <%= @genesis.input %></span>
+        <span class="text-purple-400">Initial input:</span><span :if={@genesis}> <%= @genesis.input %></span>
       </h2>
       <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <.prediction_card
