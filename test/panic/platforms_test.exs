@@ -90,15 +90,6 @@ defmodule Panic.PlatformsTest do
                Replicate.create("replicate:stability-ai/stable-diffusion", input, tokens)
     end
 
-    test "vintedois diffusion returns a URL when given a valid input", %{tokens: tokens} do
-      input = "sheep grazing on a grassy meadow"
-
-      assert {:ok, output} =
-               Replicate.create("replicate:22-hours/vintedois-diffusion", input, tokens)
-
-      assert Regex.match?(~r|https://.*|, output)
-    end
-
     test "kyrick/prompt-parrot works", %{tokens: tokens} do
       input = "sheep grazing on a grassy meadow"
       assert {:ok, output} = Replicate.create("replicate:kyrick/prompt-parrot", input, tokens)

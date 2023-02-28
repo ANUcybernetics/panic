@@ -76,13 +76,6 @@ defmodule Panic.Platforms.Replicate do
         input: :text,
         output: :image
       },
-      "replicate:22-hours/vintedois-diffusion" => %{
-        path: "22-hours/vintedois-diffusion",
-        name: "Vintedois Stable Diffusion",
-        description: "",
-        input: :text,
-        output: :image
-      },
       "replicate:timothybrooks/instruct-pix2pix" => %{
         path: "timothybrooks/instruct-pix2pix",
         name: "Instruct pix2pix",
@@ -175,19 +168,6 @@ defmodule Panic.Platforms.Replicate do
       guidance_scale: 7.5,
       width: 1024,
       height: 576
-    }
-
-    with {:ok, %{"output" => [image_url]}} <- create_and_wait(model, input_params, tokens) do
-      {:ok, image_url}
-    end
-  end
-
-  def create("replicate:22-hours/vintedois-diffusion" = model, prompt, tokens) do
-    input_params = %{
-      prompt: prompt,
-      num_inference_steps: 25,
-      width: 640,
-      height: 448
     }
 
     with {:ok, %{"output" => [image_url]}} <- create_and_wait(model, input_params, tokens) do
