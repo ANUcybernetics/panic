@@ -69,9 +69,9 @@ defmodule Panic.Platforms.Replicate do
         input: :text,
         output: :image
       },
-      "replicate:cloneofsimo/lora" => %{
+      "replicate:cloneofsimo/lora-socy" => %{
         path: "cloneofsimo/lora",
-        name: "SOCY-style SD",
+        name: "SOCY SD",
         description: "",
         input: :text,
         output: :image
@@ -175,7 +175,7 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
-  def create("replicate:cloneofsimo/lora" = model, prompt, tokens) do
+  def create("replicate:cloneofsimo/lora-socy" = model, prompt, tokens) do
     input_params = %{
       prompt: "#{prompt} in the style of <1>",
       width: 1024,
