@@ -230,10 +230,6 @@ defmodule PanicWeb.NetworkComponents do
     """
   end
 
-  defp size_classes(:small), do: "w-6 h-6 text-xs"
-  defp size_classes(:medium), do: "w-12 h-12 text-sm"
-  defp size_classes(:large), do: "w-24 h-24 text-lg"
-
   defp models_and_last?(models) do
     last_idx = Enum.count(models) - 1
     Enum.with_index(models, fn model, i -> {model, i == last_idx} end)
