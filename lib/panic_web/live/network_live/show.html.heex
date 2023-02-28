@@ -23,7 +23,12 @@
   module={PanicWeb.PredictionLive.GensisInputComponent}
 />
 
-<.prediction_grid class="mt-16" genesis={@genesis} predictions={@grid_slots} slot_incoming={@slot_incoming} />
+<.prediction_grid
+  class="mt-16"
+  genesis={@genesis}
+  predictions={@grid_slots}
+  slot_incoming={@slot_incoming}
+/>
 
 <.append_model_buttons class="mt-16" network={@network} />
 

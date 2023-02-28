@@ -67,8 +67,7 @@ defmodule PanicWeb.NetworkLive.Show do
      |> assign(state: state)
      # this hack required because the :state_change event comes after
      # :prediction_incoming and clobbers it back to nil
-     |> assign(:slot_incoming, 0)
-    }
+     |> assign(:slot_incoming, 0)}
   end
 
   @impl true
