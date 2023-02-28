@@ -33,11 +33,11 @@ defmodule Panic.Platforms do
   end
 
   def api_call(model, input, tokens) do
-    [platform, model_name] = String.split(model, ":")
+    [platform, _] = String.split(model, ":")
 
     case platform do
-      "replicate" -> Panic.Platforms.Replicate.create(model_name, input, tokens)
-      "openai" -> Panic.Platforms.OpenAI.create(model_name, input, tokens)
+      "replicate" -> Panic.Platforms.Replicate.create(model, input, tokens)
+      "openai" -> Panic.Platforms.OpenAI.create(model, input, tokens)
     end
   end
 end

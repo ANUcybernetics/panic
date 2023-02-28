@@ -18,13 +18,21 @@ defmodule Panic.Platforms.OpenAI do
   def all_model_info do
     %{
       "openai:text-davinci-003" => %{
+        path: "text-davinci-003",
         name: "GPT-3 Davinci",
         description: "",
         input: :text,
         output: :text
       },
-      "openai:text-ada-001" => %{name: "GPT-3 Ada", description: "", input: :text, output: :text},
+      "openai:text-ada-001" => %{
+        path: "text-ada-001",
+        name: "GPT-3 Ada",
+        description: "",
+        input: :text,
+        output: :text
+      },
       "openai:davinci-instruct-beta" => %{
+        path: "davinci-instruct-beta",
         name: "GPT-3 Davinci Instruct",
         description: "",
         input: :text,
@@ -46,8 +54,7 @@ defmodule Panic.Platforms.OpenAI do
     end
   end
 
-  def create(model, prompt, tokens)
-      when model in ["text-davinci-003", "text-ada-001", "davinci-instruct-beta"] do
+  def create(model, prompt, tokens) do
     request_body = %{
       prompt: prompt,
       max_tokens: @max_response_length,
@@ -56,7 +63,7 @@ defmodule Panic.Platforms.OpenAI do
 
     Finch.build(
       :post,
-      "#{@url}/#{model}/completions",
+      "#{@url}/#{model |> Panic.Platforms.model_info() |> Map.get(:path)}/completions",
       headers(tokens),
       Jason.encode!(request_body)
     )

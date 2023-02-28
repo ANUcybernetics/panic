@@ -35,7 +35,8 @@ defmodule Panic.PlatformsTest do
         name: "Stable Diffusion",
         description: "",
         input: :text,
-        output: :image
+        output: :image,
+        path: "stability-ai/stable-diffusion"
       }
 
       assert Platforms.model_info("replicate:stability-ai/stable-diffusion") == sd_info
@@ -48,21 +49,21 @@ defmodule Panic.PlatformsTest do
     test "davinci-instruct-beta responds when given a valid prompt", %{tokens: tokens} do
       input = "explain how a chicken would cross a road."
 
-      {:ok, output} = OpenAI.create("davinci-instruct-beta", input, tokens)
+      {:ok, output} = OpenAI.create("openai:davinci-instruct-beta", input, tokens)
       assert is_binary(output)
     end
 
     test "text-davinci-003 responds when given a valid prompt", %{tokens: tokens} do
       input = "hello Leonardo, what's your middle name?"
 
-      assert {:ok, output} = OpenAI.create("text-davinci-003", input, tokens)
+      assert {:ok, output} = OpenAI.create("openai:text-davinci-003", input, tokens)
       assert is_binary(output)
     end
 
     test "text-ada-001 responds when given a valid prompt", %{tokens: tokens} do
       input = "what year did Ada Lovelace first visit the moon?"
 
-      assert {:ok, output} = OpenAI.create("text-ada-001", input, tokens)
+      assert {:ok, output} = OpenAI.create("openai:text-ada-001", input, tokens)
       assert is_binary(output)
     end
   end
@@ -74,7 +75,9 @@ defmodule Panic.PlatformsTest do
          %{tokens: tokens} do
       input = "sheep grazing on a grassy meadow"
 
-      assert {:ok, output} = Replicate.create("stability-ai/stable-diffusion", input, tokens)
+      assert {:ok, output} =
+               Replicate.create("replicate:stability-ai/stable-diffusion", input, tokens)
+
       assert Regex.match?(~r|https://.*|, output)
     end
 
@@ -83,25 +86,31 @@ defmodule Panic.PlatformsTest do
       # it sucks that we have to guard against this, but need to make sure the NSFW filter works
       input = "a sexy naked woman"
 
-      assert {:error, :nsfw} = Replicate.create("stability-ai/stable-diffusion", input, tokens)
+      assert {:error, :nsfw} =
+               Replicate.create("replicate:stability-ai/stable-diffusion", input, tokens)
     end
 
     test "vintedois diffusion returns a URL when given a valid input", %{tokens: tokens} do
       input = "sheep grazing on a grassy meadow"
 
-      assert {:ok, output} = Replicate.create("22-hours/vintedois-diffusion", input, tokens)
+      assert {:ok, output} =
+               Replicate.create("replicate:22-hours/vintedois-diffusion", input, tokens)
+
       assert Regex.match?(~r|https://.*|, output)
     end
 
     test "kyrick/prompt-parrot works", %{tokens: tokens} do
       input = "sheep grazing on a grassy meadow"
-      assert {:ok, output} = Replicate.create("kyrick/prompt-parrot", input, tokens)
+      assert {:ok, output} = Replicate.create("replicate:kyrick/prompt-parrot", input, tokens)
       assert String.starts_with?(output, input)
     end
 
     test "2feet6inches/cog-prompt-parrot works", %{tokens: tokens} do
       input = "sheep grazing on a grassy meadow"
-      assert {:ok, output} = Replicate.create("2feet6inches/cog-prompt-parrot", input, tokens)
+
+      assert {:ok, output} =
+               Replicate.create("replicate:2feet6inches/cog-prompt-parrot", input, tokens)
+
       assert String.starts_with?(output, input)
     end
 
@@ -109,10 +118,11 @@ defmodule Panic.PlatformsTest do
          %{tokens: tokens} do
       input = "sheep grazing on a grassy meadow"
 
-      assert {:ok, image_url} = Replicate.create("stability-ai/stable-diffusion", input, tokens)
+      assert {:ok, image_url} =
+               Replicate.create("replicate:stability-ai/stable-diffusion", input, tokens)
 
       assert {:ok, image_caption} =
-               Replicate.create("rmokady/clip_prefix_caption", image_url, tokens)
+               Replicate.create("replicate:rmokady/clip_prefix_caption", image_url, tokens)
 
       assert is_binary(image_caption)
     end
@@ -120,9 +130,11 @@ defmodule Panic.PlatformsTest do
     test "stable diffusion image -> BLIP2 cycle works", %{tokens: tokens} do
       input = "sheep grazing on a grassy meadow"
 
-      assert {:ok, image_url} = Replicate.create("stability-ai/stable-diffusion", input, tokens)
+      assert {:ok, image_url} =
+               Replicate.create("replicate:stability-ai/stable-diffusion", input, tokens)
 
-      assert {:ok, image_caption} = Replicate.create("salesforce/blip-2", image_url, tokens)
+      assert {:ok, image_caption} =
+               Replicate.create("replicate:salesforce/blip-2", image_url, tokens)
 
       assert is_binary(image_caption)
     end
@@ -130,9 +142,12 @@ defmodule Panic.PlatformsTest do
     test "stable diffusion image -> Instruct pix2pix cycle works", %{tokens: tokens} do
       input = "sheep grazing on a grassy meadow"
 
-      assert {:ok, image_url} = Replicate.create("stability-ai/stable-diffusion", input, tokens)
+      assert {:ok, image_url} =
+               Replicate.create("replicate:stability-ai/stable-diffusion", input, tokens)
 
-      assert {:ok, output} = Replicate.create("timothybrooks/instruct-pix2pix", image_url, tokens)
+      assert {:ok, output} =
+               Replicate.create("replicate:timothybrooks/instruct-pix2pix", image_url, tokens)
+
       assert Regex.match?(~r|https://.*|, output)
     end
 
@@ -140,10 +155,11 @@ defmodule Panic.PlatformsTest do
          %{tokens: tokens} do
       input = "sheep grazing on a grassy meadow"
 
-      assert {:ok, image_url} = Replicate.create("stability-ai/stable-diffusion", input, tokens)
+      assert {:ok, image_url} =
+               Replicate.create("replicate:stability-ai/stable-diffusion", input, tokens)
 
       assert {:ok, image_caption} =
-               Replicate.create("j-min/clip-caption-reward", image_url, tokens)
+               Replicate.create("replicate:j-min/clip-caption-reward", image_url, tokens)
 
       assert is_binary(image_caption)
     end

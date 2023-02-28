@@ -113,6 +113,8 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 - when viewing a grid for a running network, initially pull the latest
   @num_grid_slots from the db (based on :genesis_id) and pre-populate the grid slots
 - add "slow down over time" logic to runs
+- add ability to specify a replicate version in model info (defaulting to latest
+  if not present)
 - add QR code view
 - write more tests for the new view things
 - add rolling cookie/URL param to QR code
