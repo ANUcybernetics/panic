@@ -220,10 +220,8 @@ defmodule PanicWeb.NetworkComponents do
 
   def waiting_spinner(assigns) do
     ~H"""
-    <div class={["relative", size_classes(@size)]}>
-      <div class={[
-        "absolute rounded-full inset-0 z-50 animate-spin border-t-2 border-b-2 border-white"
-      ]}>
+    <div class="relative w-8 h-8">
+      <div class="absolute rounded-full inset-0 z-50 animate-spin border-t-2 border-b-2 border-white/25">
       </div>
       <div class="absolute rounded-full inset-0 animate-pulse text-white bg-rose-600 grid place-items-center">
         P
