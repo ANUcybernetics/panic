@@ -92,7 +92,7 @@ defmodule PanicWeb.NetworkComponents do
     <div class="p-4 text-base text-left">
       <%= for line <- String.split(@text, "\n\n") do %>
         <%= unless line == "" do %>
-          <p class="text-purple-300"><%= line %></p>
+          <p><%= line %></p>
         <% end %>
       <% end %>
     </div>
