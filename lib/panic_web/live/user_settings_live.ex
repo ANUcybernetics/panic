@@ -28,7 +28,7 @@ defmodule PanicWeb.UserSettingsLive do
       </:actions>
     </.simple_form>
 
-    <.header>Change Password</.header>
+    <.header class="mt-16">Change Password</.header>
 
     <.simple_form
       for={@password_form}
