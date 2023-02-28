@@ -44,9 +44,7 @@ defmodule PanicWeb.NetworkComponents do
         <%= strip_platform(@prediction.model) %>
       </div>
       <div :if={@incoming} class="absolute right-2 top-2">
-        <div class="w-6 h-6 rounded-full text-white text-xs bg-rose-600 ring-1 ring-white animate-pulse grid place-items-center">
-          P
-        </div>
+        <.waiting_spinner size={:small} />
       </div>
     </.card>
     """
@@ -217,6 +215,26 @@ defmodule PanicWeb.NetworkComponents do
   defp button_colour(:ready), do: "bg-pink-500"
   defp button_colour(state) when state in [:uninterruptable, :interruptable], do: "bg-emerald-500"
   defp button_colour(_state), do: "bg-zinc-900"
+
+  attr :size, :atom, required: true
+
+  def waiting_spinner(assigns) do
+    ~H"""
+    <div class={["relative", size_classes(@size)]}>
+      <div class={[
+        "absolute rounded-full inset-0 z-50 animate-spin border-t-2 border-b-2 border-white"
+      ]}>
+      </div>
+      <div class="absolute rounded-full inset-0 animate-pulse text-white bg-rose-600 grid place-items-center">
+        P
+      </div>
+    </div>
+    """
+  end
+
+  defp size_classes(:small), do: "w-6 h-6 text-xs"
+  defp size_classes(:medium), do: "w-12 h-12 text-sm"
+  defp size_classes(:large), do: "w-24 h-24 text-lg"
 
   defp models_and_last?(models) do
     last_idx = Enum.count(models) - 1
