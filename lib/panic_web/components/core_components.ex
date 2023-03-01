@@ -55,7 +55,7 @@ defmodule PanicWeb.CoreComponents do
     >
       <div
         id={"#{@id}-bg"}
-        class="fixed inset-0 bg-purple-50/90 transition-opacity"
+        class="fixed inset-0 bg-zinc-800/90 transition-opacity"
         aria-hidden="true"
       />
       <div
@@ -74,7 +74,7 @@ defmodule PanicWeb.CoreComponents do
               phx-window-keydown={hide_modal(@on_cancel, @id)}
               phx-key="escape"
               phx-click-away={hide_modal(@on_cancel, @id)}
-              class="hidden relative rounded-2xl bg-white p-14 shadow-lg shadow-purple-700/10 ring-1 ring-purple-700/10 transition"
+              class="hidden relative rounded-2xl bg-zinc-800 p-14 shadow-lg shadow-purple-400/10 ring-1 ring-purple-400/10 transition"
             >
               <div class="absolute top-6 right-5">
                 <button
@@ -345,7 +345,7 @@ defmodule PanicWeb.CoreComponents do
       <select
         id={@id}
         name={@name}
-        class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+        class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-zinc-800 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
         multiple={@multiple}
         {@rest}
       >
@@ -366,7 +366,7 @@ defmodule PanicWeb.CoreComponents do
         name={@name}
         class={[
           "mt-2 block min-h-[6rem] w-full rounded-lg border-purple-300 py-[7px] px-[11px]",
-          "text-purple-900 focus:border-purple-400 focus:outline-none focus:ring-4 focus:ring-purple-800/5 sm:text-sm sm:leading-6",
+          "bg-zinc-900 text-purple-300 focus:border-purple-400 focus:outline-none focus:ring-4 focus:ring-purple-800/5 sm:text-sm sm:leading-6",
           "phx-no-feedback:border-purple-300 phx-no-feedback:focus:border-purple-400 phx-no-feedback:focus:ring-purple-800/5",
           "border-purple-300 focus:border-purple-400 focus:ring-purple-800/5",
           @errors != [] && "border-rose-400 focus:border-rose-400 focus:ring-rose-400/10"
@@ -506,7 +506,7 @@ defmodule PanicWeb.CoreComponents do
               class={["relative p-0", @row_click && "hover:cursor-pointer"]}
             >
               <div class="block py-4 pr-6">
-                <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-purple-800 sm:rounded-l-xl" />
+                <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-purple-900 sm:rounded-l-xl" />
                 <span class={["relative", i == 0 && "font-semibold text-purple-300"]}>
                   <%= render_slot(col, @row_item.(row)) %>
                 </span>
@@ -514,7 +514,7 @@ defmodule PanicWeb.CoreComponents do
             </td>
             <td :if={@action != []} class="relative p-0 w-14">
               <div class="relative whitespace-nowrap py-4 text-right text-sm font-medium">
-                <span class="absolute -inset-y-px -right-4 left-0 group-hover:bg-purple-800 sm:rounded-r-xl" />
+                <span class="absolute -inset-y-px -right-4 left-0 group-hover:bg-purple-900 sm:rounded-r-xl" />
                 <span
                   :for={action <- @action}
                   class="relative ml-4 font-semibold leading-6 text-purple-400 hover:text-purple-300"
