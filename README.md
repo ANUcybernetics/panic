@@ -105,23 +105,21 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 ## TODO
 
-- update all colours & look/feel from old app
+- add ability to specify a replicate version in model info (defaulting to latest
+  if not present)
 - add vestaboards array to %Network{} (could validate based on board names from
   tokens map - see idea below)
 - when viewing a grid for a running network, initially pull the latest
   @num_grid_slots from the db (based on :genesis_id) and pre-populate the grid slots
 - add "slow down over time" logic to runs
-- add ability to specify a replicate version in model info (defaulting to latest
-  if not present)
 - add QR code view
 - write more tests for the new view things
 - add rolling cookie/URL param to QR code
 - add metadata to prediction (maybe `with` is our friend here?)
 - check that access control works for the network & prediction
 - add `has_many :networks, Panic.Networks.Network` to user
-- **maybe** just have one tokens map per user, which they speficy as JSON or
-  whatever (and therefore we don't need that whole Schema). we'll manually
-  verify the required keys (e.g. Vestaboard could have one extra level of nesting)
+- use an embedded schema for the tokens (Replicate and OpenAI are strings,
+  Vestaboard is map)
 - add network permalinks (look in the history - there's some deleted `router.ex`
   code in there)
 - add models:
