@@ -151,7 +151,7 @@ defmodule PanicWeb.NetworkComponents do
       <h2 class="text-md font-semibold">Append Model</h2>
       <div class="mt-4 grid md:grid-cols-3 xl:grid-cols-6 gap-2">
         <.button
-          :for={{model, %{name: name, input: input}} <- Platforms.all_model_info()}
+          :for={{model, %Panic.Platforms.Model{name: name, input: input}} <- Platforms.models()}
           class="text-xs disabled:bg-zinc-700"
           disabled={input != Networks.last_model_output_type(@network)}
           phx-click={JS.push("append-model", value: %{model: model})}

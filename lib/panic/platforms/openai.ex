@@ -4,43 +4,6 @@ defmodule Panic.Platforms.OpenAI do
   @max_response_length 50
   # @recv_timeout 10_000
 
-  @doc """
-  Map of model info
-
-  Keys are binaries of the form `platform:model-name`, and values are maps
-  the following keys:
-
-  - `name`: human readable name for the model
-  - `description`: brief description of the model (supports markdown)
-  - `input`: input type (either `:text`, `:image` or `:audio`)
-  - `output`: output type (either `:text`, `:image` or `:audio`)
-  """
-  def all_model_info do
-    %{
-      "openai:text-davinci-003" => %{
-        path: "text-davinci-003",
-        name: "GPT-3 Davinci",
-        description: "",
-        input: :text,
-        output: :text
-      },
-      "openai:text-ada-001" => %{
-        path: "text-ada-001",
-        name: "GPT-3 Ada",
-        description: "",
-        input: :text,
-        output: :text
-      },
-      "openai:davinci-instruct-beta" => %{
-        path: "davinci-instruct-beta",
-        name: "GPT-3 Davinci Instruct",
-        description: "",
-        input: :text,
-        output: :text
-      }
-    }
-  end
-
   def list_engines(tokens) do
     Finch.build(:get, @url, headers(tokens))
     |> Finch.request(Panic.Finch)

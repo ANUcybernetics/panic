@@ -9,15 +9,15 @@ defmodule Panic.PlatformsTest do
   import Panic.AccountsFixtures
   alias Panic.Accounts
   alias Panic.Platforms
-  alias Panic.Platforms.{OpenAI, Replicate, Vestaboard}
+  alias Panic.Platforms.{Model, OpenAI, Replicate, Vestaboard}
 
   @moduletag :real_platform_api_calls
   @moduletag timeout: 5 * 60 * 1000
 
   describe "Platform helpers" do
     test "return map of all model info Maps" do
-      for %{name: name, description: description, input: input, output: output} <-
-            Platforms.all_model_info() do
+      for %Model{name: name, description: description, input: input, output: output} <-
+            Platforms.models() do
         assert is_binary(name)
         assert is_binary(description)
         assert input in [:text, :image, :audio]
@@ -26,7 +26,7 @@ defmodule Panic.PlatformsTest do
     end
 
     test "list models" do
-      assert is_list(Platforms.list_models())
+      assert is_list(Platforms.models())
     end
 
     test "get info for a single model" do

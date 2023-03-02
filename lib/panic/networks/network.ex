@@ -22,9 +22,9 @@ defmodule Panic.Networks.Network do
 
   defp validate_model_array(changeset) do
     validate_change(changeset, :models, fn :models, model_array ->
-      all_models = Panic.Platforms.list_models()
+      model_ids = Panic.Platforms.model_ids()
 
-      for model <- model_array, model not in all_models do
+      for model <- model_array, model not in model_ids do
         model
       end
       |> case do
