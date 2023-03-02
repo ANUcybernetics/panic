@@ -77,8 +77,8 @@ defmodule Panic.Networks do
   @doc """
   Helper function for appending a model to the network's model array.
   """
-  def append_model(%Network{models: models} = network, model) do
-    update_network(network, %{models: models ++ [model]})
+  def append_model(%Network{models: model_ids} = network, model_id) do
+    update_network(network, %{models: model_ids ++ [model_id]})
   end
 
   @doc """
@@ -86,8 +86,8 @@ defmodule Panic.Networks do
 
   This is the opposite of `append_model/2`.
   """
-  def remove_last_model(%Network{models: models} = network) do
-    update_network(network, %{models: List.delete_at(models, -1)})
+  def remove_last_model(%Network{models: model_ids} = network) do
+    update_network(network, %{models: List.delete_at(model_ids, -1)})
   end
 
   @doc """
@@ -122,8 +122,8 @@ defmodule Panic.Networks do
   ## input prompt is always text
   def last_model_output_type(%Network{models: []}), do: :text
 
-  def last_model_output_type(%Network{models: models}),
-    do: models |> List.last() |> Panic.Platforms.model_info() |> Map.get(:output)
+  def last_model_output_type(%Network{models: model_ids}),
+    do: model_ids |> List.last() |> Panic.Platforms.model_info() |> Map.get(:output)
 
   # pubsub helpers
   def subscribe(network_id) do

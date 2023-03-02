@@ -105,6 +105,7 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 ## TODO
 
+- maybe: move the model helper code into Model (out of Platforms)
 - add ability to specify a replicate version in model info (defaulting to latest
   if not present)
 - add vestaboards array to %Network{} (could validate based on board names from

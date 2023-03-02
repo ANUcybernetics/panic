@@ -51,9 +51,9 @@ defmodule PanicWeb.PredictionLiveTest do
                    %{conn: conn, network: network},
                    Panic.Platforms,
                    [:passthrough],
-                   api_call: fn model, _input, _user ->
+                   api_call: fn model_id, _input, _user ->
                      Process.sleep(1000)
-                     {:ok, "result of API call to #{model}"}
+                     {:ok, "result of API call to #{model_id}"}
                    end do
       {:ok, index_live, _html} = live(conn, ~p"/networks/#{network}/predictions/new")
 

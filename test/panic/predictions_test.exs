@@ -97,9 +97,9 @@ defmodule Panic.PredictionsTest do
                    %{network: network, tokens: tokens},
                    Panic.Platforms,
                    [:passthrough],
-                   api_call: fn model, _input, _user ->
+                   api_call: fn model_id, _input, _user ->
                      Process.sleep(1000)
-                     {:ok, "result of API call to #{model}"}
+                     {:ok, "result of API call to #{model_id}"}
                    end do
       input = "Tell me a joke about potatoes."
 
@@ -116,9 +116,9 @@ defmodule Panic.PredictionsTest do
                    },
                    Panic.Platforms,
                    [:passthrough],
-                   api_call: fn model, _input, _user ->
+                   api_call: fn model_id, _input, _user ->
                      Process.sleep(1000)
-                     {:ok, "result of API call to #{model}"}
+                     {:ok, "result of API call to #{model_id}"}
                    end do
       input = "Tell me a joke about potatoes."
 

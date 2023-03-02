@@ -188,15 +188,15 @@ defmodule Panic.Predictions do
   def create_prediction(%Prediction{} = previous_prediction, tokens) do
     run_index = previous_prediction.run_index + 1
     network = previous_prediction.network
-    model = Enum.at(network.models, Integer.mod(run_index, Enum.count(network.models)))
+    model_id = Enum.at(network.models, Integer.mod(run_index, Enum.count(network.models)))
     input = previous_prediction.output
 
-    case Panic.Platforms.api_call(model, input, tokens) do
+    case Panic.Platforms.api_call(model_id, input, tokens) do
       {:ok, output} ->
         create_prediction_from_attrs(%{
           input: input,
           output: output,
-          model: model,
+          model: model_id,
           run_index: run_index,
           metadata: %{},
           network_id: network.id,

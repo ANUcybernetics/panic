@@ -235,7 +235,7 @@ defmodule PanicWeb.NetworkComponents do
     Enum.with_index(models, fn model, i -> {model, i == last_idx} end)
   end
 
-  defp strip_platform(model) do
-    model |> String.split(~r/[:\/]/) |> List.last()
+  defp strip_platform(model_id) do
+    model_id |> String.split(~r/[:\/]/) |> List.last()
   end
 end

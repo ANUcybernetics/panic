@@ -17,7 +17,7 @@ defmodule Panic.Platforms.OpenAI do
     end
   end
 
-  def create(model, prompt, tokens) do
+  def create(model_id, prompt, tokens) do
     request_body = %{
       prompt: prompt,
       max_tokens: @max_response_length,
@@ -26,7 +26,7 @@ defmodule Panic.Platforms.OpenAI do
 
     Finch.build(
       :post,
-      "#{@url}/#{model |> Panic.Platforms.model_info() |> Map.get(:path)}/completions",
+      "#{@url}/#{model_id |> Panic.Platforms.model_info() |> Map.get(:path)}/completions",
       headers(tokens),
       Jason.encode!(request_body)
     )

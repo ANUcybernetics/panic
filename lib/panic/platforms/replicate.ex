@@ -2,8 +2,8 @@ defmodule Panic.Platforms.Replicate do
   @url "https://api.replicate.com/v1"
   # @recv_timeout 10_000
 
-  def get_model_versions(model, tokens) do
-    url = "#{@url}/models/#{model |> Panic.Platforms.model_info() |> Map.get(:path)}/versions"
+  def get_model_versions(model_id, tokens) do
+    url = "#{@url}/models/#{model_id |> Panic.Platforms.model_info() |> Map.get(:path)}/versions"
 
     Finch.build(:get, url, headers(tokens))
     |> Finch.request(Panic.Finch)
@@ -17,8 +17,8 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
-  def get_latest_model_version(model, tokens) do
-    get_model_versions(model, tokens) |> List.first() |> Map.get("id")
+  def get_latest_model_version(model_id, tokens) do
+    get_model_versions(model_id, tokens) |> List.first() |> Map.get("id")
   end
 
   def get_status(prediction_id, tokens) do
@@ -60,14 +60,14 @@ defmodule Panic.Platforms.Replicate do
     |> Finch.request(Panic.Finch)
   end
 
-  def create_and_wait(model, input_params, tokens) do
+  def create_and_wait(model_id, input_params, tokens) do
     version =
-      model
+      model_id
       |> Panic.Platforms.model_info()
       |> Map.get(:version)
 
     request_body = %{
-      version: version || get_latest_model_version(model, tokens),
+      version: version || get_latest_model_version(model_id, tokens),
       input: input_params
     }
 
@@ -82,7 +82,7 @@ defmodule Panic.Platforms.Replicate do
   end
 
   ## text to image
-  def create("replicate:stability-ai/stable-diffusion" = model, prompt, tokens) do
+  def create("replicate:stability-ai/stable-diffusion" = model_id, prompt, tokens) do
     input_params = %{
       prompt: prompt,
       num_inference_steps: 50,
@@ -91,12 +91,12 @@ defmodule Panic.Platforms.Replicate do
       height: 576
     }
 
-    with {:ok, %{"output" => [image_url]}} <- create_and_wait(model, input_params, tokens) do
+    with {:ok, %{"output" => [image_url]}} <- create_and_wait(model_id, input_params, tokens) do
       {:ok, image_url}
     end
   end
 
-  def create("replicate:cloneofsimo/lora-socy" = model, prompt, tokens) do
+  def create("replicate:cloneofsimo/lora-socy" = model_id, prompt, tokens) do
     input_params = %{
       prompt: "#{prompt} in the style of <1>",
       width: 1024,
@@ -105,41 +105,45 @@ defmodule Panic.Platforms.Replicate do
         "https://replicate.delivery/pbxt/eIfm9M0WYEnnjUKQxyumkqiPtr6Pi0D8ee1bGufE74ieUpXIE/tmp5xnilpplHEADER20IMAGESzip.safetensors"
     }
 
-    with {:ok, %{"output" => [image_url]}} <- create_and_wait(model, input_params, tokens) do
+    with {:ok, %{"output" => [image_url]}} <- create_and_wait(model_id, input_params, tokens) do
       {:ok, image_url}
     end
   end
 
-  def create("replicate:kuprel/min-dalle" = model, prompt, tokens) do
+  def create("replicate:kuprel/min-dalle" = model_id, prompt, tokens) do
     with {:ok, %{"output" => [image_url]}} <-
-           create_and_wait(model, %{text: prompt, grid_size: 1, progressive_outputs: 0}, tokens) do
+           create_and_wait(
+             model_id,
+             %{text: prompt, grid_size: 1, progressive_outputs: 0},
+             tokens
+           ) do
       {:ok, image_url}
     end
   end
 
-  def create("replicate:rmokady/clip_prefix_caption" = model, image_url, tokens) do
-    with {:ok, %{"output" => text}} <- create_and_wait(model, %{image: image_url}, tokens) do
+  def create("replicate:rmokady/clip_prefix_caption" = model_id, image_url, tokens) do
+    with {:ok, %{"output" => text}} <- create_and_wait(model_id, %{image: image_url}, tokens) do
       {:ok, text}
     end
   end
 
-  def create("replicate:j-min/clip-caption-reward" = model, image_url, tokens) do
-    with {:ok, %{"output" => text}} <- create_and_wait(model, %{image: image_url}, tokens) do
+  def create("replicate:j-min/clip-caption-reward" = model_id, image_url, tokens) do
+    with {:ok, %{"output" => text}} <- create_and_wait(model_id, %{image: image_url}, tokens) do
       {:ok, text}
     end
   end
 
-  def create("replicate:salesforce/blip-2" = model, image_url, tokens) do
+  def create("replicate:salesforce/blip-2" = model_id, image_url, tokens) do
     with {:ok, %{"output" => text}} <-
-           create_and_wait(model, %{image: image_url, caption: true}, tokens) do
+           create_and_wait(model_id, %{image: image_url, caption: true}, tokens) do
       {:ok, text}
     end
   end
 
-  def create("replicate:timothybrooks/instruct-pix2pix" = model, input_image_url, tokens) do
+  def create("replicate:timothybrooks/instruct-pix2pix" = model_id, input_image_url, tokens) do
     with {:ok, %{"output" => [output_image_url]}} <-
            create_and_wait(
-             model,
+             model_id,
              %{
                image: input_image_url,
                prompt: "change the environment, keep the human and technology"
@@ -151,8 +155,8 @@ defmodule Panic.Platforms.Replicate do
   end
 
   ## text to text
-  def create("replicate:kyrick/prompt-parrot" = model, prompt, tokens) do
-    with {:ok, %{"output" => text}} <- create_and_wait(model, %{prompt: prompt}, tokens) do
+  def create("replicate:kyrick/prompt-parrot" = model_id, prompt, tokens) do
+    with {:ok, %{"output" => text}} <- create_and_wait(model_id, %{prompt: prompt}, tokens) do
       ## for some reason this model returns multiple prompts, but separated by a
       ## "separator" string rather than in a list, so we split it here and choose
       ## one at random
@@ -161,8 +165,8 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
-  def create("replicate:2feet6inches/cog-prompt-parrot" = model, prompt, tokens) do
-    with {:ok, %{"output" => text}} <- create_and_wait(model, %{prompt: prompt}, tokens) do
+  def create("replicate:2feet6inches/cog-prompt-parrot" = model_id, prompt, tokens) do
+    with {:ok, %{"output" => text}} <- create_and_wait(model_id, %{prompt: prompt}, tokens) do
       {:ok, text |> String.split("\n") |> Enum.random()}
     end
   end
