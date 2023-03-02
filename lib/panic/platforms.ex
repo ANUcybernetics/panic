@@ -66,6 +66,7 @@ defmodule Panic.Platforms do
     %Model{
       id: "replicate:stability-ai/stable-diffusion",
       path: "stability-ai/stable-diffusion",
+      version: "f178fa7a1ae43a9a9af01b833b9d2ecf97b1bcb0acfd2dc5dd04895e042863f1",
       name: "Stable Diffusion",
       description: "",
       input: :text,

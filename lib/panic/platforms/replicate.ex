@@ -146,6 +146,7 @@ defmodule Panic.Platforms.Replicate do
 
   def create_and_wait(model, input_params, tokens) do
     version = Map.get(model, :version, get_latest_model_version(model, tokens))
+
     request_body = %{
       version: version,
       input: input_params
