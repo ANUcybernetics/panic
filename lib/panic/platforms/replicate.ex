@@ -64,10 +64,10 @@ defmodule Panic.Platforms.Replicate do
     version =
       model
       |> Panic.Platforms.model_info()
-      |> Map.get(:version, get_latest_model_version(model, tokens))
+      |> Map.get(:version)
 
     request_body = %{
-      version: version,
+      version: version || get_latest_model_version(model, tokens),
       input: input_params
     }
 
