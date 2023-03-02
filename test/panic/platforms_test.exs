@@ -30,13 +30,16 @@ defmodule Panic.PlatformsTest do
     end
 
     test "get info for a single model" do
-      ## manually cribbed from lib/panic/platforms/replicate.ex:57
-      sd_info = %{
+      ## manually cribbed from Panic.Platforms
+      sd_info = %Panic.Platforms.Model{
         name: "Stable Diffusion",
         description: "",
         input: :text,
         output: :image,
-        path: "stability-ai/stable-diffusion"
+        path: "stability-ai/stable-diffusion",
+        id: "replicate:stability-ai/stable-diffusion",
+        platform: Panic.Platforms.Replicate,
+        version: "f178fa7a1ae43a9a9af01b833b9d2ecf97b1bcb0acfd2dc5dd04895e042863f1"
       }
 
       assert Platforms.model_info("replicate:stability-ai/stable-diffusion") == sd_info
