@@ -17,8 +17,8 @@ defmodule PanicWeb.UserSessionControllerTest do
       assert get_session(conn, :user_token)
       assert redirected_to(conn) == ~p"/"
 
-      # Now do a logged in request and assert on the menu
-      conn = get(conn, ~p"/")
+      # Now do a logged in request and assert on the networks page
+      conn = get(conn, ~p"/networks")
       response = html_response(conn, 200)
       assert response =~ user.email
       assert response =~ "Settings</a>"
