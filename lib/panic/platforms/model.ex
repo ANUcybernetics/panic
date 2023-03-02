@@ -1,5 +1,5 @@
 defmodule Panic.Platforms.Model do
-  defstruct [:id, :path, :name, :description, :input, :output, :platform]
+  defstruct [:id, :path, :version, :name, :description, :input, :output, :platform]
 
   @moduledoc """
   Struct containing all the model info:
