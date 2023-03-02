@@ -1,4 +1,5 @@
 defmodule Panic.Platforms.Model do
+  @enforce_keys [:id, :path, :name, :input, :output, :platform]
   defstruct [:id, :path, :version, :name, :description, :input, :output, :platform]
   alias Panic.Platforms.Model
 
