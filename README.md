@@ -128,6 +128,8 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 - add model links to info maps, write model descriptions
 - clear the terminal input when a new prediction is triggered (well, actually
   it's [this issue](https://github.com/phoenixframework/phoenix_live_view/issues/624), so maybe not worth getting bogged down on)
+- (maybe) pull the "initial values" stuff (both for genesis and next runs) into
+  two separate changeset functions in the Predictions.Prediction module
 
 ## Licence
 
