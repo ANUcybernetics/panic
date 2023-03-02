@@ -13,6 +13,10 @@ defmodule Panic.Models.Platforms.Replicate do
     end
   end
 
+  def get_latest_model_version("stability-ai/stable-diffusion") do
+    "f178fa7a1ae43a9a9af01b833b9d2ecf97b1bcb0acfd2dc5dd04895e042863f1"
+  end
+
   def get_latest_model_version(model) do
     get_model_versions(model) |> List.first() |> Map.get("id")
   end
