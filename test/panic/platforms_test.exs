@@ -44,6 +44,16 @@ defmodule Panic.PlatformsTest do
 
       assert Platforms.model_info("replicate:stability-ai/stable-diffusion") == sd_info
     end
+
+    test "model-to-url helpers" do
+      assert "https://platform.openai.com/docs/models/overview" ==
+               "openai:davinci-instruct-beta" |> Platforms.model_info() |> Model.model_url()
+
+      assert "https://replicate.com/stability-ai/stable-diffusion" ==
+               "replicate:stability-ai/stable-diffusion"
+               |> Platforms.model_info()
+               |> Model.model_url()
+    end
   end
 
   describe "OpenAI" do

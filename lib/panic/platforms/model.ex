@@ -1,5 +1,6 @@
 defmodule Panic.Platforms.Model do
   defstruct [:id, :path, :version, :name, :description, :input, :output, :platform]
+  alias Panic.Platforms.Model
 
   @moduledoc """
   Struct containing all the model info:
@@ -17,4 +18,12 @@ defmodule Panic.Platforms.Model do
   various versions of `create/3` in this module) and trying to keep that code in
   sync with this info in the database would be a nightmare.
   """
+
+  def model_url(%Model{platform: Panic.Platforms.OpenAI}) do
+    "https://platform.openai.com/docs/models/overview"
+  end
+
+  def model_url(%Model{platform: Panic.Platforms.Replicate, path: path}) do
+    "https://replicate.com/#{path}"
+  end
 end
