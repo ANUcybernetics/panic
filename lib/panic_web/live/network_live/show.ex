@@ -22,7 +22,7 @@ defmodule PanicWeb.NetworkLive.Show do
   @impl true
   def handle_event("append-model", %{"model" => model_id}, socket) do
     {:ok, network} = Networks.append_model(socket.assigns.network, model_id)
-    {:noreply, assign(socket, network: network, models: network.models)}
+    {:noreply, assign(socket, network: network)}
   end
 
   @impl true

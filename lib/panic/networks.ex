@@ -120,9 +120,9 @@ defmodule Panic.Networks do
   end
 
   ## input prompt is always text
-  def last_model_output_type(%Network{models: []}), do: :text
+  def last_model_output_type([]), do: :text
 
-  def last_model_output_type(%Network{models: model_ids}),
+  def last_model_output_type(model_ids),
     do: model_ids |> List.last() |> Panic.Platforms.model_info() |> Map.get(:output)
 
   # pubsub helpers

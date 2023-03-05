@@ -151,10 +151,10 @@ defmodule PanicWeb.NetworkComponents do
       <h2 class="text-md font-semibold">Append Model</h2>
       <div class="mt-4 grid md:grid-cols-3 xl:grid-cols-6 gap-2">
         <.button
-          :for={{model, %Panic.Platforms.Model{name: name, input: input}} <- Platforms.models()}
+          :for={%Panic.Platforms.Model{id: id, name: name, input: input} <- Platforms.models()}
           class="text-xs disabled:bg-zinc-700"
-          disabled={input != Networks.last_model_output_type(@network)}
-          phx-click={JS.push("append-model", value: %{model: model})}
+          disabled={input != Networks.last_model_output_type(@network.models)}
+          phx-click={JS.push("append-model", value: %{model: id})}
         >
           <%= name %>
         </.button>
@@ -167,7 +167,7 @@ defmodule PanicWeb.NetworkComponents do
   A table of the models in the network.
 
   """
-  attr :models, :list, required: true
+  attr :network, :map, required: true
   attr :table_id, :string, default: nil
   attr :class, :string, default: nil
 
@@ -175,7 +175,7 @@ defmodule PanicWeb.NetworkComponents do
     ~H"""
     <section class={[@class]}>
       <h2 class="text-md font-semibold">Network Models</h2>
-      <.table id={@table_id} rows={models_and_last?(@models)}>
+      <.table id={@table_id} rows={models_and_last?(@network.models)}>
         <:col :let={{model, _last?}} label="Name">
           <%= model |> Platforms.model_info() |> Map.get(:name) %>
         </:col>
