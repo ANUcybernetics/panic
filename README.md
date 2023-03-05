@@ -105,20 +105,22 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 ## TODO
 
-- maybe: move the model helper code into Model (out of Platforms)
-- add ability to specify a replicate version in model info (defaulting to latest
-  if not present)
+- fix "add models" widget
 - add vestaboards array to %Network{} (could validate based on board names from
   tokens map - see idea below)
+- maybe: move the model helper code into Model (out of Platforms)
+- add QR code view
+- add "slow down over time" logic to runs
+- text shadow effect
+- remove top nav (probably... need to think about how to do this)
 - when viewing a grid for a running network, initially pull the latest
   @num_grid_slots from the db (based on :genesis_id) and pre-populate the grid slots
-- add "slow down over time" logic to runs
-- add QR code view
+- write model descriptions
+- add "network info" view
 - write more tests for the new view things
 - add rolling cookie/URL param to QR code
 - add metadata to prediction (maybe `with` is our friend here?)
 - check that access control works for the network & prediction
-- add `has_many :networks, Panic.Networks.Network` to user
 - use an embedded schema for the tokens (Replicate and OpenAI are strings,
   Vestaboard is map)
 - add network permalinks (look in the history - there's some deleted `router.ex`
@@ -126,7 +128,6 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 - add models:
   - oblique strategies follower (GPT-3 powered)
   - https://replicate.com/pharmapsychotic/clip-interrogator
-- add model links to info maps, write model descriptions
 - clear the terminal input when a new prediction is triggered (well, actually
   it's [this issue](https://github.com/phoenixframework/phoenix_live_view/issues/624), so maybe not worth getting bogged down on)
 - (maybe) pull the "initial values" stuff (both for genesis and next runs) into
