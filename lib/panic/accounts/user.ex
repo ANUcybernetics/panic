@@ -8,6 +8,7 @@ defmodule Panic.Accounts.User do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :naive_datetime
     has_many :api_tokens, Panic.Accounts.APIToken
+    has_many :networks, Panic.Networks.Network
 
     timestamps()
   end
