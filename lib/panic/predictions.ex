@@ -69,44 +69,6 @@ defmodule Panic.Predictions do
   def get_prediction!(id), do: Repo.get!(Prediction, id) |> Repo.preload([:network])
 
   @doc """
-  Creates a prediction from a map of `attrs`.
-
-  Unless you're creating a prediction from a "raw" map of attrs, it's probably
-  easier to call one of the other `create_prediction` functions (which will hit
-  the API for you, fix up the genesis block stuff, keep track of run index,
-  etc.).
-
-  ## Examples
-
-      iex> create_prediction_from_attrs(%{field: value})
-      {:ok, %Prediction{}}
-
-      iex> create_prediction_from_attrs(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_prediction_from_attrs(attrs) do
-    %Prediction{}
-    |> Prediction.changeset(attrs)
-    |> Repo.insert()
-    |> case do
-      {:ok, prediction} -> {:ok, Repo.preload(prediction, [:network])}
-      {:error, changeset} -> {:error, changeset}
-    end
-  end
-
-  def genesis_changeset(%Network{} = network, attrs \\ %{}) do
-    %{
-      model: List.first(network.models),
-      run_index: 0,
-      metadata: %{},
-      network_id: network.id
-    }
-    |> Map.merge(attrs)
-    |> create_prediction_from_attrs()
-  end
-
-  @doc """
   Given an initial input, create a genesis (first in a run) prediction.
 
   This function will make the call to the relevant model API (based on the
@@ -132,8 +94,8 @@ defmodule Panic.Predictions do
       {:platform_error, reason}
 
   """
-  def create_prediction(input, %Network{} = network, tokens) when is_binary(input) do
-    {:error, changeset} = genesis_changeset(network, %{input: input})
+  def create_genesis_prediction(input, %Network{} = network, tokens) when is_binary(input) do
+    changeset = Prediction.genesis_changeset(input, network)
 
     case changeset do
       # if the only error is the missing output, make the API call
@@ -141,12 +103,16 @@ defmodule Panic.Predictions do
         case Panic.Platforms.api_call(changeset.changes.model, changeset.changes.input, tokens) do
           {:ok, output} ->
             {:ok, %Prediction{id: id} = prediction} =
-              create_prediction_from_attrs(changeset.changes |> Map.put(:output, output))
+              changeset
+              |> Prediction.add_output(output)
+              |> Repo.insert()
 
-            update_prediction(prediction, %{genesis_id: id})
+            prediction
+            |> Repo.preload([:network])
+            |> update_prediction(%{genesis_id: id})
 
           {:error, :nsfw} ->
-            create_prediction(
+            create_genesis_prediction(
               "You have been a bad user. This incident has been reported.",
               network,
               tokens
@@ -185,30 +151,32 @@ defmodule Panic.Predictions do
       {:platform_error, reason}
 
   """
-  def create_prediction(%Prediction{} = previous_prediction, tokens) do
-    run_index = previous_prediction.run_index + 1
-    network = previous_prediction.network
-    model_id = Enum.at(network.models, Integer.mod(run_index, Enum.count(network.models)))
-    input = previous_prediction.output
+  def create_next_prediction(%Prediction{} = previous_prediction, tokens) do
+    changeset = Prediction.next_changeset(previous_prediction)
 
-    case Panic.Platforms.api_call(model_id, input, tokens) do
-      {:ok, output} ->
-        create_prediction_from_attrs(%{
-          input: input,
-          output: output,
-          model: model_id,
-          run_index: run_index,
-          metadata: %{},
-          network_id: network.id,
-          genesis_id: previous_prediction.genesis_id
-        })
+    case changeset do
+      # if the only error is the missing output, make the API call
+      %{errors: [output: _]} ->
+        case Panic.Platforms.api_call(changeset.changes.model, changeset.changes.input, tokens) do
+          {:ok, output} ->
+            {:ok, prediction} =
+              changeset
+              |> Prediction.add_output(output)
+              |> Repo.insert()
 
-      {:error, :nsfw} ->
-        %{
-          previous_prediction
-          | output: "You have been a bad user. This incident has been reported."
-        }
-        |> create_prediction(tokens)
+            {:ok, Repo.preload(prediction, [:network])}
+
+          {:error, :nsfw} ->
+            create_genesis_prediction(
+              "You have been a bad user. This incident has been reported.",
+              previous_prediction.network,
+              tokens
+            )
+        end
+
+      # otherwise just return the error changeset
+      _ ->
+        {:error, changeset}
     end
   end
 

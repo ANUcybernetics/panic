@@ -151,7 +151,7 @@ defmodule Panic.Runs.StateMachine do
       when is_binary(input) do
     Networks.broadcast(network.id, {:prediction_incoming, 0})
 
-    with {:ok, prediction} <- Predictions.create_prediction(input, network, tokens) do
+    with {:ok, prediction} <- Predictions.create_genesis_prediction(input, network, tokens) do
       Finitomata.transition(prediction.network_id, {:new_prediction, prediction})
     end
   end
@@ -162,7 +162,7 @@ defmodule Panic.Runs.StateMachine do
       {:prediction_incoming, previous_prediction.run_index + 1}
     )
 
-    with {:ok, prediction} <- Predictions.create_prediction(previous_prediction, tokens) do
+    with {:ok, prediction} <- Predictions.create_next_prediction(previous_prediction, tokens) do
       Finitomata.transition(prediction.network_id, {:new_prediction, prediction})
     end
   end

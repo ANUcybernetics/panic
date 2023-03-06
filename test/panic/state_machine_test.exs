@@ -14,9 +14,9 @@ defmodule Panic.StateMachineTest do
   setup_with_mocks([
     {Panic.Platforms, [:passthrough],
      [
-       api_call: fn model_id, _input, _user ->
+       api_call: fn model, _input, _user ->
          Process.sleep(1000)
-         {:ok, "result of API call to #{model_id}"}
+         {:ok, "result of API call to #{model}"}
        end
      ]}
   ]) do

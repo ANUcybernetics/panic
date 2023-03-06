@@ -16,22 +16,10 @@ defmodule Panic.PredictionsFixtures do
   """
   def prediction_fixture(attrs \\ %{}) do
     network = network_fixture()
+    Panic.AccountsFixtures.insert_api_tokens_from_env(network.user_id)
+    tokens = Panic.Accounts.get_api_token_map(network.user_id)
 
-    {:ok, prediction} =
-      Map.merge(
-        %{
-          input: "some input",
-          metadata: %{},
-          model: List.first(network.models),
-          output: "some output",
-          run_index: 0,
-          network_id: network.id
-        },
-        attrs
-      )
-      |> Predictions.create_prediction_from_attrs()
-
-    {:ok, prediction} = Predictions.update_prediction(prediction, %{genesis_id: prediction.id})
+    {:ok, prediction} = Predictions.create_genesis_prediction("some input", network, tokens)
 
     prediction
   end

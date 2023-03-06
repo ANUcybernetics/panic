@@ -18,36 +18,6 @@ defmodule Panic.PredictionsTest do
       assert Predictions.get_prediction!(prediction.id) == prediction
     end
 
-    test "create_prediction/1 with valid data creates a prediction" do
-      network = network_fixture()
-
-      valid_attrs = %{
-        input: "some input",
-        metadata: %{},
-        model: "some model",
-        output: "some output",
-        run_index: 42,
-        network_id: network.id,
-        genesis_id: network.id
-      }
-
-      assert {:ok, %Prediction{} = prediction} =
-               Predictions.create_prediction_from_attrs(valid_attrs)
-
-      assert prediction.input == "some input"
-      assert prediction.metadata == %{}
-      assert prediction.model == "some model"
-      assert prediction.output == "some output"
-      assert prediction.run_index == 42
-      assert prediction.network_id == network.id
-      assert prediction.genesis_id == network.id
-    end
-
-    test "create_prediction/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} =
-               Predictions.create_prediction_from_attrs(@invalid_attrs)
-    end
-
     test "update_prediction/2 with valid data updates the prediction" do
       prediction = prediction_fixture()
 
@@ -104,7 +74,7 @@ defmodule Panic.PredictionsTest do
       input = "Tell me a joke about potatoes."
 
       assert {:ok, %Prediction{output: output}} =
-               Predictions.create_prediction(input, network, tokens)
+               Predictions.create_genesis_prediction(input, network, tokens)
 
       assert is_binary(output)
     end
@@ -123,14 +93,14 @@ defmodule Panic.PredictionsTest do
       input = "Tell me a joke about potatoes."
 
       assert {:ok, %Prediction{run_index: 0} = genesis} =
-               Predictions.create_prediction(input, network, tokens)
+               Predictions.create_genesis_prediction(input, network, tokens)
 
       assert is_binary(genesis.output)
 
       genesis_id = genesis.id
 
       assert {:ok, %Prediction{run_index: 1, genesis_id: ^genesis_id}} =
-               Predictions.create_prediction(genesis, tokens)
+               Predictions.create_next_prediction(genesis, tokens)
     end
   end
 
