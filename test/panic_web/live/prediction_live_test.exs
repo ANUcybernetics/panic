@@ -30,11 +30,7 @@ defmodule PanicWeb.PredictionLiveTest do
   end
 
   defp create_prediction(%{network: network} = context) do
-    Map.put(
-      context,
-      :prediction,
-      prediction_fixture(%{network_id: network.id, model: List.first(network.models)})
-    )
+    Map.put(context, :prediction, genesis_prediction_fixture(network))
   end
 
   describe "Index" do
