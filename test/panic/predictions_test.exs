@@ -1,14 +1,21 @@
 defmodule Panic.PredictionsTest do
-  use Panic.DataCase
+  use Panic.DataCase, async: false
 
   alias Panic.Accounts
   alias Panic.Predictions
   alias Panic.Predictions.Prediction
 
-  import Panic.PredictionsFixtures
-  import Panic.NetworksFixtures
-  import Panic.AccountsFixtures
+  import Panic.{PredictionsFixtures, NetworksFixtures, AccountsFixtures}
   import Mock
+
+  setup_with_mocks([
+    {Panic.Platforms, [:passthrough], [api_call: &fake_api_call/3]}
+  ]) do
+    network = network_fixture()
+    insert_api_tokens_from_env(network.user_id)
+
+    {:ok, network: network, tokens: Accounts.get_api_token_map(network.user_id)}
+  end
 
   describe "predictions" do
     @invalid_attrs %{input: nil, metadata: nil, model: nil, output: nil, run_index: nil}
@@ -61,16 +68,8 @@ defmodule Panic.PredictionsTest do
   end
 
   describe "create genesis/next predictions (mocked platform API calls)" do
-    setup [:create_network, :load_env_vars]
-
-    test_with_mock "create_prediction/2 works with valid params",
-                   %{network: network, tokens: tokens},
-                   Panic.Platforms,
-                   [:passthrough],
-                   api_call: fn model_id, _input, _user ->
-                     Process.sleep(1000)
-                     {:ok, "result of API call to #{model_id}"}
-                   end do
+    test "create_prediction/2 works with valid params",
+         %{network: network, tokens: tokens} do
       input = "Tell me a joke about potatoes."
 
       assert {:ok, %Prediction{output: output}} =
@@ -79,17 +78,8 @@ defmodule Panic.PredictionsTest do
       assert is_binary(output)
     end
 
-    test_with_mock "create_prediction/2 followed by create_next_prediction/2 works",
-                   %{
-                     network: network,
-                     tokens: tokens
-                   },
-                   Panic.Platforms,
-                   [:passthrough],
-                   api_call: fn model_id, _input, _user ->
-                     Process.sleep(1000)
-                     {:ok, "result of API call to #{model_id}"}
-                   end do
+    test "create_prediction/2 followed by create_next_prediction/2 works",
+         %{network: network, tokens: tokens} do
       input = "Tell me a joke about potatoes."
 
       assert {:ok, %Prediction{run_index: 0} = genesis} =
@@ -104,14 +94,7 @@ defmodule Panic.PredictionsTest do
     end
   end
 
-  defp create_network(_context) do
-    %{network: network_fixture()}
-  end
-
-  defp load_env_vars(%{network: network} = context) do
-    insert_api_tokens_from_env(network.user_id)
-
-    context
-    |> Map.put(:tokens, Accounts.get_api_token_map(network.user_id))
+  defp fake_api_call(model_id, input, _user) do
+    {:ok, "#{model_id} API call result for input '#{input}'"}
   end
 end
