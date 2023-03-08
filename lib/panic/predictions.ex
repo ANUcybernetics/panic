@@ -102,14 +102,12 @@ defmodule Panic.Predictions do
       %{errors: [output: _]} ->
         case Panic.Platforms.api_call(changeset.changes.model, changeset.changes.input, tokens) do
           {:ok, output} ->
-            {:ok, %Prediction{id: id} = prediction} =
-              changeset
-              |> Prediction.add_output(output)
-              |> Repo.insert()
+            {:ok, prediction} =
+              changeset.params
+              |> Map.put("output", output)
+              |> create_prediction()
 
-            prediction
-            |> Repo.preload([:network])
-            |> update_prediction(%{genesis_id: id})
+            update_prediction(prediction, %{genesis_id: prediction.id})
 
           {:error, :nsfw} ->
             create_genesis_prediction(
@@ -160,11 +158,9 @@ defmodule Panic.Predictions do
         case Panic.Platforms.api_call(changeset.changes.model, changeset.changes.input, tokens) do
           {:ok, output} ->
             {:ok, prediction} =
-              changeset
-              |> Prediction.add_output(output)
-              |> Repo.insert()
-
-            {:ok, Repo.preload(prediction, [:network])}
+              changeset.params
+              |> Map.put("output", output)
+              |> create_prediction()
 
           {:error, :nsfw} ->
             create_genesis_prediction(
@@ -177,6 +173,35 @@ defmodule Panic.Predictions do
       # otherwise just return the error changeset
       _ ->
         {:error, changeset}
+    end
+  end
+
+  @doc """
+  Creates a prediction.
+
+  This is the standard "context" function which just takes a map of attrs. In
+  general use you almost always want to use `create_genesis_prediction/3` or
+  `create_next_prediction/2`
+
+  On success - `{:ok, %Prediction{}}` - the prediction will have the `:network`
+  attribute preloaded.
+
+  ## Examples
+
+      iex> create_prediction(%{field: value})
+      {:ok, %Prediction{}}
+
+      iex> create_prediction(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_prediction(attrs \\ %{}) do
+    %Prediction{}
+    |> Prediction.changeset(attrs)
+    |> Repo.insert()
+    |> case do
+      {:ok, prediction} -> {:ok, Repo.preload(prediction, [:network])}
+      {:error, changeset} -> {:error, changeset}
     end
   end
 

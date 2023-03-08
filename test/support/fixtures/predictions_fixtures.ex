@@ -10,11 +10,11 @@ defmodule Panic.PredictionsFixtures do
   @doc """
   Generate a (genesis) prediction.
 
-  This is expecting a map of fake data; it won't be a genesis prediction, and
-  as a "next" prediction there won't be any preceeding ones.
+  Unless `Panic.Platforms.api_call/3` is mocked in the calling context, this
+  will make a real platform API call.
 
   """
-  def prediction_fixture(attrs \\ %{}) do
+  def genesis_prediction_fixture() do
     network = network_fixture()
     Panic.AccountsFixtures.insert_api_tokens_from_env(network.user_id)
     tokens = Panic.Accounts.get_api_token_map(network.user_id)

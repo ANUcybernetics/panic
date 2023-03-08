@@ -14,12 +14,12 @@ defmodule Panic.PredictionsTest do
     @invalid_attrs %{input: nil, metadata: nil, model: nil, output: nil, run_index: nil}
 
     test "get_prediction!/1 returns the prediction with given id" do
-      prediction = prediction_fixture()
+      prediction = genesis_prediction_fixture()
       assert Predictions.get_prediction!(prediction.id) == prediction
     end
 
     test "update_prediction/2 with valid data updates the prediction" do
-      prediction = prediction_fixture()
+      prediction = genesis_prediction_fixture()
 
       update_attrs = %{
         input: "some updated input",
@@ -40,7 +40,7 @@ defmodule Panic.PredictionsTest do
     end
 
     test "update_prediction/2 with invalid data returns error changeset" do
-      prediction = prediction_fixture()
+      prediction = genesis_prediction_fixture()
 
       assert {:error, %Ecto.Changeset{}} =
                Predictions.update_prediction(prediction, @invalid_attrs)
@@ -49,13 +49,13 @@ defmodule Panic.PredictionsTest do
     end
 
     test "delete_prediction/1 deletes the prediction" do
-      prediction = prediction_fixture()
+      prediction = genesis_prediction_fixture()
       assert {:ok, %Prediction{}} = Predictions.delete_prediction(prediction)
       assert_raise Ecto.NoResultsError, fn -> Predictions.get_prediction!(prediction.id) end
     end
 
     test "change_prediction/1 returns a prediction changeset" do
-      prediction = prediction_fixture()
+      prediction = genesis_prediction_fixture()
       assert %Ecto.Changeset{} = Predictions.change_prediction(prediction)
     end
   end
