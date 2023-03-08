@@ -105,7 +105,6 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 ## TODO
 
-- fix "add models" widget
 - add vestaboards array to %Network{} (could validate based on board names from
   tokens map - see idea below)
 - maybe: move the model helper code into Model (out of Platforms)
@@ -132,6 +131,8 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
   it's [this issue](https://github.com/phoenixframework/phoenix_live_view/issues/624), so maybe not worth getting bogged down on)
 - (maybe) pull the "initial values" stuff (both for genesis and next runs) into
   two separate changeset functions in the Predictions.Prediction module
+- update to final Phoenix v1.7.0
+- convert to LV streams API
 
 ## Licence
 
