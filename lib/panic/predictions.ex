@@ -82,15 +82,15 @@ defmodule Panic.Predictions do
 
   ## Examples
 
-      iex> create_prediction("this is a text input prompt", %Network{}, tokens)
+      iex> create_genesis_prediction("this is a text input prompt", %Network{}, tokens)
       {:ok, %Prediction{}}
 
       ## if any of the arguments are invalid
-      iex> create_prediction(12345, %Network{}, tokens)
+      iex> create_genesis_prediction(12345, %Network{}, tokens)
       {:error, %Ecto.Changeset{}}
 
       ## if the platform API call fails for some reason
-      iex> create_prediction("valid text input", %Network{}, tokens)
+      iex> create_genesis_prediction("valid text input", %Network{}, tokens)
       {:platform_error, reason}
 
   """
@@ -139,15 +139,15 @@ defmodule Panic.Predictions do
 
   ## Examples
 
-      iex> create_prediction(%Prediction{}, tokens)
+      iex> create_next_prediction(%Prediction{}, tokens)
       {:ok, %Prediction{}}
 
       ## if any of the arguments are invalid
-      iex> create_prediction(nil, tokens)
+      iex> create_next_prediction(nil, tokens)
       {:error, %Ecto.Changeset{}}
 
       ## if the platform API call fails for some reason
-      iex> create_prediction(%Prediction{}, tokens)
+      iex> create_next_prediction(%Prediction{}, tokens)
       {:platform_error, reason}
 
   """
