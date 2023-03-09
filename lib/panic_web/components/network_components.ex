@@ -230,6 +230,38 @@ defmodule PanicWeb.NetworkComponents do
     """
   end
 
+  @doc """
+  A hack! Will do this more nicely later.
+  """
+  def json_input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
+    assigns =
+      assigns
+      |> assign(field: nil, id: field.id)
+      |> assign(:errors, Enum.map(field.errors, &translate_error(&1)))
+      |> assign_new(:name, fn -> field.name end)
+      |> assign_new(:value, fn -> field.value end)
+
+    ~H"""
+    <div phx-feedback-for={@name}>
+      <.label for={@id}><%= @label %></.label>
+      <input
+        type={@type}
+        name={@name}
+        id={@id || @name}
+        value={Jason.encode!(@value)}
+        class={[
+          "mt-2 block w-full rounded-lg bg-zinc-900 border-purple-300 py-[7px] px-[11px]",
+          "text-purple-300 focus:outline-none focus:ring-4 sm:text-sm sm:leading-6",
+          "phx-no-feedback:border-purple-300 phx-no-feedback:focus:border-purple-400 phx-no-feedback:focus:ring-purple-800/5",
+          "border-purple-300 focus:border-purple-400 focus:ring-purple-800/5",
+          @errors != [] && "border-rose-400 focus:border-rose-400 focus:ring-rose-400/10"
+        ]}
+      />
+      <.error :for={msg <- @errors}><%= msg %></.error>
+    </div>
+    """
+  end
+
   defp models_and_last?(models) do
     last_idx = Enum.count(models) - 1
     Enum.with_index(models, fn model, i -> {model, i == last_idx} end)

@@ -21,7 +21,11 @@ defmodule PanicWeb.NetworkLive.FormComponent do
       >
         <.input field={@form[:name]} type="text" label="Name" />
         <.input field={@form[:description]} type="textarea" label="Description (markdown)" />
-        <.input field={@form[:vestaboards]} type="text" label="Vestaboards (JSON array)" />
+        <PanicWeb.NetworkComponents.json_input
+          field={@form[:vestaboards]}
+          type="text"
+          label="Vestaboards (JSON array)"
+        />
         <:actions>
           <.button phx-disable-with="Saving...">Save Network</.button>
         </:actions>
