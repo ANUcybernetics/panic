@@ -157,7 +157,7 @@ defmodule Panic.Predictions do
       %{errors: [output: _]} ->
         case Panic.Platforms.api_call(changeset.changes.model, changeset.changes.input, tokens) do
           {:ok, output} ->
-            {:ok, prediction} =
+            {:ok, _prediction} =
               changeset.params
               |> Map.put("output", output)
               |> create_prediction()
