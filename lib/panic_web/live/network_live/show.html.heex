@@ -52,6 +52,11 @@
 
   <.network_models_table class="mt-16" network={@network} />
 
-  <h2 class="text-md font-semibold">Vestaboard array (JSON)</h2>
-  <pre><code><%= Jason.encode!(@network.vestaboards) %></code></pre>
+  <section class="mt-16" :if={@network.vestaboards}>
+  <h2 class="text-md font-semibold">Vestaboards</h2>
+  <ol start="0" class="list-decimal mt-8">
+    <li :for={v <- @network.vestaboards}><%= if v != "nil" do %><%= v %><% else
+    %><span class="text-purple-500">none</span><% end %></li>
+  </ol>
+  </section>
 </.modal>
