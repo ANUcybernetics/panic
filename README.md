@@ -121,6 +121,7 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
   Vestaboard is map)
 - add network permalinks (look in the history - there's some deleted `router.ex`
   code in there)
+- check that "send text to the Vestaboards" stuff works (need to be at uni)
 - add models:
   - oblique strategies follower (GPT-3 powered)
   - https://replicate.com/pharmapsychotic/clip-interrogator

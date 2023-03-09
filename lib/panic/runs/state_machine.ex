@@ -78,6 +78,8 @@ defmodule Panic.Runs.StateMachine do
       ) do
     Networks.broadcast(new_prediction.network_id, {:new_prediction, new_prediction})
 
+    maybe_send_vestaboard_text(new_prediction, payload.tokens)
+
     Task.Supervisor.start_child(
       Panic.Runs.TaskSupervisor,
       Panic.Runs.StateMachine,
@@ -101,6 +103,13 @@ defmodule Panic.Runs.StateMachine do
       )
       when state in [:uninterruptable, :interruptable] and new_index == head_index + 1 do
     Networks.broadcast(new_prediction.network_id, {:new_prediction, new_prediction})
+
+    maybe_send_vestaboard_text(new_prediction, payload.tokens)
+
+    # back-off logic
+    payload.genesis_prediction
+    |> api_call_delay()
+    |> Process.sleep()
 
     Task.Supervisor.start_child(
       Panic.Runs.TaskSupervisor,
@@ -219,5 +228,33 @@ defmodule Panic.Runs.StateMachine do
         tokens: Panic.Accounts.get_api_token_map(network.user_id)
       })
     end
+  end
+
+  defp api_call_delay(nil), do: 0
+
+  defp api_call_delay(genesis_prediction) do
+    case seconds_since_prediction(genesis_prediction) do
+      t when t < 300 -> 0
+      t when t < 3_600 -> 60
+      _ -> 300
+    end
+  end
+
+  defp maybe_send_vestaboard_text(%Prediction{network: %Network{vestaboards: nil}}, _tokens),
+    do: :ok
+
+  defp maybe_send_vestaboard_text(%Prediction{network: %Network{} = network} = prediction, tokens) do
+    board =
+      network.vestaboards
+      |> Enum.at(Integer.mod(prediction.run_index, Enum.count(network.vestaboards)))
+
+    if board do
+      {:ok, _} = Panic.Platforms.Vestaboard.send_text(board, prediction.output, tokens)
+    end
+
+    ## TODO if we did need to add a sleep to stop the next prediction coming in
+    ## before the Vestaboards had updated, here would be the place to do it
+
+    :ok
   end
 end
