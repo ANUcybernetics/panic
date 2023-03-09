@@ -79,6 +79,13 @@ defmodule Panic.PlatformsTest do
       assert {:ok, output} = OpenAI.create("openai:text-ada-001", input, tokens)
       assert is_binary(output)
     end
+
+    test "ChatGPT responds when given a valid prompt", %{tokens: tokens} do
+      input = "A group of puppies playing in the long grass."
+
+      assert {:ok, output} = OpenAI.create("openai:gpt-3.5-turbo", input, tokens)
+      assert is_binary(output)
+    end
   end
 
   describe "Replicate" do

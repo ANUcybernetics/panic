@@ -117,6 +117,15 @@ defmodule Panic.Platforms do
       input: :text,
       output: :text,
       platform: Panic.Platforms.OpenAI
+    },
+    %Model{
+      id: "openai:gpt-3.5-turbo",
+      path: "gpt-3.5-turbo",
+      name: "ChatGPT",
+      description: "",
+      input: :text,
+      output: :text,
+      platform: Panic.Platforms.OpenAI
     }
   ]
 
