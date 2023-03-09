@@ -51,4 +51,7 @@
   <.append_model_buttons class="mt-16" network={@network} />
 
   <.network_models_table class="mt-16" network={@network} />
+
+  <h2 class="text-md font-semibold">Vestaboard array (JSON)</h2>
+  <pre><code><%= Jason.encode!(@network.vestaboards) %></code></pre>
 </.modal>

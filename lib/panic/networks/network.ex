@@ -5,6 +5,7 @@ defmodule Panic.Networks.Network do
   schema "networks" do
     field :description, :string
     field :models, {:array, :string}, default: []
+    field :vestaboards, {:array, :string}
     field :name, :string
     belongs_to :user, Panic.Accounts.User
 
@@ -13,8 +14,10 @@ defmodule Panic.Networks.Network do
 
   @doc false
   def changeset(network, attrs) do
+    attrs = maybe_decode_vestaboards_json(attrs)
+
     network
-    |> cast(attrs, [:models, :name, :description, :user_id])
+    |> cast(attrs, [:models, :name, :description, :user_id, :vestaboards])
     |> validate_required([:name, :description, :user_id])
     |> validate_model_array()
     |> foreign_key_constraint(:user)
@@ -33,4 +36,17 @@ defmodule Panic.Networks.Network do
       end
     end)
   end
+
+  defp maybe_decode_vestaboards_json(%{"vestaboards" => vestaboards} = attrs) do
+    vb =
+      case Jason.decode(vestaboards) do
+        {:ok, result} -> result
+        {:error, %Jason.DecodeError{data: data}} -> data
+        _ -> attrs
+      end
+
+    Map.put(attrs, "vestaboards", vb)
+  end
+
+  defp maybe_decode_vestaboards_json(attrs), do: attrs
 end
