@@ -15,6 +15,7 @@ defmodule Panic.PredictionsFixtures do
 
   """
   def genesis_prediction_fixture(%Panic.Networks.Network{} = network) do
+    Panic.AccountsFixtures.insert_api_tokens_from_env(network.user_id)
     tokens = Panic.Accounts.get_api_token_map(network.user_id)
 
     {:ok, prediction} = Predictions.create_genesis_prediction("some input", network, tokens)
@@ -30,10 +31,8 @@ defmodule Panic.PredictionsFixtures do
 
   """
   def genesis_prediction_fixture() do
-    network = network_fixture()
-    Panic.AccountsFixtures.insert_api_tokens_from_env(network.user_id)
-
-    genesis_prediction_fixture(network)
+    network_fixture()
+    |> genesis_prediction_fixture()
   end
 
   @doc """
