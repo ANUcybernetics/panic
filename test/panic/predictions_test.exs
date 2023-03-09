@@ -9,7 +9,12 @@ defmodule Panic.PredictionsTest do
   import Mock
 
   setup_with_mocks([
-    {Panic.Platforms, [:passthrough], [api_call: &fake_api_call/3]}
+    {Panic.Platforms, [:passthrough],
+     [
+       api_call: fn model_id, input, _user ->
+         {:ok, "#{model_id} API call result for input '#{input}'"}
+       end
+     ]}
   ]) do
     network = network_fixture()
     insert_api_tokens_from_env(network.user_id)
@@ -92,9 +97,5 @@ defmodule Panic.PredictionsTest do
       assert {:ok, %Prediction{run_index: 1, genesis_id: ^genesis_id}} =
                Predictions.create_next_prediction(genesis, tokens)
     end
-  end
-
-  defp fake_api_call(model_id, input, _user) do
-    {:ok, "#{model_id} API call result for input '#{input}'"}
   end
 end
