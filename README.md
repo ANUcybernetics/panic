@@ -105,8 +105,6 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
 
 ## TODO
 
-- add vestaboards array to %Network{} (could validate based on board names from
-  tokens map - see idea below)
 - add QR code view
 - add "slow down over time" logic to runs
 - text shadow effect
