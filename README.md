@@ -131,9 +131,3 @@ mix petal.gen.live Networks Network networks owner_id:references:users name:stri
   two separate changeset functions in the Predictions.Prediction module
 - update to final Phoenix v1.7.0
 - convert to LV streams API
-
-## Licence
-
-(c) Ben Swift
-
-MIT
