@@ -140,6 +140,12 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
+  def create("replicate:replicate/vicuna-13b" = model_id, prompt, tokens) do
+    with {:ok, %{"output" => output}} <- create_and_wait(model_id, %{prompt: prompt}, tokens) do
+      {:ok, Enum.join(output)}
+    end
+  end
+
   def create("replicate:timothybrooks/instruct-pix2pix" = model_id, input_image_url, tokens) do
     with {:ok, %{"output" => [output_image_url]}} <-
            create_and_wait(

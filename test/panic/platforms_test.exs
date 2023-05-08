@@ -174,6 +174,18 @@ defmodule Panic.PlatformsTest do
 
       assert is_binary(image_caption)
     end
+
+    test "Vicuna 13B LLM",
+         %{tokens: tokens} do
+      input = "I'm a language model and I'm here to say"
+
+      assert {:ok, output_text} =
+               Replicate.create("replicate:replicate/vicuna-13b", input, tokens)
+
+      dbg()
+      assert is_binary(output_text)
+      assert String.length(output_text) > 0
+    end
   end
 
   describe "Vestaboard" do

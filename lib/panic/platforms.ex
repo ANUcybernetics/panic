@@ -64,6 +64,15 @@ defmodule Panic.Platforms do
       platform: Panic.Platforms.Replicate
     },
     %Model{
+      id: "replicate:replicate/vicuna-13b",
+      path: "replicate/vicuna-13b",
+      name: "vicuna 13B",
+      description: "A large language model that's been fine-tuned on ChatGPT interactions",
+      input: :text,
+      output: :text,
+      platform: Panic.Platforms.Replicate
+    },
+    %Model{
       id: "replicate:stability-ai/stable-diffusion",
       path: "stability-ai/stable-diffusion",
       version: "f178fa7a1ae43a9a9af01b833b9d2ecf97b1bcb0acfd2dc5dd04895e042863f1",
