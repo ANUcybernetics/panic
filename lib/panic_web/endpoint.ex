@@ -7,7 +7,7 @@ defmodule PanicWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_panic_key",
-    signing_salt: "NKidZ9+P",
+    signing_salt: "JvWQk5ZP",
     same_site: "Lax"
   ]
 

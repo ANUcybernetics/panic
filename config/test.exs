@@ -1,8 +1,5 @@
 import Config
 
-# Only in tests, remove the complexity from the password hashing algorithm
-config :argon2_elixir, t_cost: 1, m_cost: 8
-
 # Configure your database
 #
 # The MIX_TEST_PARTITION environment variable can be used
@@ -17,7 +14,7 @@ config :panic, Panic.Repo,
 # you can enable the server option below.
 config :panic, PanicWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
-  secret_key_base: "h7gXKrgV/TZRKSHfURXjO0auON1JMfN/2btqMIHg5HcokvjXc37uSmB88TvGSUpv",
+  secret_key_base: "V6mw47T+YV1VXLvgOOICGlfDySp4xsO9241UZkbUeoqjAsG3V3no7/n/3UQ3/Pbl",
   server: false
 
 # In test we don't send emails.

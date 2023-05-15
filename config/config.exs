@@ -18,7 +18,7 @@ config :panic, PanicWeb.Endpoint,
     layout: false
   ],
   pubsub_server: Panic.PubSub,
-  live_view: [signing_salt: "0L9a+uxI"]
+  live_view: [signing_salt: "Zhrkv8yo"]
 
 # Configures the mailer
 #
@@ -31,7 +31,7 @@ config :panic, Panic.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configure esbuild (the version is required)
 config :esbuild,
-  version: "0.14.41",
+  version: "0.17.11",
   default: [
     args:
       ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
@@ -41,7 +41,7 @@ config :esbuild,
 
 # Configure tailwind (the version is required)
 config :tailwind,
-  version: "3.2.4",
+  version: "3.2.7",
   default: [
     args: ~w(
       --config=tailwind.config.js

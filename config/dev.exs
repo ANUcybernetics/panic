@@ -20,7 +20,7 @@ config :panic, PanicWeb.Endpoint,
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "IGfpHOvrBO/rzXHsDtwaaL+PkwxFf9YfMKY0dnZc0vpjZjouAVoIoJJzf4VvBqL2",
+  secret_key_base: "rR8IitFILeEHWC8CFX6Jsdr1LeHg037daF2xZL0SnRCLUTymXIHLyQTPh0nptreF",
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
     tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}

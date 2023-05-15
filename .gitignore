@@ -35,17 +35,12 @@ panic-*.tar
 npm-debug.log
 /assets/node_modules/
 
-# Not everyone uses vscode
-.vscode
-
-.elixir_ls
+# Database files
+*.db
+*.db-*
 
 # Env vars used by direnv
 .envrc
 
 # Sobelow
 .sobelow
-
-# development databases
-/panic_dev.db*
-/panic_test.db*
