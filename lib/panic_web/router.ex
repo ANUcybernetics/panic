@@ -65,6 +65,7 @@ defmodule PanicWeb.Router do
       live "/networks/:id/qrcode", NetworkLive.Show, :qrcode
 
       live "/networks/:network_id/predictions", PredictionLive.Index, :index
+      live "/networks/:network_id/predictions/new", PredictionLive.Terminal, :new
 
       live "/api_tokens", APITokenLive.Index, :index
       live "/api_tokens/new", APITokenLive.Index, :new
@@ -83,8 +84,6 @@ defmodule PanicWeb.Router do
     live_session :public_network_routes,
       on_mount: [{PanicWeb.UserAuth, :mount_current_user}] do
       live "/", HomeLive.Index, :index
-
-      live "/networks/:network_id/predictions/new", PredictionLive.Terminal, :new
 
       ## "running grid" view
       live "/networks/:id", NetworkLive.Show, :show
