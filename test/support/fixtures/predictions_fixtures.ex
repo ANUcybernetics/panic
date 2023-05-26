@@ -4,7 +4,6 @@ defmodule Panic.PredictionsFixtures do
   entities via the `Panic.Predictions` context.
   """
 
-  import Panic.NetworksFixtures
   alias Panic.Predictions
 
   @doc """

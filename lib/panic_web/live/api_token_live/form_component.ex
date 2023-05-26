@@ -36,53 +36,56 @@ defmodule PanicWeb.APITokenLive.FormComponent do
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(:form, to_form(changeset))}
+     |> assign_form(changeset)}
   end
 
   @impl true
   def handle_event("validate", %{"api_token" => api_token_params}, socket) do
-    api_token_params = add_user_id(api_token_params, socket)
-
     changeset =
       socket.assigns.api_token
       |> Accounts.change_api_token(api_token_params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, :form, to_form(changeset))}
+    {:noreply, assign_form(socket, changeset)}
   end
 
   def handle_event("save", %{"api_token" => api_token_params}, socket) do
-    api_token_params = add_user_id(api_token_params, socket)
     save_api_token(socket, socket.assigns.action, api_token_params)
   end
 
   defp save_api_token(socket, :edit, api_token_params) do
     case Accounts.update_api_token(socket.assigns.api_token, api_token_params) do
-      {:ok, _api_token} ->
+      {:ok, api_token} ->
+        notify_parent({:saved, api_token})
+
         {:noreply,
          socket
          |> put_flash(:info, "API token updated successfully")
-         |> push_navigate(to: socket.assigns.navigate)}
+         |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, :form, to_form(changeset))}
+        {:noreply, assign_form(socket, changeset)}
     end
   end
 
   defp save_api_token(socket, :new, api_token_params) do
     case Accounts.create_api_token(api_token_params) do
-      {:ok, _api_token} ->
+      {:ok, api_token} ->
+        notify_parent({:saved, api_token})
+
         {:noreply,
          socket
          |> put_flash(:info, "API token created successfully")
-         |> push_navigate(to: socket.assigns.navigate)}
+         |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, :form, to_form(changeset))}
+        {:noreply, assign_form(socket, changeset)}
     end
   end
 
-  defp add_user_id(params, socket) do
-    Map.put(params, "user_id", socket.assigns.user.id)
+  defp assign_form(socket, %Ecto.Changeset{} = changeset) do
+    assign(socket, :form, to_form(changeset))
   end
+
+  defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 end

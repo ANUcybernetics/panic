@@ -24,10 +24,9 @@
   <.live_component
     module={PanicWeb.APITokenLive.FormComponent}
     id={@api_token.id}
-    user={@current_user}
     title={@page_title}
     action={@live_action}
     api_token={@api_token}
-    navigate={~p"/api_tokens/#{@api_token}"}
+    patch={~p"/api_tokens/#{@api_token}"}
   />
 </.modal>

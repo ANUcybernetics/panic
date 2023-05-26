@@ -6,7 +6,7 @@ defmodule PanicWeb.APITokenLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :api_tokens, list_api_tokens(socket.assigns.current_user))}
+    {:ok, stream(socket, :api_tokens, list_api_tokens(socket.assigns.current_user))}
   end
 
   @impl true
@@ -33,11 +33,16 @@ defmodule PanicWeb.APITokenLive.Index do
   end
 
   @impl true
+  def handle_info({PanicWeb.APITokenLive.FormComponent, {:saved, api_token}}, socket) do
+    {:noreply, stream_insert(socket, :api_tokens, api_token)}
+  end
+
+  @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     api_token = Accounts.get_api_token!(id)
     {:ok, _} = Accounts.delete_api_token(api_token)
 
-    {:noreply, assign(socket, :api_tokens, list_api_tokens(socket.assigns.current_user))}
+    {:noreply, stream_delete(socket, :api_tokens, api_token)}
   end
 
   defp list_api_tokens(%Accounts.User{} = user) do

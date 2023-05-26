@@ -10,7 +10,7 @@ defmodule Panic.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
-      compilers: [:finitomata] ++ Mix.compilers()
+      compilers: compilers()
     ]
   end
 
@@ -58,6 +58,10 @@ defmodule Panic.MixProject do
       {:content_security_policy, "~> 1.0"},
       {:argon2_elixir, "~> 3.0"}
     ]
+  end
+
+  defp compilers do
+    [:finitomata] # ++ Mix.compilers()
   end
 
   # Aliases are shortcuts or tasks specific to the current project.
