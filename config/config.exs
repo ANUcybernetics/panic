@@ -18,7 +18,7 @@ config :panic, PanicWeb.Endpoint,
     layout: false
   ],
   pubsub_server: Panic.PubSub,
-  live_view: [signing_salt: "Zhrkv8yo"]
+  live_view: [signing_salt: "0IoP3us6"]
 
 # Configures the mailer
 #

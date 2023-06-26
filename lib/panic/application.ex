@@ -17,10 +17,9 @@ defmodule Panic.Application do
       # Start Finch
       {Finch, name: Panic.Finch},
       # Start the Endpoint (http/https)
-      PanicWeb.Endpoint,
+      PanicWeb.Endpoint
       # Start a worker by calling: Panic.Worker.start_link(arg)
       # {Panic.Worker, arg}
-      {Task.Supervisor, name: Panic.Runs.TaskSupervisor}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

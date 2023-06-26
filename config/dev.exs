@@ -11,8 +11,8 @@ config :panic, Panic.Repo,
 # debugging and code reloading.
 #
 # The watchers configuration can be used to run external
-# watchers to your application. For example, we use it
-# with esbuild to bundle .js and .css sources.
+# watchers to your application. For example, we can use it
+# to bundle .js and .css sources.
 config :panic, PanicWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
@@ -20,7 +20,7 @@ config :panic, PanicWeb.Endpoint,
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "rR8IitFILeEHWC8CFX6Jsdr1LeHg037daF2xZL0SnRCLUTymXIHLyQTPh0nptreF",
+  secret_key_base: "uJqKYerPNF5F+rk7fsHEQkH6XrcB/llS3qrz+J8iQLgojJzgyBr+gSJ8x8nRXwm1",
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
     tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}

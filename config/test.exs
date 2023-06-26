@@ -17,7 +17,7 @@ config :panic, Panic.Repo,
 # you can enable the server option below.
 config :panic, PanicWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
-  secret_key_base: "V6mw47T+YV1VXLvgOOICGlfDySp4xsO9241UZkbUeoqjAsG3V3no7/n/3UQ3/Pbl",
+  secret_key_base: "1t1JIukXbQ2i9gu9/IVnth+hXmcOIYqM0yR6lZ9cH0ueFj660lFzszT1mj5Xl9LL",
   server: false
 
 # In test we don't send emails.
