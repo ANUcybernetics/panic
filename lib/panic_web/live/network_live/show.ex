@@ -3,7 +3,6 @@ defmodule PanicWeb.NetworkLive.Show do
 
   alias Panic.{Networks, Predictions}
   alias Panic.Predictions.Prediction
-  alias Panic.Runs.StateMachine
   import PanicWeb.NetworkComponents
 
   # TODO pull these from params
@@ -33,13 +32,11 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_event("reset", %{"network_id" => network_id}, socket) do
-    StateMachine.transition(network_id, {:reset, nil})
     {:noreply, apply_action(socket, :reset_slots)}
   end
 
   @impl true
   def handle_event("lock", %{"network_id" => network_id}, socket) do
-    StateMachine.transition(network_id, {:lock, 30})
     {:noreply, socket}
   end
 
@@ -50,7 +47,6 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_info({:genesis_input, _input} = payload, socket) do
-    Finitomata.transition(socket.assigns.network.id, payload)
     {:noreply, socket}
   end
 
@@ -83,7 +79,6 @@ defmodule PanicWeb.NetworkLive.Show do
   defp page_title(:edit), do: "Edit Network"
 
   defp apply_action(socket, :new_network, network) do
-    StateMachine.start_if_not_running(network)
     if connected?(socket), do: Networks.subscribe(network.id)
 
     socket
@@ -91,7 +86,6 @@ defmodule PanicWeb.NetworkLive.Show do
     |> assign(:models, network.models)
     |> apply_action(:reset_slots)
     |> assign(:missing_api_tokens, Panic.Accounts.missing_api_tokens(socket.assigns.current_user))
-    |> assign(:state, StateMachine.get_current_state(network.id))
   end
 
   defp apply_action(socket, :new_prediction, %Prediction{run_index: 0} = prediction) do

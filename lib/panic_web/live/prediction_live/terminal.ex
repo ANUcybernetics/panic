@@ -9,7 +9,6 @@ defmodule PanicWeb.PredictionLive.Terminal do
   """
   use PanicWeb, :live_view
   alias Panic.{Accounts, Networks}
-  alias Panic.Runs.StateMachine
 
   @impl true
   def render(assigns) do
@@ -42,7 +41,6 @@ defmodule PanicWeb.PredictionLive.Terminal do
 
   @impl true
   def handle_info({:genesis_input, _input} = payload, socket) do
-    Finitomata.transition(socket.assigns.network.id, payload)
     {:noreply, socket}
   end
 
@@ -60,12 +58,10 @@ defmodule PanicWeb.PredictionLive.Terminal do
   end
 
   defp apply_action(socket, :new_network, network) do
-    StateMachine.start_if_not_running(network)
     if connected?(socket), do: Networks.subscribe(network.id)
 
     socket
     |> assign(:network, network)
-    |> assign(:state, StateMachine.get_current_state(network.id))
   end
 
   defp state_label(state) when state in [:running_genesis, :uninterruptable], do: "please wait"

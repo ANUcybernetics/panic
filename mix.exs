@@ -51,7 +51,6 @@ defmodule Panic.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-      {:finitomata, "~> 0.1"},
       {:slugify, "~> 1.3"},
       {:mock, "~> 0.3", only: :test},
       {:sobelow, "~> 0.11", only: :dev},
@@ -61,7 +60,7 @@ defmodule Panic.MixProject do
   end
 
   defp compilers do
-    [:finitomata] # ++ Mix.compilers()
+    Mix.compilers()
   end
 
   # Aliases are shortcuts or tasks specific to the current project.

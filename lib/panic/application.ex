@@ -20,7 +20,6 @@ defmodule Panic.Application do
       PanicWeb.Endpoint,
       # Start a worker by calling: Panic.Worker.start_link(arg)
       # {Panic.Worker, arg}
-      Finitomata,
       {Task.Supervisor, name: Panic.Runs.TaskSupervisor}
     ]
 
