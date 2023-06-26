@@ -100,7 +100,7 @@ Run `asdf install` to install those versions.
 
 ```
 mix phx.gen.context Models Run runs platform:enum:replicate:huggingface:openai model_name:string input:string output:string metadata:map
-mix petal.gen.live Networks Network networks owner_id:references:users name:string models:array:integer loop:boolean
+mix phx.gen.live Runs Prediction predictions input:string metadata:map model:string output:string run_index:integer network_id:references:networks genesis_id:references:predictions
 ```
 
 ## TODO
