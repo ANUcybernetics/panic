@@ -31,4 +31,22 @@ defmodule Panic.PredictionsFixtures do
     {:ok, prediction} = Predictions.create_prediction(attrs)
     prediction
   end
+
+  @doc """
+  Generate a prediction.
+  """
+  def prediction_fixture(attrs \\ %{}) do
+    {:ok, prediction} =
+      attrs
+      |> Enum.into(%{
+        input: "some input",
+        output: "some output",
+        metadata: %{},
+        model: "some model",
+        run_index: 42
+      })
+      |> Panic.Predictions.create_prediction()
+
+    prediction
+  end
 end

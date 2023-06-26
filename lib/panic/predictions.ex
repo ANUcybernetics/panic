@@ -69,119 +69,27 @@ defmodule Panic.Predictions do
   def get_prediction!(id), do: Repo.get!(Prediction, id) |> Repo.preload([:network])
 
   @doc """
-  Given an initial input, create a genesis (first in a run) prediction.
+  Complete a %Prediction{} with an input but no output.
 
   This function will make the call to the relevant model API (based on the
   `:models` field of the network) and return the completed `%Prediction{}`
   object. This might take a while (the API call is synchronous), so call it in a
   `Task` or something if you're worried about blocking.
 
-  If the model API call fails for whatever reason, this will return a changeset
-  as usual (with _hopefully_ a more helpful error validation message than the
-  usual "can't be blank").
-
-  ## Examples
-
-      iex> create_genesis_prediction("this is a text input prompt", %Network{}, tokens)
-      {:ok, %Prediction{}}
-
-      ## if any of the arguments are invalid
-      iex> create_genesis_prediction(12345, %Network{}, tokens)
-      {:error, %Ecto.Changeset{}}
-
-      ## if the platform API call fails for some reason
-      iex> create_genesis_prediction("valid text input", %Network{}, tokens)
-      {:platform_error, reason}
-
   """
-  def create_genesis_prediction(input, %Network{} = network, tokens) when is_binary(input) do
-    changeset = Prediction.genesis_changeset(input, network)
+  def predict(%Prediction{output: nil} = prediction, tokens) do
+    case Panic.Platforms.api_call(prediction.model, prediction.input, tokens) do
+      {:ok, output} ->
+        update_prediction(prediction, %{output: output})
 
-    case changeset do
-      # if the only error is the missing output, make the API call
-      %{errors: [output: _]} ->
-        case Panic.Platforms.api_call(changeset.changes.model, changeset.changes.input, tokens) do
-          {:ok, output} ->
-            {:ok, prediction} =
-              changeset.params
-              |> Map.put("output", output)
-              |> create_prediction()
-
-            update_prediction(prediction, %{genesis_id: prediction.id})
-
-          {:error, :nsfw} ->
-            create_genesis_prediction(
-              "You have been a bad user. This incident has been reported.",
-              network,
-              tokens
-            )
-        end
-
-      # otherwise just return the error changeset
-      _ ->
-        {:error, changeset}
-    end
-  end
-
-  @doc """
-  Given a prediction, creates the next one in the Run.
-
-  This function will make the call to the relevant model API (based on the
-  `:models` field of the network) and return the completed `%Prediction{}`
-  object. This might take a while (the API call is synchronous), so call it in a
-  `Task` or something if you're worried about blocking.
-
-  If the model API call fails for whatever reason, this will return a changeset
-  as usual (with _hopefully_ a more helpful error validation message than the
-  usual "can't be blank").
-
-  ## Examples
-
-      iex> create_next_prediction(%Prediction{}, tokens)
-      {:ok, %Prediction{}}
-
-      ## if any of the arguments are invalid
-      iex> create_next_prediction(nil, tokens)
-      {:error, %Ecto.Changeset{}}
-
-      ## if the platform API call fails for some reason
-      iex> create_next_prediction(%Prediction{}, tokens)
-      {:platform_error, reason}
-
-  """
-  def create_next_prediction(%Prediction{} = previous_prediction, tokens) do
-    changeset = Prediction.next_changeset(previous_prediction)
-
-    case changeset do
-      # if the only error is the missing output, make the API call
-      %{errors: [output: _]} ->
-        case Panic.Platforms.api_call(changeset.changes.model, changeset.changes.input, tokens) do
-          {:ok, output} ->
-            {:ok, _prediction} =
-              changeset.params
-              |> Map.put("output", output)
-              |> create_prediction()
-
-          {:error, :nsfw} ->
-            create_genesis_prediction(
-              "You have been a bad user. This incident has been reported.",
-              previous_prediction.network,
-              tokens
-            )
-        end
-
-      # otherwise just return the error changeset
-      _ ->
-        {:error, changeset}
+      {:error, :nsfw} ->
+        {:ok, prediction} = update_prediction(prediction, %{input: "You have been a bad user. This incident has been reported."})
+        predict(prediction, tokens)
     end
   end
 
   @doc """
   Creates a prediction.
-
-  This is the standard "context" function which just takes a map of attrs. In
-  general use you almost always want to use `create_genesis_prediction/3` or
-  `create_next_prediction/2`
 
   On success - `{:ok, %Prediction{}}` - the prediction will have the `:network`
   attribute preloaded.
