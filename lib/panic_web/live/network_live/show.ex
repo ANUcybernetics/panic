@@ -46,11 +46,6 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   @impl true
-  def handle_info({:genesis_input, _input} = payload, socket) do
-    {:noreply, socket}
-  end
-
-  @impl true
   def handle_info({:new_prediction, prediction}, socket) do
     {:noreply, apply_action(socket, :new_prediction, prediction)}
   end

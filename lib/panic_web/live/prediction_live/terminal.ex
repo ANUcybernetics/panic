@@ -40,11 +40,6 @@ defmodule PanicWeb.PredictionLive.Terminal do
   end
 
   @impl true
-  def handle_info({:genesis_input, _input} = payload, socket) do
-    {:noreply, socket}
-  end
-
-  @impl true
   def handle_info({:state_change, state}, socket) do
     {:noreply, assign(socket, state: state)}
   end
