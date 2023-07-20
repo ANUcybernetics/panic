@@ -23,6 +23,10 @@ defmodule Panic.Models.Platforms.Vestaboard do
         # could be the "message already displayed" error
         {:ok, :bad_request}
 
+      {:ok, %HTTPoison.Response{status_code: 405}} ->
+        # definitely is a "message already displayed" error
+        {:ok, :bad_request}
+
       {:ok, %HTTPoison.Response{status_code: 503}} ->
         # this isn't *really* ok, but hopefully we can ignore it
         {:ok, :too_many_requests}
