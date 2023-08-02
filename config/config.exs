@@ -142,6 +142,7 @@ config :panic, :content_security_policy, %{
     "wss://panic.fly.dev/live/websocket",
     # cloud AI APIS
     "https://replicate.delivery",
+    "https://pbxt.replicate.delivery",
     "https://simulator.vestaboard.com",
     # Google Fonts
     "https://fonts.googleapis.com",
