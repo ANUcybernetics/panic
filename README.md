@@ -79,14 +79,13 @@ going on:
 - **model**: a particular AI model (e.g. _Stable Diffusion_, _GPT3 Davinci
   instruct_)
 - **platform**: model-hosting cloud platform (e.g.
-  [Replicate](https://asdf-vm.com), [OpenAI](https://openai.com))
+  [Replicate](https://replicate`.com), [OpenAI](https://openai.com))
 - **network**: a specific network (i.e. cyclic graph) of models, designed so
   that the output of one is fed as input to the next
 - **prediction**: a specific "inference" run for a single model; includes both
   the input (prompt) an the output (prediction) along with some other metadata
-- **run**: a specific cycle of predictions starting from an initial prompt and
-  following the models in a network (may or may not converge, depending on
-  whether convergence testing is happening)
+- **run**: a specific sequence of predictions starting from an initial prompt and
+  following the models in a network
 
 ## Setup
 
