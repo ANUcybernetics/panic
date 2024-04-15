@@ -82,7 +82,7 @@ going on:
   [Replicate](https://replicate`.com), [OpenAI](https://openai.com))
 - **network**: a specific network (i.e. cyclic graph) of models, designed so
   that the output of one is fed as input to the next
-- **prediction**: a specific "inference" run for a single model; includes both
+- **invocation**: a specific "inference" run for a single model; includes both
   the input (prompt) an the output (prediction) along with some other metadata
 - **run**: a specific sequence of predictions starting from an initial prompt and
   following the models in a network
