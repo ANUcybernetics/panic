@@ -7,6 +7,11 @@
 # General application configuration
 import Config
 
+config :panic, ash_domains: [Panic.Network]
+
+# because I'm mostly using integer primary keys - better for sqlite
+config :ash, :default_belongs_to_type, :integer
+
 config :panic,
   ecto_repos: [Panic.Repo],
   generators: [timestamp_type: :utc_datetime]
