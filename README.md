@@ -1,4 +1,5 @@
 # Panic!
+
 ## **P**layground **A**i **N**etwork for **I**nteractive **C**reativity
 
 The rise of cloud AI platforms like OpenAI and HuggingFace means that using
@@ -8,8 +9,8 @@ log in, input their text/image/audio, hit "run model", and see for the results.
 This has led to a Cambrian explosion of AI art - good and bad - as new, diverse
 voices probe the input manifolds of models like GPT-3 and DALL-E. The Creative
 AI practitioner is therefore presented with the eternal Jurassic Park question:
-just because we *can* put our text/audio/images into these models have them
-provide new text/audio/images in return, does it mean that we *should*?
+just because we _can_ put our text/audio/images into these models have them
+provide new text/audio/images in return, does it mean that we _should_?
 
 At the Creative AI symposium we will demo new Creative AI app called **PANIC:
 Playground Ai Network for Interactive Creativity**---probably through a talk,
@@ -34,18 +35,18 @@ prompting of a single model?
 
 The general outline for our proposed talk/presentation is:
 
--   introduction (with examples/demo) to Creative AI model platforms e.g.
-    OpenAI, HuggingFace, AccompliceAI
+- introduction (with examples/demo) to Creative AI model platforms e.g.
+  OpenAI, HuggingFace, AccompliceAI
 
--   explanation & demo of the PANIC "create a network of AI models" interface
+- explanation & demo of the PANIC "create a network of AI models" interface
 
--   set up different PANIC network topologies, seeing how different
-    text/audio/image inputs are transformed as they are passed through different
-    Creative AI networks (including "closed loop" topologies)
+- set up different PANIC network topologies, seeing how different
+  text/audio/image inputs are transformed as they are passed through different
+  Creative AI networks (including "closed loop" topologies)
 
--   discussion of emergent behaviours, recurring patterns, degenerate & edge
-    cases, and what it all says about the nature of Creative AI model platforms
-    in their current form
+- discussion of emergent behaviours, recurring patterns, degenerate & edge
+  cases, and what it all says about the nature of Creative AI model platforms
+  in their current form
 
 While PANIC is an experimental tool for creative "play", the accessibility of
 these AI model platforms (cost, time, technical knowledge) means that their
