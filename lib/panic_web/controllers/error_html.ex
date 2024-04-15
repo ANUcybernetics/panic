@@ -1,4 +1,9 @@
 defmodule PanicWeb.ErrorHTML do
+  @moduledoc """
+  This module is invoked by your endpoint in case of errors on HTML requests.
+
+  See config/config.exs.
+  """
   use PanicWeb, :html
 
   # If you want to customize your error pages,

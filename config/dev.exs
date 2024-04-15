@@ -2,7 +2,7 @@ import Config
 
 # Configure your database
 config :panic, Panic.Repo,
-  database: Path.expand("../panic_dev.db", Path.dirname(__ENV__.file)),
+  database: Path.expand("../panic_dev.db", __DIR__),
   pool_size: 5,
   stacktrace: true,
   show_sensitive_data_on_connection_error: true
@@ -20,10 +20,10 @@ config :panic, PanicWeb.Endpoint,
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "uJqKYerPNF5F+rk7fsHEQkH6XrcB/llS3qrz+J8iQLgojJzgyBr+gSJ8x8nRXwm1",
+  secret_key_base: "6rby+gqrif8Cqjfv4vorWRRp/zN5h9sFUIoCpfriz+gUKISZYnjSw5djiwpQlxFY",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
+    esbuild: {Esbuild, :install_and_run, [:panic, ~w(--sourcemap=inline --watch)]},
+    tailwind: {Tailwind, :install_and_run, [:panic, ~w(--watch)]}
   ]
 
 # ## SSL Support
@@ -53,7 +53,7 @@ config :panic, PanicWeb.Endpoint,
 config :panic, PanicWeb.Endpoint,
   live_reload: [
     patterns: [
-      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
+      ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
       ~r"lib/panic_web/(controllers|live|components)/.*(ex|heex)$"
     ]
@@ -71,6 +71,12 @@ config :phoenix, :stacktrace_depth, 20
 
 # Initialize plugs at runtime for faster development compilation
 config :phoenix, :plug_init_mode, :runtime
+
+config :phoenix_live_view,
+  # Include HEEx debug annotations as HTML comments in rendered markup
+  debug_heex_annotations: true,
+  # Enable helpful, but potentially expensive runtime checks
+  enable_expensive_runtime_checks: true
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false

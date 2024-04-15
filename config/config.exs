@@ -8,17 +8,19 @@
 import Config
 
 config :panic,
-  ecto_repos: [Panic.Repo]
+  ecto_repos: [Panic.Repo],
+  generators: [timestamp_type: :utc_datetime]
 
 # Configures the endpoint
 config :panic, PanicWeb.Endpoint,
   url: [host: "localhost"],
+  adapter: Bandit.PhoenixAdapter,
   render_errors: [
     formats: [html: PanicWeb.ErrorHTML, json: PanicWeb.ErrorJSON],
     layout: false
   ],
   pubsub_server: Panic.PubSub,
-  live_view: [signing_salt: "0IoP3us6"]
+  live_view: [signing_salt: "aVE1mUTr"]
 
 # Configures the mailer
 #
@@ -32,7 +34,7 @@ config :panic, Panic.Mailer, adapter: Swoosh.Adapters.Local
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.17.11",
-  default: [
+  panic: [
     args:
       ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
     cd: Path.expand("../assets", __DIR__),
@@ -41,8 +43,8 @@ config :esbuild,
 
 # Configure tailwind (the version is required)
 config :tailwind,
-  version: "3.2.7",
-  default: [
+  version: "3.4.0",
+  panic: [
     args: ~w(
       --config=tailwind.config.js
       --input=css/app.css
@@ -58,25 +60,6 @@ config :logger, :console,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
-
-config :panic, :content_security_policy, %{
-  default_src: [
-    "'unsafe-inline'",
-    "'unsafe-eval'",
-    "'self'",
-    "data:",
-    "ws://localhost:4000",
-    # for fly.io deployment
-    "wss://panic.fly.dev",
-    "wss://panic.fly.dev/live/websocket",
-    # cloud AI APIS
-    "https://replicate.delivery",
-    "https://simulator.vestaboard.com",
-    # Google Fonts
-    "https://fonts.googleapis.com",
-    "https://fonts.gstatic.com"
-  ]
-}
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

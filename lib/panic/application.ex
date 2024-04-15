@@ -8,18 +8,19 @@ defmodule Panic.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Start the Telemetry supervisor
       PanicWeb.Telemetry,
-      # Start the Ecto repository
       Panic.Repo,
-      # Start the PubSub system
+      {Ecto.Migrator,
+        repos: Application.fetch_env!(:panic, :ecto_repos),
+        skip: skip_migrations?()},
+      {DNSCluster, query: Application.get_env(:panic, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Panic.PubSub},
-      # Start Finch
+      # Start the Finch HTTP client for sending emails
       {Finch, name: Panic.Finch},
-      # Start the Endpoint (http/https)
-      PanicWeb.Endpoint
       # Start a worker by calling: Panic.Worker.start_link(arg)
-      # {Panic.Worker, arg}
+      # {Panic.Worker, arg},
+      # Start to serve requests, typically the last entry
+      PanicWeb.Endpoint
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
@@ -34,5 +35,10 @@ defmodule Panic.Application do
   def config_change(changed, _new, removed) do
     PanicWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp skip_migrations?() do
+    # By default, sqlite migrations are run when using a release
+    System.get_env("RELEASE_NAME") != nil
   end
 end

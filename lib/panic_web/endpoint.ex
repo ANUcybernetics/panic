@@ -7,11 +7,13 @@ defmodule PanicWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_panic_key",
-    signing_salt: "HRIwIBCA",
+    signing_salt: "sxuIFVUp",
     same_site: "Lax"
   ]
 
-  socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
+  socket "/live", Phoenix.LiveView.Socket,
+    websocket: [connect_info: [session: @session_options]],
+    longpoll: [connect_info: [session: @session_options]]
 
   # Serve at "/" the static files from "priv/static" directory.
   #
