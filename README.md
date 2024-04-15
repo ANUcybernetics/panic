@@ -80,7 +80,7 @@ going on:
 - **model**: a particular AI model (e.g. _Stable Diffusion_, _GPT3 Davinci
   instruct_)
 - **platform**: model-hosting cloud platform (e.g.
-  [Replicate](https://replicate`.com), [OpenAI](https://openai.com))
+  [Replicate](https://replicate.com), [OpenAI](https://openai.com))
 - **network**: a specific network (i.e. cyclic graph) of models, designed so
   that the output of one is fed as input to the next
 - **invocation**: a specific "inference" run for a single model; includes both
