@@ -1,5 +1,12 @@
 # Panic TODO
 
+- add Oban
+- slim down the set of actions
+- transfer all resources from the notebook
+- tidy up v2/v3 nomenclature (probably: v0 is prototype, v1 at AusCyber, v2 is Birch install)
+
+## old v2 items
+
 - [ ] remove APIToken as separate resource (add a has_many embed to user, managed via user controller)
 - [ ] use embeds + cast_assoc, hidden form fields,streams; IOW phoenix it properly
 - [ ] Vestaboard module isn't like the others, and should be separated (maybe)
@@ -13,4 +20,3 @@
 - [ ] create `Prediction` on form submit, not just when the API call returns
 - [ ] add new views as per the notebook sketches
 - [ ] in add model modal, group models by input type
-
