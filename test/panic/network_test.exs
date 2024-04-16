@@ -52,6 +52,11 @@ defmodule Panic.NetworkTest do
       assert_raise Ash.Error.Invalid, fn -> Ash.get!(Network, 1234) end
     end
 
+    test "read the created network with :get_by_id" do
+      %Network{id: network_id} = network_fixture()
+      assert %Network{id: ^network_id} = Panic.Topology.get_by_id!(network_id)
+    end
+
     # test "create action works with good inlist_networks/1 returns all networks" do
     #   network = network_fixture()
     #   user = Panic.Accounts.get_user!(network.user_id)
@@ -101,19 +106,24 @@ defmodule Panic.NetworkTest do
   end
 
   # # used to be in a separate module, but not necessary for now
-  # defp network_fixture(attrs \\ %{}) do
-  #   {:ok, network} =
-  #     Map.merge(
-  #       %{
-  #         description: "a test network (but the models are real)",
-  #         models: ["openai:text-davinci-003", "openai:text-ada-001"],
-  #         name: "My Awesome Network",
-  #         user_id: user.id
-  #       },
-  #       attrs
-  #     )
-  #     |> Panic.Networks.create_network()
+  defp network_fixture(attrs \\ %{}) do
+    attrs =
+      Map.merge(
+        %{
+          name: "My Network",
+          description: "A super cool network",
+          models: [
+            # TODO change this to an actual model module once they exist
+            Panic.Topology
+          ]
+        },
+        attrs
+      )
 
-  #   network
-  # end
+    Panic.Topology.create_network!(
+      attrs.name,
+      attrs.description,
+      attrs.models
+    )
+  end
 end
