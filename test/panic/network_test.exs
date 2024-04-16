@@ -62,6 +62,12 @@ defmodule Panic.NetworkTest do
                Panic.Topology.create_network("Good name", "Good description", [BadModule])
     end
 
+    test "set_state action changes the network state to :starting" do
+      network = network_fixture()
+      {:ok, network} = Panic.Topology.set_state(network.id, :starting)
+      assert network.state == :starting
+    end
+
     # test "update_network/2 with valid data updates the network" do
     #   network = network_fixture()
 

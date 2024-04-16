@@ -29,6 +29,8 @@ defmodule Panic.Topology.Network do
 
     attribute :state, :atom do
       default :stopped
+
+      # `:starting` represents the initial "uninterruptible" period
       constraints one_of: [:starting, :running, :paused, :stopped]
       allow_nil? false
     end
@@ -80,6 +82,11 @@ defmodule Panic.Topology.Network do
 
     create :duplicate do
       argument :id, :integer, allow_nil?: false
+    end
+
+    update :set_state do
+      argument :state, :atom, allow_nil?: false
+      change set_attribute(:state, arg(:state))
     end
   end
 end
