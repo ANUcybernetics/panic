@@ -1,11 +1,9 @@
-defmodule Panic.Network.Loop do
+defmodule Panic.Topology.Network do
   @moduledoc """
-  A `Loop` represents a specific network (i.e. cyclic graph) of models
-
-  This was originally called a `Network`, but now I'm using that for the domain---that might change in future.
+  A Network represents a specific network (i.e. cyclic graph) of models.
   """
   use Ash.Resource,
-    domain: Panic.Network,
+    domain: Panic.Topology,
     data_layer: AshSqlite.DataLayer
 
   sqlite do
