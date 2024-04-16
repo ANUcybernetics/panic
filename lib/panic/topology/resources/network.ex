@@ -27,7 +27,7 @@ defmodule Panic.Topology.Network do
 
     attribute :description, :string
 
-    attribute :models, {:array, Ash.Type.Module} do
+    attribute :models, {:array, :module} do
       default []
       allow_nil? false
       # TODO validate that it's a module with the required behaviour
@@ -46,7 +46,17 @@ defmodule Panic.Topology.Network do
   end
 
   actions do
-    defaults [:read, :destroy, create: :*]
+    defaults [:read, :destroy]
+
+    create :create do
+      accept [:name, :description, :models]
+
+      # change fn changeset, _ ->
+      #   changeset
+      #   |> set_attribute(:slug, Panic.Slug.generate(changeset.data.name))
+      #   |> set_attribute(:state, :stopped)
+      # end
+    end
 
     read :by_id do
       argument :id, :integer
