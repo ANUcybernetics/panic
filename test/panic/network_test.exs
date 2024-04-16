@@ -54,7 +54,7 @@ defmodule Panic.NetworkTest do
 
     test "read the created network with :get_by_id" do
       %Network{id: network_id} = network_fixture()
-      assert %Network{id: ^network_id} = Panic.Topology.get_by_id!(network_id)
+      assert %Network{id: ^network_id} = Panic.Topology.get_network!(network_id)
     end
 
     test "create action with invalid data returns error changeset" do
