@@ -57,20 +57,10 @@ defmodule Panic.NetworkTest do
       assert %Network{id: ^network_id} = Panic.Topology.get_by_id!(network_id)
     end
 
-    # test "create action works with good inlist_networks/1 returns all networks" do
-    #   network = network_fixture()
-    #   user = Panic.Accounts.get_user!(network.user_id)
-    #   assert Network.list_networks(user) == [network]
-    # end
-
-    # test "get_network!/1 returns the network with given id" do
-    #   network = network_fixture()
-    #   assert Network.get_network!(network.id) == network
-    # end
-
-    # test "create_network/1 with invalid data returns error changeset" do
-    #   assert {:error, %Ecto.Changeset{}} = Network.create_network(@invalid_attrs)
-    # end
+    test "create action with invalid data returns error changeset" do
+      assert {:error, %Ash.Error.Invalid{}} =
+               Panic.Topology.create_network("Good name", "Good description", [BadModule])
+    end
 
     # test "update_network/2 with valid data updates the network" do
     #   network = network_fixture()
@@ -97,11 +87,6 @@ defmodule Panic.NetworkTest do
     #   network = network_fixture()
     #   assert {:ok, %Network{}} = Network.delete_network(network)
     #   assert_raise Ecto.NoResultsError, fn -> Network.get_network!(network.id) end
-    # end
-
-    # test "change_network/1 returns a network changeset" do
-    #   network = network_fixture()
-    #   assert %Ecto.Changeset{} = Network.change_network(network)
     # end
   end
 
