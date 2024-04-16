@@ -7,15 +7,15 @@ defmodule Panic.Topology.Network do
     data_layer: AshSqlite.DataLayer
 
   sqlite do
-    table "loops"
+    table "networks"
     repo Panic.Repo
   end
 
   # TODO double-check that this shouldn't now be on the resource for v3?
-  code_interface do
-    define :create, args: [:name, :description, :models]
-    define :get_by_id, args: [:id], action: :by_id
-  end
+  # code_interface do
+  #   define :create, args: [:name, :description, :models]
+  #   define :get_by_id, args: [:id], action: :by_id
+  # end
 
   attributes do
     integer_primary_key :id
