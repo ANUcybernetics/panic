@@ -25,6 +25,29 @@ defmodule Panic.NetworkTest do
       assert network.state == :stopped
     end
 
+    test "code interface for :create action with valid data creates a network" do
+      valid_attrs = %{
+        name: "My Network",
+        description: "A super cool network",
+        models: [
+          # TODO change this to an actual model module once they exist
+          Panic.Topology
+        ]
+      }
+
+      network =
+        Panic.Topology.create_network!(
+          valid_attrs.name,
+          valid_attrs.description,
+          valid_attrs.models
+        )
+
+      assert network.name == valid_attrs.name
+      assert network.description == valid_attrs.description
+      assert network.models == valid_attrs.models
+      assert network.state == :stopped
+    end
+
     test "raise if there's no Network with a given id" do
       assert_raise Ash.Error.Invalid, fn -> Ash.get!(Network, 1234) end
     end

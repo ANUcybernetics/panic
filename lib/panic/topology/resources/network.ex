@@ -11,12 +11,6 @@ defmodule Panic.Topology.Network do
     repo Panic.Repo
   end
 
-  # TODO double-check that this shouldn't now be on the resource for v3?
-  # code_interface do
-  #   define :create, args: [:name, :description, :models]
-  #   define :get_by_id, args: [:id], action: :by_id
-  # end
-
   attributes do
     integer_primary_key :id
 
@@ -30,7 +24,7 @@ defmodule Panic.Topology.Network do
     attribute :models, {:array, :module} do
       default []
       allow_nil? false
-      # TODO validate that it's a module with the required behaviour
+      # TODO validate that the module conforms to the Model behaviour
     end
 
     attribute :state, :atom do
