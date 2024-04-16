@@ -1,5 +1,3 @@
 defmodule Panic.Repo do
-  use Ecto.Repo,
-    otp_app: :panic,
-    adapter: Ecto.Adapters.SQLite3
+  use AshSqlite.Repo, otp_app: :panic
 end
