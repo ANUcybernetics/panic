@@ -39,12 +39,24 @@ defmodule Panic.Models.Invocation do
   actions do
     defaults [:read]
 
-    create :create do
+    create :invoke do
       accept [:model, :input, :run_number]
+      validate absent(:output)
+      # then fire off the Oban job, which will finalise when done
     end
 
-    update :cancel do
-      accept [:id]
+    read :by_id do
+      argument :id, :integer
+      get? true
+      filter expr(id == ^arg(:id))
+    end
+
+    create :create_next do
+      argument :parent_id, :integer, allow_nil?: false
+    end
+
+    update :finalise do
+      accept [:output]
     end
   end
 

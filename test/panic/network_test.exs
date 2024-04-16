@@ -52,7 +52,7 @@ defmodule Panic.NetworkTest do
       assert_raise Ash.Error.Invalid, fn -> Ash.get!(Network, 1234) end
     end
 
-    test "read the created network with :get_by_id" do
+    test "read the created network back from the db" do
       %Network{id: network_id} = network_fixture()
       assert %Network{id: ^network_id} = Panic.Topology.get_network!(network_id)
     end
