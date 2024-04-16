@@ -47,4 +47,8 @@ defmodule Panic.Models.Invocation do
       accept [:id]
     end
   end
+
+  relationships do
+    belongs_to :network, Panic.Topology.Network
+  end
 end
