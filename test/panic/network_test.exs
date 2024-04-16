@@ -22,6 +22,7 @@ defmodule Panic.NetworkTest do
       assert network.name == valid_attrs.name
       assert network.description == valid_attrs.description
       assert network.models == valid_attrs.models
+      assert network.state == :stopped
     end
 
     test "raise if there's no Network with a given id" do
