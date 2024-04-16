@@ -24,9 +24,9 @@ defmodule Panic.NetworkTest do
       assert network.models == valid_attrs.models
     end
 
-    # test "raise if there's no Network with a given id" do
-    #   assert_raise Ash.Error.Query.NotFound, fn -> Ash.get!(Network, 1234) end
-    # end
+    test "raise if there's no Network with a given id" do
+      assert_raise Ash.Error.Invalid, fn -> Ash.get!(Network, 1234) end
+    end
 
     # test "create action works with good inlist_networks/1 returns all networks" do
     #   network = network_fixture()
