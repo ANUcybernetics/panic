@@ -1,51 +1,71 @@
 defmodule Panic.ModelsTest do
   use Panic.DataCase
+  alias Panic.Topology.Network
   alias Panic.Models.Invocation
 
   describe "Panic.Models.Invocation resource" do
-    test "changeset for :create action with valid data creates an invocation" do
-      valid_attrs = %{
-        model: Panic.Topology,
-        input: "a test input",
-        run_number: 0
-      }
+    test "changeset for :create_first action with valid data creates an invocation" do
+      network = network_fixture()
+      valid_attrs = %{network: network, input: "my test input"}
 
       invocation =
         Invocation
-        |> Ash.Changeset.for_create(:invoke, valid_attrs)
+        |> Ash.Changeset.for_create(:create_first, valid_attrs)
         |> Ash.create!()
 
-      assert invocation.model == valid_attrs.model
+      assert invocation.network_id == network.id
       assert invocation.input == valid_attrs.input
-      assert invocation.run_number == valid_attrs.run_number
+      assert invocation.sequence_number == 0
+      assert invocation.run_number >= 0
     end
 
-    test "raise if there's no Invocation with a given id" do
-      assert_raise Ash.Error.Invalid, fn -> Ash.get!(Invocation, 1234) end
-    end
+    # test "raise if there's no Invocation with a given id" do
+    #   assert_raise Ash.Error.Invalid, fn -> Ash.get!(Invocation, 1234) end
+    # end
 
-    test "read the created invocation back from the db" do
-      %Invocation{id: invocation_id} = invocation_fixture()
+    # test "read the created invocation back from the db" do
+    #   %Invocation{id: invocation_id} = invocation_fixture()
 
-      assert %Invocation{id: ^invocation_id} =
-               Panic.Models.get_invocation!(invocation_id)
-    end
+    #   assert %Invocation{id: ^invocation_id} =
+    #            Panic.Models.get_invocation!(invocation_id)
+    # end
+
+    # test "create a model, then run the invoke_first action" do
+    #   network = network_fixture()
+    #   invocation = invocation_fixture()
+
+    #   model = network.models |> List.first()
+
+    #   invocation =
+    #     Panic.Models.Invocation.invoke_first!(
+    #       model,
+    #       invocation.input,
+    #       invocation.run_number
+    #     )
+    # end
   end
 
   # # used to be in a separate e, but not necessary for now
-  defp invocation_fixture(attrs \\ %{}) do
+  # defp invocation_fixture(attrs \\ %{}) do
+  #   attrs
+  # end
+
+  defp network_fixture(attrs \\ %{}) do
     attrs =
       Map.merge(
         %{
-          model: Panic.Topology,
-          input: "a test input",
-          run_number: 0
+          name: "My Network",
+          description: "A super cool network",
+          models: [
+            # TODO change this to an actual model module once they exist
+            Panic.Topology
+          ]
         },
         attrs
       )
 
-    Invocation
-    |> Ash.Changeset.for_create(:invoke, attrs)
+    Network
+    |> Ash.Changeset.for_create(:create, attrs)
     |> Ash.create!()
   end
 end

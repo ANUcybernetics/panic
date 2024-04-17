@@ -17,8 +17,8 @@ defmodule Panic.Models.Invocation do
   attributes do
     integer_primary_key :id
 
-    attribute :model, :module, allow_nil?: false
     attribute :input, :string, allow_nil?: false
+    attribute :model, :module
     attribute :output, :string
 
     attribute :sequence_number, :integer do
@@ -29,26 +29,26 @@ defmodule Panic.Models.Invocation do
 
     attribute :run_number, :integer do
       constraints min: 0
-      allow_nil? false
     end
 
     attribute :metadata, :map, default: %{}, allow_nil?: false
     create_timestamp :inserted_at
+    update_timestamp :updated_at
   end
 
   actions do
     defaults [:read]
 
-    create :invoke do
-      accept [:model, :input, :run_number]
-      validate absent(:output)
-      # then fire off the Oban job, which will finalise when done
-    end
-
     read :by_id do
       argument :id, :integer
       get? true
       filter expr(id == ^arg(:id))
+    end
+
+    create :create_first do
+      accept [:input]
+      argument :network, :map, allow_nil?: false
+      change Panic.Changes.Invoke
     end
 
     create :create_next do
@@ -57,10 +57,11 @@ defmodule Panic.Models.Invocation do
 
     update :finalise do
       accept [:output]
+      change set_attribute(:output, arg(:output))
     end
   end
 
   relationships do
-    belongs_to :network, Panic.Topology.Network
+    belongs_to :network, Panic.Topology.Network, allow_nil?: false
   end
 end

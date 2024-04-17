@@ -3,7 +3,7 @@ defmodule Panic.Models do
 
   resources do
     resource Panic.Models.Invocation do
-      define :invoke, args: [:model, :input, :run_number], action: :invoke
+      define :invoke_first, args: [:network_id, :input], action: :create_first
       define :get_invocation, args: [:id], action: :by_id
     end
   end

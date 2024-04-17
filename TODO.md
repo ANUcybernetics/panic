@@ -4,6 +4,9 @@
 - slim down the set of actions
 - transfer all resources from the notebook
 - tidy up v2/v3 nomenclature (probably: v0 is prototype, v1 at AusCyber, v2 is Birch install)
+- mock the test stubs as per that dashbit blog post
+- put all the identities/unique constraints in
+- update the vestaboard stuff to use the new read/write API (which will simplify things)
 
 ## old v2 items
 

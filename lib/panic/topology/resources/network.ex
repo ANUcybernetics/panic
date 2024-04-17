@@ -37,6 +37,7 @@ defmodule Panic.Topology.Network do
 
     attribute :slug, :string
     create_timestamp :inserted_at
+    update_timestamp :updated_at
     # attribute :schedule
     # attribute :backoff
   end
