@@ -31,6 +31,19 @@
       "primary_key?": false
     },
     {
+      "default": "[]",
+      "size": null,
+      "type": [
+        "array",
+        "text"
+      ],
+      "source": "models",
+      "references": null,
+      "allow_nil?": false,
+      "generated?": false,
+      "primary_key?": false
+    },
+    {
       "default": "nil",
       "size": null,
       "type": "text",
@@ -59,16 +72,26 @@
       "allow_nil?": false,
       "generated?": false,
       "primary_key?": false
+    },
+    {
+      "default": "nil",
+      "size": null,
+      "type": "utc_datetime_usec",
+      "source": "updated_at",
+      "references": null,
+      "allow_nil?": false,
+      "generated?": false,
+      "primary_key?": false
     }
   ],
   "table": "networks",
-  "hash": "7DC9174244BD178FF98DD46A3CF230FE93D08BE4793DAE9F1FE66C0EDA2F12CB",
+  "hash": "C7FC93356C7F6A70834439069C893D173A80F39DC985A82C8B1CF157AFBB23F3",
   "repo": "Elixir.Panic.Repo",
   "identities": [],
   "multitenancy": {
     "global": null,
-    "strategy": null,
-    "attribute": null
+    "attribute": null,
+    "strategy": null
   },
   "base_filter": null,
   "custom_indexes": [],
