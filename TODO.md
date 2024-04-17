@@ -1,5 +1,6 @@
 # Panic TODO
 
+- get all the Model modules compiling (maybe even refactor the info struct into a module var?)
 - add Oban
 - add nice Splode errors (maybe `Panic.Models.Errors.FOO`) for the different AI platform call failure modes
 - slim down the set of actions

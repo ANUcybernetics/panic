@@ -13,6 +13,17 @@ defmodule Panic.Models.DalleMini do
       output_type: :image
     }
   end
+
+  def invoke(input) do
+    with {:ok, %{"output" => [image_url]}} <-
+           Panic.Platforms.Replicate.create_and_wait(
+             model_id,
+             %{text: input, grid_size: 1, progressive_outputs: 0},
+             tokens
+           ) do
+      {:ok, image_url}
+    end
+  end
 end
 
 defmodule Panic.Models.PromptParrot do
@@ -29,6 +40,14 @@ defmodule Panic.Models.PromptParrot do
       input_type: :text,
       output_type: :text
     }
+  end
+
+  def invoke(input) do
+    with {:ok, %{"output" => text}} <-
+           Panic.Platforms.Replicate.create_and_wait(model_id, %{prompt: prompt}, tokens) do
+      {:ok,
+       text |> String.split("\n------------------------------------------\n") |> Enum.random()}
+    end
   end
 end
 
@@ -47,6 +66,13 @@ defmodule Panic.Models.CogPromptParrot do
       output_type: :text
     }
   end
+
+  def invoke(input) do
+    with {:ok, %{"output" => text}} <-
+           Panic.Platforms.Replicate.create_and_wait(model_id, %{prompt: prompt}, tokens) do
+      {:ok, text |> String.split("\n") |> Enum.random()}
+    end
+  end
 end
 
 defmodule Panic.Models.ClipPrefixCaption do
@@ -63,6 +89,13 @@ defmodule Panic.Models.ClipPrefixCaption do
       input_type: :image,
       output_type: :text
     }
+  end
+
+  def invoke(input) do
+    with {:ok, %{"output" => text}} <-
+           Panic.Platforms.Replicate.create_and_wait(model_id, %{image: image_url}, tokens) do
+      {:ok, text}
+    end
   end
 end
 
@@ -81,6 +114,13 @@ defmodule Panic.Models.ClipCaptionReward do
       output_type: :text
     }
   end
+
+  def invoke(input) do
+    with {:ok, %{"output" => text}} <-
+           Panic.Platforms.Replicate.create_and_wait(model_id, %{image: image_url}, tokens) do
+      {:ok, text}
+    end
+  end
 end
 
 defmodule Panic.Models.BLIP2 do
@@ -98,6 +138,17 @@ defmodule Panic.Models.BLIP2 do
       output_type: :text
     }
   end
+
+  def invoke(input) do
+    with {:ok, %{"output" => text}} <-
+           Panic.Platforms.Replicate.create_and_wait(
+             model_id,
+             %{image: image_url, caption: true},
+             tokens
+           ) do
+      {:ok, text}
+    end
+  end
 end
 
 defmodule Panic.Models.Vicuna13B do
@@ -114,6 +165,13 @@ defmodule Panic.Models.Vicuna13B do
       input_type: :text,
       output_type: :text
     }
+  end
+
+  def invoke(input) do
+    with {:ok, %{"output" => output}} <-
+           Panic.Platforms.Replicate.create_and_wait(model_id, %{prompt: prompt}, tokens) do
+      {:ok, Enum.join(output)}
+    end
   end
 end
 
@@ -133,6 +191,21 @@ defmodule Panic.Models.StableDiffusion do
       output_type: :image
     }
   end
+
+  def invoke(input) do
+    input_params = %{
+      prompt: input,
+      num_inference_steps: 50,
+      guidance_scale: 7.5,
+      width: 1024,
+      height: 576
+    }
+
+    with {:ok, %{"output" => [image_url]}} <-
+           Panic.Platforms.Replicate.create_and_wait(model_id, input_params, tokens) do
+      {:ok, image_url}
+    end
+  end
 end
 
 defmodule Panic.Models.SOCYSD do
@@ -150,6 +223,21 @@ defmodule Panic.Models.SOCYSD do
       output_type: :image
     }
   end
+
+  def invoke(input) do
+    input_params = %{
+      prompt: "#{prompt} in the style of <1>",
+      width: 1024,
+      height: 576,
+      lora_urls:
+        "https://replicate.delivery/pbxt/eIfm9M0WYEnnjUKQxyumkqiPtr6Pi0D8ee1bGufE74ieUpXIE/tmp5xnilpplHEADER20IMAGESzip.safetensors"
+    }
+
+    with {:ok, %{"output" => [image_url]}} <-
+           Panic.Platforms.Replicate.create_and_wait(model_id, input_params, tokens) do
+      {:ok, image_url}
+    end
+  end
 end
 
 defmodule Panic.Models.InstructPix2Pix do
@@ -166,5 +254,19 @@ defmodule Panic.Models.InstructPix2Pix do
       input_type: :image,
       output_type: :image
     }
+  end
+
+  def invoke(input) do
+    with {:ok, %{"output" => [output_image_url]}} <-
+           Panic.Platforms.Replicate.create_and_wait(
+             model_id,
+             %{
+               image: input_image_url,
+               prompt: "change the environment, keep the human and technology"
+             },
+             tokens
+           ) do
+      {:ok, output_image_url}
+    end
   end
 end
