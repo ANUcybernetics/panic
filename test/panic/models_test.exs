@@ -19,36 +19,17 @@ defmodule Panic.ModelsTest do
       assert invocation.run_number >= 0
     end
 
-    # test "raise if there's no Invocation with a given id" do
-    #   assert_raise Ash.Error.Invalid, fn -> Ash.get!(Invocation, 1234) end
-    # end
+    test "raise if there's no Invocation with a given id" do
+      assert_raise Ash.Error.Invalid, fn -> Ash.get!(Invocation, 1234) end
+    end
 
-    # test "read the created invocation back from the db" do
-    #   %Invocation{id: invocation_id} = invocation_fixture()
+    test "read the created invocation back from the db" do
+      %Invocation{id: invocation_id} = invocation_fixture()
 
-    #   assert %Invocation{id: ^invocation_id} =
-    #            Panic.Models.get_invocation!(invocation_id)
-    # end
-
-    # test "create a model, then run the invoke_first action" do
-    #   network = network_fixture()
-    #   invocation = invocation_fixture()
-
-    #   model = network.models |> List.first()
-
-    #   invocation =
-    #     Panic.Models.Invocation.invoke_first!(
-    #       model,
-    #       invocation.input,
-    #       invocation.run_number
-    #     )
-    # end
+      assert %Invocation{id: ^invocation_id} =
+               Panic.Models.get_invocation!(invocation_id)
+    end
   end
-
-  # # used to be in a separate e, but not necessary for now
-  # defp invocation_fixture(attrs \\ %{}) do
-  #   attrs
-  # end
 
   defp network_fixture(attrs \\ %{}) do
     attrs =
@@ -66,6 +47,20 @@ defmodule Panic.ModelsTest do
 
     Network
     |> Ash.Changeset.for_create(:create, attrs)
+    |> Ash.create!()
+  end
+
+  defp invocation_fixture(attrs \\ %{}) do
+    network = network_fixture()
+
+    attrs =
+      Map.merge(
+        %{network: network, input: "my test input"},
+        attrs
+      )
+
+    Invocation
+    |> Ash.Changeset.for_create(:create_first, attrs)
     |> Ash.create!()
   end
 end
