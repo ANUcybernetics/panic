@@ -1,9 +1,9 @@
-defmodule Panic.Topology.Network do
+defmodule Panic.Engine.Network do
   @moduledoc """
   A Network represents a specific network (i.e. cyclic graph) of models.
   """
   use Ash.Resource,
-    domain: Panic.Topology,
+    domain: Panic.Engine,
     data_layer: AshSqlite.DataLayer
 
   sqlite do

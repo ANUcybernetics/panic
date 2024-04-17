@@ -1,16 +1,15 @@
 defmodule Panic.NetworkTest do
   use Panic.DataCase
-  alias Panic.Topology.Network
+  alias Panic.Engine.Network
 
-  describe "Panic.Topology.Network resource" do
-
+  describe "Panic.Engine.Network resource" do
     test "changeset for :create action with valid data creates a network" do
       valid_attrs = %{
         name: "My Network",
         description: "A super cool network",
         models: [
           # TODO change this to an actual model module once they exist
-          Panic.Topology
+          Panic.Engine
         ]
       }
 
@@ -31,12 +30,12 @@ defmodule Panic.NetworkTest do
         description: "A super cool network",
         models: [
           # TODO change this to an actual model module once they exist
-          Panic.Topology
+          Panic.Engine
         ]
       }
 
       network =
-        Panic.Topology.create_network!(
+        Panic.Engine.create_network!(
           valid_attrs.name,
           valid_attrs.description,
           valid_attrs.models
@@ -54,17 +53,17 @@ defmodule Panic.NetworkTest do
 
     test "read the created network back from the db" do
       %Network{id: network_id} = network_fixture()
-      assert %Network{id: ^network_id} = Panic.Topology.get_network!(network_id)
+      assert %Network{id: ^network_id} = Panic.Engine.get_network!(network_id)
     end
 
     test "create action with invalid data returns error changeset" do
       assert {:error, %Ash.Error.Invalid{}} =
-               Panic.Topology.create_network("Good name", "Good description", [BadModule])
+               Panic.Engine.create_network("Good name", "Good description", [BadModule])
     end
 
     test "set_state action changes the network state to :starting" do
       network = network_fixture()
-      {:ok, network} = Panic.Topology.set_state(network.id, :starting)
+      {:ok, network} = Panic.Engine.set_state(network.id, :starting)
       assert network.state == :starting
     end
 
@@ -105,14 +104,14 @@ defmodule Panic.NetworkTest do
           description: "A super cool network",
           models: [
             # TODO change this to an actual model module once they exist
-            Panic.Topology
+            Panic.Engine
           ]
         },
         attrs
       )
 
-      Network
-      |> Ash.Changeset.for_create(:create, attrs)
-      |> Ash.create!()
+    Network
+    |> Ash.Changeset.for_create(:create, attrs)
+    |> Ash.create!()
   end
 end

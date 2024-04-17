@@ -1,9 +1,9 @@
 defmodule Panic.ModelsTest do
   use Panic.DataCase
-  alias Panic.Topology.Network
-  alias Panic.Models.Invocation
+  alias Panic.Engine.Network
+  alias Panic.Engine.Invocation
 
-  describe "Panic.Models.Invocation resource" do
+  describe "Panic.Engine.Invocation resource" do
     test "changeset for :create_first action with valid data creates an invocation" do
       network = network_fixture()
       valid_attrs = %{network: network, input: "my test input"}
@@ -27,7 +27,7 @@ defmodule Panic.ModelsTest do
       %Invocation{id: invocation_id} = invocation_fixture()
 
       assert %Invocation{id: ^invocation_id} =
-               Panic.Models.get_invocation!(invocation_id)
+               Panic.Engine.get_invocation!(invocation_id)
     end
   end
 
@@ -39,7 +39,7 @@ defmodule Panic.ModelsTest do
           description: "A super cool network",
           models: [
             # TODO change this to an actual model module once they exist
-            Panic.Topology
+            Panic.Engine
           ]
         },
         attrs

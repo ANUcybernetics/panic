@@ -1,4 +1,4 @@
-defmodule Panic.Models.Invocation do
+defmodule Panic.Engine.Invocation do
   @moduledoc """
   A resource representing a specific "inference" run for a single model
 
@@ -6,11 +6,11 @@ defmodule Panic.Models.Invocation do
   along with some other metadata.
   """
   use Ash.Resource,
-    domain: Panic.Models,
+    domain: Panic.Engine,
     data_layer: AshSqlite.DataLayer
 
   sqlite do
-    table "models"
+    table "invocations"
     repo Panic.Repo
   end
 
@@ -62,6 +62,6 @@ defmodule Panic.Models.Invocation do
   end
 
   relationships do
-    belongs_to :network, Panic.Topology.Network, allow_nil?: false
+    belongs_to :network, Panic.Engine.Network, allow_nil?: false
   end
 end
