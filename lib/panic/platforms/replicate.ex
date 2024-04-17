@@ -2,23 +2,16 @@ defmodule Panic.Platforms.Replicate do
   @url "https://api.replicate.com/v1"
   # @recv_timeout 10_000
 
-  def get_model_versions(model_id, tokens) do
-    url = "#{@url}/models/#{model_id |> Panic.Platforms.model_info() |> Map.get(:path)}/versions"
+  def get_latest_model_version(model_id, tokens) do
+    url = "#{@url}/models/#{model_id}"
 
-    Finch.build(:get, url, headers(tokens))
-    |> Finch.request(Panic.Finch)
-    |> case do
-      {:ok, %Finch.Response{body: response_body, status: 200}} ->
-        %{"results" => results} = Jason.decode!(response_body)
-        results
+    case Req.get(url, headers: headers(tokens)) do
+      {:ok, %Req.Response{body: %{"latest_version" => version}, status: 200}} ->
+        version
 
       {:error, reason} ->
         {:error, reason}
     end
-  end
-
-  def get_latest_model_version(model_id, tokens) do
-    get_model_versions(model_id, tokens) |> List.first() |> Map.get("id")
   end
 
   def get_status(prediction_id, tokens) do
