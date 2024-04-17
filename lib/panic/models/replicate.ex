@@ -5,7 +5,7 @@ defmodule Panic.Models.DalleMini do
   def info do
     %Panic.Models.ModelInfo{
       id: "kuprel/min-dalle",
-      platform: Panic.Models.Platforms.Replicate,
+      platform: Panic.Platforms.Replicate,
       path: "kuprel/min-dalle",
       name: "DALL·E Mini",
       description: "",
@@ -22,7 +22,7 @@ defmodule Panic.Models.PromptParrot do
   def info do
     %Panic.Models.ModelInfo{
       id: "kyrick/prompt-parrot",
-      platform: Panic.Models.Platforms.Replicate,
+      platform: Panic.Platforms.Replicate,
       path: "kyrick/prompt-parrot",
       name: "Prompt Parrot",
       description: "",
@@ -39,7 +39,7 @@ defmodule Panic.Models.CogPromptParrot do
   def info do
     %Panic.Models.ModelInfo{
       id: "2feet6inches/cog-prompt-parrot",
-      platform: Panic.Models.Platforms.Replicate,
+      platform: Panic.Platforms.Replicate,
       path: "2feet6inches/cog-prompt-parrot",
       name: "Cog Prompt Parrot",
       description: "",
@@ -56,7 +56,7 @@ defmodule Panic.Models.ClipPrefixCaption do
   def info do
     %Panic.Models.ModelInfo{
       id: "rmokady/clip_prefix_caption",
-      platform: Panic.Models.Platforms.Replicate,
+      platform: Panic.Platforms.Replicate,
       path: "rmokady/clip_prefix_caption",
       name: "Clip Prefix Caption",
       description: "",
@@ -73,7 +73,7 @@ defmodule Panic.Models.ClipCaptionReward do
   def info do
     %Panic.Models.ModelInfo{
       id: "j-min/clip-caption-reward",
-      platform: Panic.Models.Platforms.Replicate,
+      platform: Panic.Platforms.Replicate,
       path: "j-min/clip-caption-reward",
       name: "Clip Caption Reward",
       description: "",
@@ -90,7 +90,7 @@ defmodule Panic.Models.BLIP2 do
   def info do
     %Panic.Models.ModelInfo{
       id: "salesforce/blip-2",
-      platform: Panic.Models.Platforms.Replicate,
+      platform: Panic.Platforms.Replicate,
       path: "salesforce/blip-2",
       name: "BLIP2",
       description: "",
@@ -107,7 +107,7 @@ defmodule Panic.Models.Vicuna13B do
   def info do
     %Panic.Models.ModelInfo{
       id: "replicate/vicuna-13b",
-      platform: Panic.Models.Platforms.Replicate,
+      platform: Panic.Platforms.Replicate,
       path: "replicate/vicuna-13b",
       name: "vicuna 13B",
       description: "A large language model that's been fine-tuned on ChatGPT interactions",
@@ -124,7 +124,7 @@ defmodule Panic.Models.StableDiffusion do
   def info do
     %Panic.Models.ModelInfo{
       id: "stability-ai/stable-diffusion",
-      platform: Panic.Models.Platforms.Replicate,
+      platform: Panic.Platforms.Replicate,
       path: "stability-ai/stable-diffusion",
       # version: "f178fa7a1ae43a9a9af01b833b9d2ecf97b1bcb0acfd2dc5dd04895e042863f1",
       name: "Stable Diffusion",
@@ -142,7 +142,7 @@ defmodule Panic.Models.SOCYSD do
   def info do
     %Panic.Models.ModelInfo{
       id: "cloneofsimo/lora-socy",
-      platform: Panic.Models.Platforms.Replicate,
+      platform: Panic.Platforms.Replicate,
       path: "cloneofsimo/lora",
       name: "SOCY SD",
       description: "",
@@ -159,7 +159,7 @@ defmodule Panic.Models.InstructPix2Pix do
   def info do
     %Panic.Models.ModelInfo{
       id: "timothybrooks/instruct-pix2pix",
-      platform: Panic.Models.Platforms.Replicate,
+      platform: Panic.Platforms.Replicate,
       path: "timothybrooks/instruct-pix2pix",
       name: "Instruct pix2pix",
       description: "",

@@ -1,4 +1,4 @@
-defmodule Panic.Models.Platforms.Replicate do
+defmodule Panic.Platforms.Replicate do
   @url "https://api.replicate.com/v1"
   # @recv_timeout 10_000
 

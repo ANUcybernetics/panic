@@ -1,4 +1,4 @@
-defmodule Panic.Models.Platforms.OpenAI do
+defmodule Panic.Platforms.OpenAI do
   @url "https://api.openai.com/v1"
   @temperature 0.7
   @max_response_length 50

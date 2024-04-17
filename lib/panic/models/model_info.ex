@@ -19,7 +19,7 @@ defmodule Panic.Models.ModelInfo do
   sync with this info in the database would be a nightmare.
   """
 
-  def model_url(%__MODULE__{platform: Panic.Models.Platforms.OpenAI}) do
+  def model_url(%__MODULE__{platform: Panic.Platforms.OpenAI}) do
     "https://platform.openai.com/docs/models/overview"
   end
 
