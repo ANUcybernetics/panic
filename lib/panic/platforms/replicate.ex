@@ -1,9 +1,8 @@
 defmodule Panic.Platforms.Replicate do
-  @base_url "https://api.replicate.com/v1/"
-  # @recv_timeout 10_000
-
-  def get_latest_model_version(model, tokens) do
-    case Req.get(url: "models/#{model.info(:path)}", base_url: @base_url, headers: headers(tokens)) do
+  def get_latest_model_version(model) do
+    req_new(url: "models/#{model.info(:path)}")
+    |> Req.request()
+    |> case do
       {:ok, %Req.Response{body: body, status: 200}} ->
         %{"latest_version" => %{"id" => id}} = body
         id
@@ -13,23 +12,19 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
-  def get_status(prediction_id, tokens) do
-    case Req.get(
-           url: "predictions/#{prediction_id}",
-           base_url: @base_url,
-           headers: headers(tokens)
-         ) do
+  def get_status(prediction_id) do
+    req_new(url: "predictions/#{prediction_id}")
+    |> Req.request()
+    |> case do
       {:ok, %Req.Response{body: body, status: 200}} ->
         body
     end
   end
 
-  def get(prediction_id, tokens) do
-    case Req.get(
-           url: "predictions/#{prediction_id}",
-           base_url: @base_url,
-           headers: headers(tokens)
-         ) do
+  def get(prediction_id) do
+    req_new(url: "predictions/#{prediction_id}")
+    |> Req.request()
+    |> case do
       {:ok, %Req.Response{body: body, status: 200}} ->
         case body do
           %{"status" => "succeeded"} = body ->
@@ -43,7 +38,7 @@ defmodule Panic.Platforms.Replicate do
 
           %{"status" => status} when status in ~w(starting processing) ->
             ## recursion case; doesn't need a tuple
-            get(prediction_id, tokens)
+            get(prediction_id)
         end
 
       {:error, reason} ->
@@ -51,38 +46,41 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
-  def cancel(prediction_id, tokens) do
-    Req.post(
-      url: "predictions/#{prediction_id}/cancel",
-      base_url: @base_url,
-      headers: headers(tokens)
-    )
+  def cancel(prediction_id) do
+    req_new(method: :post, url: "predictions/#{prediction_id}/cancel")
+    |> Req.request()
   end
 
-  def create_and_wait(model, input_params, tokens) do
+  def create_and_wait(model, input_params) do
     version = model.info() |> Map.get(:version)
 
     request_body = %{
-      version: version || get_latest_model_version(model, tokens),
+      version: version || get_latest_model_version(model),
       input: input_params
     }
 
     Req.post(
       url: "predictions",
-      base_url: @base_url,
-      headers: headers(tokens),
       json: request_body
     )
     |> case do
       {:ok, %Req.Response{body: %{"id" => id}, status: 201}} ->
-        get(id, tokens)
+        get(id)
     end
   end
 
-  defp headers(%{"Replicate" => token}) do
-    %{
-      "Authorization" => "Token #{token}",
-      "Content-Type" => "application/json"
-    }
+  defp req_new(opts) do
+    # FIXME this is gross and I'll fix - it' just temporary while I'm porting to Ash
+    token = System.get_env("REPLICATE_API_TOKEN")
+
+    Keyword.merge(
+      [
+        base_url: "https://api.replicate.com/v1/",
+        receive_timeout: 10_000,
+        headers: [{"authorization", "token #{token}"}]
+      ],
+      opts
+    )
+    |> Req.new()
   end
 end
