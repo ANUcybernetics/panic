@@ -14,20 +14,24 @@ defmodule Panic.Platforms.Replicate do
   end
 
   def get_status(prediction_id, tokens) do
-    Finch.build(:get, "#{@url}/predictions/#{prediction_id}", headers(tokens))
-    |> Finch.request(Panic.Finch)
-    |> case do
-      {:ok, %Finch.Response{body: response_body, status: 200}} ->
-        Jason.decode!(response_body)
+    case Req.get(
+           url: "predictions/#{prediction_id}",
+           base_url: @base_url,
+           headers: headers(tokens)
+         ) do
+      {:ok, %Req.Response{body: body, status: 200}} ->
+        body
     end
   end
 
   def get(prediction_id, tokens) do
-    Finch.build(:get, "#{@url}/predictions/#{prediction_id}", headers(tokens))
-    |> Finch.request(Panic.Finch)
-    |> case do
-      {:ok, %Finch.Response{body: response_body, status: 200}} ->
-        case Jason.decode!(response_body) do
+    case Req.get(
+           url: "predictions/#{prediction_id}",
+           base_url: @base_url,
+           headers: headers(tokens)
+         ) do
+      {:ok, %Req.Response{body: body, status: 200}} ->
+        case body do
           %{"status" => "succeeded"} = body ->
             {:ok, body}
 
@@ -48,8 +52,11 @@ defmodule Panic.Platforms.Replicate do
   end
 
   def cancel(prediction_id, tokens) do
-    Finch.build(:post, "#{@url}/predictions/#{prediction_id}/cancel", headers(tokens), [])
-    |> Finch.request(Panic.Finch)
+    Req.post(
+      url: "predictions/#{prediction_id}/cancel",
+      base_url: @base_url,
+      headers: headers(tokens)
+    )
   end
 
   def create_and_wait(model_id, input_params, tokens) do
@@ -63,13 +70,15 @@ defmodule Panic.Platforms.Replicate do
       input: input_params
     }
 
-    Finch.build(:post, "#{@url}/predictions", headers(tokens), Jason.encode!(request_body))
-    |> Finch.request(Panic.Finch)
+    Req.post(
+      url: "predictions",
+      base_url: @base_url,
+      headers: headers(tokens),
+      json: request_body
+    )
     |> case do
-      {:ok, %Finch.Response{body: response_body, status: 201}} ->
-        Jason.decode!(response_body)
-        |> Map.get("id")
-        |> get(tokens)
+      {:ok, %Req.Response{body: %{"id" => id}, status: 201}} ->
+        get(id, tokens)
     end
   end
 
