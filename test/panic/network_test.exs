@@ -1,8 +1,8 @@
 defmodule Panic.NetworkTest do
   use Panic.DataCase
+  alias Panic.Topology.Network
 
   describe "Panic.Topology.Network resource" do
-    alias Panic.Topology.Network
 
     test "changeset for :create action with valid data creates a network" do
       valid_attrs = %{
@@ -111,10 +111,8 @@ defmodule Panic.NetworkTest do
         attrs
       )
 
-    Panic.Topology.create_network!(
-      attrs.name,
-      attrs.description,
-      attrs.models
-    )
+      Network
+      |> Ash.Changeset.for_create(:create, attrs)
+      |> Ash.create!()
   end
 end
