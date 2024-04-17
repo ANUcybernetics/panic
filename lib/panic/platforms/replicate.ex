@@ -2,8 +2,8 @@ defmodule Panic.Platforms.Replicate do
   @url "https://api.replicate.com/v1"
   # @recv_timeout 10_000
 
-  def get_latest_model_version(model_id, tokens) do
-    url = "#{@url}/models/#{model_id}"
+  def get_latest_model_version(model_path, tokens) do
+    url = "#{@url}/models/#{model_path}"
 
     case Req.get(url, headers: headers(tokens)) do
       {:ok, %Req.Response{body: %{"latest_version" => version}, status: 200}} ->
