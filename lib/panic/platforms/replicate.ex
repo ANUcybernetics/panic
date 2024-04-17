@@ -2,8 +2,8 @@ defmodule Panic.Platforms.Replicate do
   @base_url "https://api.replicate.com/v1/"
   # @recv_timeout 10_000
 
-  def get_latest_model_version(model_path, tokens) do
-    case Req.get(url: "models/#{model_path}", base_url: @base_url, headers: headers(tokens)) do
+  def get_latest_model_version(model, tokens) do
+    case Req.get(url: "models/#{model.info(:path)}", base_url: @base_url, headers: headers(tokens)) do
       {:ok, %Req.Response{body: body, status: 200}} ->
         %{"latest_version" => %{"id" => id}} = body
         id
@@ -59,14 +59,11 @@ defmodule Panic.Platforms.Replicate do
     )
   end
 
-  def create_and_wait(model_id, input_params, tokens) do
-    version =
-      model_id
-      |> Panic.Platforms.model_info()
-      |> Map.get(:version)
+  def create_and_wait(model, input_params, tokens) do
+    version = model.info() |> Map.get(:version)
 
     request_body = %{
-      version: version || get_latest_model_version(model_id, tokens),
+      version: version || get_latest_model_version(model, tokens),
       input: input_params
     }
 
