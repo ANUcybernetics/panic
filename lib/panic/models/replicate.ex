@@ -27,7 +27,7 @@ defmodule Panic.Models.PromptParrot do
       name: "Prompt Parrot",
       description: "",
       input_type: :text,
-      output_type: :text,
+      output_type: :text
     }
   end
 end
@@ -44,7 +44,7 @@ defmodule Panic.Models.CogPromptParrot do
       name: "Cog Prompt Parrot",
       description: "",
       input_type: :text,
-      output_type: :text,
+      output_type: :text
     }
   end
 end
@@ -61,7 +61,7 @@ defmodule Panic.Models.ClipPrefixCaption do
       name: "Clip Prefix Caption",
       description: "",
       input_type: :image,
-      output_type: :text,
+      output_type: :text
     }
   end
 end
@@ -78,7 +78,7 @@ defmodule Panic.Models.ClipCaptionReward do
       name: "Clip Caption Reward",
       description: "",
       input_type: :image,
-      output_type: :text,
+      output_type: :text
     }
   end
 end
@@ -95,7 +95,7 @@ defmodule Panic.Models.BLIP2 do
       name: "BLIP2",
       description: "",
       input_type: :image,
-      output_type: :text,
+      output_type: :text
     }
   end
 end
@@ -112,7 +112,7 @@ defmodule Panic.Models.Vicuna13B do
       name: "vicuna 13B",
       description: "A large language model that's been fine-tuned on ChatGPT interactions",
       input_type: :text,
-      output_type: :text,
+      output_type: :text
     }
   end
 end
@@ -130,7 +130,7 @@ defmodule Panic.Models.StableDiffusion do
       name: "Stable Diffusion",
       description: "",
       input_type: :text,
-      output_type: :image,
+      output_type: :image
     }
   end
 end
@@ -147,7 +147,7 @@ defmodule Panic.Models.SOCYSD do
       name: "SOCY SD",
       description: "",
       input_type: :text,
-      output_type: :image,
+      output_type: :image
     }
   end
 end
@@ -164,75 +164,7 @@ defmodule Panic.Models.InstructPix2Pix do
       name: "Instruct pix2pix",
       description: "",
       input_type: :image,
-      output_type: :image,
-    }
-  end
-end
-
-defmodule Panic.Models.GPT3Davinci do
-  @behaviour Panic.Model
-
-  @impl true
-  def info do
-    %Panic.Models.ModelInfo{
-      id: "openai:text-davinci-003",
-      path: "text-davinci-003",
-      name: "GPT-3 Davinci",
-      description: "",
-      input_type: :text,
-      output_type: :text,
-      platform: Panic.Platforms.OpenAI
-    }
-  end
-end
-
-defmodule Panic.Models.GPT3Ada do
-  @behaviour Panic.Model
-
-  @impl true
-  def info do
-    %Panic.Models.ModelInfo{
-      id: "openai:text-ada-001",
-      path: "text-ada-001",
-      name: "GPT-3 Ada",
-      description: "",
-      input_type: :text,
-      output_type: :text,
-      platform: Panic.Platforms.OpenAI
-    }
-  end
-end
-
-defmodule Panic.Models.GPT3DavinciInstruct do
-  @behaviour Panic.Model
-
-  @impl true
-  def info do
-    %Panic.Models.ModelInfo{
-      id: "openai:davinci-instruct-beta",
-      path: "davinci-instruct-beta",
-      name: "GPT-3 Davinci Instruct",
-      description: "",
-      input_type: :text,
-      output_type: :text,
-      platform: Panic.Platforms.OpenAI
-    }
-  end
-end
-
-defmodule Panic.Models.ChatGPT do
-  @behaviour Panic.Model
-
-  @impl true
-  def info do
-    %Panic.Models.ModelInfo{
-      id: "openai:gpt-3.5-turbo",
-      path: "gpt-3.5-turbo",
-      name: "ChatGPT",
-      description: "",
-      input_type: :text,
-      output_type: :text,
-      platform: Panic.Platforms.OpenAI
+      output_type: :image
     }
   end
 end
