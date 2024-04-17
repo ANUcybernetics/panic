@@ -16,7 +16,7 @@ defmodule Panic.ModelsTest do
       assert invocation.network_id == network.id
       assert invocation.input == valid_attrs.input
       assert invocation.sequence_number == 0
-      assert invocation.run_number >= 0
+      assert invocation.run_number == nil
     end
 
     test "raise if there's no Invocation with a given id" do
