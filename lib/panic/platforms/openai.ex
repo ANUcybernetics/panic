@@ -2,7 +2,6 @@ defmodule Panic.Platforms.OpenAI do
   @url "https://api.openai.com/v1"
   @temperature 0.7
   @max_response_length 50
-  # @recv_timeout 10_000
 
   def list_engines(tokens) do
     Finch.build(:get, @url <> "/engines", headers(tokens))
