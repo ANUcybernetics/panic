@@ -1,4 +1,7 @@
 defmodule Panic.Models.DalleMini do
+  @behaviour Panic.Model
+
+  @impl true
   def info do
     %Panic.Models.ModelInfo{
       id: "kuprel/min-dalle",
@@ -13,6 +16,9 @@ defmodule Panic.Models.DalleMini do
 end
 
 defmodule Panic.Models.PromptParrot do
+  @behaviour Panic.Model
+
+  @impl true
   def info do
     %Panic.Models.ModelInfo{
       id: "kyrick/prompt-parrot",
@@ -27,6 +33,9 @@ defmodule Panic.Models.PromptParrot do
 end
 
 defmodule Panic.Models.CogPromptParrot do
+  @behaviour Panic.Model
+
+  @impl true
   def info do
     %Panic.Models.ModelInfo{
       id: "2feet6inches/cog-prompt-parrot",
@@ -41,6 +50,9 @@ defmodule Panic.Models.CogPromptParrot do
 end
 
 defmodule Panic.Models.ClipPrefixCaption do
+  @behaviour Panic.Model
+
+  @impl true
   def info do
     %Panic.Models.ModelInfo{
       id: "rmokady/clip_prefix_caption",
@@ -55,6 +67,9 @@ defmodule Panic.Models.ClipPrefixCaption do
 end
 
 defmodule Panic.Models.ClipCaptionReward do
+  @behaviour Panic.Model
+
+  @impl true
   def info do
     %Panic.Models.ModelInfo{
       id: "j-min/clip-caption-reward",
@@ -69,6 +84,9 @@ defmodule Panic.Models.ClipCaptionReward do
 end
 
 defmodule Panic.Models.BLIP2 do
+  @behaviour Panic.Model
+
+  @impl true
   def info do
     %Panic.Models.ModelInfo{
       id: "salesforce/blip-2",
@@ -83,6 +101,9 @@ defmodule Panic.Models.BLIP2 do
 end
 
 defmodule Panic.Models.Vicuna13B do
+  @behaviour Panic.Model
+
+  @impl true
   def info do
     %Panic.Models.ModelInfo{
       id: "replicate/vicuna-13b",
@@ -97,6 +118,9 @@ defmodule Panic.Models.Vicuna13B do
 end
 
 defmodule Panic.Models.StableDiffusion do
+  @behaviour Panic.Model
+
+  @impl true
   def info do
     %Panic.Models.ModelInfo{
       id: "stability-ai/stable-diffusion",
@@ -112,6 +136,9 @@ defmodule Panic.Models.StableDiffusion do
 end
 
 defmodule Panic.Models.SOCYSD do
+  @behaviour Panic.Model
+
+  @impl true
   def info do
     %Panic.Models.ModelInfo{
       id: "cloneofsimo/lora-socy",
@@ -126,6 +153,9 @@ defmodule Panic.Models.SOCYSD do
 end
 
 defmodule Panic.Models.InstructPix2Pix do
+  @behaviour Panic.Model
+
+  @impl true
   def info do
     %Panic.Models.ModelInfo{
       id: "timothybrooks/instruct-pix2pix",
@@ -140,6 +170,9 @@ defmodule Panic.Models.InstructPix2Pix do
 end
 
 defmodule Panic.Models.GPT3Davinci do
+  @behaviour Panic.Model
+
+  @impl true
   def info do
     %Panic.Models.ModelInfo{
       id: "openai:text-davinci-003",
@@ -154,6 +187,9 @@ defmodule Panic.Models.GPT3Davinci do
 end
 
 defmodule Panic.Models.GPT3Ada do
+  @behaviour Panic.Model
+
+  @impl true
   def info do
     %Panic.Models.ModelInfo{
       id: "openai:text-ada-001",
@@ -168,6 +204,9 @@ defmodule Panic.Models.GPT3Ada do
 end
 
 defmodule Panic.Models.GPT3DavinciInstruct do
+  @behaviour Panic.Model
+
+  @impl true
   def info do
     %Panic.Models.ModelInfo{
       id: "openai:davinci-instruct-beta",
@@ -182,6 +221,9 @@ defmodule Panic.Models.GPT3DavinciInstruct do
 end
 
 defmodule Panic.Models.ChatGPT do
+  @behaviour Panic.Model
+
+  @impl true
   def info do
     %Panic.Models.ModelInfo{
       id: "openai:gpt-3.5-turbo",
