@@ -3,12 +3,12 @@ defmodule Panic.Platforms.OpenAI do
   @temperature 0.7
   @max_response_length 50
 
-  def list_engines(tokens) do
-    Finch.build(:get, @url <> "/engines", headers(tokens))
-    |> Finch.request(Panic.Finch)
+  def list_engines do
+    req_new(url: "/engines")
+    |> Req.request()
     |> case do
-      {:ok, %Finch.Response{body: response_body, status: 200}} ->
-        %{"data" => data} = Jason.decode!(response_body)
+      {:ok, %Req.Response{body: body, status: 200}} ->
+        %{"data" => data} = body
         data
 
       {:error, reason} ->
@@ -16,20 +16,24 @@ defmodule Panic.Platforms.OpenAI do
     end
   end
 
-  def create(model_id, prompt, tokens) do
-    request(model_id, prompt, tokens)
-    |> Finch.request(Panic.Finch)
+  def create(model, input) do
+    request(model, input)
+    |> Req.request()
     |> case do
-      {:ok, %Finch.Response{body: response_body, status: 200}} ->
-        case Jason.decode!(response_body) do
-          %{"choices" => [%{"text" => ""} | _choices]} -> {:error, :blank_output}
-          %{"choices" => [%{"text" => text} | _choices]} -> {:ok, text}
-          %{"choices" => [%{"message" => %{"content" => text}} | _choices]} -> {:ok, text}
+      {:ok, %Req.Response{body: body, status: 200}} ->
+        case body do
+          %{"choices" => [%{"text" => ""}]} -> {:error, :blank_output}
+          %{"choices" => [%{"text" => text}]} -> {:ok, text}
+          %{"choices" => [%{"message" => %{"content" => text}}]} -> {:ok, text}
+          _ -> {:error, :unexpected_response_format}
         end
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
-  defp request("openai:gpt-3.5-turbo", prompt, tokens) do
+  defp request("openai:gpt-3.5-turbo", input) do
     request_body = %{
       model: "gpt-3.5-turbo",
       messages: [
@@ -38,37 +42,42 @@ defmodule Panic.Platforms.OpenAI do
           "content" =>
             "You are one component of a larger AI artwork system. Your job is to describe what you see."
         },
-        %{"role" => "user", "content" => prompt}
+        %{"role" => "user", "content" => input}
       ]
     }
 
-    Finch.build(
-      :post,
-      "#{@url}/chat/completions",
-      headers(tokens),
-      Jason.encode!(request_body)
+    req_new(
+      method: :post,
+      url: "/chat/completions",
+      json: request_body
     )
   end
 
-  defp request(model_id, prompt, tokens) do
+  defp request(model, input) do
     request_body = %{
-      prompt: prompt,
+      prompt: input,
       max_tokens: @max_response_length,
       temperature: @temperature
     }
 
-    Finch.build(
-      :post,
-      "#{@url}/engines/#{model_id |> Panic.Platforms.model_info() |> Map.get(:path)}/completions",
-      headers(tokens),
-      Jason.encode!(request_body)
+    req_new(
+      method: :post,
+      url: "/engines/#{model.info(:path)}/completions",
+      json: request_body
     )
   end
 
-  defp headers(%{"OpenAI" => token}) do
-    %{
-      "Authorization" => "Bearer #{token}",
-      "Content-Type" => "application/json"
-    }
+  defp req_new(opts) do
+    token = System.get_env("OPENAI_API_TOKEN")
+
+    Keyword.merge(
+      [
+        base_url: @url,
+        receive_timeout: 10_000,
+        auth: {:bearer, token}
+      ],
+      opts
+    )
+    |> Req.new()
   end
 end
