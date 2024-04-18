@@ -19,10 +19,7 @@ defmodule Panic.Models.GPT4 do
   def info(field), do: Map.fetch!(@info, field)
 
   @impl true
-  def invoke(input) do
-    model_id = @info.id
-    OpenAI.create(model_id, input)
-  end
+  def invoke(input), do: OpenAI.create(@info.id, input)
 end
 
 defmodule Panic.Models.GPT4Turbo do
@@ -46,8 +43,5 @@ defmodule Panic.Models.GPT4Turbo do
   def info(field), do: Map.fetch!(@info, field)
 
   @impl true
-  def invoke(input) do
-    model_id = @info.id
-    OpenAI.create(model_id, input)
-  end
+  def invoke(input), do: OpenAI.create(@info.id, input)
 end
