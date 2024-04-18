@@ -1,67 +1,53 @@
-defmodule Panic.Models.GPT3Davinci do
+defmodule Panic.Models.GPT4 do
   @behaviour Panic.Model
+  alias Panic.Platforms.OpenAI
+
+  @info %Panic.Models.ModelInfo{
+    id: "gpt-4",
+    path: "gpt-4",
+    name: "GPT-4",
+    description: "",
+    input_type: :text,
+    output_type: :text,
+    platform: OpenAI
+  }
 
   @impl true
-  def info do
-    %Panic.Models.ModelInfo{
-      id: "text-davinci-003",
-      path: "text-davinci-003",
-      name: "GPT-3 Davinci",
-      description: "",
-      input_type: :text,
-      output_type: :text,
-      platform: Panic.Platforms.OpenAI
-    }
+  def info, do: @info
+
+  @impl true
+  def info(field), do: Map.fetch!(@info, field)
+
+  @impl true
+  def invoke(input) do
+    model_id = @info.id
+    OpenAI.create(model_id, input)
   end
 end
 
-defmodule Panic.Models.GPT3Ada do
+defmodule Panic.Models.GPT4Turbo do
   @behaviour Panic.Model
+  alias Panic.Platforms.OpenAI
+
+  @info %Panic.Models.ModelInfo{
+    id: "gpt-4-turbo",
+    path: "gpt-4-turbo",
+    name: "GPT4 Turbo",
+    description: "",
+    input_type: :text,
+    output_type: :text,
+    platform: OpenAI
+  }
 
   @impl true
-  def info do
-    %Panic.Models.ModelInfo{
-      id: "text-ada-001",
-      path: "text-ada-001",
-      name: "GPT-3 Ada",
-      description: "",
-      input_type: :text,
-      output_type: :text,
-      platform: Panic.Platforms.OpenAI
-    }
-  end
-end
-
-defmodule Panic.Models.GPT3DavinciInstruct do
-  @behaviour Panic.Model
+  def info, do: @info
 
   @impl true
-  def info do
-    %Panic.Models.ModelInfo{
-      id: "openai:davinci-instruct-beta",
-      path: "davinci-instruct-beta",
-      name: "GPT-3 Davinci Instruct",
-      description: "",
-      input_type: :text,
-      output_type: :text,
-      platform: Panic.Platforms.OpenAI
-    }
-  end
-end
-
-defmodule Panic.Models.ChatGPT do
-  @behaviour Panic.Model
+  def info(field), do: Map.fetch!(@info, field)
 
   @impl true
-  def info do
-    %Panic.Models.ModelInfo{
-      id: "openai:gpt-3.5-turbo",
-      path: "gpt-3.5-turbo",
-      name: "ChatGPT",
-      description: "",
-      input_type: :text,
-      output_type: :text,
-      platform: Panic.Platforms.OpenAI
-    }
+  def invoke(input) do
+    model_id = @info.id
+    OpenAI.create(model_id, input)
   end
 end

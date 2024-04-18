@@ -1,7 +1,6 @@
 defmodule Panic.Platforms.OpenAI do
-  @url "https://api.openai.com/v1"
   @temperature 0.7
-  @max_response_length 50
+  @max_tokens 50
 
   def list_engines do
     req_new(url: "/engines")
@@ -33,17 +32,19 @@ defmodule Panic.Platforms.OpenAI do
     end
   end
 
-  defp request("openai:gpt-3.5-turbo", input) do
+  defp request(model, input) do
     request_body = %{
-      model: "gpt-3.5-turbo",
+      model: model.info(:id),
       messages: [
-        %{
-          "role" => "system",
-          "content" =>
-            "You are one component of a larger AI artwork system. Your job is to describe what you see."
-        },
+        # %{
+        #   "role" => "system",
+        #   "content" =>
+        #     "You are one component of a larger AI artwork system. Your job is to describe what you see."
+        # },
         %{"role" => "user", "content" => input}
-      ]
+      ],
+      temperature: @temperature,
+      max_tokens: @max_tokens
     }
 
     req_new(
@@ -53,26 +54,12 @@ defmodule Panic.Platforms.OpenAI do
     )
   end
 
-  defp request(model, input) do
-    request_body = %{
-      prompt: input,
-      max_tokens: @max_response_length,
-      temperature: @temperature
-    }
-
-    req_new(
-      method: :post,
-      url: "/engines/#{model.info(:path)}/completions",
-      json: request_body
-    )
-  end
-
   defp req_new(opts) do
     token = System.get_env("OPENAI_API_TOKEN")
 
     Keyword.merge(
       [
-        base_url: @url,
+        base_url: "https://api.openai.com/v1",
         receive_timeout: 10_000,
         auth: {:bearer, token}
       ],
