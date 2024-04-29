@@ -9,8 +9,11 @@ defmodule PanicWeb.NetworkLive.Show do
   @num_slots 6
   @reprompt_seconds 30
   @vestaboard_models [
+    "replicate:methexis-inc/img2prompt",
     "replicate:rmokady/clip_prefix_caption",
-    "replicate:j-min/clip-caption-reward"
+    "replicate:j-min/clip-caption-reward",
+    "replicate:pharmapsychotic/clip-interrogator",
+    "replicate:salesforce/blip"
   ]
 
   @impl true
