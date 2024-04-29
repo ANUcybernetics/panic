@@ -32,6 +32,7 @@ defmodule Panic.Models do
       "replicate:rmokady/clip_prefix_caption",
       "replicate:j-min/clip-caption-reward",
       "replicate:stability-ai/stable-diffusion",
+      "replicate:bytedance/sdxl-lightning-4step",
       "replicate:prompthero/openjourney",
       "replicate:pharmapsychotic/clip-interrogator"
     ]
@@ -56,6 +57,7 @@ defmodule Panic.Models do
   def model_io("replicate:rmokady/clip_prefix_caption"), do: {:image, :text}
   def model_io("replicate:j-min/clip-caption-reward"), do: {:image, :text}
   def model_io("replicate:stability-ai/stable-diffusion"), do: {:text, :image}
+  def model_io("replicate:bytedance/sdxl-lightning-4step"), do: {:text, :image}
   def model_io("replicate:prompthero/openjourney"), do: {:text, :image}
   def model_io("replicate:pharmapsychotic/clip-interrogator"), do: {:image, :text}
 

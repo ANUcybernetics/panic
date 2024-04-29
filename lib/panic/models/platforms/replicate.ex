@@ -74,6 +74,19 @@ defmodule Panic.Models.Platforms.Replicate do
     image_url
   end
 
+  def create("bytedance/sdxl-lightning-4step" = model, prompt) do
+    input_params = %{
+      prompt: prompt,
+      guidance_scale: 7.5,
+      width: 1024,
+      height: 576,
+      disable_safety_checker: true
+    }
+
+    %{"output" => [image_url]} = create_and_wait(model, input_params)
+    image_url
+  end
+
   ## text to image
   def create("prompthero/openjourney" = model, prompt) do
     input_params = %{
