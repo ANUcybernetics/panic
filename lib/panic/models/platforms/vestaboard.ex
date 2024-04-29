@@ -24,8 +24,8 @@ defmodule Panic.Models.Platforms.Vestaboard do
     end
   end
 
-  def clear_all(board_ids) do
-    board_ids |> Enum.each(&send_text(&1, ""))
+  def clear_all(board_names) do
+    board_names |> Enum.each(&send_text(&1, ""))
   end
 
   defp api_key(board_name) do
