@@ -14,7 +14,7 @@ defmodule Panic.Models.Platforms.Replicate do
   end
 
   def get_latest_model_version("stability-ai/stable-diffusion") do
-    "f178fa7a1ae43a9a9af01b833b9d2ecf97b1bcb0acfd2dc5dd04895e042863f1"
+    "ac732df83cea7fff18b8472768c88ad041fa750ff7682a21affe81863cbe77e4"
   end
 
   def get_latest_model_version(model) do
