@@ -210,6 +210,11 @@ defmodule Panic.Models.Platforms.Replicate do
     |> Enum.random()
   end
 
+  def create("salesforce/blip" = model, image_url) do
+    %{"output" => "Caption: " <> text} = create_and_wait(model, %{image: image_url})
+    text
+  end
+
   ## image to image
   def create("netease-gameai/spatchgan-selfie2anime" = model, image_url) do
     %{"output" => [%{"file" => image_url} | _]} = create_and_wait(model, %{image: image_url})

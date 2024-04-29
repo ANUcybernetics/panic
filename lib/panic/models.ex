@@ -35,7 +35,8 @@ defmodule Panic.Models do
       "replicate:stability-ai/sdxl",
       "replicate:bytedance/sdxl-lightning-4step",
       "replicate:prompthero/openjourney",
-      "replicate:pharmapsychotic/clip-interrogator"
+      "replicate:pharmapsychotic/clip-interrogator",
+      "replicate:salesforce/blip"
     ]
   end
 
@@ -62,6 +63,7 @@ defmodule Panic.Models do
   def model_io("replicate:bytedance/sdxl-lightning-4step"), do: {:text, :image}
   def model_io("replicate:prompthero/openjourney"), do: {:text, :image}
   def model_io("replicate:pharmapsychotic/clip-interrogator"), do: {:image, :text}
+  def model_io("replicate:salesforce/blip"), do: {:image, :text}
 
   def list_runs(%Network{id: network_id}) do
     Repo.all(from r in Run, where: r.network_id == ^network_id, order_by: [asc: r.cycle_index])
