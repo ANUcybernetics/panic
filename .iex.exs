@@ -1,5 +1,8 @@
 alias Panic.{
   Repo,
+  Models.Platforms.Replicate,
+  Models.Platforms.OpenAI,
+  Models.Platforms.HuggingFace,
   Accounts,
   Accounts.User,
   Accounts.UserSeeder,
