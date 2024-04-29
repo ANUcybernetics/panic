@@ -25,7 +25,8 @@ defmodule Panic.Models.Platforms.Vestaboard do
   end
 
   def clear_all(board_names) do
-    board_names |> Enum.each(&send_text(&1, ""))
+    # this is a workaround, because the RW API doesn't allow blank messages
+    board_names |> Enum.each(&send_text(&1, "blank"))
   end
 
   defp api_key(board_name) do
