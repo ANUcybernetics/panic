@@ -13,35 +13,35 @@ config :panic,
       raise("""
       environment variable REPLICATE_API_TOKEN is missing.
       """),
-  openai_api_token:
-    System.get_env("OPENAI_API_TOKEN") ||
+  # openai_api_token:
+  #   System.get_env("OPENAI_API_TOKEN") ||
+  #     raise("""
+  #     environment variable OPENAI_API_TOKEN is missing.
+  #     """),
+  # huggingface_api_token:
+  #   System.get_env("HUGGINGFACE_API_TOKEN") ||
+  #     raise("""
+  #     environment variable HUGGINGFACE_API_TOKEN is missing.
+  #     """),
+  vestaboard_api_token_panic_1:
+    System.get_env("VESTABOARD_API_TOKEN_PANIC_1") ||
       raise("""
-      environment variable OPENAI_API_TOKEN is missing.
+      environment variable VESTABOARD_API_TOKEN_PANIC_1 is missing.
       """),
-  huggingface_api_token:
-    System.get_env("HUGGINGFACE_API_TOKEN") ||
+  vestaboard_api_token_panic_2:
+    System.get_env("VESTABOARD_API_TOKEN_PANIC_2") ||
       raise("""
-      environment variable HUGGINGFACE_API_TOKEN is missing.
+      environment variable VESTABOARD_API_TOKEN_PANIC_2 is missing.
       """),
-  vestaboard_api_secret_1:
-    System.get_env("VESTABOARD_API_SECRET_1") ||
+  vestaboard_api_token_panic_3:
+    System.get_env("VESTABOARD_API_TOKEN_PANIC_3") ||
       raise("""
-      environment variable VESTABOARD_API_SECRET_1 is missing.
+      environment variable VESTABOARD_API_TOKEN_PANIC_3 is missing.
       """),
-  vestaboard_api_secret_2:
-    System.get_env("VESTABOARD_API_SECRET_2") ||
+  vestaboard_api_token_panic_4:
+    System.get_env("VESTABOARD_API_TOKEN_PANIC_4") ||
       raise("""
-      environment variable VESTABOARD_API_SECRET_2 is missing.
-      """),
-  vestaboard_api_secret_3:
-    System.get_env("VESTABOARD_API_SECRET_3") ||
-      raise("""
-      environment variable VESTABOARD_API_SECRET_3 is missing.
-      """),
-  vestaboard_api_secret_4:
-    System.get_env("VESTABOARD_API_SECRET_4") ||
-      raise("""
-      environment variable VESTABOARD_API_SECRET_4 is missing.
+      environment variable VESTABOARD_API_TOKEN_PANIC_4 is missing.
       """)
 
 config :ueberauth, Ueberauth.Strategy.Google.OAuth,
