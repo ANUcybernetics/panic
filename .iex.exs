@@ -3,6 +3,7 @@ alias Panic.{
   Models.Platforms.Replicate,
   Models.Platforms.OpenAI,
   Models.Platforms.HuggingFace,
+  Models.Platforms.Vestaboard,
   Accounts,
   Accounts.User,
   Accounts.UserSeeder,
