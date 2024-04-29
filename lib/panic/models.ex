@@ -21,8 +21,8 @@ defmodule Panic.Models do
   """
   def list_models do
     [
-      "huggingface:facebook/fastspeech2-en-ljspeech",
-      "huggingface:facebook/wav2vec2-base-960h",
+      # "huggingface:facebook/fastspeech2-en-ljspeech",
+      # "huggingface:facebook/wav2vec2-base-960h",
       "openai:text-davinci-002",
       "replicate:charlesfrye/text-recognizer-gpu",
       "replicate:kuprel/min-dalle",

@@ -138,7 +138,11 @@ defmodule Panic.Models.Platforms.Replicate do
 
   def create("pharmapsychotic/clip-interrogator" = model, image_url) do
     %{"output" => text} =
-      create_and_wait(model, %{image: image_url, mode: "fast", clip_model_name: "ViT-H-14"})
+      create_and_wait(model, %{
+        image: image_url,
+        mode: "fast",
+        clip_model_name: "ViT-H-14/laion2b_s32b_b79k"
+      })
 
     text
   end
