@@ -13,14 +13,14 @@ defmodule Panic.Models.Platforms.Vestaboard do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         Jason.decode(body)
 
-      {:ok, %HTTPoison.Response{status_code: 400}} ->
-        {:ok, :bad_request}
+      {:ok, %HTTPoison.Response{status_code: status_code}} when status_code in [400, 405] ->
+        {:error, :bad_request}
 
-      {:ok, %HTTPoison.Response{status_code: 405}} ->
-        {:ok, :bad_request}
+      {:ok, %HTTPoison.Response{status_code: 304}} ->
+        {:error, :not_modified}
 
       {:ok, %HTTPoison.Response{status_code: 503}} ->
-        {:ok, :too_many_requests}
+        {:error, :too_many_requests}
     end
   end
 
