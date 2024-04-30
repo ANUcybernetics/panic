@@ -2,7 +2,6 @@ defmodule PanicWeb.NetworkLive.Public do
   use PanicWeb, :live_view
 
   alias Panic.Networks
-  alias Panic.Networks.Analytics
   alias Panic.Models
   alias Panic.Models.Run
 
@@ -19,12 +18,10 @@ defmodule PanicWeb.NetworkLive.Public do
 
     Networks.subscribe(network_id)
 
-    ## analytics
     {:noreply,
      socket
      |> assign(:page_title, "Public network view")
      |> assign(:network, network)
-     |> assign(:analytics, get_analytics(network))
      |> assign(:slot_id, slot_id)
      |> assign(:slots, empty_slots(slot_count))}
   end
@@ -55,7 +52,6 @@ defmodule PanicWeb.NetworkLive.Public do
      socket
      |> assign_new(:first_run, fn -> Models.get_run!(run.first_run_id) end)
      ## *super* expensive - refactor asap!
-     |> assign(:analytics, get_analytics(socket.assigns.network))
      |> update(:slots, fn slots -> update_slots(slots, run) end)}
   end
 
@@ -94,18 +90,6 @@ defmodule PanicWeb.NetworkLive.Public do
     end
   end
 
-  defp get_analytics(network) do
-    %{
-      run_count: Analytics.run_count(network),
-      cycle_count: Analytics.cycle_count(network),
-      sheep: Analytics.time_to_word(network, "sheep"),
-      horse: Analytics.time_to_word(network, "horse"),
-      camel: Analytics.time_to_word(network, "camel"),
-      kite: Analytics.time_to_word(network, "kite"),
-      umbrella: Analytics.time_to_word(network, "umbrella")
-    }
-  end
-
   #############
   # rendering #
   #############
@@ -125,7 +109,14 @@ defmodule PanicWeb.NetworkLive.Public do
       Map.put(
         assigns,
         :words,
-        [{"🐑", :sheep}, {"🐎", :horse}, {"🐪", :camel}, {"🪁", :kite}, {"☂", :umbrella}, {"✂", :scissors}]
+        [
+          {"🐑", :sheep},
+          {"🐎", :horse},
+          {"🐪", :camel},
+          {"🪁", :kite},
+          {"☂", :umbrella},
+          {"✂", :scissors}
+        ]
       )
 
     ~H"""
