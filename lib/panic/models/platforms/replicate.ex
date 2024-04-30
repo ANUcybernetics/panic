@@ -3,6 +3,16 @@ defmodule Panic.Models.Platforms.Replicate do
   @nsfw_placeholder "https://res.cloudinary.com/teepublic/image/private/s--XZyAQb6t--/t_Preview/b_rgb:191919,c_lpad,f_jpg,h_630,q_90,w_1200/v1532173190/production/designs/2918923_0.jpg"
   @recv_timeout 30_000
 
+  def list_predictions() do
+    url = "#{@url}/predictions"
+
+    case HTTPoison.get(url, headers(), hackney: [pool: :default]) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} ->
+        {:ok, %{"results" => results}} = Jason.decode(response_body)
+        results
+    end
+  end
+
   def get_model_versions(model) do
     url = "#{@url}/models/#{model}/versions"
 
@@ -58,6 +68,13 @@ defmodule Panic.Models.Platforms.Replicate do
   def cancel(prediction_id) do
     url = "#{@url}/predictions/#{prediction_id}/cancel"
     HTTPoison.post(url, [], headers(), hackney: [pool: :default])
+  end
+
+  def cancel_running_predictions() do
+    list_predictions()
+    |> Enum.filter(&(&1["status"] in ~w(starting processing)))
+    |> Enum.map(&Map.get(&1, "id"))
+    |> Enum.each(&cancel/1)
   end
 
   ## text to image
