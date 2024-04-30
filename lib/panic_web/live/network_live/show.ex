@@ -158,6 +158,8 @@ defmodule PanicWeb.NetworkLive.Show do
       vestaboards
       |> Enum.at(idx)
       |> Vestaboard.send_text(run.output)
+
+      Process.sleep(10_000)
     end
   end
 
