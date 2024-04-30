@@ -148,16 +148,15 @@ defmodule PanicWeb.NetworkLive.Show do
   defp send_to_vestaboard([], _run), do: :pass
 
   defp send_to_vestaboard(vestaboards, run) do
-    ## hardcoded for length-2 networks, will make more generalisable in v3
-    network_length = 2
-
-    idx =
-      run.cycle_index
-      |> Integer.mod(Enum.count(vestaboards) * network_length)
-      |> Integer.floor_div(network_length)
-      |> then(fn x -> x + 1 end)
-
     if Enum.member?(@vestaboard_models, run.model) do
+      ## hardcoded for now
+      network_length = 2
+
+      idx =
+        run.cycle_index
+        |> Integer.mod(Enum.count(vestaboards) * network_length)
+        |> Integer.floor_div(network_length)
+
       vestaboards
       |> Enum.at(idx)
       |> Vestaboard.send_text(run.output)
