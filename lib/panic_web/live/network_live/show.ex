@@ -69,7 +69,7 @@ defmodule PanicWeb.NetworkLive.Show do
   def handle_info({:run_created, %Run{cycle_index: 0} = run}, socket) do
     schedule_timer_decrement(@reprompt_seconds)
 
-    Vestaboard.clear_all(socket.assigns.vestaboards)
+    socket.assigns.vestaboards |> Enum.each(&Vestaboard.send_text(&1, "blank"))
 
     {:noreply,
      socket
