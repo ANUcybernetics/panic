@@ -169,8 +169,11 @@ defmodule PanicWeb.NetworkLive.Show do
     board_name
     |> Vestaboard.send_text(text)
     |> case do
-      {:ok, _} -> Process.sleep(10_000)
-      {:error, reason} -> Logger.warn(reason)
+      {:ok, _} ->
+        Process.sleep(10_000)
+
+      {:error, reason} ->
+        Logger.warn("Vestaboard API error for #{board_name}: #{inspect(reason)}")
     end
   end
 
