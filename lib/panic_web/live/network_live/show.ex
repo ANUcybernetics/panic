@@ -5,6 +5,7 @@ defmodule PanicWeb.NetworkLive.Show do
   alias Panic.Models
   alias Panic.Models.Run
   alias Panic.Models.Platforms.Vestaboard
+  require Logger
 
   @num_slots 6
   @reprompt_seconds 30
@@ -94,7 +95,15 @@ defmodule PanicWeb.NetworkLive.Show do
     if stale_run?(socket.assigns.slots, run) do
       {:noreply, socket}
     else
-      send_to_vestaboard(socket.assigns.vestaboards, run)
+      board_name =
+        current_vestaboard(
+          socket.assigns.vestaboards,
+          run,
+          Enum.count(socket.assigns.network.models)
+        )
+
+      # IO.inspect("#{board_name} #{run.cycle_index}", label: "board_name")
+      if board_name, do: send_text(board_name, run.output)
 
       # if the completed run was successful, create & dispatch the new one
       if socket.assigns.status == :running and status == :succeeded do
@@ -145,25 +154,23 @@ defmodule PanicWeb.NetworkLive.Show do
     end
   end
 
-  defp send_to_vestaboard([], _run), do: :pass
-
-  defp send_to_vestaboard(vestaboards, run) do
+  def current_vestaboard(vestaboards, run, network_length) do
     if Enum.member?(@vestaboard_models, run.model) do
-      ## hardcoded for now
-      network_length = 2
+      run.cycle_index
+      |> Integer.mod(Enum.count(vestaboards) * network_length)
+      |> Integer.floor_div(network_length)
+      |> then(&Enum.at(vestaboards, &1))
+    else
+      nil
+    end
+  end
 
-      idx =
-        run.cycle_index
-        |> Integer.mod(Enum.count(vestaboards) * network_length)
-        |> Integer.floor_div(network_length)
-
-      vestaboards
-      |> Enum.at(idx)
-      |> Vestaboard.send_text(run.output)
-      |> case do
-        {:ok, _} -> Process.sleep(10_000)
-        {:error, _} -> :pass
-      end
+  defp send_text(board_name, text) do
+    board_name
+    |> Vestaboard.send_text(text)
+    |> case do
+      {:ok, _} -> Process.sleep(10_000)
+      {:error, reason} -> Logger.warn(reason)
     end
   end
 
