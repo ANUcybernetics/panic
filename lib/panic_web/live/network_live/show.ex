@@ -154,6 +154,8 @@ defmodule PanicWeb.NetworkLive.Show do
     end
   end
 
+  def current_vestaboard([], _run, _network_length), do: nil
+
   def current_vestaboard(vestaboards, run, network_length) do
     if Enum.member?(@vestaboard_models, run.model) do
       run.cycle_index
