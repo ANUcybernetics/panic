@@ -44,6 +44,8 @@ config :panic,
       environment variable VESTABOARD_API_TOKEN_PANIC_4 is missing.
       """)
 
+config :ash_oban, :pro?, true
+
 # ## Using releases
 #
 # If you use `mix release`, you need to explicitly enable the server

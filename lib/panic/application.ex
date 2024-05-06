@@ -13,6 +13,7 @@ defmodule Panic.Application do
       {Ecto.Migrator,
         repos: Application.fetch_env!(:panic, :ecto_repos),
         skip: skip_migrations?()},
+      {Oban, AshOban.config(Application.fetch_env!(:panic, :ash_domains), Application.fetch_env!(:panic, Oban))},
       {DNSCluster, query: Application.get_env(:panic, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Panic.PubSub},
       # Start the Finch HTTP client for sending emails
