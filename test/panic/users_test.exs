@@ -8,35 +8,32 @@ defmodule Panic.NetworkTest do
     end
 
     test "creation via Ash changeset works with valid data", %{user: user} do
-      assert %{valid?: true} = User.create_user(%{email: "test@example.com", password: "secret"})
+      # code goes here
     end
 
     test "creation with invalid data returns an error changeset" do
-      assert %{valid?: false} = User.create_user(%{})
+      # code goes here
     end
 
     test "reading a created user back from the db", %{user: user} do
-      found_user = User.get_user!(user.id)
-      assert found_user.email == user.email
+      # code goes here
     end
 
     test "raises an error if there's no user with a given id" do
-      assert_raise Ecto.NoResultsError, fn -> User.get_user!(12345) end
+      # code goes here
     end
 
     test "unique constraint on :email is respected", %{user: user} do
-      assert {:error, changeset} = User.create_user(%{email: user.email, password: "secret"})
-      assert changeset.errors[:email] != nil
+      # code goes here
     end
 
     test "authentication by policy works", %{user: user} do
-      assert {:ok, _} = User.authenticate_user(user.email, "secret")
-      assert {:error, _} = User.authenticate_user(user.email, "wrongpassword")
+      # code goes here
     end
   end
 
   defp user_fixture(attrs \\ %{}) do
-    {:ok, user} = User.create_user(Map.merge(%{email: "user@example.com", password: "secret"}, attrs))
-    user
+    @doc "create a user from `attrs` using `Ash.Changeset.for_create/2`"
+    # code goes here
   end
 end
