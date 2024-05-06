@@ -34,3 +34,7 @@ config :phoenix_live_view,
   enable_expensive_runtime_checks: true
 
 config :panic, Oban, testing: :inline
+
+# Do NOT set this value for production
+config :bcrypt_elixir, log_rounds: 1
+config :panic, :token_signing_secret, "keep_out"

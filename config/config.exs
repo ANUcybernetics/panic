@@ -7,7 +7,7 @@
 # General application configuration
 import Config
 
-config :panic, :ash_domains, [Panic.Engine]
+config :panic, :ash_domains, [Panic.Engine, Panic.Accounts]
 
 # because I'm mostly using integer primary keys - better for sqlite
 config :ash, :default_belongs_to_type, :integer

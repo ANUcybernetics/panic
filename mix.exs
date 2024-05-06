@@ -63,7 +63,8 @@ defmodule Panic.MixProject do
       {:bandit, "~> 1.2"},
       {:req, "~> 0.4.14"},
       {:oban, "~> 2.17"},
-      {:ash_oban, "~> 0.2.3-rc.1"}
+      {:ash_oban, "~> 0.2.3-rc.1"},
+      {:ash_authentication, "~> 4.0.0-rc.6"}
     ]
   end
 
