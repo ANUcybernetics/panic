@@ -1,5 +1,6 @@
 defmodule PanicWeb.Router do
   use PanicWeb, :router
+  use AshAuthentication.Phoenix.Router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -8,16 +9,26 @@ defmodule PanicWeb.Router do
     plug :put_root_layout, html: {PanicWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :load_from_session
   end
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug :load_from_bearer
   end
 
   scope "/", PanicWeb do
     pipe_through :browser
 
     get "/", PageController, :home
+
+    # Leave out `register_path` and `reset_path` if you don't want to support
+    # user registration and/or password resets respectively.
+    # sign_in_route(register_path: "/register", reset_path: "/reset")
+    sign_in_route()
+    sign_out_route AuthController
+    auth_routes_for Panic.Accounts.User, to: AuthController
+    reset_route []
   end
 
   # Other scopes may use custom stacks.
