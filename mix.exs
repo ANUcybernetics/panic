@@ -64,7 +64,8 @@ defmodule Panic.MixProject do
       {:req, "~> 0.4.14"},
       {:oban, "~> 2.17"},
       {:ash_oban, "~> 0.2.3-rc.1"},
-      {:ash_authentication, "~> 4.0.0-rc.6"}
+      {:ash_authentication, "~> 4.0.0-rc.6"},
+      {:ash_authentication_phoenix, "~> 2.0.0-rc.2"}
     ]
   end
 
