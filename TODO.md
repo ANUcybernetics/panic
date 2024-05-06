@@ -1,6 +1,5 @@
 # Panic TODO
 
-- add Oban
 - add nice Splode errors (maybe `Panic.Models.Errors.FOO`) for the different AI platform call failure modes
 - slim down the set of actions
 - tidy up v2/v3 nomenclature (probably: v0 is prototype, v1 at AusCyber, v2 is Birch install)
