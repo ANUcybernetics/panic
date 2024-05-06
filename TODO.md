@@ -1,11 +1,11 @@
 # Panic TODO
 
+- add Users, with embedded APITokens (thus removing the need for the env vars)
 - add nice Splode errors (maybe `Panic.Models.Errors.FOO`) for the different AI platform call failure modes
 - slim down the set of actions
 - tidy up v2/v3 nomenclature (probably: v0 is prototype, v1 at AusCyber, v2 is Birch install)
 - mock the test stubs as per that dashbit blog post
 - put all the identities/unique constraints in
-- update the vestaboard stuff to use the new read/write API (which will simplify things)
 - audio vis (with [this](https://audiomotion.dev/demo/multi.html), or something else
 
 ## old v2 items
