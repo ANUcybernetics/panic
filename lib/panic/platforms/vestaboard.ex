@@ -1,17 +1,10 @@
-defmodule Panic.Models.Platforms.Vestaboard do
-  @url "https://rw.vestaboard.com/"
-
+defmodule Panic.Platforms.Vestaboard do
   def send_text(board_name, text) do
-    request_body = Jason.encode!(%{"text" => text})
-
-    headers = [
-      {"X-Vestaboard-Read-Write-Key", api_key(board_name)},
-      {"Content-Type", "application/json"}
-    ]
-
-    case Req.post(@url, body: request_body, headers: headers) do
-      {:ok, %Req.Response{status: 200, body: body}} ->
-        Jason.decode(body)
+    req_new(board_name, method: :post, json: %{"text" => text})
+    |> Req.request()
+    |> case do
+      {:ok, %Req.Response{status: 200, body: %{"id" => id}}} ->
+        {:ok, id}
 
       {:ok, %Req.Response{status: status_code}} when status_code in [400, 405] ->
         {:error, :bad_request}
@@ -29,7 +22,18 @@ defmodule Panic.Models.Platforms.Vestaboard do
     send_text(board_name, "blank")
   end
 
-  defp api_key(board_name) do
-    Application.fetch_env!(:panic, :"vestaboard_api_token_#{to_string(board_name)}")
+  defp req_new(board_name, opts) do
+    token = Application.fetch_env!(:panic, :"vestaboard_api_token_#{to_string(board_name)}")
+    headers = [{"X-Vestaboard-Read-Write-Key", token}]
+
+    Keyword.merge(
+      [
+        base_url: "https://rw.vestaboard.com/",
+        receive_timeout: 10_000,
+        headers: headers
+      ],
+      opts
+    )
+    |> Req.new()
   end
 end
