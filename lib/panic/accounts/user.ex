@@ -2,7 +2,7 @@ defmodule Panic.Accounts.User do
   use Ash.Resource,
     data_layer: AshSqlite.DataLayer,
     extensions: [AshAuthentication],
-    authorizers: [Ash.Policy.Authorizer],
+    # authorizers: [Ash.Policy.Authorizer],
     domain: Panic.Accounts
 
   attributes do
@@ -38,13 +38,13 @@ defmodule Panic.Accounts.User do
 
   # You can customize this if you wish, but this is a safe default that
   # only allows user data to be interacted with via AshAuthentication.
-  policies do
-    bypass AshAuthentication.Checks.AshAuthenticationInteraction do
-      authorize_if always()
-    end
+  # policies do
+  #   bypass AshAuthentication.Checks.AshAuthenticationInteraction do
+  #     authorize_if always()
+  #   end
 
-    policy always() do
-      forbid_if always()
-    end
-  end
+  #   policy always() do
+  #     forbid_if always()
+  #   end
+  # end
 end
