@@ -9,6 +9,30 @@ defmodule Panic.Accounts.User do
     integer_primary_key :id
     attribute :email, :ci_string, allow_nil?: false, public?: true
     attribute :hashed_password, :string, allow_nil?: false, sensitive?: true
+
+    attribute :api_tokens, :map do
+      default %{}
+      sensitive? true
+
+      constraints fields: [
+                    replicate_api_token: [type: :string],
+                    openai_api_token: [type: :string],
+                    vestaboard_api_token_panic_1: [type: :string],
+                    vestaboard_api_token_panic_2: [type: :string],
+                    vestaboard_api_token_panic_3: [type: :string],
+                    vestaboard_api_token_panic_4: [type: :string]
+                  ]
+    end
+  end
+
+  actions do
+    read :token do
+      argument :token_name, :atom
+      get? true
+      # todo figure this out (look at DSL doco for read)
+      # change get_attribute(:output, arg(:output))
+      # get_attribute(id == ^arg(:id))
+    end
   end
 
   authentication do
