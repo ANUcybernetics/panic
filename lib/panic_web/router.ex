@@ -29,6 +29,16 @@ defmodule PanicWeb.Router do
     sign_out_route AuthController
     auth_routes_for Panic.Accounts.User, to: AuthController
     reset_route []
+
+    ash_authentication_live_session :authentication_required,
+      on_mount: {PanicWeb.LiveUserAuth, :live_user_required} do
+      live "/protected_route", PanicWebLive.Index, :index
+    end
+
+    ash_authentication_live_session :authentication_optional,
+      on_mount: {PanicWeb.LiveUserAuth, :live_user_optional} do
+      live "/", PanicWebLive.Index, :index
+    end
   end
 
   # Other scopes may use custom stacks.
