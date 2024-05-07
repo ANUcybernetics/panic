@@ -1,4 +1,4 @@
-defmodule Panic.NetworkTest do
+defmodule Panic.UsersTest do
   use Panic.DataCase
   alias Panic.Accounts.User
 
@@ -8,32 +8,39 @@ defmodule Panic.NetworkTest do
     end
 
     test "creation via Ash changeset works with valid data", %{user: user} do
-      # code goes here
+      assert user.id
+      assert user.email
     end
 
-    test "creation with invalid data returns an error changeset" do
-      # code goes here
-    end
+    # test "creation with invalid data returns an error changeset" do
+    # end
 
-    test "reading a created user back from the db", %{user: user} do
-      # code goes here
-    end
+    # test "reading a created user back from the db", %{user: user} do
+    # end
 
-    test "raises an error if there's no user with a given id" do
-      # code goes here
-    end
+    # test "raises an error if there's no user with a given id" do
+    # end
 
-    test "unique constraint on :email is respected", %{user: user} do
-      # code goes here
-    end
+    # test "unique constraint on :email is respected", %{user: user} do
+    # end
 
-    test "authentication by policy works", %{user: user} do
-      # code goes here
-    end
+    # test "authentication by policy works", %{user: user} do
+    # end
   end
 
   defp user_fixture(attrs \\ %{}) do
-    @doc "create a user from `attrs` using `Ash.Changeset.for_create/2`"
-    # code goes here
+    attrs =
+      Map.merge(
+        %{
+          email: "jane.citizen@example.com",
+          password: "abcd1234",
+          password_confirmation: "abcd1234"
+        },
+        attrs
+      )
+
+    User
+    |> Ash.Changeset.for_create(:register_with_password, attrs)
+    |> Ash.create!()
   end
 end
