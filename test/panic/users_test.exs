@@ -37,6 +37,17 @@ defmodule Panic.UsersTest do
              } = user.api_tokens
     end
 
+    test "trying to set an unsupported token raises an error" do
+      assert_raise Ash.Error.Invalid, fn ->
+        user_fixture()
+        |> Ash.Changeset.for_update(:set_token, %{
+          token_name: :unsupported,
+          token_value: "this_is_an_unsupported_token"
+        })
+        |> Ash.update!()
+      end
+    end
+
     # test "creation with invalid data returns an error changeset" do
     # end
 
