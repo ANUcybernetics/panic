@@ -70,17 +70,16 @@ defmodule Panic.Platforms.Replicate do
   end
 
   defp req_new(opts) do
-    # FIXME this is gross and I'll fix - it' just temporary while I'm porting to Ash
+    # FIXME get it from `user.api_tokens` instead
     token = System.get_env("REPLICATE_API_TOKEN")
 
-    Keyword.merge(
-      [
-        base_url: "https://api.replicate.com/v1/",
-        receive_timeout: 10_000,
-        headers: [{"authorization", "token #{token}"}]
-      ],
-      opts
-    )
+    [
+      base_url: "https://api.replicate.com/v1/",
+      receive_timeout: 10_000,
+      headers: [{"authorization", "token #{token}"}]
+    ]
+    |> Keyword.merge(Application.get_env(:panic, :replicate_req_options, []))
+    |> Keyword.merge(opts)
     |> Req.new()
   end
 end
