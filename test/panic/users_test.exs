@@ -12,6 +12,18 @@ defmodule Panic.UsersTest do
       assert user.email
     end
 
+    test "add replicate token to user", %{user: user} do
+      user =
+        user
+        |> Ash.Changeset.for_update(:set_token, %{
+          token_name: :replicate_api_token,
+          token_value: "this_is_a_replicate_token"
+        })
+        |> Ash.update!()
+
+      assert %{replicate_api_token: "this_is_a_replicate_token"} = user.api_tokens
+    end
+
     # test "creation with invalid data returns an error changeset" do
     # end
 
