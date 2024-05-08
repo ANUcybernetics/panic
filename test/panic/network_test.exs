@@ -62,8 +62,11 @@ defmodule Panic.NetworkTest do
     end
 
     test "set_state action changes the network state to :starting" do
-      network = network_fixture()
-      {:ok, network} = Panic.Engine.set_state(network.id, :starting)
+      network =
+        network_fixture()
+        |> Ash.Changeset.for_update(:set_state, %{state: :starting})
+        |> Ash.update!()
+
       assert network.state == :starting
     end
 
