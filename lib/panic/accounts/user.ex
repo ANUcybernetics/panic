@@ -16,12 +16,12 @@ defmodule Panic.Accounts.User do
       writable? true
 
       constraints fields: [
-                    replicate_api_token: [type: :string],
-                    openai_api_token: [type: :string],
-                    vestaboard_api_token_panic_1: [type: :string],
-                    vestaboard_api_token_panic_2: [type: :string],
-                    vestaboard_api_token_panic_3: [type: :string],
-                    vestaboard_api_token_panic_4: [type: :string]
+                    replicate: [type: :string],
+                    openai: [type: :string],
+                    vestaboard_panic_1: [type: :string],
+                    vestaboard_panic_2: [type: :string],
+                    vestaboard_panic_3: [type: :string],
+                    vestaboard_panic_4: [type: :string]
                   ]
     end
   end
