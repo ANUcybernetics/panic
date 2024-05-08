@@ -70,6 +70,11 @@ defmodule Panic.NetworkTest do
       assert network.state == :starting
     end
 
+    test "set_state code interface works" do
+      network = Panic.Engine.set_state!(network_fixture(), :paused)
+      assert network.state == :paused
+    end
+
     # test "update_network/2 with valid data updates the network" do
     #   network = network_fixture()
 
