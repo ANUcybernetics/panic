@@ -7,43 +7,6 @@ import Config
 # any compile-time configuration in here, as it won't be applied.
 # The block below contains prod specific runtime configuration.
 
-config :panic,
-  replicate_api_token:
-    System.get_env("REPLICATE_API_TOKEN") ||
-      raise("""
-      environment variable REPLICATE_API_TOKEN is missing.
-      """),
-  # openai_api_token:
-  #   System.get_env("OPENAI_API_TOKEN") ||
-  #     raise("""
-  #     environment variable OPENAI_API_TOKEN is missing.
-  #     """),
-  # huggingface_api_token:
-  #   System.get_env("HUGGINGFACE_API_TOKEN") ||
-  #     raise("""
-  #     environment variable HUGGINGFACE_API_TOKEN is missing.
-  #     """),
-  vestaboard_api_token_panic_1:
-    System.get_env("VESTABOARD_API_TOKEN_PANIC_1") ||
-      raise("""
-      environment variable VESTABOARD_API_TOKEN_PANIC_1 is missing.
-      """),
-  vestaboard_api_token_panic_2:
-    System.get_env("VESTABOARD_API_TOKEN_PANIC_2") ||
-      raise("""
-      environment variable VESTABOARD_API_TOKEN_PANIC_2 is missing.
-      """),
-  vestaboard_api_token_panic_3:
-    System.get_env("VESTABOARD_API_TOKEN_PANIC_3") ||
-      raise("""
-      environment variable VESTABOARD_API_TOKEN_PANIC_3 is missing.
-      """),
-  vestaboard_api_token_panic_4:
-    System.get_env("VESTABOARD_API_TOKEN_PANIC_4") ||
-      raise("""
-      environment variable VESTABOARD_API_TOKEN_PANIC_4 is missing.
-      """)
-
 config :ash_oban, :pro?, true
 
 # ## Using releases

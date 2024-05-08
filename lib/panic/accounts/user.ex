@@ -25,16 +25,6 @@ defmodule Panic.Accounts.User do
     end
   end
 
-  actions do
-    read :token do
-      argument :token_name, :atom
-      get? true
-      # todo figure this out (look at DSL doco for read)
-      # change get_attribute(:output, arg(:output))
-      # get_attribute(id == ^arg(:id))
-    end
-  end
-
   authentication do
     strategies do
       password :password do
