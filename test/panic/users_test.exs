@@ -22,6 +22,19 @@ defmodule Panic.UsersTest do
         |> Ash.update!()
 
       assert %{replicate_api_token: "this_is_a_replicate_token"} = user.api_tokens
+
+      user =
+        user
+        |> Ash.Changeset.for_update(:set_token, %{
+          token_name: :openai_api_token,
+          token_value: "this_is_an_openai_token"
+        })
+        |> Ash.update!()
+
+      assert %{
+               replicate_api_token: "this_is_a_replicate_token",
+               openai_api_token: "this_is_an_openai_token"
+             } = user.api_tokens
     end
 
     # test "creation with invalid data returns an error changeset" do
