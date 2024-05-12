@@ -1,9 +1,9 @@
 # Panic TODO
 
-- add nice Splode errors (maybe `Panic.Models.Errors.FOO`) for the different AI platform call failure modes
+- add nice Ash.Errors (Splode) errors for the different AI platform call failure modes
+- test things as per the new livebook
 - slim down the set of actions
 - tidy up v2/v3 nomenclature (probably: v0 is prototype, v1 at AusCyber, v2 is Birch install)
-- mock the test stubs as per that dashbit blog post
 - put all the identities/unique constraints in
 - audio vis (with [this](https://audiomotion.dev/demo/multi.html), or something else
 
