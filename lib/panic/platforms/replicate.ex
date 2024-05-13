@@ -51,12 +51,12 @@ defmodule Panic.Platforms.Replicate do
     |> Req.request()
   end
 
-  def create_and_wait(model, input_params) do
+  def create_and_wait(model, input) do
     version = model.info() |> Map.get(:version)
 
     request_body = %{
       version: version || get_latest_model_version(model),
-      input: input_params
+      input: input
     }
 
     Req.post(
