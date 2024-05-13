@@ -2,21 +2,23 @@ defmodule Panic.Models.PromptParrot do
   @behaviour Panic.Model
   alias Panic.Platforms.Replicate
 
-  @info %Panic.Models.ModelInfo{
-    id: "kyrick/prompt-parrot",
-    platform: Replicate,
-    path: "kyrick/prompt-parrot",
-    name: "Prompt Parrot",
-    description: "",
-    input_type: :text,
-    output_type: :text
-  }
+  @impl true
+  def info do
+    %Panic.Models.ModelInfo{
+      id: "kyrick/prompt-parrot",
+      platform: Replicate,
+      path: "kyrick/prompt-parrot",
+      name: "Prompt Parrot",
+      description: "",
+      input_type: :text,
+      output_type: :text
+    }
+  end
 
   @impl true
-  def info, do: @info
-
-  @impl true
-  def info(field), do: Map.fetch!(@info, field)
+  def fetch!(field) do
+    info() |> Map.fetch!(field)
+  end
 
   @impl true
   def invoke(input) do
