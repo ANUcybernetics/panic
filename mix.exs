@@ -34,9 +34,9 @@ defmodule Panic.MixProject do
     [
       {:phoenix, "~> 1.7.12"},
       {:phoenix_ecto, "~> 4.4"},
-      {:ash, "~> 3.0.0-rc.24"},
-      {:ash_sqlite, "~> 0.1.2-rc.0"},
-      {:ash_phoenix, "~> 2.0.0-rc.5"},
+      {:ash, "~> 3.0.0"},
+      {:ash_sqlite, "~> 0.1.2"},
+      {:ash_phoenix, "~> 2.0.0"},
       {:ecto_sql, "~> 3.10"},
       {:ecto_sqlite3, ">= 0.0.0"},
       {:phoenix_html, "~> 4.0"},
@@ -63,9 +63,9 @@ defmodule Panic.MixProject do
       {:bandit, "~> 1.2"},
       {:req, "~> 0.4.14"},
       {:oban, "~> 2.17"},
-      {:ash_oban, "~> 0.2.3-rc.1"},
-      {:ash_authentication, "~> 4.0.0-rc.6"},
-      {:ash_authentication_phoenix, "~> 2.0.0-rc.2"}
+      {:ash_oban, "~> 0.2.3"},
+      {:ash_authentication, "~> 4.0.0"},
+      {:ash_authentication_phoenix, "~> 2.0.0"}
     ]
   end
 

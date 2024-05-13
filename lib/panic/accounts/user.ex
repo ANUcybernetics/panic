@@ -51,6 +51,7 @@ defmodule Panic.Accounts.User do
     end
 
     tokens do
+      enabled? true
       token_resource Panic.Accounts.Token
 
       signing_secret fn _, _ ->
