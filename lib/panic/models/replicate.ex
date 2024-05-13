@@ -1,37 +1,3 @@
-defmodule Panic.Models.DalleMini do
-  @behaviour Panic.Model
-  alias Panic.Platforms.Replicate
-
-  @info %Panic.Models.ModelInfo{
-    id: "kuprel/min-dalle",
-    platform: Replicate,
-    path: "kuprel/min-dalle",
-    name: "DALL·E Mini",
-    description: "",
-    input_type: :text,
-    output_type: :image
-  }
-
-  @impl true
-  def info, do: @info
-
-  @impl true
-  def info(field), do: Map.fetch!(@info, field)
-
-  @impl true
-  def invoke(input) do
-    model_id = @info.id
-
-    with {:ok, %{"output" => [image_url]}} <-
-           Replicate.create_and_wait(
-             model_id,
-             %{text: input, grid_size: 1, progressive_outputs: 0}
-           ) do
-      {:ok, image_url}
-    end
-  end
-end
-
 defmodule Panic.Models.PromptParrot do
   @behaviour Panic.Model
   alias Panic.Platforms.Replicate
@@ -54,10 +20,8 @@ defmodule Panic.Models.PromptParrot do
 
   @impl true
   def invoke(input) do
-    model_id = @info.id
-
     with {:ok, %{"output" => text}} <-
-           Replicate.create_and_wait(model_id, %{prompt: input}) do
+           Replicate.create_and_wait(__MODULE__, %{prompt: input}) do
       {:ok,
        text |> String.split("\n------------------------------------------\n") |> Enum.random()}
     end
@@ -86,10 +50,8 @@ defmodule Panic.Models.CogPromptParrot do
 
   @impl true
   def invoke(input) do
-    model_id = @info.id
-
     with {:ok, %{"output" => text}} <-
-           Replicate.create_and_wait(model_id, %{prompt: input}) do
+           Replicate.create_and_wait(__MODULE__, %{prompt: input}) do
       {:ok, text |> String.split("\n") |> Enum.random()}
     end
   end
@@ -117,10 +79,8 @@ defmodule Panic.Models.ClipPrefixCaption do
 
   @impl true
   def invoke(input) do
-    model_id = @info.id
-
     with {:ok, %{"output" => text}} <-
-           Replicate.create_and_wait(model_id, %{image: input}) do
+           Replicate.create_and_wait(__MODULE__, %{image: input}) do
       {:ok, text}
     end
   end
@@ -148,10 +108,8 @@ defmodule Panic.Models.ClipCaptionReward do
 
   @impl true
   def invoke(input) do
-    model_id = @info.id
-
     with {:ok, %{"output" => text}} <-
-           Replicate.create_and_wait(model_id, %{image: input}) do
+           Replicate.create_and_wait(__MODULE__, %{image: input}) do
       {:ok, text}
     end
   end
@@ -179,11 +137,8 @@ defmodule Panic.Models.BLIP2 do
 
   @impl true
   def invoke(input) do
-    model_id = @info.id
-
     with {:ok, %{"output" => text}} <-
-           Replicate.create_and_wait(
-             model_id,
+           Replicate.create_and_wait(__MODULE__,
              %{image: input, caption: true}
            ) do
       {:ok, text}
@@ -213,10 +168,8 @@ defmodule Panic.Models.Vicuna13B do
 
   @impl true
   def invoke(input) do
-    model_id = @info.id
-
     with {:ok, %{"output" => output}} <-
-           Replicate.create_and_wait(model_id, %{prompt: input}) do
+           Replicate.create_and_wait(__MODULE__, %{prompt: input}) do
       {:ok, Enum.join(output)}
     end
   end
@@ -252,24 +205,22 @@ defmodule Panic.Models.StableDiffusion do
       height: 576
     }
 
-    model_id = @info.id
-
     with {:ok, %{"output" => [image_url]}} <-
-           Replicate.create_and_wait(model_id, input_params) do
+           Replicate.create_and_wait(__MODULE__, input_params) do
       {:ok, image_url}
     end
   end
 end
 
-defmodule Panic.Models.SOCYSD do
+defmodule Panic.Models.SDXL do
   @behaviour Panic.Model
   alias Panic.Platforms.Replicate
 
   @info %Panic.Models.ModelInfo{
-    id: "cloneofsimo/lora-socy",
+    id: "stability-ai/sdxl",
     platform: Replicate,
-    path: "cloneofsimo/lora",
-    name: "SOCY SD",
+    path: "stability-ai/sdxl",
+    name: "Stable Diffusion XL",
     description: "",
     input_type: :text,
     output_type: :image
@@ -284,34 +235,32 @@ defmodule Panic.Models.SOCYSD do
   @impl true
   def invoke(input) do
     input_params = %{
-      prompt: "#{input} in the style of <1>",
+      prompt: input,
+      num_inference_steps: 50,
+      guidance_scale: 7.5,
       width: 1024,
-      height: 576,
-      lora_urls:
-        "https://replicate.delivery/pbxt/eIfm9M0WYEnnjUKQxyumkqiPtr6Pi0D8ee1bGufE74ieUpXIE/tmp5xnilpplHEADER20IMAGESzip.safetensors"
+      height: 576
     }
 
-    model_id = @info.id
-
     with {:ok, %{"output" => [image_url]}} <-
-           Replicate.create_and_wait(model_id, input_params) do
+           Replicate.create_and_wait(__MODULE__, input_params) do
       {:ok, image_url}
     end
   end
 end
 
-defmodule Panic.Models.InstructPix2Pix do
+defmodule Panic.Models.LLaVA do
   @behaviour Panic.Model
   alias Panic.Platforms.Replicate
 
   @info %Panic.Models.ModelInfo{
-    id: "timothybrooks/instruct-pix2pix",
+    id: "yorickvp/llava-v1.6-34b",
     platform: Replicate,
-    path: "timothybrooks/instruct-pix2pix",
-    name: "Instruct pix2pix",
+    path: "yorickvp/llava-v1.6-34b",
+    name: "LLaVA 34B text-to-image",
     description: "",
     input_type: :image,
-    output_type: :image
+    output_type: :text
   }
 
   @impl true
@@ -322,17 +271,14 @@ defmodule Panic.Models.InstructPix2Pix do
 
   @impl true
   def invoke(input) do
-    model_id = @info.id
+    input_params = %{
+      image: input,
+      prompt: "Provide a detailed description of this image for captioning purposes, including descriptions both the foreground and background."
+    }
 
-    with {:ok, %{"output" => [output_image_url]}} <-
-           Replicate.create_and_wait(
-             model_id,
-             %{
-               image: input,
-               prompt: "change the environment, keep the human and technology"
-             }
-           ) do
-      {:ok, output_image_url}
+    with {:ok, %{"output" => description_list}} <-
+           Replicate.create_and_wait(__MODULE__, input_params) do
+      {:ok, Enum.join(description_list)}
     end
   end
 end

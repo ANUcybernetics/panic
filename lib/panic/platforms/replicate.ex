@@ -52,17 +52,12 @@ defmodule Panic.Platforms.Replicate do
   end
 
   def create_and_wait(model, input) do
-    version = model.info() |> Map.get(:version)
+    version = model.info() |> Map.get(:version) || get_latest_model_version(model)
 
-    request_body = %{
-      version: version || get_latest_model_version(model),
-      input: input
-    }
+    request_body = %{version: version, input: input}
 
-    Req.post(
-      url: "predictions",
-      json: request_body
-    )
+    req_new(url: "predictions", method: :post, json: request_body)
+    |> Req.request()
     |> case do
       {:ok, %Req.Response{body: %{"id" => id}, status: 201}} ->
         get(id)
