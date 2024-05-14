@@ -1,8 +1,11 @@
 # Panic TODO
 
+- test things as per the new how-to guide
+- fill out the suite of actions, including tests
+- get the platform modules to pull API keys from the user
+- upgrade to liveview 1.0-rc
+- put a frontend on 'er
 - add nice Ash.Errors (Splode) errors for the different AI platform call failure modes
-- test things as per the new livebook
-- slim down the set of actions
 - tidy up v2/v3 nomenclature (probably: v0 is prototype, v1 at AusCyber, v2 is Birch install)
 - put all the identities/unique constraints in
 - set up tigris to host the images (because replicate outputs now expire in 1h)
