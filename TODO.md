@@ -5,6 +5,8 @@
 - slim down the set of actions
 - tidy up v2/v3 nomenclature (probably: v0 is prototype, v1 at AusCyber, v2 is Birch install)
 - put all the identities/unique constraints in
+- set up tigris to host the images (because replicate outputs now expire in 1h)
+- add embeddings for all outputs (possibly via an ash oban trigger)
 - audio vis (with [this](https://audiomotion.dev/demo/multi.html), or something else
 
 ## old v2 items
