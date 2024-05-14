@@ -7,7 +7,7 @@ defmodule Panic.Model do
   @doc """
   Return `field` from this model's `%Panic.Models.ModelInfo{}` struct.
   """
-  @callback info(Atom.t()) :: term()
+  @callback fetch!(Atom.t()) :: term()
 
   @doc """
   Invoke the model with the given input.

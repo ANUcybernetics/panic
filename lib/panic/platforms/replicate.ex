@@ -1,6 +1,6 @@
 defmodule Panic.Platforms.Replicate do
   def get_latest_model_version(model) do
-    req_new(url: "models/#{model.info(:path)}")
+    req_new(url: "models/#{model.fetch!(:path)}")
     |> Req.request()
     |> case do
       {:ok, %Req.Response{body: body, status: 200}} ->
