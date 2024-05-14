@@ -1,4 +1,5 @@
 defmodule Panic.Platforms.OpenAI do
+  # TODO perhaps make these defaults, but also pull from the Model struct?
   @temperature 0.7
   @max_tokens 50
 
@@ -16,7 +17,21 @@ defmodule Panic.Platforms.OpenAI do
   end
 
   def create(model, input) do
-    request(model, input)
+    request_body = %{
+      model: model.fetch!(:id),
+      messages: [
+        # %{
+        #   "role" => "system",
+        #   "content" =>
+        #     "You are one component of a larger AI artwork system. Your job is to describe what you see."
+        # },
+        %{"role" => "user", "content" => input}
+      ],
+      temperature: @temperature,
+      max_tokens: @max_tokens
+    }
+
+    req_new(method: :post, url: "/chat/completions", json: request_body)
     |> Req.request()
     |> case do
       {:ok, %Req.Response{body: body, status: 200}} ->
@@ -30,28 +45,6 @@ defmodule Panic.Platforms.OpenAI do
       {:error, reason} ->
         {:error, reason}
     end
-  end
-
-  defp request(model, input) do
-    request_body = %{
-      model: model.info(:id),
-      messages: [
-        # %{
-        #   "role" => "system",
-        #   "content" =>
-        #     "You are one component of a larger AI artwork system. Your job is to describe what you see."
-        # },
-        %{"role" => "user", "content" => input}
-      ],
-      temperature: @temperature,
-      max_tokens: @max_tokens
-    }
-
-    req_new(
-      method: :post,
-      url: "/chat/completions",
-      json: request_body
-    )
   end
 
   defp req_new(opts) do
