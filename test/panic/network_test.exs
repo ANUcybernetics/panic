@@ -1,6 +1,7 @@
 defmodule Panic.NetworkTest do
   use Panic.DataCase
   alias Panic.Engine.Network
+  alias Panic.Models
 
   describe "Panic.Engine.Network resource" do
     test "changeset for :create action with valid data creates a network" do
@@ -9,7 +10,9 @@ defmodule Panic.NetworkTest do
         description: "A super cool network",
         models: [
           # TODO change this to an actual model module once they exist
-          Panic.Engine
+          Models.GPT4o,
+          Models.SDXL,
+          Models.LLaVA
         ]
       }
 
