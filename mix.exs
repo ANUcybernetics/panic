@@ -61,7 +61,7 @@ defmodule Panic.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.2"},
-      {:req, "~> 0.4.14"},
+      {:req, "~> 0.5"},
       {:oban, "~> 2.17"},
       {:ash_oban, "~> 0.2.3"},
       {:ash_authentication, "~> 4.0.0"},
