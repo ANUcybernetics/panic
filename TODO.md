@@ -12,6 +12,10 @@
 - add embeddings for all outputs (possibly via an ash oban trigger)
 - audio vis (with [this](https://audiomotion.dev/demo/multi.html), or something else
 
+### bugfixes
+
+- the `Engine.create_network` code interface takes a `:description` arg, which is optional on the resource, but required on the code interface... there's gotta be a nicer way to do that
+
 ## old v2 items
 
 - [ ] remove APIToken as separate resource (add a has_many embed to user, managed via user controller)

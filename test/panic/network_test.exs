@@ -4,23 +4,10 @@ defmodule Panic.NetworkTest do
   alias Panic.Engine.Network
   alias Panic.Models
 
-  describe "valid inputs" do
+  describe "CRUD actions" do
     # now if our action inputs are invalid when we think they should be valid, we will find out here
     property "accepts all valid input" do
-      check all(
-              input <-
-                Ash.Generator.action_input(Network, :create, %{
-                  models:
-                    list_of(
-                      StreamData.member_of([
-                        Panic.Models.SDXL,
-                        Panic.Models.BLIP2,
-                        Panic.Models.GPT4o
-                      ])
-                    ),
-                  description: StreamData.binary()
-                })
-            ) do
+      check all(input <- create_generator()) do
         assert %Ash.Changeset{valid?: true} =
                  Panic.Engine.changeset_to_create_network(
                    input.name,
@@ -31,16 +18,50 @@ defmodule Panic.NetworkTest do
       end
     end
 
-    # # same as the above, but actually call the action. This tests the underlying action implementation
-    # # not just intial validation
-    # property "succeeds on all valid input" do
-    #   user = Domain.create_user!()
+    # same as the above, but actually call the action. This tests the underlying action implementation
+    # not just intial validation
+    property "succeeds on all valid input" do
+      check all(input <- create_generator()) do
+        assert Panic.Engine.create_network!(
+                 input.name,
+                 input.description,
+                 input.models,
+                 authorize?: false
+               )
+      end
+    end
 
-    #   check all(input <- Ash.Generator.action_input(Tweet, :create)) do
-    #     {text, other_inputs} = Map.pop!(input, :text)
-    #     Domain.create_tweet!(text, other_inputs, authorize?: false, actor: user)
-    #   end
-    # end
+    property "Network read action" do
+      check all(input <- create_generator()) do
+        network =
+          Panic.Engine.create_network!(
+            input.name,
+            input.description,
+            input.models,
+            authorize?: false
+          )
+
+        assert network.id == Panic.Engine.get_network!(network.id).id
+      end
+    end
+
+    property "Network set_state action" do
+      check all(
+              input <- create_generator(),
+              state <- member_of([:starting, :running, :paused, :stopped])
+            ) do
+        network =
+          Panic.Engine.create_network!(
+            input.name,
+            input.description,
+            input.models,
+            authorize?: false
+          )
+
+        network = Panic.Engine.set_state!(network.id, state)
+        assert network.state == state
+      end
+    end
   end
 
   describe "Panic.Engine.Network resource" do
@@ -164,5 +185,19 @@ defmodule Panic.NetworkTest do
     Network
     |> Ash.Changeset.for_create(:create, attrs)
     |> Ash.create!()
+  end
+
+  defp create_generator do
+    Ash.Generator.action_input(Network, :create, %{
+      models:
+        list_of(
+          StreamData.member_of([
+            Panic.Models.SDXL,
+            Panic.Models.BLIP2,
+            Panic.Models.GPT4o
+          ])
+        ),
+      description: StreamData.binary()
+    })
   end
 end
