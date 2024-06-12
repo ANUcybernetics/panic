@@ -39,11 +39,10 @@ defmodule Panic.StreamGenerators do
       contents =
         quote do
           @behaviour Panic.Model
-          alias Panic.Platforms.OpenAI
 
           @impl true
           def info do
-            unquote(model_info)
+            unquote(Macro.escape(model_info))
           end
 
           @impl true
@@ -55,7 +54,9 @@ defmodule Panic.StreamGenerators do
           def invoke(input), do: unquote(invocation_result)
         end
 
-      Module.create(model_name, contents, Macro.Env.location(__ENV__))
+      {:module, module, _, _} = Module.create(model_name, contents, Macro.Env.location(__ENV__))
+
+      module
     end
   end
 end

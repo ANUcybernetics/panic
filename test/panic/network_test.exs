@@ -1,7 +1,47 @@
 defmodule Panic.NetworkTest do
   use Panic.DataCase
+  use ExUnitProperties
   alias Panic.Engine.Network
   alias Panic.Models
+
+  describe "valid inputs" do
+    # now if our action inputs are invalid when we think they should be valid, we will find out here
+    property "accepts all valid input" do
+      check all(
+              input <-
+                Ash.Generator.action_input(Network, :create, %{
+                  models:
+                    list_of(
+                      StreamData.member_of([
+                        Panic.Models.SDXL,
+                        Panic.Models.BLIP2,
+                        Panic.Models.GPT4o
+                      ])
+                    ),
+                  description: StreamData.binary()
+                })
+            ) do
+        assert %Ash.Changeset{valid?: true} =
+                 Panic.Engine.changeset_to_create_network(
+                   input.name,
+                   input.description,
+                   input.models,
+                   authorize?: false
+                 )
+      end
+    end
+
+    # # same as the above, but actually call the action. This tests the underlying action implementation
+    # # not just intial validation
+    # property "succeeds on all valid input" do
+    #   user = Domain.create_user!()
+
+    #   check all(input <- Ash.Generator.action_input(Tweet, :create)) do
+    #     {text, other_inputs} = Map.pop!(input, :text)
+    #     Domain.create_tweet!(text, other_inputs, authorize?: false, actor: user)
+    #   end
+    # end
+  end
 
   describe "Panic.Engine.Network resource" do
     test "changeset for :create action with valid data creates a network" do
