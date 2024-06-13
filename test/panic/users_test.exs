@@ -1,6 +1,18 @@
 defmodule Panic.UsersTest do
   use Panic.DataCase
+  use ExUnitProperties
   alias Panic.Accounts.User
+
+  # describe "CRUD actions" do
+  #   # now if our action inputs are invalid when we think they should be valid, we will find out here
+  #   property "accepts all valid input" do
+  #     check all(input <- create_generator()) do
+  #       User
+  #       |> Ash.Changeset.for_create(:register_with_password, input)
+  #       |> Ash.create!()
+  #     end
+  #   end
+  # end
 
   describe "test the User resource" do
     setup do
@@ -79,4 +91,15 @@ defmodule Panic.UsersTest do
     |> Ash.Changeset.for_create(:register_with_password, attrs)
     |> Ash.create!()
   end
+
+  # TODO not working, need to figure out how to generate unique emails...
+  # defp create_generator do
+  #   gen all(
+  #     user <- string(:ascii, min_length: 1),
+  #     unique_integer <- repeatedly(fn -> System.unique_integer([:positive, :monotonic]) end),
+  #     domain <- string(:ascii, min_length: 1),
+  #     password <- binary(min_length: 8)) do
+  #       %{email: "#{user}#{unique_integer}@#{domain}", password: password, password_confirmation: password}
+  #   end
+  # end
 end
