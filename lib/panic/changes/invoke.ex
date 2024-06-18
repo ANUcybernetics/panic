@@ -8,17 +8,16 @@ defmodule Panic.Changes.Invoke do
         network = changeset.arguments.network
         models = network.models
 
-        model_index = Integer.mod(changeset.attributes.sequence_number, Enum.count(models))
-        model = models |> Enum.at(model_index)
+        if length(models) == 0 do
+          Ash.Changeset.add_error(changeset, "No models in network")
+        else
+          model_index = Integer.mod(changeset.attributes.sequence_number, Enum.count(models))
+          model = models |> Enum.at(model_index)
 
-        changeset =
           changeset
           |> Ash.Changeset.change_attribute(:model, model)
           |> Ash.Changeset.manage_relationship(:network, network, type: :append_and_remove)
-
-        # then fire off the Oban job, which will finalise when done
-
-        changeset
+        end
 
       :error ->
         changeset
