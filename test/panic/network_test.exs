@@ -28,42 +28,33 @@ defmodule Panic.NetworkTest do
 
     property "succeeds on all valid input (code interface version)" do
       check all(input <- input_for_create()) do
-        assert Panic.Engine.create_network!(
-                 input.name,
-                 input.description,
-                 input.models,
-                 authorize?: false
-               )
-      end
-    end
-
-    property "Network read action" do
-      check all(input <- input_for_create()) do
-        network =
-          Panic.Engine.create_network!(
+        {:ok, network} =
+          Panic.Engine.create_network(
             input.name,
             input.description,
             input.models,
             authorize?: false
           )
 
+        assert network.name == input.name
+        # FIXME there might be an issue here with "" vs nil?
+        # assert network.description == input.description
+        assert network.models == input.models
+        assert network.state == :stopped
+      end
+    end
+
+    property "Network read action" do
+      check all(network <- network_stream()) do
         assert network.id == Panic.Engine.get_network!(network.id).id
       end
     end
 
     property "Network set_state action" do
       check all(
-              input <- input_for_create(),
+              network <- network_stream(),
               state <- member_of([:starting, :running, :paused, :stopped])
             ) do
-        network =
-          Panic.Engine.create_network!(
-            input.name,
-            input.description,
-            input.models,
-            authorize?: false
-          )
-
         network = Panic.Engine.set_state!(network.id, state)
         assert network.state == state
       end
@@ -139,5 +130,13 @@ defmodule Panic.NetworkTest do
         ),
       description: StreamData.binary()
     })
+  end
+
+  defp network_stream do
+    gen all(input <- input_for_create()) do
+      Network
+      |> Ash.Changeset.for_create(:create, input)
+      |> Ash.create!()
+    end
   end
 end
