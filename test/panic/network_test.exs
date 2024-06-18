@@ -7,7 +7,7 @@ defmodule Panic.NetworkTest do
   describe "CRUD actions" do
     # now if our action inputs are invalid when we think they should be valid, we will find out here
     property "accepts all valid input" do
-      check all(input <- create_generator()) do
+      check all(input <- input_for_create()) do
         assert %Ash.Changeset{valid?: true} =
                  Panic.Engine.changeset_to_create_network(
                    input.name,
@@ -21,7 +21,7 @@ defmodule Panic.NetworkTest do
     # same as the above, but actually call the action. This tests the underlying action implementation
     # not just intial validation
     property "succeeds on all valid input" do
-      check all(input <- create_generator()) do
+      check all(input <- input_for_create()) do
         assert Panic.Engine.create_network!(
                  input.name,
                  input.description,
@@ -32,7 +32,7 @@ defmodule Panic.NetworkTest do
     end
 
     property "Network read action" do
-      check all(input <- create_generator()) do
+      check all(input <- input_for_create()) do
         network =
           Panic.Engine.create_network!(
             input.name,
@@ -47,7 +47,7 @@ defmodule Panic.NetworkTest do
 
     property "Network set_state action" do
       check all(
-              input <- create_generator(),
+              input <- input_for_create(),
               state <- member_of([:starting, :running, :paused, :stopped])
             ) do
         network =
@@ -187,7 +187,7 @@ defmodule Panic.NetworkTest do
     |> Ash.create!()
   end
 
-  defp create_generator do
+  defp input_for_create do
     Ash.Generator.action_input(Network, :create, %{
       models:
         list_of(
