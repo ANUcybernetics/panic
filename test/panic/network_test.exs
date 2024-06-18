@@ -45,14 +45,14 @@ defmodule Panic.NetworkTest do
     end
 
     property "Network read action" do
-      check all(network <- network_stream()) do
+      check all(network <- Panic.Generators.network()) do
         assert network.id == Panic.Engine.get_network!(network.id).id
       end
     end
 
     property "Network set_state action" do
       check all(
-              network <- network_stream(),
+              network <- Panic.Generators.network(),
               state <- member_of([:starting, :running, :paused, :stopped])
             ) do
         network = Panic.Engine.set_state!(network.id, state)
@@ -130,13 +130,5 @@ defmodule Panic.NetworkTest do
         ),
       description: StreamData.binary()
     })
-  end
-
-  defp network_stream do
-    gen all(input <- input_for_create()) do
-      Network
-      |> Ash.Changeset.for_create(:create, input)
-      |> Ash.create!()
-    end
   end
 end
