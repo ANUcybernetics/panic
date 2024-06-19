@@ -41,4 +41,18 @@ defmodule Panic.Generators do
       |> Ash.create!()
     end
   end
+
+  def user do
+    gen all(
+          email <- Ash.Generator.sequence(:unique_email, fn i -> "user-#{i}@example.com" end),
+          password <- string(:utf8, min_length: 8)
+        ) do
+      Panic.Accounts.User
+      |> Ash.Changeset.for_create(
+        :register_with_password,
+        %{email: email, password: password, password_confirmation: password}
+      )
+      |> Ash.create!()
+    end
+  end
 end
