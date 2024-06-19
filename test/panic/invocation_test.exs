@@ -27,6 +27,22 @@ defmodule Panic.InvocationTest do
       end
     end
 
+    property "gives error changeset when :input is invalid" do
+      check all(input <-
+        Ash.Generator.action_input(Panic.Engine.Invocation, :create_first, %{
+          network: Panic.Generators.network(min_length: 1),
+          input: integer()
+        })
+      ) do
+        assert %Ash.Changeset{valid?: false} =
+                 Panic.Engine.changeset_to_create_first(
+                   input.network,
+                   input.input,
+                   authorize?: false
+                 )
+      end
+    end
+
     property "succeeds on all valid input" do
       check all(input <- input_for_create_first(min_length: 1)) do
         Invocation
