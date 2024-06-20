@@ -48,7 +48,7 @@ defmodule Panic.MixProject do
       {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
       {:heroicons,
        github: "tailwindlabs/heroicons",
-       tag: "v2.1.1",
+       tag: "v2.1.4",
        sparse: "optimized",
        app: false,
        compile: false,
