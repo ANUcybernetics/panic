@@ -45,26 +45,26 @@ defmodule Panic.InvocationTest do
 
     property "succeeds on all valid input" do
       check all(input <- input_for_create_first(min_length: 1)) do
-        Invocation
-        |> Ash.Changeset.for_create(:create_first, input)
-        |> Ash.create!()
+        invocation =
+          Invocation
+          |> Ash.Changeset.for_create(:create_first, input)
+          |> Ash.create!()
+
+        assert invocation.network_id == input.network.id
+        assert invocation.input == input.input
+        assert invocation.output == nil
+        assert invocation.sequence_number == 0
+        assert invocation.run_number == nil
       end
     end
 
     property "succeeds on all valid input (code interface version)" do
       check all(input <- input_for_create_first(min_length: 1)) do
-        {:ok, invocation} =
-          Panic.Engine.create_first(
+          Panic.Engine.create_first!(
             input.network,
             input.input,
             authorize?: false
           )
-
-        assert invocation.input == input.input
-        # FIXME there might be an issue here with "" vs nil?
-        # assert invocation.description == input.description
-        assert invocation.network == input.network
-        assert is_nil(invocation.output)
       end
     end
 
