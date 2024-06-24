@@ -35,8 +35,8 @@ prompting of a single model?
 
 The general outline for our proposed talk/presentation is:
 
-- introduction (with examples/demo) to Creative AI model platforms e.g.
-  OpenAI, HuggingFace, AccompliceAI
+- introduction (with examples/demo) to Creative AI model platforms e.g. OpenAI,
+  HuggingFace, AccompliceAI
 
 - explanation & demo of the PANIC "create a network of AI models" interface
 
@@ -45,8 +45,8 @@ The general outline for our proposed talk/presentation is:
   Creative AI networks (including "closed loop" topologies)
 
 - discussion of emergent behaviours, recurring patterns, degenerate & edge
-  cases, and what it all says about the nature of Creative AI model platforms
-  in their current form
+  cases, and what it all says about the nature of Creative AI model platforms in
+  their current form
 
 While PANIC is an experimental tool for creative "play", the accessibility of
 these AI model platforms (cost, time, technical knowledge) means that their
@@ -85,8 +85,8 @@ going on:
   that the output of one is fed as input to the next
 - **invocation**: a specific "inference" run for a single model; includes both
   the input (prompt) an the output (prediction) along with some other metadata
-- **run**: a specific sequence of predictions starting from an initial prompt and
-  following the models in a network
+- **run**: a specific sequence of predictions starting from an initial prompt
+  and following the models in a network
 
 ## Setup
 
@@ -96,38 +96,18 @@ The file `.tool-version` tells asdf which versions we use.
 
 Run `asdf install` to install those versions.
 
-### Other Setup notes
+## SXSW blurb
 
-```
-mix phx.gen.context Models Run runs platform:enum:replicate:huggingface:openai model_name:string input:string output:string metadata:map
-mix phx.gen.live Runs Prediction predictions input:string metadata:map model:string output:string run_index:integer network_id:references:networks genesis_id:references:predictions
-```
+PANIC is an interactive installation where **you** can play with feedback loops
+of generative AI models hooked end-to-end. As well as generating intriguing
+text, images and audio, PANIC explores how different ways of connecting these
+models up can give rise to different patterns of outputs, emergent behaviours,
+recurring patterns, and degenerate cases. Today, the low barrier to entry in
+generative AI model platforms (in terms of cost, time, and knowledge) means that
+more and more of us are using them. But just because we _can_ put our
+text/images/audio into these models and have them provide new text/images/audio
+in return, does it mean that we _should_?
 
-## TODO
-
-- add QR code view
-- add "slow down over time" logic to runs
-- text shadow effect
-- remove top nav (probably... need to think about how to do this)
-- when viewing a grid for a running network, initially pull the latest
-  @num_grid_slots from the db (based on :genesis_id) and pre-populate the grid slots
-- write model descriptions
-- add "network info" view
-- write more tests for the new view things
-- add rolling cookie/URL param to QR code
-- add metadata to prediction (maybe `with` is our friend here?)
-- check that access control works for the network & prediction
-- use an embedded schema for the tokens (Replicate and OpenAI are strings,
-  Vestaboard is map)
-- add network permalinks (look in the history - there's some deleted `router.ex`
-  code in there)
-- check that "send text to the Vestaboards" stuff works (need to be at uni)
-- add models:
-  - oblique strategies follower (GPT-3 powered)
-  - https://replicate.com/pharmapsychotic/clip-interrogator
-- clear the terminal input when a new prediction is triggered (well, actually
-  it's [this issue](https://github.com/phoenixframework/phoenix_live_view/issues/624), so maybe not worth getting bogged down on)
-- (maybe) pull the "initial values" stuff (both for genesis and next runs) into
-  two separate changeset functions in the Predictions.Prediction module
-- update to final Phoenix v1.7.0
-- convert to LV streams API
+PANIC will be running on the SXSW Expo floor from TIME to TIME every day. In
+addition, PANIC's creators will give a short artist talk/how-it-works demo every
+day at TIME, TIME and TIME.
