@@ -42,10 +42,16 @@ defmodule Panic.Generators do
     end
   end
 
+  def password do
+    string(:utf8, min_length: 8)
+    |> filter(fn s -> not Regex.match?(~r/^[[:space:]]*$/, s) end)
+    |> filter(fn s -> String.length(s) >= 8 end)
+  end
+
   def user do
     gen all(
           email <- Ash.Generator.sequence(:unique_email, fn i -> "user-#{i}@example.com" end),
-          password <- string(:printable, min_length: 8)
+          password <- password()
         ) do
       Panic.Accounts.User
       |> Ash.Changeset.for_create(
