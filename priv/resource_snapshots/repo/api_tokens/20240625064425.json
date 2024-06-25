@@ -30,8 +30,8 @@
         "table": "users",
         "multitenancy": {
           "global": null,
-          "attribute": null,
-          "strategy": null
+          "strategy": null,
+          "attribute": null
         },
         "primary_key?": true,
         "destination_attribute": "id",
@@ -47,13 +47,13 @@
     }
   ],
   "table": "api_tokens",
-  "hash": "CDB6E3F50EB4C4971419AAB44EE44B9DD24AE79D01AB1047A5FE35858D22EA70",
+  "hash": "055898B197D4594B83B98DF37C429736A29469AD2BB106AC4AA71026E485F77E",
   "repo": "Elixir.Panic.Repo",
   "identities": [],
   "multitenancy": {
     "global": null,
-    "attribute": null,
-    "strategy": null
+    "strategy": null,
+    "attribute": null
   },
   "base_filter": null,
   "custom_indexes": [],

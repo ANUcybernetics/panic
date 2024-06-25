@@ -72,13 +72,13 @@
     }
   ],
   "table": "tokens",
-  "hash": "6582B8E74D3250A5B38C3FCE31AEF1783A908CA398207650B125983F866045F0",
+  "hash": "C23D8DBFA993B5740357FEE7C8B649A892E3ABB1287121A735F0C00745B7C75B",
   "repo": "Elixir.Panic.Repo",
   "identities": [],
   "multitenancy": {
     "global": null,
-    "attribute": null,
-    "strategy": null
+    "strategy": null,
+    "attribute": null
   },
   "base_filter": null,
   "custom_indexes": [],

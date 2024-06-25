@@ -7,68 +7,61 @@
       "source": "id",
       "references": null,
       "allow_nil?": false,
-      "primary_key?": true,
-      "generated?": true
+      "generated?": true,
+      "primary_key?": true
     },
     {
       "default": "nil",
       "size": null,
       "type": "text",
-      "source": "input",
+      "source": "name",
       "references": null,
       "allow_nil?": false,
-      "primary_key?": false,
-      "generated?": false
+      "generated?": false,
+      "primary_key?": false
     },
     {
       "default": "nil",
       "size": null,
       "type": "text",
-      "source": "model",
+      "source": "description",
       "references": null,
       "allow_nil?": true,
-      "primary_key?": false,
-      "generated?": false
+      "generated?": false,
+      "primary_key?": false
+    },
+    {
+      "default": "[]",
+      "size": null,
+      "type": [
+        "array",
+        "text"
+      ],
+      "source": "models",
+      "references": null,
+      "allow_nil?": false,
+      "generated?": false,
+      "primary_key?": false
     },
     {
       "default": "nil",
       "size": null,
       "type": "text",
-      "source": "output",
+      "source": "state",
       "references": null,
-      "allow_nil?": true,
-      "primary_key?": false,
-      "generated?": false
+      "allow_nil?": false,
+      "generated?": false,
+      "primary_key?": false
     },
     {
       "default": "nil",
       "size": null,
-      "type": "bigint",
-      "source": "sequence_number",
-      "references": null,
-      "allow_nil?": false,
-      "primary_key?": false,
-      "generated?": false
-    },
-    {
-      "default": "nil",
-      "size": null,
-      "type": "bigint",
-      "source": "run_number",
+      "type": "text",
+      "source": "slug",
       "references": null,
       "allow_nil?": true,
-      "primary_key?": false,
-      "generated?": false
-    },
-    {
-      "default": "%{}",
-      "size": null,
-      "type": "map",
-      "source": "metadata",
-      "references": null,
-      "allow_nil?": false,
-      "primary_key?": false,
-      "generated?": false
+      "generated?": false,
+      "primary_key?": false
     },
     {
       "default": "nil",
@@ -77,8 +70,8 @@
       "source": "inserted_at",
       "references": null,
       "allow_nil?": false,
-      "primary_key?": false,
-      "generated?": false
+      "generated?": false,
+      "primary_key?": false
     },
     {
       "default": "nil",
@@ -87,46 +80,46 @@
       "source": "updated_at",
       "references": null,
       "allow_nil?": false,
-      "primary_key?": false,
-      "generated?": false
+      "generated?": false,
+      "primary_key?": false
     },
     {
       "default": "nil",
       "size": null,
       "type": "bigint",
-      "source": "network_id",
+      "source": "user_id",
       "references": {
-        "name": "invocations_network_id_fkey",
-        "table": "networks",
+        "name": "networks_user_id_fkey",
+        "table": "users",
+        "multitenancy": {
+          "global": null,
+          "strategy": null,
+          "attribute": null
+        },
         "primary_key?": true,
         "destination_attribute": "id",
         "on_delete": null,
-        "on_update": null,
         "deferrable": false,
-        "multitenancy": {
-          "global": null,
-          "attribute": null,
-          "strategy": null
-        },
         "destination_attribute_default": null,
-        "destination_attribute_generated": null
+        "destination_attribute_generated": null,
+        "on_update": null
       },
       "allow_nil?": false,
-      "primary_key?": false,
-      "generated?": false
+      "generated?": false,
+      "primary_key?": false
     }
   ],
-  "table": "invocations",
-  "hash": "64E44A77BDF9DB62C7D970C8C5FFB1C818504C47EF9EDDBD40C0392A6365329D",
+  "table": "networks",
+  "hash": "672D13EED452B561246D5C360F8EEC40A7F7FBB06A56E1A528B0040D58A9A767",
   "repo": "Elixir.Panic.Repo",
-  "base_filter": null,
   "identities": [],
-  "custom_indexes": [],
-  "custom_statements": [],
   "multitenancy": {
     "global": null,
-    "attribute": null,
-    "strategy": null
+    "strategy": null,
+    "attribute": null
   },
+  "base_filter": null,
+  "custom_indexes": [],
+  "custom_statements": [],
   "has_create_action": true
 }
