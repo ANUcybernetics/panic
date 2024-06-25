@@ -3,6 +3,18 @@ defmodule Panic.UsersTest do
   use ExUnitProperties
   # alias Panic.Accounts.User
 
+  describe "ApiToken CRUD actions" do
+    property "accepts all valid input" do
+      check all(input <- Ash.Generator.action_input(Panic.Accounts.ApiToken, :create)) do
+        dbg(input)
+
+        Panic.Accounts.ApiToken
+        |> Ash.Changeset.for_create(:create, input)
+        |> Ash.create!()
+      end
+    end
+  end
+
   describe "CRUD actions" do
     #   # now if our action inputs are invalid when we think they should be valid, we will find out here
     property "accepts all valid input" do
@@ -22,7 +34,7 @@ defmodule Panic.UsersTest do
   end
 
   describe "User resource" do
-    property "add replicate token to user" do
+    property "add api token to user" do
       user = Panic.Generators.user_fixture()
 
       check all(

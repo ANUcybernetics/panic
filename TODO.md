@@ -1,5 +1,6 @@
 # Panic TODO
 
+- create ApiToken resource, remove attribute from user
 - fill out the suite of actions, including tests
 - get the platform modules to pull API keys from the user
 - upgrade to liveview 1.0-rc
