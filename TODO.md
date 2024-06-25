@@ -1,7 +1,5 @@
 # Panic TODO
 
-- create ApiToken resource, remove attribute from user
-- fill out the suite of actions, including tests
 - get the platform modules to pull API keys from the user
 - upgrade to liveview 1.0-rc
 - put a frontend on 'er (adding views as per the notebook sketches)
@@ -30,6 +28,8 @@
   [this issue](https://github.com/phoenixframework/phoenix_live_view/issues/624),
   so maybe not worth getting bogged down on)
 - add user profile liveview
+- liveview assigns: network, ready_at (ts), invocations (stream, if running),
+  form, watchers (presence?), screen/grid params
 
 ### bugfixes
 
