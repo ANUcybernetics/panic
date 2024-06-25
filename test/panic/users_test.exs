@@ -23,7 +23,9 @@ defmodule Panic.UsersTest do
         |> Ash.Changeset.for_create(:create, %{name: name, value: value}, actor: user)
         |> Ash.create!()
 
-        assert Ash.get!(Panic.Accounts.ApiToken, name).value == value
+        token = Ash.get!(Panic.Accounts.ApiToken, name, load: :user)
+        assert token.user.id == user.id
+        assert token.value == value
       end
     end
   end
