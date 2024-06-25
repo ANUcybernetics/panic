@@ -48,11 +48,13 @@ defmodule Panic.Generators do
     |> filter(fn s -> String.length(s) >= 8 end)
   end
 
+  def email do
+    repeatedly(fn -> System.unique_integer([:positive]) end)
+    |> map(fn i -> "user-#{i}@example.com" end)
+  end
+
   def user do
-    gen all(
-          email <- Ash.Generator.sequence(:unique_email, fn i -> "user-#{i}@example.com" end),
-          password <- password()
-        ) do
+    gen all(email <- email(), password <- password()) do
       Panic.Accounts.User
       |> Ash.Changeset.for_create(
         :register_with_password,
@@ -60,5 +62,9 @@ defmodule Panic.Generators do
       )
       |> Ash.create!()
     end
+  end
+
+  def user_fixture() do
+    user() |> pick()
   end
 end

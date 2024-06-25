@@ -18,7 +18,9 @@ defmodule Panic.NetworkTest do
     end
 
     property "accepts all valid input (with an actor)" do
-      check all(input <- input_for_create(), user <- Panic.Generators.user()) do
+      user = Panic.Generators.user()
+
+      check all(input <- input_for_create()) do
         assert %Ash.Changeset{valid?: true} =
                  Panic.Engine.changeset_to_create_network(
                    input.name,

@@ -7,14 +7,15 @@ defmodule Panic.UsersTest do
     #   # now if our action inputs are invalid when we think they should be valid, we will find out here
     property "accepts all valid input" do
       check all(
-              email <- Ash.Generator.sequence(:unique_email, fn i -> "user-#{i}@example.com" end),
-              password <- string(:ascii, min_length: 8)
+              email <- Panic.Generators.email(),
+              password <- Panic.Generators.password()
             ) do
         Panic.Accounts.User
         |> Ash.Changeset.for_create(
           :register_with_password,
           %{email: email, password: password, password_confirmation: password}
         )
+        # NOTE: doesn't check that the data is persisted correctly
         |> Ash.create!()
       end
     end
@@ -22,8 +23,9 @@ defmodule Panic.UsersTest do
 
   describe "User resource" do
     property "add replicate token to user" do
+      user = Panic.Generators.user_fixture()
+
       check all(
-              user <- Panic.Generators.user(),
               token_name <- member_of([:openai, :replicate]),
               # for some reason this fails if it's a string with leading/trailing whitespace
               token_value <- string(:alphanumeric, min_length: 1)
@@ -41,15 +43,15 @@ defmodule Panic.UsersTest do
     end
 
     property "trying to set an unsupported token raises an error" do
-      check all(user <- Panic.Generators.user()) do
-        assert_raise Ash.Error.Invalid, fn ->
-          user
-          |> Ash.Changeset.for_update(:set_token, %{
-            token_name: :unsupported,
-            token_value: "this_is_an_unsupported_token"
-          })
-          |> Ash.update!()
-        end
+      user = Panic.Generators.user_fixture()
+
+      assert_raise Ash.Error.Invalid, fn ->
+        user
+        |> Ash.Changeset.for_update(:set_token, %{
+          token_name: :unsupported,
+          token_value: "this_is_an_unsupported_token"
+        })
+        |> Ash.update!()
       end
 
       # test "creation with invalid data returns an error changeset" do
