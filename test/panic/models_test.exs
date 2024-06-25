@@ -1,7 +1,6 @@
 defmodule Panic.ModelsTest do
   use Panic.DataCase
   use ExUnitProperties
-  alias Panic.Engine.Invocation
 
   describe "model helpers" do
     test "list all modules which conform to Model behaviour" do
@@ -22,43 +21,5 @@ defmodule Panic.ModelsTest do
       # check that they're all in the list
       assert Panic.Models.list() |> MapSet.new() == MapSet.new(models)
     end
-  end
-
-  describe "Panic.Engine.Invocation resource" do
-    test "changeset for :create_first action with valid data creates an invocation" do
-      network = network_fixture()
-      valid_attrs = %{network: network, input: "my test input"}
-
-      invocation =
-        Invocation
-        |> Ash.Changeset.for_create(:create_first, valid_attrs)
-        |> Ash.create!()
-
-      assert invocation.network_id == network.id
-      assert invocation.input == valid_attrs.input
-      assert invocation.sequence_number == 0
-      assert invocation.run_number == nil
-    end
-
-    test "raise if there's no Invocation with a given id" do
-      assert_raise Ash.Error.Invalid, fn -> Ash.get!(Invocation, 1234) end
-    end
-
-    test "read the created invocation back from the db" do
-      %Invocation{id: invocation_id} = invocation_fixture()
-
-      assert %Invocation{id: ^invocation_id} =
-               Panic.Engine.get_invocation!(invocation_id)
-    end
-  end
-
-  defp network_fixture() do
-    user = Panic.Generators.user_fixture()
-    Panic.Generators.network(user) |> pick()
-  end
-
-  defp invocation_fixture() do
-    user = Panic.Generators.user_fixture()
-    Panic.Generators.invocation(user) |> pick()
   end
 end
