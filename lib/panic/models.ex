@@ -5,6 +5,11 @@ defmodule Panic.Models do
     |> Enum.map(fn {mod, _} -> mod end)
   end
 
+  def list(platform) do
+    list()
+    |> Enum.filter(fn model -> model.fetch!(:platform) == platform end)
+  end
+
   defp implements_model(module) do
     if function_exported?(module, :__info__, 1) do
       behaviours = Keyword.get(module.__info__(:attributes), :behaviour, [])
