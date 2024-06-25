@@ -81,14 +81,7 @@ defmodule Panic.NetworkTest do
 
   defp input_for_create do
     Ash.Generator.action_input(Network, :create, %{
-      models:
-        list_of(
-          StreamData.member_of([
-            Panic.Models.SDXL,
-            Panic.Models.BLIP2,
-            Panic.Models.GPT4o
-          ])
-        ),
+      models: list_of(StreamData.member_of(Panic.Models.list())),
       description: StreamData.binary()
     })
   end

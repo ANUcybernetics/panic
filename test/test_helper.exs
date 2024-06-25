@@ -13,11 +13,7 @@ defmodule Panic.Generators do
             Ash.Generator.action_input(Panic.Engine.Network, :create, %{
               models:
                 list_of(
-                  StreamData.member_of([
-                    Panic.Models.SDXL,
-                    Panic.Models.BLIP2,
-                    Panic.Models.GPT4o
-                  ]),
+                  StreamData.member_of(Panic.Models.list()),
                   opts
                 )
             })
