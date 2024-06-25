@@ -1,6 +1,6 @@
 defmodule Panic.ModelsTest do
   use Panic.DataCase
-  alias Panic.Engine.Network
+  use ExUnitProperties
   alias Panic.Engine.Invocation
 
   describe "model helpers" do
@@ -52,36 +52,13 @@ defmodule Panic.ModelsTest do
     end
   end
 
-  defp network_fixture(attrs \\ %{}) do
-    attrs =
-      Map.merge(
-        %{
-          name: "My Network",
-          description: "A super cool network",
-          models: [
-            # TODO change this to an actual model module once they exist
-            Panic.Engine
-          ]
-        },
-        attrs
-      )
-
-    Network
-    |> Ash.Changeset.for_create(:create, attrs)
-    |> Ash.create!()
+  defp network_fixture() do
+    user = Panic.Generators.user_fixture()
+    Panic.Generators.network(user) |> pick()
   end
 
-  defp invocation_fixture(attrs \\ %{}) do
-    network = network_fixture()
-
-    attrs =
-      Map.merge(
-        %{network: network, input: "my test input"},
-        attrs
-      )
-
-    Invocation
-    |> Ash.Changeset.for_create(:create_first, attrs)
-    |> Ash.create!()
+  defp invocation_fixture() do
+    user = Panic.Generators.user_fixture()
+    Panic.Generators.invocation(user) |> pick()
   end
 end

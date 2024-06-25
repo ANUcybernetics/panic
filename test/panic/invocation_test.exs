@@ -28,12 +28,15 @@ defmodule Panic.InvocationTest do
     end
 
     property "gives error changeset when :input is invalid" do
-      check all(input <-
-        Ash.Generator.action_input(Panic.Engine.Invocation, :create_first, %{
-          network: Panic.Generators.network(min_length: 1),
-          input: integer()
-        })
-      ) do
+      user = Panic.Generators.user_fixture()
+
+      check all(
+              input <-
+                Ash.Generator.action_input(Panic.Engine.Invocation, :create_first, %{
+                  network: Panic.Generators.network(user, min_length: 1),
+                  input: integer()
+                })
+            ) do
         assert %Ash.Changeset{valid?: false} =
                  Panic.Engine.changeset_to_create_first(
                    input.network,
@@ -44,10 +47,12 @@ defmodule Panic.InvocationTest do
     end
 
     property "succeeds on all valid input" do
+      user = Panic.Generators.user_fixture()
+
       check all(input <- input_for_create_first(min_length: 1)) do
         invocation =
           Invocation
-          |> Ash.Changeset.for_create(:create_first, input)
+          |> Ash.Changeset.for_create(:create_first, input, actor: user)
           |> Ash.create!()
 
         assert invocation.network_id == input.network.id
@@ -60,18 +65,20 @@ defmodule Panic.InvocationTest do
 
     property "succeeds on all valid input (code interface version)" do
       check all(input <- input_for_create_first(min_length: 1)) do
-          Panic.Engine.create_first!(
-            input.network,
-            input.input,
-            authorize?: false
-          )
+        Panic.Engine.create_first!(
+          input.network,
+          input.input,
+          authorize?: false
+        )
       end
     end
 
     # TODO what's the best way with property testing to test that it gives the right invalid changeset on invalid input?
 
     property "Invocation read action" do
-      check all(invocation <- Panic.Generators.invocation()) do
+      user = Panic.Generators.user_fixture()
+
+      check all(invocation <- Panic.Generators.invocation(user)) do
         assert invocation.id == Panic.Engine.get_invocation!(invocation.id).id
         # there shouldn't ever be a negative ID in the db, so this should always raise
         assert_raise Ash.Error.Invalid, fn -> Ash.get!(Invocation, -1) end
@@ -79,15 +86,19 @@ defmodule Panic.InvocationTest do
     end
 
     property "Invocation finalise action" do
-      check all(invocation <- Panic.Generators.invocation()) do
+      user = Panic.Generators.user_fixture()
+
+      check all(invocation <- Panic.Generators.invocation(user)) do
         assert invocation.output == "not yet done"
       end
     end
   end
 
   defp input_for_create_first(opts) do
+    user = Panic.Generators.user_fixture()
+
     Ash.Generator.action_input(Panic.Engine.Invocation, :create_first, %{
-      network: Panic.Generators.network(opts)
+      network: Panic.Generators.network(user, opts)
     })
   end
 end

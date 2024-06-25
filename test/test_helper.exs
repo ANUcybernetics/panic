@@ -24,12 +24,12 @@ defmodule Panic.Generators do
     end
   end
 
-  def invocation do
+  def invocation(user) do
     gen all(
           input <-
             Ash.Generator.action_input(Panic.Engine.Invocation, :create_first, %{
               # need at least one, otherwise Panic.Changes.Invoke will raise
-              network: network(min_length: 1)
+              network: network(user, min_length: 1)
             })
         ) do
       Panic.Engine.Invocation
