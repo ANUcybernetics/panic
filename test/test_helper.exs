@@ -7,7 +7,7 @@ defmodule Panic.Generators do
   """
   use ExUnitProperties
 
-  def network(opts \\ []) do
+  def network(user, opts \\ []) do
     gen all(
           input <-
             Ash.Generator.action_input(Panic.Engine.Network, :create, %{
@@ -19,7 +19,7 @@ defmodule Panic.Generators do
             })
         ) do
       Panic.Engine.Network
-      |> Ash.Changeset.for_create(:create, input)
+      |> Ash.Changeset.for_create(:create, input, actor: user)
       |> Ash.create!()
     end
   end
