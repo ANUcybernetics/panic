@@ -4,13 +4,26 @@ defmodule Panic.UsersTest do
   # alias Panic.Accounts.User
 
   describe "ApiToken CRUD actions" do
-    property "accepts all valid input" do
-      check all(input <- Ash.Generator.action_input(Panic.Accounts.ApiToken, :create)) do
-        dbg(input)
+    test "set all api tokens" do
+      user = Panic.Generators.user_fixture()
+
+      token_names = [
+        :replicate,
+        :openai,
+        :vestaboard_panic_1,
+        :vestaboard_panic_2,
+        :vestaboard_panic_3,
+        :vestaboard_panic_4
+      ]
+
+      for name <- token_names do
+        value = string(:ascii, min_length: 1) |> pick()
 
         Panic.Accounts.ApiToken
-        |> Ash.Changeset.for_create(:create, input)
+        |> Ash.Changeset.for_create(:create, %{name: name, value: value}, actor: user)
         |> Ash.create!()
+
+        assert Ash.get!(Panic.Accounts.ApiToken, name).value == value
       end
     end
   end
