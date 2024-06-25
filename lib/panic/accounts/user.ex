@@ -12,13 +12,7 @@ defmodule Panic.Accounts.User do
   end
 
   actions do
-    defaults [:read]
-
-    update :set_api_token do
-      argument :token_name, :atom, allow_nil?: false
-      argument :token_value, :string, allow_nil?: false
-      change TODO
-    end
+    defaults [:read, :destroy, update: [:email, :hashed_password]]
   end
 
   authentication do

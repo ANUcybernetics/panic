@@ -70,61 +70,22 @@ defmodule Panic.UsersTest do
   end
 
   describe "User resource" do
-    property "add api token to user" do
+    test "list all api token for user" do
       user = Panic.Generators.user_fixture()
 
-      token_names = [
-        :replicate,
-        :openai,
-        :vestaboard_panic_1,
-        :vestaboard_panic_2,
-        :vestaboard_panic_3,
-        :vestaboard_panic_4
-      ]
+      token_name = :replicate
+      token_value = string(:ascii, min_length: 1) |> pick()
 
-      check all(
-              token_name <- member_of(token_names),
-              # for some reason this fails if it's a string with leading/trailing whitespace
-              token_value <- string(:alphanumeric, min_length: 1)
-            ) do
-        user =
-          user
-          |> Ash.Changeset.for_update(:set_token, %{
-            token_name: token_name,
-            token_value: token_value
-          })
-          |> Ash.update!()
+      Panic.Accounts.ApiToken
+      |> Ash.Changeset.for_create(:create, %{name: token_name, value: token_value}, actor: user)
+      |> Ash.create!()
 
-        assert user.api_tokens[token_name] == token_value
-      end
-    end
+      replicate_token =
+        Ash.load!(user, :api_tokens)
+        |> Map.get(:api_tokens)
+        |> Enum.find(fn token -> token.name == token_name end)
 
-    property "trying to set an unsupported token raises an error" do
-      user = Panic.Generators.user_fixture()
-
-      assert_raise Ash.Error.Invalid, fn ->
-        user
-        |> Ash.Changeset.for_update(:set_token, %{
-          token_name: :unsupported,
-          token_value: "this_is_an_unsupported_token"
-        })
-        |> Ash.update!()
-      end
-
-      # test "creation with invalid data returns an error changeset" do
-      # end
-
-      # test "reading a created user back from the db", %{user: user} do
-      # end
-
-      # test "raises an error if there's no user with a given id" do
-      # end
-
-      # test "unique constraint on :email is respected", %{user: user} do
-      # end
-
-      # test "authentication by policy works", %{user: user} do
-      # end
+      assert replicate_token.value == token_value
     end
   end
 end
