@@ -80,10 +80,7 @@ defmodule Panic.Engine.Network do
     # read :statistics
     # read :state
     # update :set_state
-
-    create :duplicate do
-      argument :id, :integer, allow_nil?: false
-    end
+    # create :duplicate # duplicate the network
 
     update :set_state do
       argument :state, :atom, allow_nil?: false
