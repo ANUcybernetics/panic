@@ -29,7 +29,12 @@ defmodule Panic.Accounts.ApiToken do
   end
 
   actions do
-    defaults [:read, :destroy, create: :*, update: :*]
+    defaults [:read, :destroy, update: [:name, :value]]
+
+    create :create do
+      accept [:name, :value]
+      change relate_actor(:user)
+    end
   end
 
   relationships do
