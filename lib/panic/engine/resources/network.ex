@@ -47,12 +47,7 @@ defmodule Panic.Engine.Network do
 
     create :create do
       accept [:name, :description, :models]
-
-      # change fn changeset, _ ->
-      #   changeset
-      #   |> set_attribute(:slug, Panic.Slug.generate(changeset.data.name))
-      #   |> set_attribute(:state, :stopped)
-      # end
+      change relate_actor(:user)
     end
 
     read :by_id do
@@ -86,5 +81,9 @@ defmodule Panic.Engine.Network do
       argument :state, :atom, allow_nil?: false
       change set_attribute(:state, arg(:state))
     end
+  end
+
+  relationships do
+    belongs_to :user, Panic.Accounts.User, allow_nil?: false
   end
 end
