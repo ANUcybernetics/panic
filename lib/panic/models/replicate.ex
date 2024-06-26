@@ -239,3 +239,34 @@ defmodule Panic.Models.LLaVA do
     end
   end
 end
+
+defmodule Panic.Models.LLaMa3Instruct8B do
+  @behaviour Panic.Model
+  alias Panic.Platforms.Replicate
+
+  @impl true
+  def info do
+    %Panic.Models.ModelInfo{
+      id: "meta/meta-llama-3-8b-instruct",
+      platform: Replicate,
+      path: "meta/meta-llama-3-8b-instruct",
+      name: "LLaMa 8B Instruct",
+      description: "",
+      input_type: :text,
+      output_type: :text
+    }
+  end
+
+  @impl true
+  def fetch!(field) do
+    info() |> Map.fetch!(field)
+  end
+
+  @impl true
+  def invoke(input) do
+    with {:ok, %{"output" => output_list}} <-
+           Replicate.create_and_wait(__MODULE__, %{prompt: input}) do
+      {:ok, Enum.join(output_list)}
+    end
+  end
+end
