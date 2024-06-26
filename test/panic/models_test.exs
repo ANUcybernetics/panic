@@ -74,7 +74,7 @@ defmodule Panic.ModelsTest do
         output_fragment = get_in(canned_responses[model_key]["output_fragment"])
 
         assert {:ok, output} = model.invoke(input)
-        assert output_fragment =~ output
+        assert output =~ output_fragment
       end
     end
   end

@@ -50,14 +50,13 @@ defmodule Panic.Platforms.OpenAI do
   defp req_new(opts) do
     token = System.get_env("OPENAI_API_TOKEN")
 
-    Keyword.merge(
-      [
-        base_url: "https://api.openai.com/v1",
-        receive_timeout: 10_000,
-        auth: {:bearer, token}
-      ],
-      opts
-    )
+    [
+      base_url: "https://api.openai.com/v1",
+      receive_timeout: 10_000,
+      auth: {:bearer, token}
+    ]
+    |> Keyword.merge(Application.get_env(:panic, :openai_req_options, []))
+    |> Keyword.merge(opts)
     |> Req.new()
   end
 
