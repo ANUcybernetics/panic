@@ -116,7 +116,8 @@ defmodule Panic.Models.BLIP2 do
   @impl true
   def invoke(input) do
     with {:ok, %{"output" => text}} <-
-           Replicate.create_and_wait(__MODULE__,
+           Replicate.create_and_wait(
+             __MODULE__,
              %{image: input, caption: true}
            ) do
       {:ok, text}
@@ -228,7 +229,8 @@ defmodule Panic.Models.LLaVA do
   def invoke(input) do
     input_params = %{
       image: input,
-      prompt: "Provide a detailed description of this image for captioning purposes, including descriptions both the foreground and background."
+      prompt:
+        "Provide a detailed description of this image for captioning purposes, including descriptions both the foreground and background."
     }
 
     with {:ok, %{"output" => description_list}} <-
