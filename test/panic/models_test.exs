@@ -25,10 +25,8 @@ defmodule Panic.ModelsTest do
   end
 
   describe "Replicate platform tests (mocked)" do
-    alias Panic.Platforms.Replicate
-
     test "list models" do
-      Req.Test.stub(Replicate, fn conn ->
+      Req.Test.stub(Panic.Platforms.Replicate, fn conn ->
         # this is the correct value at 2024-05-08, but it doesn't matter, we only test against the regex
         body = %{
           "latest_version" => %{
@@ -39,35 +37,28 @@ defmodule Panic.ModelsTest do
         Req.Test.json(conn, body)
       end)
 
-      version = Replicate.get_latest_model_version(Models.StableDiffusion)
+      version = Panic.Platforms.Replicate.get_latest_model_version(Models.StableDiffusion)
       assert String.match?(version, ~r/^[a-f0-9]{64}$/)
     end
 
-    @tag :skip
-    test "invoke models" do
+    test "invoke OpenAI models" do
       # models for which we have canned responses
       models =
-        Models.list()
+        Panic.Platforms.OpenAI
+        |> Models.list()
         |> Enum.filter(fn model -> model.fetch!(:input_type) == :text end)
 
       canned_responses =
-        "test/support/canned_responses/replicate.json"
+        "test/support/canned_responses/openai.json"
         |> File.read!()
         |> Jason.decode!()
 
       for model <- models do
         model_key = to_string(model)
 
-        Req.Test.stub(Replicate, fn conn ->
-          case conn.path_info do
-            ["v1", "models", _, _] ->
-              version = canned_responses[model_key]["response"]["body"]["version"]
-              Req.Test.json(conn, %{"latest_version" => %{"id" => version}})
-
-            _ ->
-              body = get_in(canned_responses[model_key]["response"]["body"])
-              Req.Test.json(conn, body)
-          end
+        Req.Test.stub(Panic.Platforms.OpenAI, fn conn ->
+          body = get_in(canned_responses[model_key]["response"]["body"])
+          Req.Test.json(conn, body)
         end)
 
         input = get_in(canned_responses[model_key]["input"])
