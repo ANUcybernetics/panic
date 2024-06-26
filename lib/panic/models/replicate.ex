@@ -124,37 +124,6 @@ defmodule Panic.Models.BLIP2 do
   end
 end
 
-defmodule Panic.Models.Vicuna13B do
-  @behaviour Panic.Model
-  alias Panic.Platforms.Replicate
-
-  @impl true
-  def info do
-    %Panic.Models.ModelInfo{
-      id: "replicate/vicuna-13b",
-      platform: Replicate,
-      path: "replicate/vicuna-13b",
-      name: "vicuna 13B",
-      description: "A large language model that's been fine-tuned on ChatGPT interactions",
-      input_type: :text,
-      output_type: :text
-    }
-  end
-
-  @impl true
-  def fetch!(field) do
-    info() |> Map.fetch!(field)
-  end
-
-  @impl true
-  def invoke(input) do
-    with {:ok, %{"output" => output}} <-
-           Replicate.create_and_wait(__MODULE__, %{prompt: input}) do
-      {:ok, Enum.join(output)}
-    end
-  end
-end
-
 defmodule Panic.Models.StableDiffusion do
   @behaviour Panic.Model
   alias Panic.Platforms.Replicate
