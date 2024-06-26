@@ -14,7 +14,6 @@ defmodule Panic.ModelsTest do
         Models.GPT4Turbo,
         Models.LLaVA,
         Models.ClipPrefixCaption,
-        Models.Vicuna13B,
         Models.SDXL,
         Models.GPT4
       ]
@@ -31,7 +30,6 @@ defmodule Panic.ModelsTest do
         Models.CogPromptParrot,
         Models.LLaVA,
         Models.ClipPrefixCaption,
-        Models.Vicuna13B,
         Models.SDXL
       ]
 
