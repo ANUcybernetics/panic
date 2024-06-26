@@ -3,7 +3,8 @@ defmodule Panic.Models.GPT4 do
   alias Panic.Platforms.OpenAI
 
   @impl true
-  def info do %Panic.Models.ModelInfo{
+  def info do
+    %Panic.Models.ModelInfo{
       id: "gpt-4",
       path: "gpt-4",
       name: "GPT-4",
