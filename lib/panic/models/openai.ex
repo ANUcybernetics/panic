@@ -20,7 +20,7 @@ defmodule Panic.Models.GPT4 do
   end
 
   @impl true
-  def invoke(input), do: OpenAI.create(fetch!(:id), input)
+  def invoke(input), do: OpenAI.create(__MODULE__, input)
 end
 
 defmodule Panic.Models.GPT4Turbo do

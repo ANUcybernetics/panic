@@ -1,0 +1,311 @@
+{
+  "Elixir.Panic.Models.CogPromptParrot": {
+    "input": "this is a test input... what's your response?",
+    "output_fragment": "trending on artstation",
+    "response": {
+      "body": {
+        "completed_at": "2024-06-26T03:24:56.019040473Z",
+        "created_at": "2024-06-26T03:21:50.932Z",
+        "data_removed": false,
+        "error": null,
+        "id": "c4vfcdjwahrgc0cgaa89mzhqq4",
+        "input": {
+          "prompt": "this is a test input... what's your response?"
+        },
+        "logs": "The attention mask and the pad token id were not set. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.\nSetting `pad_token_id` to `eos_token_id`:50256 for open-end generation.\n",
+        "metrics": {
+          "predict_time": 9.197581012
+        },
+        "model": "2feet6inches/cog-prompt-parrot",
+        "output": "this is a test input... what's your response?  trending on artstation digital art digital painting illustration illustration illustration illustration illustration illustration illustration illustration illustration illustration illustration digital illustration illustration\nthis is a test input... what's your response? beautiful illustration, highly detailed computer render painting concept, digital art illustration concept art concept, concept art illustration illustration illustration concept concept, detailed concept painting illustration\nthis is a test input... what's your response? noir palette by John Atkinson Grimshaw and Ross Tran trending on artstation matte painting illustration concept, artstation cinematic, digital painting soft matte image\nthis is a test input... what's your response? hdynamic render render on an alien surface, deviantart concept, by Daniel Gilbert and Ross Tran over at the dark city, oil on canvas concept, by Ivan\nthis is a test input... what's your response?  on canvas, artstation render, oil on canvas, trending on artstation contrasting matte, contrasting contrasting illustration at the center, by Simon Sandler\nthis is a test input... what's your response?????????????#(inserted character in a tree, digital art, contrasting concept concept noir 3 concept concept concept, art illustration soft render digital art\nthis is a test input... what's your response? vaporwave clouds by Ivan Aivazovsky, cyberpunk concept art concept art oil on canvas illustration by Ivan A impression impressionist, illustration illustration illustrative\nthis is a test input... what's your response?  impressionist painting render, highly detailed, highly detailed painting illustration oil, digital painting illustration illustration illustration illustration illustration illustration illustration illustration illustration\nthis is a test input... what's your response? 3:50 PM John Harrisgio blanchard, cinematic lighting digital painting illustration character concept, by John Harris illustration illustration illustration illustration illustration digital painting\nthis is a test input... what's your response? response to a mangymaid portrait painting, concept art, character illustration illustration illustration illustration concept art illustration illustration illustration illustration illustration illustration illustration illustration",
+        "started_at": "2024-06-26T03:24:46.821459455Z",
+        "status": "succeeded",
+        "urls": {
+          "cancel": "https://api.replicate.com/v1/predictions/c4vfcdjwahrgc0cgaa89mzhqq4/cancel",
+          "get": "https://api.replicate.com/v1/predictions/c4vfcdjwahrgc0cgaa89mzhqq4"
+        },
+        "version": "b08782b399f76e0671f48e564cf5efc9a89941ed12399b8deae21b04abbb7b4c"
+      },
+      "headers": {
+        "alt-svc": ["h3=\":443\"; ma=86400"],
+        "cf-cache-status": ["DYNAMIC"],
+        "cf-ray": ["899a16525a817504-CBR"],
+        "connection": ["keep-alive"],
+        "content-type": ["application/json; charset=utf-8"],
+        "date": ["Wed, 26 Jun 2024 03:24:56 GMT"],
+        "nel": [
+          "{\"success_fraction\":0,\"report_to\":\"cf-nel\",\"max_age\":604800}"
+        ],
+        "ratelimit-remaining": ["59999"],
+        "ratelimit-reset": ["1"],
+        "report-to": [
+          "{\"endpoints\":[{\"url\":\"https:\\/\\/a.nel.cloudflare.com\\/report\\/v4?s=qu7gFJ5Fope04XChpxLZqqTUFN4Of7IjjfF%2FCSgFuHw7yEf0nLDwgRG4PiSryDw2AJ3ug1JU%2Ffso9z95RrOnfpKOY2E4ZNyfHv8oIFdjNfDiPWhq3eGgjTzxsTSXdO%2BLdqW4\"}],\"group\":\"cf-nel\",\"max_age\":604800}"
+        ],
+        "server": ["cloudflare"],
+        "strict-transport-security": ["max-age=15552000"],
+        "transfer-encoding": ["chunked"],
+        "via": ["1.1 google"]
+      },
+      "private": {},
+      "status": 200,
+      "trailers": {}
+    }
+  },
+  "Elixir.Panic.Models.LLaMa3Instruct8B": {
+    "input": "this is a test input... what's your response?",
+    "output_fragment": "testing my response",
+    "response": {
+      "body": {
+        "completed_at": "2024-06-26T03:24:58.468277142Z",
+        "created_at": "2024-06-26T03:24:57.201Z",
+        "data_removed": false,
+        "error": null,
+        "id": "rkzq36hky5rgp0cgaa9sr26tmr",
+        "input": {
+          "prompt": "this is a test input... what's your response?"
+        },
+        "logs": "Random seed used: `98646`\nNote: Random seed will not impact output if greedy decoding is used.\nFormatted prompt: `<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nYou are a helpful assistant<|eot_id|><|start_header_id|>user<|end_header_id|>\n\nthis is a test input... what's your response?<|eot_id|><|start_header_id|>assistant<|end_header_id|>`Random seed used: `98646`\nNote: Random seed will not impact output if greedy decoding is used.\nFormatted prompt: `<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nYou are a helpful assistant<|eot_id|><|start_header_id|>user<|end_header_id|>\n\nthis is a test input... what's your response?<|eot_id|><|start_header_id|>assistant<|end_header_id|>`",
+        "metrics": {
+          "batch_size": 12.906846838016726,
+          "input_token_count": 30,
+          "output_token_count": 85,
+          "predict_time": 1.266209962,
+          "predict_time_share": 0.09805291841477108,
+          "time_to_first_token": 0.050941178,
+          "tokens_per_second": 69.94337476539675
+        },
+        "model": "replicate-internal/llama-3-8b-instruct-fp16-triton",
+        "output": [
+          "\n\n",
+          "It",
+          " seems",
+          " like",
+          " you",
+          "'re",
+          " testing",
+          " my",
+          " response",
+          "!",
+          " That",
+          "'s",
+          " perfectly",
+          " fine",
+          ".",
+          " I",
+          "'m",
+          " happy",
+          " to",
+          " help",
+          " with",
+          " any",
+          " questions",
+          " or",
+          " topics",
+          " you",
+          "'d",
+          " like",
+          " to",
+          " discuss",
+          ".\n\n",
+          "Since",
+          " this",
+          " is",
+          " a",
+          " test",
+          " input",
+          ",",
+          " I",
+          "'ll",
+          " respond",
+          " with",
+          " a",
+          " friendly",
+          " message",
+          ":",
+          " \"",
+          "Hello",
+          "!",
+          " I",
+          "'m",
+          " here",
+          " to",
+          " assist",
+          " you",
+          " with",
+          " any",
+          " questions",
+          " or",
+          " topics",
+          " you",
+          "'d",
+          " like",
+          " to",
+          " explore",
+          ".",
+          " What",
+          "'s",
+          " on",
+          " your",
+          " mind",
+          ",",
+          " or",
+          " is",
+          " there",
+          " something",
+          " specific",
+          " you",
+          "'d",
+          " like",
+          " to",
+          " chat",
+          " about",
+          "?\""
+        ],
+        "started_at": "2024-06-26T03:24:57.20206718Z",
+        "status": "succeeded",
+        "urls": {
+          "cancel": "https://api.replicate.com/v1/predictions/rkzq36hky5rgp0cgaa9sr26tmr/cancel",
+          "get": "https://api.replicate.com/v1/predictions/rkzq36hky5rgp0cgaa9sr26tmr"
+        },
+        "version": "dp-a557b7387b4940df25b23f779dc534c4"
+      },
+      "headers": {
+        "alt-svc": ["h3=\":443\"; ma=86400"],
+        "cf-cache-status": ["DYNAMIC"],
+        "cf-ray": ["899a1660dc337504-CBR"],
+        "connection": ["keep-alive"],
+        "content-type": ["application/json; charset=utf-8"],
+        "date": ["Wed, 26 Jun 2024 03:24:58 GMT"],
+        "nel": [
+          "{\"success_fraction\":0,\"report_to\":\"cf-nel\",\"max_age\":604800}"
+        ],
+        "ratelimit-remaining": ["59999"],
+        "ratelimit-reset": ["1"],
+        "report-to": [
+          "{\"endpoints\":[{\"url\":\"https:\\/\\/a.nel.cloudflare.com\\/report\\/v4?s=%2Fw5B6dWaQZki46LB%2F47t72vC%2BJ%2FVO%2B3zn6DO1CmPVL0wPIcMv92SGJoLvY6BAdvnCEHeGo%2BJfv2X7JFeyu9FGAKClKf82ThX8wVm1DjVHt7C6IuDj0gn4hGoOt5BzyJTTcxe\"}],\"group\":\"cf-nel\",\"max_age\":604800}"
+        ],
+        "server": ["cloudflare"],
+        "strict-transport-security": ["max-age=15552000"],
+        "transfer-encoding": ["chunked"]
+      },
+      "private": {},
+      "status": 200,
+      "trailers": {}
+    }
+  },
+  "Elixir.Panic.Models.SDXL": {
+    "input": "this is a test input... what's your response?",
+    "output_fragment": "out-0.png",
+    "response": {
+      "private": {},
+      "status": 200,
+      "body": {
+        "completed_at": "2024-06-26T03:25:07.565069779Z",
+        "created_at": "2024-06-26T03:24:59.279Z",
+        "data_removed": false,
+        "error": null,
+        "id": "54zcpv9w1xrgm0cgaa9rnhs52g",
+        "input": {
+          "guidance_scale": 7.5,
+          "height": 576,
+          "num_inference_steps": 50,
+          "prompt": "this is a test input... what's your response?",
+          "width": 1024
+        },
+        "logs": "Using seed: 62270\nPrompt: this is a test input... what's your response?\ntxt2img mode\n  0%|          | 0/50 [00:00<?, ?it/s]\n  2%|▏         | 1/50 [00:00<00:06,  8.15it/s]\n  4%|▍         | 2/50 [00:00<00:05,  8.10it/s]\n  6%|▌         | 3/50 [00:00<00:05,  8.07it/s]\n  8%|▊         | 4/50 [00:00<00:05,  8.06it/s]\n 10%|█         | 5/50 [00:00<00:05,  8.04it/s]\n 12%|█▏        | 6/50 [00:00<00:05,  8.03it/s]\n 14%|█▍        | 7/50 [00:00<00:05,  8.03it/s]\n 16%|█▌        | 8/50 [00:00<00:05,  8.02it/s]\n 18%|█▊        | 9/50 [00:01<00:05,  8.01it/s]\n 20%|██        | 10/50 [00:01<00:04,  8.01it/s]\n 22%|██▏       | 11/50 [00:01<00:04,  8.01it/s]\n 24%|██▍       | 12/50 [00:01<00:04,  8.01it/s]\n 26%|██▌       | 13/50 [00:01<00:04,  8.01it/s]\n 28%|██▊       | 14/50 [00:01<00:04,  8.01it/s]\n 30%|███       | 15/50 [00:01<00:04,  8.00it/s]\n 32%|███▏      | 16/50 [00:01<00:04,  8.01it/s]\n 34%|███▍      | 17/50 [00:02<00:04,  8.00it/s]\n 36%|███▌      | 18/50 [00:02<00:03,  8.01it/s]\n 38%|███▊      | 19/50 [00:02<00:03,  8.01it/s]\n 40%|████      | 20/50 [00:02<00:03,  8.01it/s]\n 42%|████▏     | 21/50 [00:02<00:03,  8.00it/s]\n 44%|████▍     | 22/50 [00:02<00:03,  8.00it/s]\n 46%|████▌     | 23/50 [00:02<00:03,  8.00it/s]\n 48%|████▊     | 24/50 [00:02<00:03,  8.00it/s]\n 50%|█████     | 25/50 [00:03<00:03,  8.00it/s]\n 52%|█████▏    | 26/50 [00:03<00:02,  8.00it/s]\n 54%|█████▍    | 27/50 [00:03<00:02,  8.00it/s]\n 56%|█████▌    | 28/50 [00:03<00:02,  8.01it/s]\n 58%|█████▊    | 29/50 [00:03<00:02,  8.01it/s]\n 60%|██████    | 30/50 [00:03<00:02,  8.00it/s]\n 62%|██████▏   | 31/50 [00:03<00:02,  8.00it/s]\n 64%|██████▍   | 32/50 [00:03<00:02,  7.99it/s]\n 66%|██████▌   | 33/50 [00:04<00:02,  7.99it/s]\n 68%|██████▊   | 34/50 [00:04<00:01,  8.00it/s]\n 70%|███████   | 35/50 [00:04<00:01,  8.00it/s]\n 72%|███████▏  | 36/50 [00:04<00:01,  8.01it/s]\n 74%|███████▍  | 37/50 [00:04<00:01,  8.00it/s]\n 76%|███████▌  | 38/50 [00:04<00:01,  8.00it/s]\n 78%|███████▊  | 39/50 [00:04<00:01,  7.99it/s]\n 80%|████████  | 40/50 [00:04<00:01,  7.99it/s]\n 82%|████████▏ | 41/50 [00:05<00:01,  7.99it/s]\n 84%|████████▍ | 42/50 [00:05<00:01,  8.00it/s]\n 86%|████████▌ | 43/50 [00:05<00:00,  8.00it/s]\n 88%|████████▊ | 44/50 [00:05<00:00,  8.00it/s]\n 90%|█████████ | 45/50 [00:05<00:00,  7.99it/s]\n 92%|█████████▏| 46/50 [00:05<00:00,  7.99it/s]\n 94%|█████████▍| 47/50 [00:05<00:00,  7.99it/s]\n 96%|█████████▌| 48/50 [00:05<00:00,  7.98it/s]\n 98%|█████████▊| 49/50 [00:06<00:00,  7.98it/s]\n100%|██████████| 50/50 [00:06<00:00,  7.99it/s]\n100%|██████████| 50/50 [00:06<00:00,  8.01it/s]\n",
+        "metrics": {
+          "predict_time": 8.240177264
+        },
+        "model": "stability-ai/sdxl",
+        "output": [
+          "https://replicate.delivery/pbxt/hhgbR4R2o75KDVVVTANTqbf4dGU7fKGRBAv5edWE4fsIBPJMB/out-0.png"
+        ],
+        "started_at": "2024-06-26T03:24:59.324892515Z",
+        "status": "succeeded",
+        "urls": {
+          "cancel": "https://api.replicate.com/v1/predictions/54zcpv9w1xrgm0cgaa9rnhs52g/cancel",
+          "get": "https://api.replicate.com/v1/predictions/54zcpv9w1xrgm0cgaa9rnhs52g"
+        },
+        "version": "7762fd07cf82c948538e41f63f77d685e02b063e37e496e96eefd46c929f9bdc"
+      },
+      "headers": {
+        "alt-svc": ["h3=\":443\"; ma=86400"],
+        "cf-cache-status": ["DYNAMIC"],
+        "cf-ray": ["899a169bbe0c7504-CBR"],
+        "connection": ["keep-alive"],
+        "content-type": ["application/json; charset=utf-8"],
+        "date": ["Wed, 26 Jun 2024 03:25:08 GMT"],
+        "nel": [
+          "{\"success_fraction\":0,\"report_to\":\"cf-nel\",\"max_age\":604800}"
+        ],
+        "ratelimit-remaining": ["59999"],
+        "ratelimit-reset": ["1"],
+        "report-to": [
+          "{\"endpoints\":[{\"url\":\"https:\\/\\/a.nel.cloudflare.com\\/report\\/v4?s=VT8X1iouryZEIlIQCNiGu5qHHj92%2FooLf4cBk43EnM66dPyR1LFjGdF8hJv58hYdbcJ8jbNGqio%2BM7bFXi9jHpj7S2Ad9bNNdACgkFB7geOW5yMtl9jed2RwbvGMxUpibqmr\"}],\"group\":\"cf-nel\",\"max_age\":604800}"
+        ],
+        "server": ["cloudflare"],
+        "strict-transport-security": ["max-age=15552000"],
+        "transfer-encoding": ["chunked"]
+      },
+      "trailers": {}
+    }
+  },
+  "Elixir.Panic.Models.StableDiffusion": {
+    "input": "this is a test input... what's your response?",
+    "output_fragment": "out-0.png",
+    "response": {
+      "body": {
+        "completed_at": "2024-06-26T03:21:49.451185834Z",
+        "created_at": "2024-06-26T03:21:46.62Z",
+        "data_removed": false,
+        "error": null,
+        "id": "22wv13tbfhrgc0cgaa887zbv94",
+        "input": {
+          "guidance_scale": 7.5,
+          "height": 576,
+          "num_inference_steps": 50,
+          "prompt": "this is a test input... what's your response?",
+          "width": 1024
+        },
+        "logs": "Using seed: 49391\n  0%|          | 0/50 [00:00<?, ?it/s]\n  6%|▌         | 3/50 [00:00<00:02, 23.19it/s]\n 12%|█▏        | 6/50 [00:00<00:01, 23.19it/s]\n 18%|█▊        | 9/50 [00:00<00:01, 23.18it/s]\n 24%|██▍       | 12/50 [00:00<00:01, 23.17it/s]\n 30%|███       | 15/50 [00:00<00:01, 23.17it/s]\n 36%|███▌      | 18/50 [00:00<00:01, 23.18it/s]\n 42%|████▏     | 21/50 [00:00<00:01, 23.17it/s]\n 48%|████▊     | 24/50 [00:01<00:01, 23.17it/s]\n 54%|█████▍    | 27/50 [00:01<00:00, 23.18it/s]\n 60%|██████    | 30/50 [00:01<00:00, 23.17it/s]\n 66%|██████▌   | 33/50 [00:01<00:00, 23.17it/s]\n 72%|███████▏  | 36/50 [00:01<00:00, 23.17it/s]\n 78%|███████▊  | 39/50 [00:01<00:00, 23.18it/s]\n 84%|████████▍ | 42/50 [00:01<00:00, 23.18it/s]\n 90%|█████████ | 45/50 [00:01<00:00, 23.20it/s]\n 96%|█████████▌| 48/50 [00:02<00:00, 23.20it/s]\n100%|██████████| 50/50 [00:02<00:00, 23.18it/s]\n",
+        "metrics": {
+          "predict_time": 2.818355678
+        },
+        "model": "stability-ai/stable-diffusion",
+        "output": [
+          "https://replicate.delivery/czjl/J3fIKmjtntUTGCCU5jDZHSiKXbtwESBB7MagAHNebflaanEmA/out-0.png"
+        ],
+        "started_at": "2024-06-26T03:21:46.632830172Z",
+        "status": "succeeded",
+        "urls": {
+          "cancel": "https://api.replicate.com/v1/predictions/22wv13tbfhrgc0cgaa887zbv94/cancel",
+          "get": "https://api.replicate.com/v1/predictions/22wv13tbfhrgc0cgaa887zbv94"
+        },
+        "version": "ac732df83cea7fff18b8472768c88ad041fa750ff7682a21affe81863cbe77e4"
+      },
+      "headers": {
+        "alt-svc": ["h3=\":443\"; ma=86400"],
+        "cf-cache-status": ["DYNAMIC"],
+        "cf-ray": ["899a11c4adcb7504-CBR"],
+        "connection": ["keep-alive"],
+        "content-type": ["application/json; charset=utf-8"],
+        "date": ["Wed, 26 Jun 2024 03:21:49 GMT"],
+        "nel": [
+          "{\"success_fraction\":0,\"report_to\":\"cf-nel\",\"max_age\":604800}"
+        ],
+        "ratelimit-remaining": ["59999"],
+        "ratelimit-reset": ["1"],
+        "report-to": [
+          "{\"endpoints\":[{\"url\":\"https:\\/\\/a.nel.cloudflare.com\\/report\\/v4?s=fDgKO%2FBGeWQ8qy4aLJsgkYPg%2Ffhg1q7GrrBOGtuDrXF%2FxgYRmDwQxM2qa9Q%2BjXMAJ1Uwm9kPYT4Bh9Wy7B6idYEsJdeyskYw7VGBtwe5FGY4unLZE4I9yzzKmEWrph3IZj46\"}],\"group\":\"cf-nel\",\"max_age\":604800}"
+        ],
+        "server": ["cloudflare"],
+        "strict-transport-security": ["max-age=15552000"],
+        "transfer-encoding": ["chunked"],
+        "via": ["1.1 google"]
+      },
+      "private": {},
+      "status": 200,
+      "trailers": {}
+    }
+  }
+}
