@@ -77,4 +77,21 @@ defmodule Panic.Platforms.Replicate do
     |> Keyword.merge(opts)
     |> Req.new()
   end
+
+  @doc "helper function for preparing canned responses for testing"
+  def append_resp_to_canned_data(resp) do
+    filename =
+      "test/support/canned_responses/replicate.json"
+
+    filename
+    |> File.read!()
+    |> Jason.decode!()
+    |> Map.put(resp.body["model"], %{
+      "input" => resp.body["input"]["prompt"],
+      "output_fragment" => "TODO",
+      "response" => Map.from_struct(resp)
+    })
+    |> Jason.encode!(pretty: true)
+    |> then(fn data -> File.write!(filename, data) end)
+  end
 end

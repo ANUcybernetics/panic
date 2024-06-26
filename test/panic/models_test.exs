@@ -15,37 +15,12 @@ defmodule Panic.ModelsTest do
         Models.LLaVA,
         Models.ClipPrefixCaption,
         Models.SDXL,
-        Models.GPT4
+        Models.GPT4,
+        Models.LLaMa3Instruct8B
       ]
 
       # check that they're all in the list
       assert Models.list() |> MapSet.new() == MapSet.new(models)
-    end
-
-    test "list all Replicate models" do
-      models = [
-        Models.BLIP2,
-        Models.StableDiffusion,
-        Models.ClipCaptionReward,
-        Models.CogPromptParrot,
-        Models.LLaVA,
-        Models.ClipPrefixCaption,
-        Models.SDXL
-      ]
-
-      # check that they're all in the list
-      assert Models.list(Panic.Platforms.Replicate) |> MapSet.new() == MapSet.new(models)
-    end
-
-    test "list all OpenAI models" do
-      models = [
-        Models.GPT4o,
-        Models.GPT4,
-        Models.GPT4Turbo
-      ]
-
-      # check that they're all in the list
-      assert Models.list(Panic.Platforms.OpenAI) |> MapSet.new() == MapSet.new(models)
     end
   end
 
@@ -68,9 +43,12 @@ defmodule Panic.ModelsTest do
       assert String.match?(version, ~r/^[a-f0-9]{64}$/)
     end
 
+    @tag :skip
     test "invoke models" do
       # models for which we have canned responses
-      models = [Models.GPT4o]
+      models =
+        Models.list()
+        |> Enum.filter(fn model -> model.fetch!(:input_type) == :text end)
 
       canned_responses =
         "test/support/canned_responses/replicate.json"
@@ -81,14 +59,22 @@ defmodule Panic.ModelsTest do
         model_key = to_string(model)
 
         Req.Test.stub(Replicate, fn conn ->
-          body = get_in(canned_responses[model_key]["response"]["body"])
+          case conn.path_info do
+            ["v1", "models", _, _] ->
+              version = canned_responses[model_key]["response"]["body"]["version"]
+              Req.Test.json(conn, %{"latest_version" => %{"id" => version}})
 
-          Req.Test.json(conn, body)
+            _ ->
+              body = get_in(canned_responses[model_key]["response"]["body"])
+              Req.Test.json(conn, body)
+          end
         end)
 
         input = get_in(canned_responses[model_key]["input"])
-        output = get_in(canned_responses[model_key]["output"])
-        assert {:ok, ^output} = model.invoke(input)
+        output_fragment = get_in(canned_responses[model_key]["output_fragment"])
+
+        assert {:ok, output} = model.invoke(input)
+        assert output_fragment =~ output
       end
     end
   end

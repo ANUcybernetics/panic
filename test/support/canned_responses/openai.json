@@ -1,0 +1,173 @@
+{
+  "Elixir.Panic.Models.GPT4": {
+    "input": "here's some test input",
+    "output_fragment": "tests or physical actions",
+    "response": {
+      "private": {},
+      "status": 200,
+      "body": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "logprobs": null,
+            "message": {
+              "content": "As an AI, I don't perform tests or physical actions. However, I can help you analyze or understand your input. Please provide more information or context.",
+              "role": "assistant"
+            }
+          }
+        ],
+        "created": 1719373683,
+        "id": "chatcmpl-9eDvXU1GTvELz2O7NNLbn02z9l45H",
+        "model": "gpt-4-0613",
+        "object": "chat.completion",
+        "system_fingerprint": null,
+        "usage": {
+          "completion_tokens": 32,
+          "prompt_tokens": 12,
+          "total_tokens": 44
+        }
+      },
+      "headers": {
+        "alt-svc": ["h3=\":443\"; ma=86400"],
+        "cf-cache-status": ["DYNAMIC"],
+        "cf-ray": ["899a3830af2055bf-CBR"],
+        "connection": ["keep-alive"],
+        "content-type": ["application/json"],
+        "date": ["Wed, 26 Jun 2024 03:48:05 GMT"],
+        "openai-organization": ["anu-school-of-cybernetics"],
+        "openai-processing-ms": ["1361"],
+        "openai-version": ["2020-10-01"],
+        "server": ["cloudflare"],
+        "set-cookie": [
+          "__cf_bm=ZzDLLIR3UjGgtC18oxj5uF5yx.aEYW9m.g3I9EHPNKc-1719373685-1.0.1.1-7Mu1auHts6OOlpEtI8VkU.cYjG.yW_9ZWbIFEHpaf4NEA1PoCUGRcjkDVuO1fzeyxWrGG27XW2xmQISEhp5_ZQ; path=/; expires=Wed, 26-Jun-24 04:18:05 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None",
+          "_cfuvid=qjTB_0v2VDRe6RqBSK581mpGsMiNZTa9RT0FMXhR_sw-1719373685002-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None"
+        ],
+        "strict-transport-security": ["max-age=31536000; includeSubDomains"],
+        "transfer-encoding": ["chunked"],
+        "x-ratelimit-limit-requests": ["5000"],
+        "x-ratelimit-limit-tokens": ["40000"],
+        "x-ratelimit-remaining-requests": ["4999"],
+        "x-ratelimit-remaining-tokens": ["39943"],
+        "x-ratelimit-reset-requests": ["12ms"],
+        "x-ratelimit-reset-tokens": ["85ms"],
+        "x-request-id": ["53f60ba6d551406a53ef500af73bd787"]
+      },
+      "trailers": {}
+    }
+  },
+  "Elixir.Panic.Models.GPT4Turbo": {
+    "input": "here's some test input",
+    "output_fragment": "let me know what you need",
+    "response": {
+      "body": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "logprobs": null,
+            "message": {
+              "content": "Sure, I'm here to help! Please provide the test input and let me know what you need assistance with.",
+              "role": "assistant"
+            }
+          }
+        ],
+        "created": 1719373682,
+        "id": "chatcmpl-9eDvWEbyMz6oIpLSh0Hdm1lbzdoRY",
+        "model": "gpt-4-turbo-2024-04-09",
+        "object": "chat.completion",
+        "system_fingerprint": "fp_9d7f5c6195",
+        "usage": {
+          "completion_tokens": 23,
+          "prompt_tokens": 12,
+          "total_tokens": 35
+        }
+      },
+      "headers": {
+        "alt-svc": ["h3=\":443\"; ma=86400"],
+        "cf-cache-status": ["DYNAMIC"],
+        "cf-ray": ["899a38280b2655bf-CBR"],
+        "connection": ["keep-alive"],
+        "content-type": ["application/json"],
+        "date": ["Wed, 26 Jun 2024 03:48:03 GMT"],
+        "openai-organization": ["anu-school-of-cybernetics"],
+        "openai-processing-ms": ["1112"],
+        "openai-version": ["2020-10-01"],
+        "server": ["cloudflare"],
+        "set-cookie": [
+          "__cf_bm=spi14dvjZLMR19gzbJ3bdtyu.ywbB09_IFaR_Tb83ho-1719373683-1.0.1.1-umE7m1NP6K2eb944tLtcrAladfMfBszxXu76MKnnCH7pHRQq1YPNtp9g3hLN7Yb9uRYBLSyErVa4LoX89TPYWQ; path=/; expires=Wed, 26-Jun-24 04:18:03 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None",
+          "_cfuvid=BdHe1oH6o9UBChpepnF7yY4QfEX0n5jh9jGWV6Bs3e4-1719373683298-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None"
+        ],
+        "strict-transport-security": ["max-age=31536000; includeSubDomains"],
+        "transfer-encoding": ["chunked"],
+        "x-ratelimit-limit-requests": ["500"],
+        "x-ratelimit-limit-tokens": ["450000"],
+        "x-ratelimit-remaining-requests": ["499"],
+        "x-ratelimit-remaining-tokens": ["449943"],
+        "x-ratelimit-reset-requests": ["120ms"],
+        "x-ratelimit-reset-tokens": ["7ms"],
+        "x-request-id": ["0c1ab97756ef67ee21c9a5ab3389a71b"]
+      },
+      "private": {},
+      "status": 200,
+      "trailers": {}
+    }
+  },
+  "Elixir.Panic.Models.GPT4o": {
+    "input": "here's some test input",
+    "output_fragment": "happy to help with your test input!",
+    "response": {
+      "body": {
+        "choices": [
+          {
+            "finish_reason": "length",
+            "index": 0,
+            "logprobs": null,
+            "message": {
+              "content": "Sure, I'd be happy to help with your test input! Could you please provide more context or specify what kind of test input you are referring to? For example, are you working on a software application, a data analysis project, or something else?",
+              "role": "assistant"
+            }
+          }
+        ],
+        "created": 1719373681,
+        "id": "chatcmpl-9eDvV9cpzcm1e5vzCibU2CBAjH5at",
+        "model": "gpt-4o-2024-05-13",
+        "object": "chat.completion",
+        "system_fingerprint": "fp_5bf7397cd3",
+        "usage": {
+          "completion_tokens": 50,
+          "prompt_tokens": 12,
+          "total_tokens": 62
+        }
+      },
+      "headers": {
+        "alt-svc": ["h3=\":443\"; ma=86400"],
+        "cf-cache-status": ["DYNAMIC"],
+        "cf-ray": ["899a381e4e0255bf-CBR"],
+        "connection": ["keep-alive"],
+        "content-type": ["application/json"],
+        "date": ["Wed, 26 Jun 2024 03:48:01 GMT"],
+        "openai-organization": ["anu-school-of-cybernetics"],
+        "openai-processing-ms": ["835"],
+        "openai-version": ["2020-10-01"],
+        "server": ["cloudflare"],
+        "set-cookie": [
+          "__cf_bm=MIJKXWoT5KQxvbyWFFc5ASgaUfBL2_NOe4oYYXKeB18-1719373681-1.0.1.1-NTYFCOZ1uVP.X0yi1.v4W1uM5n4g4jRLKesxjHPa6PSPz5vd9zjulMf285vlmrisso81efhxqa8g6x_M_3uyRA; path=/; expires=Wed, 26-Jun-24 04:18:01 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None",
+          "_cfuvid=smtFD8zpa6MCj9Uu0nLE7Kzy2TjtkJyMLKSaCbuwTcQ-1719373681912-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None"
+        ],
+        "strict-transport-security": ["max-age=31536000; includeSubDomains"],
+        "transfer-encoding": ["chunked"],
+        "x-ratelimit-limit-requests": ["5000"],
+        "x-ratelimit-limit-tokens": ["450000"],
+        "x-ratelimit-remaining-requests": ["4999"],
+        "x-ratelimit-remaining-tokens": ["449942"],
+        "x-ratelimit-reset-requests": ["12ms"],
+        "x-ratelimit-reset-tokens": ["7ms"],
+        "x-request-id": ["93a9010f75eb19d50258630a45c1b304"]
+      },
+      "private": {},
+      "status": 200,
+      "trailers": {}
+    }
+  }
+}

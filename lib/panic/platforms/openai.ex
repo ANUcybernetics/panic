@@ -60,4 +60,21 @@ defmodule Panic.Platforms.OpenAI do
     )
     |> Req.new()
   end
+
+  @doc "helper function for preparing canned responses for testing"
+  def append_resp_to_canned_data(resp) do
+    filename =
+      "test/support/canned_responses/openai.json"
+
+    filename
+    |> File.read!()
+    |> Jason.decode!()
+    |> Map.put(resp.body["model"], %{
+      "input" => "TODO",
+      "output_fragment" => "TODO",
+      "response" => Map.from_struct(resp)
+    })
+    |> Jason.encode!(pretty: true)
+    |> then(fn data -> File.write!(filename, data) end)
+  end
 end
