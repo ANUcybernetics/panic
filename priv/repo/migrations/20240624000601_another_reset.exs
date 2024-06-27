@@ -1,4 +1,4 @@
-defmodule :"Elixir.Panic.Repo.Migrations.Another-pseudo-reset" do
+defmodule Panic.Repo.Migrations.AnotherReset do
   @moduledoc """
   Updates resources based on their most recent snapshots.
 
@@ -62,11 +62,16 @@ defmodule :"Elixir.Panic.Repo.Migrations.Another-pseudo-reset" do
           null: false
 
       add :value, :text, null: false
-      add :name, :text, null: false, primary_key: true
+      add :name, :text, null: false
+      add :id, :bigserial, null: false, primary_key: true
     end
+
+    create unique_index(:api_tokens, [:name, :value], name: "api_tokens_token_index")
   end
 
   def down do
+    drop_if_exists unique_index(:api_tokens, [:name, :value], name: "api_tokens_token_index")
+
     drop constraint(:api_tokens, "api_tokens_user_id_fkey")
 
     drop table(:api_tokens)

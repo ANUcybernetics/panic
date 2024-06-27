@@ -100,8 +100,8 @@
         "table": "networks",
         "multitenancy": {
           "global": null,
-          "strategy": null,
-          "attribute": null
+          "attribute": null,
+          "strategy": null
         },
         "primary_key?": true,
         "destination_attribute": "id",
@@ -117,13 +117,13 @@
     }
   ],
   "table": "invocations",
-  "hash": "DB18D21C8163490161D5113BFFEC7EBD3FA7B24BA0496A5CE2891FA2CC23F1D6",
+  "hash": "3622E2D1FC1C53FD3876CDE5084888831175553F14C12D6EF91C28E73CFE4AAD",
   "repo": "Elixir.Panic.Repo",
   "identities": [],
   "multitenancy": {
     "global": null,
-    "strategy": null,
-    "attribute": null
+    "attribute": null,
+    "strategy": null
   },
   "base_filter": null,
   "custom_indexes": [],

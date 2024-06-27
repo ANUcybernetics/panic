@@ -32,7 +32,7 @@
     }
   ],
   "table": "users",
-  "hash": "A6455BC7BF68A5F464E453577AB0272FF01CC9D078105C1B93060FA1E11C058A",
+  "hash": "D68BAC6F9840B07DF0E33BBD66A1E4220851B2B12AC47B703B795EFAE06FC07F",
   "repo": "Elixir.Panic.Repo",
   "identities": [
     {
@@ -46,8 +46,8 @@
   ],
   "multitenancy": {
     "global": null,
-    "strategy": null,
-    "attribute": null
+    "attribute": null,
+    "strategy": null
   },
   "base_filter": null,
   "custom_indexes": [],

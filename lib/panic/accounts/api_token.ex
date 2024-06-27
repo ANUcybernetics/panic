@@ -9,6 +9,8 @@ defmodule Panic.Accounts.ApiToken do
   end
 
   attributes do
+    integer_primary_key :id
+
     attribute :name, :atom do
       constraints one_of: [
                     :replicate,
@@ -19,7 +21,6 @@ defmodule Panic.Accounts.ApiToken do
                     :vestaboard_panic_4
                   ]
 
-      primary_key? true
       allow_nil? false
     end
 

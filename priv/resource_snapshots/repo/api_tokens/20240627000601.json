@@ -3,12 +3,22 @@
     {
       "default": "nil",
       "size": null,
+      "type": "bigint",
+      "source": "id",
+      "references": null,
+      "allow_nil?": false,
+      "generated?": true,
+      "primary_key?": true
+    },
+    {
+      "default": "nil",
+      "size": null,
       "type": "text",
       "source": "name",
       "references": null,
       "allow_nil?": false,
       "generated?": false,
-      "primary_key?": true
+      "primary_key?": false
     },
     {
       "default": "nil",
@@ -30,8 +40,8 @@
         "table": "users",
         "multitenancy": {
           "global": null,
-          "strategy": null,
-          "attribute": null
+          "attribute": null,
+          "strategy": null
         },
         "primary_key?": true,
         "destination_attribute": "id",
@@ -47,13 +57,23 @@
     }
   ],
   "table": "api_tokens",
-  "hash": "055898B197D4594B83B98DF37C429736A29469AD2BB106AC4AA71026E485F77E",
+  "hash": "B1B8F4631E46DDDDBE1649E2042AE3B5D3DCB8D206B6889AF07ED6E4B0308366",
   "repo": "Elixir.Panic.Repo",
-  "identities": [],
+  "identities": [
+    {
+      "name": "token",
+      "keys": [
+        "name",
+        "value"
+      ],
+      "index_name": "api_tokens_token_index",
+      "base_filter": null
+    }
+  ],
   "multitenancy": {
     "global": null,
-    "strategy": null,
-    "attribute": null
+    "attribute": null,
+    "strategy": null
   },
   "base_filter": null,
   "custom_indexes": [],
