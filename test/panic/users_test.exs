@@ -25,10 +25,10 @@ defmodule Panic.UsersTest do
 
         token =
           Panic.Accounts.ApiToken
-          |> Ash.Query.for_read(:by_name, %{name: name}, actor: user)
-          |> Ash.read!()
+          |> Ash.Query.for_read(:get_by_name, %{name: name}, actor: user)
+          |> Ash.read_one!()
 
-        assert token.user.id == user.id
+        assert token.user_id == user.id
         assert token.value == value
       end
     end
@@ -52,6 +52,22 @@ defmodule Panic.UsersTest do
         |> Ash.Changeset.for_create(:create, %{name: name, value: value}, actor: user)
         |> Ash.create!()
       end
+    end
+
+    test "get token by name" do
+      name = :openai
+      value = string(:ascii, min_length: 1) |> pick()
+      user = Panic.Generators.user_fixture()
+
+      Panic.Accounts.create_api_token!(name, value, actor: user)
+
+      token =
+        Panic.Accounts.ApiToken
+        |> Ash.Query.for_read(:get_by_name, %{name: name})
+        |> Ash.read_one!()
+
+      assert token.name == :openai
+      assert token.value == value
     end
   end
 
@@ -111,7 +127,6 @@ defmodule Panic.UsersTest do
       [token1] =
         Ash.load!(user1, :api_tokens)
         |> Map.get(:api_tokens)
-        |> dbg()
 
       assert token1.name == :replicate
       assert token1.value == value1
