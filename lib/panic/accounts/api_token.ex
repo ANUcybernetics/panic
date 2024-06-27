@@ -1,7 +1,8 @@
 defmodule Panic.Accounts.ApiToken do
   use Ash.Resource,
     domain: Panic.Accounts,
-    data_layer: AshSqlite.DataLayer
+    data_layer: AshSqlite.DataLayer,
+    authorizers: [Ash.Policy.Authorizer]
 
   sqlite do
     table "api_tokens"
@@ -50,5 +51,11 @@ defmodule Panic.Accounts.ApiToken do
 
   relationships do
     belongs_to :user, Panic.Accounts.User, allow_nil?: false
+  end
+
+  policies do
+    policy always() do
+      authorize_if always()
+    end
   end
 end
