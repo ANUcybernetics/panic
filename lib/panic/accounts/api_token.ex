@@ -38,6 +38,10 @@ defmodule Panic.Accounts.ApiToken do
     end
   end
 
+  identities do
+    identity :token, [:name, :user_id]
+  end
+
   relationships do
     belongs_to :user, Panic.Accounts.User, allow_nil?: false
   end
