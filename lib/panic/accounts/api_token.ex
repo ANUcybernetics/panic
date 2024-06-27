@@ -36,6 +36,12 @@ defmodule Panic.Accounts.ApiToken do
       accept [:name, :value]
       change relate_actor(:user)
     end
+
+    read :get_by_name do
+      argument :name, :atom
+      get? true
+      filter expr(name == ^arg(:name))
+    end
   end
 
   identities do
