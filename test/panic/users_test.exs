@@ -82,6 +82,28 @@ defmodule Panic.UsersTest do
       assert token.name == :openai
       assert token.value == value
     end
+
+    test "only list api tokens belonging to user" do
+      user1 = Panic.Generators.user_fixture()
+      user2 = Panic.Generators.user_fixture()
+      value1 = string(:ascii, min_length: 1) |> pick()
+      value2 = string(:ascii, min_length: 1) |> pick()
+
+      Panic.Accounts.create_api_token!(:replicate, value1, actor: user1)
+      Panic.Accounts.create_api_token!(:replicate, value2, actor: user2)
+
+      # check that user1 can't read user2's tokens
+      token1 = Panic.Accounts.get_token!(:replicate, actor: user1)
+
+      assert token1.name == :replicate
+      assert token1.value == value1
+
+      # check that user2 can't read user1's tokens
+      token2 = Panic.Accounts.get_token!(:replicate, actor: user2)
+
+      assert token2.name == :replicate
+      assert token2.value == value2
+    end
   end
 
   describe "CRUD actions" do
@@ -121,36 +143,5 @@ defmodule Panic.UsersTest do
       assert replicate_token.value == token_value
     end
 
-    test "only list api tokens belonging to user" do
-      user1 = Panic.Generators.user_fixture()
-      user2 = Panic.Generators.user_fixture()
-      value1 = string(:ascii, min_length: 1) |> pick()
-      value2 = string(:ascii, min_length: 1) |> pick()
-
-      Panic.Accounts.ApiToken
-      |> Ash.Changeset.for_create(:create, %{name: :replicate, value: value1}, actor: user1)
-      |> Ash.create!()
-
-      # user2 has an :openai token
-      Panic.Accounts.ApiToken
-      |> Ash.Changeset.for_create(:create, %{name: :replicate, value: value2}, actor: user2)
-      |> Ash.create!()
-
-      # check that user1 can't read user2's tokens
-      [token1] =
-        Ash.load!(user1, :api_tokens)
-        |> Map.get(:api_tokens)
-
-      assert token1.name == :replicate
-      assert token1.value == value1
-
-      # check that user2 can't read user1's tokens
-      [token2] =
-        Ash.load!(user2, :api_tokens)
-        |> Map.get(:api_tokens)
-
-      assert token2.name == :replicate
-      assert token2.value == value2
-    end
   end
 end
