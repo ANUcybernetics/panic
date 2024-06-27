@@ -69,6 +69,19 @@ defmodule Panic.UsersTest do
       assert token.name == :openai
       assert token.value == value
     end
+
+    test "get token by name (code interface version)" do
+      name = :openai
+      value = string(:ascii, min_length: 1) |> pick()
+      user = Panic.Generators.user_fixture()
+
+      Panic.Accounts.create_api_token!(name, value, actor: user)
+
+      token = Panic.Accounts.get_token!(name, actor: user)
+
+      assert token.name == :openai
+      assert token.value == value
+    end
   end
 
   describe "CRUD actions" do
