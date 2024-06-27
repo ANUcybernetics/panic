@@ -63,7 +63,7 @@ defmodule Panic.UsersTest do
 
       token =
         Panic.Accounts.ApiToken
-        |> Ash.Query.for_read(:get_by_name, %{name: name})
+        |> Ash.Query.for_read(:get_by_name, %{name: name}, actor: user)
         |> Ash.read_one!()
 
       assert token.name == :openai
