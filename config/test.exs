@@ -38,8 +38,3 @@ config :panic, Oban, testing: :inline
 # Do NOT set this value for production
 config :bcrypt_elixir, log_rounds: 1
 config :panic, :token_signing_secret, "keep_out"
-
-config :panic,
-  replicate_req_options: [plug: {Req.Test, Panic.Platforms.Replicate}],
-  openai_req_options: [plug: {Req.Test, Panic.Platforms.OpenAI}],
-  vestaboard_req_options: [plug: {Req.Test, Panic.Platforms.Vestaboard}]

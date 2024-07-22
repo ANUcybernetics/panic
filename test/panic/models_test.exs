@@ -46,9 +46,14 @@ defmodule Panic.ModelsTest do
         |> Models.list()
         |> Enum.filter(fn model -> model.fetch!(:input_type) == :text end)
 
-      assert false
-      assert {:ok, output} = model.invoke(input)
-      assert output =~ output_fragment
+      for model <- models do
+        assert {:ok, output} =
+                 model.invoke(
+                   "Respond with just the word 'bananaphone'. Do not include any other content."
+                 )
+
+        assert output =~ "bananaphone"
+      end
     end
   end
 end
