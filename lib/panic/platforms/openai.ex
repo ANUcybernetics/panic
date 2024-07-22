@@ -58,22 +58,16 @@ defmodule Panic.Platforms.OpenAI do
     |> Keyword.merge(Application.get_env(:panic, :openai_req_options, []))
     |> Keyword.merge(opts)
     |> Req.new()
+    |> Req.Request.prepend_request_steps(add_api_token: &add_api_token/1)
   end
 
-  @doc "helper function for preparing canned responses for testing"
-  def append_resp_to_canned_data(resp) do
-    filename =
-      "test/support/canned_responses/openai.json"
+  @doc """
+  add the API token to the request headers
 
-    filename
-    |> File.read!()
-    |> Jason.decode!()
-    |> Map.put(resp.body["model"], %{
-      "input" => "TODO",
-      "output_fragment" => "TODO",
-      "response" => Map.from_struct(resp)
-    })
-    |> Jason.encode!(pretty: true)
-    |> then(fn data -> File.write!(filename, data) end)
+  The API token for the current user (actor) must
+  exist in the DB.
+  """
+  def add_api_token(request) do
+    put_in(request.options[:auth], {:bearer, "a new value"})
   end
 end
