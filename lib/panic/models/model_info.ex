@@ -18,12 +18,22 @@ defmodule Panic.Models.ModelInfo do
   various versions of `create/3` in this module) and trying to keep that code in
   sync with this info in the database would be a nightmare.
   """
+  @type t :: %__MODULE__{
+          id: String.t(),
+          path: String.t(),
+          name: String.t(),
+          platform: Panic.Platforms.OpenAI | Panic.Platforms.Replicate,
+          input_type: :text | :audio | :image,
+          output_type: :text | :audio | :image,
+          description: String.t(),
+          homepage: String.t() | nil
+        }
 
   def model_url(%__MODULE__{platform: Panic.Platforms.OpenAI}) do
     "https://platform.openai.com/docs/models/overview"
   end
 
-  def model_url(%__MODULE__{platform: Panic.Models.Platforms.Replicate, path: path}) do
+  def model_url(%__MODULE__{platform: Panic.Platforms.Replicate, path: path}) do
     "https://replicate.com/#{path}"
   end
 end
