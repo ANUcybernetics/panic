@@ -7,7 +7,6 @@ defmodule Panic.Models.ModelInfo do
 
   - `id`: string used as a unique identifier for the model
   - `path`: path to the hosted model (exactly how that translates into the final URL depends on the platform)
-  - `version`: (optional, for replicate models) specify a specific version hash to use
   - `name`: human readable name for the model
   - `description`: brief description of the model (supports markdown)
   - `input_type`: input type (either `:text`, `:image` or `:audio`)
