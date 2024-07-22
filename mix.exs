@@ -34,7 +34,7 @@ defmodule Panic.MixProject do
     [
       {:phoenix, "~> 1.7.12"},
       {:phoenix_ecto, "~> 4.4"},
-      {:ash, "~> 3.0.0"},
+      {:ash, "~> 3.0"},
       {:ash_sqlite, "~> 0.1.2"},
       {:ash_phoenix, "~> 2.0.0"},
       {:ecto_sql, "~> 3.10"},
