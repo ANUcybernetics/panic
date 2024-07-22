@@ -63,4 +63,15 @@ defmodule Panic.Generators do
   def user_fixture() do
     user() |> pick()
   end
+
+  def user_with_real_tokens_fixture() do
+    user = user_fixture()
+    replicate_token = System.get_env("REPLICATE_API_TOKEN")
+    openai_token = System.get_env("OPENAI_API_TOKEN")
+
+    Panic.Accounts.create_api_token!(:replicate, replicate_token, actor: user)
+    Panic.Accounts.create_api_token!(:openai, openai_token, actor: user)
+
+    user
+  end
 end
