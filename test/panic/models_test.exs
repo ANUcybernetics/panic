@@ -50,10 +50,10 @@ defmodule Panic.ModelsTest do
       for model <- models do
         assert {:ok, output} =
                  model.invoke(
-                   "Respond with just the word 'bananaphone'. Do not include any other content."
+                   "Respond with just the word 'bananaphone'. Do not include any other content (even punctuation)."
                  )
 
-        assert output =~ "bananaphone"
+        assert output == "bananaphone"
       end
     end
   end
