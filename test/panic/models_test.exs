@@ -39,6 +39,7 @@ defmodule Panic.ModelsTest do
       assert String.match?(version, ~r/^[a-f0-9]{64}$/)
     end
 
+    @tag skip: "costs money"
     test "OpenAI models" do
       # models for which we have canned responses
       models =
