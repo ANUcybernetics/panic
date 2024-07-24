@@ -1,6 +1,7 @@
 # Panic TODO
 
 - get the platform modules to pull API keys from the user
+- put access control on all resources (with tests)
 - upgrade to liveview 1.0-rc
 - put a frontend on 'er (adding views as per the notebook sketches)
 - add nice Ash.Errors (Splode) errors for the different AI platform call failure
@@ -19,7 +20,6 @@
   @num_grid_slots from the db (based on :genesis_id) and pre-populate the grid
   slots
 - write model descriptions
-- test that access control works for the network & prediction
 - add network permalinks (look in the history - there's some deleted `router.ex`
   code in there)
 - add oblique strategies model (GPT-4 powered)
