@@ -27,13 +27,13 @@ defmodule Panic.Generators do
   def invocation(user) do
     gen all(
           input <-
-            Ash.Generator.action_input(Panic.Engine.Invocation, :create_first, %{
+            Ash.Generator.action_input(Panic.Engine.Invocation, :prepare_first, %{
               # need at least one, otherwise Panic.Changes.Invoke will raise
               network: network(user, min_length: 1)
             })
         ) do
       Panic.Engine.Invocation
-      |> Ash.Changeset.for_create(:create_first, input)
+      |> Ash.Changeset.for_create(:prepare_first, input)
       |> Ash.create!()
     end
   end

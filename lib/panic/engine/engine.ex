@@ -11,8 +11,8 @@ defmodule Panic.Engine do
 
   resources do
     resource Panic.Engine.Invocation do
-      define :create_first, args: [:network, :input], action: :create_first
-      define :create_next, args: [:parent, :input], action: :create_next
+      define :prepare_first, args: [:network, :input], action: :prepare_first
+      define :prepare_next, args: [:parent, :input], action: :prepare_next
       define :get_invocation, args: [:id], action: :by_id
     end
   end

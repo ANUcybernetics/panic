@@ -6,9 +6,9 @@ defmodule Panic.InvocationTest do
   describe "CRUD actions" do
     # now if our action inputs are invalid when we think they should be valid, we will find out here
     property "accepts all valid input (with networks of length at least 1)" do
-      check all(input <- input_for_create_first(min_length: 1)) do
+      check all(input <- input_for_prepare_first(min_length: 1)) do
         assert %Ash.Changeset{valid?: true} =
-                 Panic.Engine.changeset_to_create_first(
+                 Panic.Engine.changeset_to_prepare_first(
                    input.network,
                    input.input,
                    authorize?: false
@@ -17,9 +17,9 @@ defmodule Panic.InvocationTest do
     end
 
     property "throws error when network has no models" do
-      check all(input <- input_for_create_first(length: 0)) do
+      check all(input <- input_for_prepare_first(length: 0)) do
         assert %Ash.Changeset{valid?: false} =
-                 Panic.Engine.changeset_to_create_first(
+                 Panic.Engine.changeset_to_prepare_first(
                    input.network,
                    input.input,
                    authorize?: false
@@ -32,13 +32,13 @@ defmodule Panic.InvocationTest do
 
       check all(
               input <-
-                Ash.Generator.action_input(Panic.Engine.Invocation, :create_first, %{
+                Ash.Generator.action_input(Panic.Engine.Invocation, :prepare_first, %{
                   network: Panic.Generators.network(user, min_length: 1),
                   input: integer()
                 })
             ) do
         assert %Ash.Changeset{valid?: false} =
-                 Panic.Engine.changeset_to_create_first(
+                 Panic.Engine.changeset_to_prepare_first(
                    input.network,
                    input.input,
                    authorize?: false
@@ -49,23 +49,23 @@ defmodule Panic.InvocationTest do
     property "succeeds on all valid input" do
       user = Panic.Generators.user_fixture()
 
-      check all(input <- input_for_create_first(min_length: 1)) do
+      check all(input <- input_for_prepare_first(min_length: 1)) do
         invocation =
           Invocation
-          |> Ash.Changeset.for_create(:create_first, input, actor: user)
+          |> Ash.Changeset.for_create(:prepare_first, input, actor: user)
           |> Ash.create!()
 
         assert invocation.network_id == input.network.id
         assert invocation.input == input.input
         assert invocation.output == nil
         assert invocation.sequence_number == 0
-        assert invocation.run_number == nil
+        assert invocation.run_number == invocation.id
       end
     end
 
     property "succeeds on all valid input (code interface version)" do
-      check all(input <- input_for_create_first(min_length: 1)) do
-        Panic.Engine.create_first!(
+      check all(input <- input_for_prepare_first(min_length: 1)) do
+        Panic.Engine.prepare_first!(
           input.network,
           input.input,
           authorize?: false
@@ -94,10 +94,10 @@ defmodule Panic.InvocationTest do
     end
   end
 
-  defp input_for_create_first(opts) do
+  defp input_for_prepare_first(opts) do
     user = Panic.Generators.user_fixture()
 
-    Ash.Generator.action_input(Panic.Engine.Invocation, :create_first, %{
+    Ash.Generator.action_input(Panic.Engine.Invocation, :prepare_first, %{
       network: Panic.Generators.network(user, opts)
     })
   end

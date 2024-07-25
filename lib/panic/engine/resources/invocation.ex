@@ -18,11 +18,11 @@ defmodule Panic.Engine.Invocation do
     integer_primary_key :id
 
     attribute :input, :string, allow_nil?: false
-    attribute :model, :module
+    attribute :model, :module, allow_nil?: false
+    attribute :metadata, :map, allow_nil?: false, default: %{}
     attribute :output, :string
 
     attribute :sequence_number, :integer do
-      default 0
       constraints min: 0
       allow_nil? false
     end
@@ -31,7 +31,6 @@ defmodule Panic.Engine.Invocation do
       constraints min: 0
     end
 
-    attribute :metadata, :map, default: %{}, allow_nil?: false
     create_timestamp :inserted_at
     update_timestamp :updated_at
   end
@@ -45,19 +44,73 @@ defmodule Panic.Engine.Invocation do
       filter expr(id == ^arg(:id))
     end
 
-    create :create_first do
+    # maybe "prepare"?
+    create :prepare_first do
       accept [:input]
-      argument :network, :map, allow_nil?: false
-      change Panic.Changes.Invoke
+
+      argument :network, :struct do
+        constraints instance_of: Panic.Engine.Network
+        allow_nil? false
+      end
+
+      change set_attribute(:sequence_number, 0)
+
+      change fn changeset, _context ->
+        {:ok, network} = Ash.Changeset.fetch_argument(changeset, :network)
+        network_length = Enum.count(network.models)
+
+        if network_length == 0 do
+          Ash.Changeset.add_error(changeset, "No models in network")
+        else
+          changeset
+          |> Ash.Changeset.change_attribute(:model, List.first(network.models))
+          |> Ash.Changeset.manage_relationship(:network, network, type: :append_and_remove)
+        end
+      end
+
+      # for "first runs", we need to wait until the invocation is created in the db (so it gets an id)
+      # and then set the :run_number field to that value (hence this "update record in after action hook" thing)
+      change after_action(fn changeset, invocation, _context ->
+               invocation
+               |> Ash.Changeset.for_update(:set_run_number, %{run_number: invocation.id})
+               |> Ash.update!()
+               |> then(&{:ok, &1})
+             end)
     end
 
-    create :create_next do
-      argument :parent_id, :integer, allow_nil?: false
+    update :set_run_number do
+      accept [:run_number]
     end
 
-    update :finalise do
-      accept [:output]
-      change set_attribute(:output, arg(:output))
+    create :prepare_next do
+      argument :previous_invocation, :struct do
+        constraints instance_of: __MODULE__
+        allow_nil? false
+      end
+    end
+
+    update :invoke do
+      change fn changeset, _context ->
+        case Ash.Changeset.fetch_change(changeset, :input) do
+          {:ok, _input} ->
+            network = changeset.arguments.network
+            models = network.models
+
+            if length(models) == 0 do
+              Ash.Changeset.add_error(changeset, "No models in network")
+            else
+              model_index = Integer.mod(changeset.attributes.sequence_number, Enum.count(models))
+              model = models |> Enum.at(model_index)
+
+              changeset
+              |> Ash.Changeset.change_attribute(:model, model)
+              |> Ash.Changeset.manage_relationship(:network, network, type: :append_and_remove)
+            end
+
+          :error ->
+            changeset
+        end
+      end
     end
   end
 
