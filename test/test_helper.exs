@@ -24,7 +24,7 @@ defmodule Panic.Generators do
     end
   end
 
-  def invocation(user) do
+  def first_invocation(user) do
     gen all(
           input <-
             Ash.Generator.action_input(Panic.Engine.Invocation, :prepare_first, %{

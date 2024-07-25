@@ -75,21 +75,32 @@ defmodule Panic.InvocationTest do
 
     # TODO what's the best way with property testing to test that it gives the right invalid changeset on invalid input?
 
-    property "Invocation read action" do
+    property "Invocation missing read action throws Invalid error" do
       user = Panic.Generators.user_fixture()
 
-      check all(invocation <- Panic.Generators.invocation(user)) do
+      check all(invocation <- Panic.Generators.first_invocation(user)) do
         assert invocation.id == Panic.Engine.get_invocation!(invocation.id).id
         # there shouldn't ever be a negative ID in the db, so this should always raise
         assert_raise Ash.Error.Invalid, fn -> Ash.get!(Invocation, -1) end
       end
     end
 
-    property "Invocation finalise action" do
+    property "Invocation pre-invocation has no output" do
       user = Panic.Generators.user_fixture()
 
-      check all(invocation <- Panic.Generators.invocation(user)) do
-        assert invocation.output == "not yet done"
+      check all(invocation <- Panic.Generators.first_invocation(user)) do
+        refute invocation.input == nil
+        assert invocation.output == nil
+        assert invocation.id == invocation.run_number
+      end
+    end
+
+    property "invoke the invocation" do
+      user = Panic.Generators.user_fixture()
+
+      check all(invocation <- Panic.Generators.first_invocation(user)) do
+        invoked = Panic.Engine.invoke!(invocation)
+        refute invoked.output == nil
       end
     end
   end

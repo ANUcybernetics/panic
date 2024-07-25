@@ -87,29 +87,34 @@ defmodule Panic.Engine.Invocation do
         constraints instance_of: __MODULE__
         allow_nil? false
       end
+
+      change fn changeset, _context ->
+        {:ok, previous_invocation} = Ash.Changeset.fetch_argument(changeset, :previous_invocation)
+
+        %{
+          network: %{models: models} = network,
+          run_number: run_number,
+          sequence_number: prev_sequence_number
+        } = previous_invocation
+
+        model_index = Integer.mod(prev_sequence_number + 1, Enum.count(models))
+        model = Enum.at(models, model_index)
+
+        changeset
+        |> Ash.Changeset.change_attribute(:model, model)
+        |> Ash.Changeset.change_attribute(:run_number, run_number)
+        |> Ash.Changeset.manage_relationship(:network, network, type: :append_and_remove)
+      end
     end
 
     update :invoke do
       change fn changeset, _context ->
-        case Ash.Changeset.fetch_change(changeset, :input) do
-          {:ok, _input} ->
-            network = changeset.arguments.network
-            models = network.models
+        %{model: model, input: input} = changeset.data
 
-            if length(models) == 0 do
-              Ash.Changeset.add_error(changeset, "No models in network")
-            else
-              model_index = Integer.mod(changeset.attributes.sequence_number, Enum.count(models))
-              model = models |> Enum.at(model_index)
+        {:ok, output} = model.invoke(input)
 
-              changeset
-              |> Ash.Changeset.change_attribute(:model, model)
-              |> Ash.Changeset.manage_relationship(:network, network, type: :append_and_remove)
-            end
-
-          :error ->
-            changeset
-        end
+        changeset
+        |> Ash.Changeset.change_attribute(:output, output)
       end
     end
   end
