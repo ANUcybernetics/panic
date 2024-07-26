@@ -43,7 +43,7 @@ defmodule Panic.Engine.Network do
   end
 
   actions do
-    defaults [:read, :destroy]
+    defaults [:destroy]
 
     create :create do
       accept [:name, :description, :models]
