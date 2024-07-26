@@ -115,6 +115,7 @@ defmodule Panic.InvocationTest do
       end
     end
 
+    # this is a big test - almost an integration test
     property "create a run of invocations" do
       run_length = 100
 
@@ -133,6 +134,12 @@ defmodule Panic.InvocationTest do
 
       invocations =
         Panic.Engine.all_in_run!(network_id, first_invocation.run_number)
+
+      invocations
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.each(fn [a, b] ->
+        assert a.output == b.input
+      end)
 
       assert Enum.count(invocations) == run_length
       sequence_numbers = Enum.map(invocations, & &1.sequence_number)
