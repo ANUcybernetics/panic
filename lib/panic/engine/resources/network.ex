@@ -51,9 +51,8 @@ defmodule Panic.Engine.Network do
     end
 
     read :by_id do
-      argument :id, :integer
-      get? true
-      filter expr(id == ^arg(:id))
+      get_by :id
+      primary? true
     end
 
     update :append_model do
