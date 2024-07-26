@@ -135,16 +135,19 @@ defmodule Panic.InvocationTest do
       invocations =
         Panic.Engine.all_in_run!(network_id, first_invocation.run_number)
 
+      # check outputs match inputs
       invocations
       |> Enum.chunk_every(2, 1, :discard)
       |> Enum.each(fn [a, b] ->
         assert a.output == b.input
       end)
 
+      # check the right number of invocations generated, and returned in the right order
       assert Enum.count(invocations) == run_length
       sequence_numbers = Enum.map(invocations, & &1.sequence_number)
       assert sequence_numbers = Enum.sort(sequence_numbers, :asc)
 
+      # check the most recent invocation action works
       most_recent = Panic.Engine.most_recent_invocation!(network_id)
       assert most_recent.sequence_number == Enum.max(sequence_numbers)
     end
