@@ -41,7 +41,7 @@ defmodule Panic.Engine.Invocation do
     read :most_recently_updated do
       argument :network_id, :integer
       filter expr(network_id == ^arg(:network_id))
-      prepare build(sort: [:updated_at], limit: 1)
+      prepare build(sort: [updated_at: :desc], limit: 1)
       get? true
     end
 
