@@ -120,6 +120,7 @@ defmodule Panic.InvocationTest do
 
       user = Panic.Generators.user_fixture()
       first_invocation = Panic.Generators.first_invocation(user) |> pick()
+      network_id = first_invocation.network.id
 
       first_invocation
       |> Stream.iterate(fn inv ->
@@ -131,9 +132,14 @@ defmodule Panic.InvocationTest do
       |> Stream.run()
 
       invocations =
-        Panic.Engine.all_in_run!(first_invocation.network.id, first_invocation.run_number)
+        Panic.Engine.all_in_run!(network_id, first_invocation.run_number)
 
       assert Enum.count(invocations) == run_length
+      sequence_numbers = Enum.map(invocations, & &1.sequence_number)
+      assert sequence_numbers = Enum.sort(sequence_numbers, :asc)
+
+      most_recent = Panic.Engine.most_recent_invocation!(network_id)
+      assert most_recent.sequence_number == Enum.max(sequence_numbers)
     end
   end
 
