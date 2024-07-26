@@ -122,8 +122,7 @@ defmodule Panic.Engine.Invocation do
       change fn changeset, _context ->
         %{model: model, input: input} = changeset.data
 
-        # {:ok, output} = model.invoke(input)
-        output = "fake output"
+        {:ok, output} = model.invoke(input)
 
         changeset
         |> Ash.Changeset.change_attribute(:output, output)
