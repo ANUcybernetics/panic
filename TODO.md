@@ -1,5 +1,7 @@
 # Panic TODO
 
+- add the read actions (all in run, latest invocation, etc.)
+- add model validation
 - get the platform modules to pull API keys from the user
 - put access control on all resources (with tests)
 - upgrade to liveview 1.0-rc

@@ -81,7 +81,7 @@ defmodule Panic.InvocationTest do
       check all(invocation <- Panic.Generators.first_invocation(user)) do
         assert invocation.id == Panic.Engine.get_invocation!(invocation.id).id
         # there shouldn't ever be a negative ID in the db, so this should always raise
-        assert_raise Ash.Error.Invalid, fn -> Ash.get!(Invocation, -1) end
+        assert_raise Ash.Error.Query.NotFound, fn -> Panic.Engine.get_invocation!(-1) end
       end
     end
 
@@ -129,6 +129,11 @@ defmodule Panic.InvocationTest do
       end)
       |> Stream.take(run_length)
       |> Stream.run()
+
+      invocations =
+        Panic.Engine.all_in_run!(first_invocation.network.id, first_invocation.run_number)
+
+      assert Enum.count(invocations) == run_length
     end
   end
 

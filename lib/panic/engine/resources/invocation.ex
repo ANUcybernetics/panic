@@ -36,12 +36,20 @@ defmodule Panic.Engine.Invocation do
   end
 
   actions do
-    defaults [:read]
+    read :by_id, get_by: :id
 
-    read :by_id do
-      argument :id, :integer
+    read :most_recently_updated do
+      argument :network_id, :integer
+      filter expr(network_id == ^arg(:network_id))
+      prepare build(sort: [:updated_at], limit: 1)
       get? true
-      filter expr(id == ^arg(:id))
+    end
+
+    read :all_in_run do
+      argument :network_id, :integer
+      argument :run_number, :integer
+      prepare build(sort: [sequence_number: :asc])
+      filter expr(network_id == ^arg(:network_id) and run_number == ^arg(:run_number))
     end
 
     # maybe "prepare"?
