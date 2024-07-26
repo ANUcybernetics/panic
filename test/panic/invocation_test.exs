@@ -103,6 +103,33 @@ defmodule Panic.InvocationTest do
         refute invoked.output == nil
       end
     end
+
+    property "invoke and prepare next" do
+      user = Panic.Generators.user_fixture()
+
+      check all(invocation <- Panic.Generators.first_invocation(user)) do
+        invoked = Panic.Engine.invoke!(invocation)
+        next = Panic.Engine.prepare_next!(invoked)
+        assert invoked.run_number == next.run_number
+        assert invoked.sequence_number + 1 == next.sequence_number
+      end
+    end
+
+    property "create a run of invocations" do
+      run_length = 100
+
+      user = Panic.Generators.user_fixture()
+      first_invocation = Panic.Generators.first_invocation(user) |> pick()
+
+      first_invocation
+      |> Stream.iterate(fn inv ->
+        inv
+        |> Panic.Engine.invoke!()
+        |> Panic.Engine.prepare_next!()
+      end)
+      |> Stream.take(run_length)
+      |> Stream.run()
+    end
   end
 
   defp input_for_prepare_first(opts) do

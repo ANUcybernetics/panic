@@ -94,7 +94,8 @@ defmodule Panic.Engine.Invocation do
         %{
           network: %{models: models} = network,
           run_number: run_number,
-          sequence_number: prev_sequence_number
+          sequence_number: prev_sequence_number,
+          output: prev_output
         } = previous_invocation
 
         model_index = Integer.mod(prev_sequence_number + 1, Enum.count(models))
@@ -103,6 +104,8 @@ defmodule Panic.Engine.Invocation do
         changeset
         |> Ash.Changeset.change_attribute(:model, model)
         |> Ash.Changeset.change_attribute(:run_number, run_number)
+        |> Ash.Changeset.change_attribute(:sequence_number, prev_sequence_number + 1)
+        |> Ash.Changeset.change_attribute(:input, prev_output)
         |> Ash.Changeset.manage_relationship(:network, network, type: :append_and_remove)
       end
     end
@@ -111,7 +114,8 @@ defmodule Panic.Engine.Invocation do
       change fn changeset, _context ->
         %{model: model, input: input} = changeset.data
 
-        {:ok, output} = model.invoke(input)
+        # {:ok, output} = model.invoke(input)
+        output = "fake output"
 
         changeset
         |> Ash.Changeset.change_attribute(:output, output)
