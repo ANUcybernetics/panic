@@ -148,7 +148,7 @@ defmodule Panic.InvocationTest do
       assert sequence_numbers = Enum.sort(sequence_numbers, :asc)
 
       # check the most recent invocation action works
-      most_recent = Panic.Engine.most_recent_invocation!(network_id)
+      [most_recent] = Panic.Engine.most_recent_invocations!(network_id, 1)
       assert most_recent.sequence_number == Enum.max(sequence_numbers)
     end
   end

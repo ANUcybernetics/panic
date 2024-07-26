@@ -16,7 +16,11 @@ defmodule Panic.Engine do
       define :invoke, args: [], action: :invoke
       define :get_invocation, args: [:id], action: :by_id
       define :all_in_run, args: [:network_id, :run_number], action: :all_in_run, get?: false
-      define :most_recent_invocation, args: [:network_id], action: :most_recently_updated
+
+      define :most_recent_invocations,
+        args: [:network_id, :limit],
+        action: :most_recent,
+        get?: false
     end
   end
 end
