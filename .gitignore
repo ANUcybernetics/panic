@@ -44,3 +44,5 @@ npm-debug.log
 
 # Sobelow
 .sobelow
+
+/config/*.secrets.exs
