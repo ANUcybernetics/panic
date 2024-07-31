@@ -66,7 +66,7 @@ defmodule Panic.Platforms.Replicate do
 
   defp req_new(opts) do
     # FIXME get it from `user.api_tokens` instead
-    token = System.get_env("REPLICATE_API_TOKEN")
+    token = Application.get_env(:panic, :api_tokens, :replicate)
 
     [
       base_url: "https://api.replicate.com/v1/",

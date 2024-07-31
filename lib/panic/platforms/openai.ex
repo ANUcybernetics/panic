@@ -48,7 +48,7 @@ defmodule Panic.Platforms.OpenAI do
   end
 
   defp req_new(opts) do
-    token = System.get_env("OPENAI_API_TOKEN")
+    token = Application.get_env(:panic, :api_tokens, :openai)
 
     [
       base_url: "https://api.openai.com/v1",
