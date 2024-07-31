@@ -87,6 +87,17 @@ defmodule Panic.NetworkTest do
         assert network.state == state
       end
     end
+
+    property "can append models with correct modality" do
+      user = Panic.Generators.user_fixture()
+
+      check all(
+              network <- Panic.Generators.network(user),
+              text_input_model <- Panic.Generators.model(input_type: :text)
+            ) do
+        _network = Panic.Engine.append_model!(network, text_input_model)
+      end
+    end
   end
 
   defp input_for_create do

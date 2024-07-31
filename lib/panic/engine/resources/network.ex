@@ -60,11 +60,16 @@ defmodule Panic.Engine.Network do
       argument :model, Ash.Type.Module, allow_nil?: false
 
       change fn changeset, _ ->
-        set_attribute(
-          changeset,
-          :models,
-          List.insert_at(changeset.data.models, -1, :model)
-        )
+        %{models: models} = changeset.data
+        models = models ++ [Ash.Changeset.get_argument(changeset, :model)]
+
+        case validate_model_io_types(models) do
+          :ok ->
+            Ash.Changeset.change_attribute(changeset, :models, models)
+
+          {:error, message} ->
+            Ash.Changeset.add_error(changeset, field: :models, message: message)
+        end
       end
     end
 
@@ -84,5 +89,31 @@ defmodule Panic.Engine.Network do
 
   relationships do
     belongs_to :user, Panic.Accounts.User, allow_nil?: false
+  end
+
+  def validate_model_io_types(models) do
+    # validate that each "interface" matches
+    models
+    |> Enum.map(&{&1.fetch!(:name), &1.fetch!(:input_type), &1.fetch!(:output_type)})
+    # hack to ensure first input is :text
+    |> List.insert_at(0, {"Initial input", nil, :text})
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.reduce([], fn [{name_1, _, output_type}, {name_2, input_type, _}], errors ->
+      if output_type == input_type do
+        errors
+      else
+        [
+          "#{name_1} output (#{output_type}) does not match #{name_2} input (#{input_type})"
+          | errors
+        ]
+      end
+    end)
+    |> case do
+      [] ->
+        :ok
+
+      error_string ->
+        {:error, Enum.join(error_string, ", ")}
+    end
   end
 end
