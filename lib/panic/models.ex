@@ -1,21 +1,36 @@
 defmodule Panic.Models do
-  def list do
+  # this is a bit gross, because the :__info__ callback is meant to be used at runtime, so this
+  # will cause weird errors in tests. Mostly useful for printing out the list of Models, which
+  # can be manually kept in sync for use in `list/0` and `list/1`
+  def list_model_modules do
     :code.all_loaded()
-    |> Enum.filter(fn {mod, _} -> implements_model(mod) end)
+    |> Enum.filter(fn {mod, _} -> mod != :elixir_bootstrap end)
+    |> Enum.filter(fn {mod, _} -> function_exported?(mod, :__info__, 1) end)
+    |> Enum.filter(fn {mod, _} ->
+      behaviours = Keyword.get(mod.__info__(:attributes), :behaviour, [])
+      Panic.Model in behaviours
+    end)
     |> Enum.map(fn {mod, _} -> mod end)
+  end
+
+  def list do
+    [
+      Panic.Models.ClipPrefixCaption,
+      Panic.Models.BLIP2,
+      Panic.Models.CogPromptParrot,
+      Panic.Models.GPT4Turbo,
+      Panic.Models.SDXL,
+      Panic.Models.GPT4,
+      Panic.Models.LLaVA,
+      Panic.Models.StableDiffusion,
+      Panic.Models.ClipCaptionReward,
+      Panic.Models.GPT4o,
+      Panic.Models.LLaMa3Instruct8B
+    ]
   end
 
   def list(platform) do
     list()
     |> Enum.filter(fn model -> model.fetch!(:platform) == platform end)
-  end
-
-  defp implements_model(module) do
-    if function_exported?(module, :__info__, 1) do
-      behaviours = Keyword.get(module.__info__(:attributes), :behaviour, [])
-      Panic.Model in behaviours
-    else
-      false
-    end
   end
 end
