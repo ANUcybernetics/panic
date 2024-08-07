@@ -31,6 +31,13 @@ defmodule Panic.ModelsTest do
       # check that they're all in the list
       assert Models.list() |> MapSet.new() == MapSet.new(models)
     end
+
+    test "generator can filter models by type" do
+      text_input_model = Panic.Generators.model(input_type: :text) |> pick()
+      assert text_input_model.fetch!(:input_type) == :text
+      image_ouput_model = Panic.Generators.model(output_type: :image) |> pick()
+      assert image_ouput_model.fetch!(:output_type) == :image
+    end
   end
 
   describe "Replicate models" do

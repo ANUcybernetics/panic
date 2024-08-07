@@ -8,7 +8,8 @@ defmodule Panic.Generators do
   use ExUnitProperties
 
   def model(filters \\ []) do
-    StreamData.one_of(Panic.Models.list())
+    Panic.Models.list()
+    |> one_of()
     |> filter(fn model ->
       filters
       |> Enum.map(fn {output, type} -> model.fetch!(output) == type end)
