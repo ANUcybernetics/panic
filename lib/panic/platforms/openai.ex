@@ -11,6 +11,9 @@ defmodule Panic.Platforms.OpenAI do
         %{"data" => data} = body
         data
 
+      {:ok, %Req.Response{body: %{"error" => %{"message" => message}}}} ->
+        {:error, message}
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -41,6 +44,9 @@ defmodule Panic.Platforms.OpenAI do
           %{"choices" => [%{"message" => %{"content" => text}}]} -> {:ok, text}
           _ -> {:error, :unexpected_response_format}
         end
+
+      {:ok, %Req.Response{body: %{"error" => %{"message" => message}}}} ->
+        {:error, message}
 
       {:error, reason} ->
         {:error, reason}

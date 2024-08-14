@@ -7,6 +7,9 @@ defmodule Panic.Platforms.Replicate do
         %{"latest_version" => %{"id" => id}} = body
         id
 
+      {:ok, %Req.Response{body: %{"detail" => message}}} ->
+        {:error, message}
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -18,6 +21,9 @@ defmodule Panic.Platforms.Replicate do
     |> case do
       {:ok, %Req.Response{body: body, status: 200}} ->
         body
+
+      {:ok, %Req.Response{body: %{"detail" => message}}} ->
+        {:error, message}
     end
   end
 
@@ -40,6 +46,9 @@ defmodule Panic.Platforms.Replicate do
             ## recursion case; doesn't need a tuple
             get(prediction_id)
         end
+
+      {:ok, %Req.Response{body: %{"detail" => message}}} ->
+        {:error, message}
 
       {:error, reason} ->
         {:error, reason}
