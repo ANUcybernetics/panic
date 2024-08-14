@@ -38,11 +38,12 @@ defmodule Panic.Generators do
   def user_with_tokens do
     gen all(user <- user()) do
       # TODO check these work!
-      replicate_token = Application.get_env(:panic, :api_tokens) |> Keyword.fetch!(:replicate)
-      openai_token = Application.get_env(:panic, :api_tokens) |> Keyword.fetch!(:openai)
+      Application.get_env(:panic, :api_tokens)
+      |> Enum.each(fn {name, value} ->
+        Panic.Accounts.create_api_token!(name, value, actor: user)
+      end)
 
-      Panic.Accounts.create_api_token!(:replicate, replicate_token, actor: user)
-      Panic.Accounts.create_api_token!(:openai, openai_token, actor: user)
+      Ash.get!(Panic.Accounts.User, user.id)
     end
   end
 

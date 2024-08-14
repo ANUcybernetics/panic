@@ -33,6 +33,24 @@ defmodule Panic.UsersTest do
       end
     end
 
+    property "can read (real) tokens from user_with_tokens generator" do
+      token_names = [
+        :replicate,
+        :openai,
+        :vestaboard_panic_1,
+        :vestaboard_panic_2,
+        :vestaboard_panic_3,
+        :vestaboard_panic_4
+      ]
+
+      check all(
+              user <- Panic.Generators.user_with_tokens(),
+              token_name <- one_of(token_names)
+            ) do
+        Panic.Accounts.get_token!(token_name, actor: user)
+      end
+    end
+
     test "create token via code interface" do
       name = :openai
       value = string(:ascii, min_length: 1) |> pick()
