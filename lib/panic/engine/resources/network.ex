@@ -83,7 +83,7 @@ defmodule Panic.Engine.Network do
 
     update :set_state do
       argument :state, :atom, allow_nil?: false
-      change set_attribute(:state, arg(:state))
+      change atomic_update(:state, arg(:state))
     end
   end
 

@@ -80,7 +80,7 @@ defmodule Panic.NetworkTest do
               network <- Panic.Generators.network(user),
               state <- member_of([:starting, :running, :paused, :stopped])
             ) do
-        network = Panic.Engine.set_state!(network.id, state)
+        network = Panic.Engine.set_state!(network, state)
         assert network.state == state
       end
     end
