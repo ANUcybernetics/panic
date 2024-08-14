@@ -13,7 +13,7 @@ defmodule Panic.Models do
     |> Enum.map(fn {mod, _} -> mod end)
   end
 
-  def list do
+  def list() do
     [
       Panic.Models.ClipPrefixCaption,
       Panic.Models.BLIP2,
@@ -29,8 +29,12 @@ defmodule Panic.Models do
     ]
   end
 
-  def list(platform) do
+  def list(filters) do
     list()
-    |> Enum.filter(fn model -> model.fetch!(:platform) == platform end)
+    |> Enum.filter(fn model ->
+      filters
+      |> Enum.map(fn {output, type} -> model.fetch!(output) == type end)
+      |> Enum.all?()
+    end)
   end
 end
