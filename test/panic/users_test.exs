@@ -5,7 +5,7 @@ defmodule Panic.UsersTest do
 
   describe "ApiToken resource actions" do
     test "set api token (for all valid token names)" do
-      user = Panic.Generators.user_fixture()
+      user = Panic.Fixtures.user()
 
       token_names = [
         :replicate,
@@ -36,13 +36,13 @@ defmodule Panic.UsersTest do
     test "create token via code interface" do
       name = :openai
       value = string(:ascii, min_length: 1) |> pick()
-      user = Panic.Generators.user_fixture()
+      user = Panic.Fixtures.user()
 
       Panic.Accounts.create_api_token!(name, value, actor: user)
     end
 
     test "fails with unsupported api token" do
-      user = Panic.Generators.user_fixture()
+      user = Panic.Fixtures.user()
 
       name = :unsupported_token
       value = string(:ascii, min_length: 1) |> pick()
@@ -57,7 +57,7 @@ defmodule Panic.UsersTest do
     test "get token by name" do
       name = :openai
       value = string(:ascii, min_length: 1) |> pick()
-      user = Panic.Generators.user_fixture()
+      user = Panic.Fixtures.user()
 
       Panic.Accounts.create_api_token!(name, value, actor: user)
 
@@ -73,7 +73,7 @@ defmodule Panic.UsersTest do
     test "get token by name (code interface version)" do
       name = :openai
       value = string(:ascii, min_length: 1) |> pick()
-      user = Panic.Generators.user_fixture()
+      user = Panic.Fixtures.user()
 
       Panic.Accounts.create_api_token!(name, value, actor: user)
 
@@ -84,8 +84,8 @@ defmodule Panic.UsersTest do
     end
 
     test "only list api tokens belonging to user" do
-      user1 = Panic.Generators.user_fixture()
-      user2 = Panic.Generators.user_fixture()
+      user1 = Panic.Fixtures.user()
+      user2 = Panic.Fixtures.user()
       value1 = string(:ascii, min_length: 1) |> pick()
       value2 = string(:ascii, min_length: 1) |> pick()
 
@@ -126,7 +126,7 @@ defmodule Panic.UsersTest do
 
   describe "User resource" do
     test "list all api token for user" do
-      user = Panic.Generators.user_fixture()
+      user = Panic.Fixtures.user()
 
       token_name = :replicate
       token_value = string(:ascii, min_length: 1) |> pick()
@@ -142,6 +142,5 @@ defmodule Panic.UsersTest do
 
       assert replicate_token.value == token_value
     end
-
   end
 end

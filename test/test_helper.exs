@@ -8,44 +8,9 @@ defmodule Panic.Generators do
   use ExUnitProperties
 
   def model(filters \\ []) do
-    Panic.Models.list()
+    filters
+    |> Panic.Models.list()
     |> one_of()
-    |> filter(fn model ->
-      filters
-      |> Enum.map(fn {output, type} -> model.fetch!(output) == type end)
-      |> Enum.all?()
-    end)
-  end
-
-  def network(user, opts \\ []) do
-    gen all(
-          input <-
-            Ash.Generator.action_input(Panic.Engine.Network, :create, %{
-              models:
-                list_of(
-                  StreamData.member_of(Panic.Models.list()),
-                  opts
-                )
-            })
-        ) do
-      Panic.Engine.Network
-      |> Ash.Changeset.for_create(:create, input, actor: user)
-      |> Ash.create!()
-    end
-  end
-
-  def first_invocation(user) do
-    gen all(
-          input <-
-            Ash.Generator.action_input(Panic.Engine.Invocation, :prepare_first, %{
-              # need at least one, otherwise Panic.Changes.Invoke will raise
-              network: network(user, min_length: 1)
-            })
-        ) do
-      Panic.Engine.Invocation
-      |> Ash.Changeset.for_create(:prepare_first, input)
-      |> Ash.create!()
-    end
   end
 
   def password do
@@ -70,18 +35,45 @@ defmodule Panic.Generators do
     end
   end
 
-  def user_fixture() do
-    user() |> pick()
+  def user_with_tokens do
+    gen all(user <- user()) do
+      # TODO check these work!
+      replicate_token = Application.get_env(:panic, :api_tokens, :replicate)
+      openai_token = Application.get_env(:panic, :api_tokens, :openai)
+
+      Panic.Accounts.create_api_token!(:replicate, replicate_token, actor: user)
+      Panic.Accounts.create_api_token!(:openai, openai_token, actor: user)
+    end
   end
 
-  def user_with_real_tokens_fixture() do
-    user = user_fixture()
-    replicate_token = Application.get_env(:panic, :api_tokens, :replicate)
-    openai_token = Application.get_env(:panic, :api_tokens, :openai)
+  def network(user) do
+    gen all(input <- Ash.Generator.action_input(Panic.Engine.Network, :create)) do
+      Panic.Engine.Network
+      |> Ash.Changeset.for_create(:create, input, actor: user)
+      |> Ash.create!()
+    end
+  end
 
-    Panic.Accounts.create_api_token!(:replicate, replicate_token, actor: user)
-    Panic.Accounts.create_api_token!(:openai, openai_token, actor: user)
+  def network_with_models(user) do
+    gen all(network <- network(user), length <- integer(1..10)) do
+      {network, :text}
+      |> Stream.unfold(fn {network, input_type} ->
+        next_model = model(input_type: input_type) |> pick()
+        network = Panic.Engine.append_model!(network, next_model)
+        {network, {network, next_model.fetch!(:output_type)}}
+      end)
+      |> Enum.take(length)
+      # return the last network (with the latest :models attr) from the generator
+      |> Enum.at(-1)
+    end
+  end
+end
 
-    user
+defmodule Panic.Fixtures do
+  @moduledoc """
+  Test fixtures for Panic resources.
+  """
+  def user() do
+    Panic.Generators.user() |> ExUnitProperties.pick()
   end
 end

@@ -4,7 +4,7 @@ defmodule Panic.ModelsTest do
   alias Panic.Models
 
   # setup do
-  #   user = Panic.Generators.user_fixture()
+  #   user = Panic.Fixtures.user()
   #   # set the real token, for "live" tests
   #   token = System.get_env("OPENAI_API_TOKEN")
   #   Panic.Accounts.create_api_token!(:openai, token, actor: user)
@@ -32,11 +32,25 @@ defmodule Panic.ModelsTest do
       assert Models.list() |> MapSet.new() == MapSet.new(models)
     end
 
-    test "generator can filter models by type" do
+    test "model list filters work" do
       text_input_model = Panic.Generators.model(input_type: :text) |> pick()
       assert text_input_model.fetch!(:input_type) == :text
       image_ouput_model = Panic.Generators.model(output_type: :image) |> pick()
       assert image_ouput_model.fetch!(:output_type) == :image
+
+      replicate_ouput_model =
+        Panic.Generators.model(platform: Panic.Platforms.Replicate) |> pick()
+
+      assert replicate_ouput_model.fetch!(:platform) == Panic.Platforms.Replicate
+    end
+
+    property "model list filters work" do
+      check all(
+              input_type <- one_of([:text, :image]),
+              model <- Panic.Generators.model(input_type: input_type)
+            ) do
+        assert model.fetch!(:input_type) == input_type
+      end
     end
   end
 

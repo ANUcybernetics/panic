@@ -6,14 +6,13 @@ defmodule Panic.NetworkTest do
   describe "CRUD actions" do
     # now if our action inputs are invalid when we think they should be valid, we will find out here
     property "accepts all valid input" do
-      user = Panic.Generators.user_fixture()
+      user = Panic.Fixtures.user()
 
       check all(input <- input_for_create()) do
         assert %Ash.Changeset{valid?: true} =
                  Panic.Engine.changeset_to_create_network(
                    input.name,
                    input.description,
-                   input.models,
                    actor: user
                  )
       end
@@ -27,7 +26,6 @@ defmodule Panic.NetworkTest do
                  Panic.Engine.changeset_to_create_network(
                    input.name,
                    input.description,
-                   input.models,
                    actor: user,
                    authorize?: false
                  )
@@ -35,7 +33,7 @@ defmodule Panic.NetworkTest do
     end
 
     property "succeeds on all valid input" do
-      user = Panic.Generators.user_fixture()
+      user = Panic.Fixtures.user()
 
       check all(input <- input_for_create()) do
         Network
@@ -45,21 +43,20 @@ defmodule Panic.NetworkTest do
     end
 
     property "succeeds on all valid input (code interface version)" do
-      user = Panic.Generators.user_fixture()
+      user = Panic.Fixtures.user()
 
       check all(input <- input_for_create()) do
         {:ok, network} =
           Panic.Engine.create_network(
             input.name,
             input.description,
-            input.models,
             actor: user
           )
 
         assert network.name == input.name
         # FIXME there might be an issue here with "" vs nil?
         # assert network.description == input.description
-        assert network.models == input.models
+        assert network.models == []
         assert network.state == :stopped
       end
     end
@@ -67,7 +64,7 @@ defmodule Panic.NetworkTest do
     # TODO what's the best way with property testing to test that it gives the right invalid changeset on invalid input?
 
     property "Network read action" do
-      user = Panic.Generators.user_fixture()
+      user = Panic.Fixtures.user()
 
       check all(network <- Panic.Generators.network(user)) do
         assert network.id == Panic.Engine.get_network!(network.id).id
@@ -77,7 +74,7 @@ defmodule Panic.NetworkTest do
     end
 
     property "Network set_state action" do
-      user = Panic.Generators.user_fixture()
+      user = Panic.Fixtures.user()
 
       check all(
               network <- Panic.Generators.network(user),
@@ -89,20 +86,31 @@ defmodule Panic.NetworkTest do
     end
 
     property "can append models with correct modality" do
-      user = Panic.Generators.user_fixture()
+      user = Panic.Fixtures.user()
 
-      check all(
-              network <- Panic.Generators.network(user),
-              text_input_model <- Panic.Generators.model(input_type: :text)
-            ) do
-        _network = Panic.Engine.append_model!(network, text_input_model)
+      check all(network <- Panic.Generators.network(user)) do
+        model1 = Panic.Models.SDXL
+        model2 = Panic.Models.BLIP2
+
+        network =
+          network
+          |> Panic.Engine.append_model!(model1)
+          |> Panic.Engine.append_model!(model2)
+
+        assert [^model1, ^model2] = network.models
       end
+    end
+
+    test "network_with_models generator" do
+      user = Panic.Fixtures.user()
+      network = Panic.Generators.network_with_models(user) |> pick()
+      assert [first_model | _] = network.models
+      assert first_model.fetch!(:input_type) == :text
     end
   end
 
   defp input_for_create do
     Ash.Generator.action_input(Network, :create, %{
-      models: list_of(StreamData.member_of(Panic.Models.list())),
       description: StreamData.binary()
     })
   end
