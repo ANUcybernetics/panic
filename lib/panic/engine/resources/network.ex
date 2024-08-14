@@ -46,7 +46,8 @@ defmodule Panic.Engine.Network do
     defaults [:destroy]
 
     create :create do
-      accept [:name, :description, :models]
+      accept [:name, :description]
+      set_attribute(:models, [])
       change relate_actor(:user)
     end
 
@@ -60,8 +61,7 @@ defmodule Panic.Engine.Network do
       argument :model, Ash.Type.Module, allow_nil?: false
 
       change fn changeset, _ ->
-        %{models: models} = changeset.data
-        models = models ++ [Ash.Changeset.get_argument(changeset, :model)]
+        models = changeset.data.models ++ [Ash.Changeset.get_argument(changeset, :model)]
 
         case validate_model_io_types(models) do
           :ok ->
