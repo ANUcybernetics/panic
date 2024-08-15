@@ -19,15 +19,7 @@ defmodule Panic.Accounts.User do
     strategies do
       password :password do
         identity_field :email
-      end
-    end
-
-    tokens do
-      enabled? true
-      token_resource Panic.Accounts.Token
-
-      signing_secret fn _, _ ->
-        Application.fetch_env(:panic, :token_signing_secret)
+        sign_in_tokens_enabled? false
       end
     end
   end

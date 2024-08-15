@@ -3,7 +3,6 @@ defmodule Panic.Accounts do
 
   resources do
     resource Panic.Accounts.User
-    resource Panic.Accounts.Token
 
     resource Panic.Accounts.ApiToken do
       define :create_api_token, args: [:name, :value], action: :create
