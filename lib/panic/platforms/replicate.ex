@@ -47,9 +47,6 @@ defmodule Panic.Platforms.Replicate do
             get(prediction_id)
         end
 
-      {:ok, %Req.Response{body: %{"detail" => message}}} ->
-        {:error, message}
-
       {:error, reason} ->
         {:error, reason}
     end
