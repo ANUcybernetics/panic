@@ -5,8 +5,6 @@
 - put access control on all resources (with tests)
 - upgrade to liveview 1.0-rc
 - put a frontend on 'er (adding views as per the notebook sketches)
-- add nice Ash.Errors (Splode) errors for the different AI platform call failure
-  modes
 - tidy up v2/v3 nomenclature (probably: v0 is prototype, v1 at AusCyber, v2 is
   Birch install)
 - put all the identities/unique constraints in
