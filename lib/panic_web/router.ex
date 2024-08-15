@@ -32,7 +32,21 @@ defmodule PanicWeb.Router do
 
     ash_authentication_live_session :authentication_required,
       on_mount: {PanicWeb.LiveUserAuth, :live_user_required} do
-      live "/protected_route", PanicWebLive.Index, :index
+      scope "/users" do
+        live "/", PanicWebLive.Index, :index
+        live "/new", PanicWebLive.Index, :new
+        live "/edit", PanicWebLive.Index, :edit
+        live "/:user_id", PanicWebLive.Index, :show
+      end
+
+      scope "/networks" do
+        live "/", PanicWebLive.Network, :index
+        live "/new", PanicWebLive.Network, :new
+        live "/edit", PanicWebLive.Network, :edit
+        live "/:network_id", PanicWebLive.Network, :show
+        live "/:network_id/invocations/:invocation_id", PanicWebLive.Network, :show
+        live "/:network_id/invocations/live/:type/a/b", PanicWebLive.Network, :show
+      end
     end
 
     ash_authentication_live_session :authentication_optional,
