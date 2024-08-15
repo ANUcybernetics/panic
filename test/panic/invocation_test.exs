@@ -3,7 +3,7 @@ defmodule Panic.InvocationTest do
   use ExUnitProperties
   alias Panic.Engine.Invocation
 
-  describe "CRUD actions" do
+  describe "basic CRUD (no real API calls)" do
     # now if our action inputs are invalid when we think they should be valid, we will find out here
     property "accepts all valid input (with networks of length at least 1)" do
       check all(input <- input_for_prepare_first()) do
@@ -109,6 +109,10 @@ defmodule Panic.InvocationTest do
         assert invocation.id == invocation.run_number
       end
     end
+  end
+
+  describe "invoke with real API calls" do
+    @describetag skip: "requires API keys"
 
     property "invoke the invocation" do
       user = Panic.Fixtures.user()
