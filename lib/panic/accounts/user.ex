@@ -5,6 +5,10 @@ defmodule Panic.Accounts.User do
     # authorizers: [Ash.Policy.Authorizer],
     domain: Panic.Accounts
 
+  resource do
+    plural_name :users
+  end
+
   attributes do
     integer_primary_key :id
     attribute :email, :ci_string, allow_nil?: false, public?: true

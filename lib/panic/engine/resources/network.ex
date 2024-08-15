@@ -11,6 +11,10 @@ defmodule Panic.Engine.Network do
     repo Panic.Repo
   end
 
+  resource do
+    plural_name :networks
+  end
+
   attributes do
     integer_primary_key :id
 

@@ -14,6 +14,10 @@ defmodule Panic.Engine.Invocation do
     repo Panic.Repo
   end
 
+  resource do
+    plural_name :invocations
+  end
+
   attributes do
     integer_primary_key :id
 
