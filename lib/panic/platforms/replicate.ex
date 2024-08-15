@@ -71,13 +71,9 @@ defmodule Panic.Platforms.Replicate do
   end
 
   defp req_new(opts) do
-    # FIXME get it from `user.api_tokens` instead
-    token = Application.get_env(:panic, :api_tokens) |> Keyword.fetch!(:replicate)
-
     [
       base_url: "https://api.replicate.com/v1/",
-      receive_timeout: 10_000,
-      headers: [{"authorization", "token #{token}"}]
+      receive_timeout: 10_000
     ]
     |> Keyword.merge(Application.get_env(:panic, :replicate_req_options, []))
     |> Keyword.merge(opts)

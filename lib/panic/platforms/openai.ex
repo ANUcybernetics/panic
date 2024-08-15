@@ -54,12 +54,9 @@ defmodule Panic.Platforms.OpenAI do
   end
 
   defp req_new(opts) do
-    token = Application.get_env(:panic, :api_tokens) |> Keyword.fetch!(:openai)
-
     [
       base_url: "https://api.openai.com/v1",
-      receive_timeout: 10_000,
-      auth: {:bearer, token}
+      receive_timeout: 10_000
     ]
     |> Keyword.merge(Application.get_env(:panic, :openai_req_options, []))
     |> Keyword.merge(opts)
@@ -74,6 +71,6 @@ defmodule Panic.Platforms.OpenAI do
   exist in the DB.
   """
   def add_api_token(request) do
-    put_in(request.options[:auth], {:bearer, "a new value"})
+    put_in(request.options[:auth], {:bearer, "test API key, not real"})
   end
 end
