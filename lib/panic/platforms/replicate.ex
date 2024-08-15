@@ -5,9 +5,9 @@ defmodule Panic.Platforms.Replicate do
     |> case do
       {:ok, %Req.Response{body: body, status: 200}} ->
         %{"latest_version" => %{"id" => id}} = body
-        id
+        {:ok, id}
 
-      {:ok, %Req.Response{body: %{"detail" => message}}} ->
+      {:ok, %Req.Response{body: %{"detail" => message}, status: status}} when status >= 400 ->
         {:error, message}
 
       {:error, reason} ->
@@ -22,7 +22,7 @@ defmodule Panic.Platforms.Replicate do
       {:ok, %Req.Response{body: body, status: 200}} ->
         body
 
-      {:ok, %Req.Response{body: %{"detail" => message}}} ->
+      {:ok, %Req.Response{body: %{"detail" => message}, status: status}} when status >= 400 ->
         {:error, message}
     end
   end
@@ -58,15 +58,21 @@ defmodule Panic.Platforms.Replicate do
   end
 
   def create_and_wait(model, input) do
-    version = model.info() |> Map.get(:version) || get_latest_model_version(model)
+    version =
+      case model.info() do
+        %{version: version} -> {:ok, version}
+        _ -> get_latest_model_version(model)
+      end
 
-    request_body = %{version: version, input: input}
+    with {:ok, version_id} <- version do
+      request_body = %{version: version_id, input: input}
 
-    req_new(url: "predictions", method: :post, json: request_body)
-    |> Req.request()
-    |> case do
-      {:ok, %Req.Response{body: %{"id" => id}, status: 201}} ->
-        get(id)
+      req_new(url: "predictions", method: :post, json: request_body)
+      |> Req.request()
+      |> case do
+        {:ok, %Req.Response{body: %{"id" => id}, status: 201}} ->
+          get(id)
+      end
     end
   end
 

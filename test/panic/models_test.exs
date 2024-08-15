@@ -58,7 +58,7 @@ defmodule Panic.ModelsTest do
     @describetag skip: "requires API keys"
 
     test "list models" do
-      version = Panic.Platforms.Replicate.get_latest_model_version(Models.StableDiffusion)
+      {:ok, version} = Panic.Platforms.Replicate.get_latest_model_version(Models.StableDiffusion)
       assert String.match?(version, ~r/^[a-f0-9]{64}$/)
     end
 
