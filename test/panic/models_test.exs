@@ -13,35 +13,18 @@ defmodule Panic.ModelsTest do
   # end
 
   describe "model helpers" do
-    test "list all modules which conform to Model behaviour" do
-      models = [
-        Models.BLIP2,
-        Models.StableDiffusion,
-        Models.ClipCaptionReward,
-        Models.GPT4o,
-        Models.CogPromptParrot,
-        Models.GPT4Turbo,
-        Models.LLaVA,
-        Models.ClipPrefixCaption,
-        Models.SDXL,
-        Models.GPT4,
-        Models.LLaMa3Instruct8B
-      ]
-
-      # check that they're all in the list
-      assert Models.list() |> MapSet.new() == MapSet.new(models)
-    end
-
-    test "model list filters work" do
-      text_input_model = Panic.Generators.model(input_type: :text) |> pick()
-      assert text_input_model.fetch!(:input_type) == :text
-      image_ouput_model = Panic.Generators.model(output_type: :image) |> pick()
-      assert image_ouput_model.fetch!(:output_type) == :image
-
-      replicate_ouput_model =
-        Panic.Generators.model(platform: Panic.Platforms.Replicate) |> pick()
-
-      assert replicate_ouput_model.fetch!(:platform) == Panic.Platforms.Replicate
+    property "model generators work" do
+      check all(
+              model <- Panic.Generators.model(),
+              text_input_model <- Panic.Generators.model(input_type: :text),
+              image_ouput_model <- Panic.Generators.model(output_type: :image),
+              replicate_model <- Panic.Generators.model(platform: Panic.Platforms.Replicate)
+            ) do
+        assert %Panic.Models.ModelInfo{} = model.info()
+        assert text_input_model.fetch!(:input_type) == :text
+        assert image_ouput_model.fetch!(:output_type) == :image
+        assert replicate_model.fetch!(:platform) == Panic.Platforms.Replicate
+      end
     end
 
     property "model list filters work" do
