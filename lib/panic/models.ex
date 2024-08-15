@@ -20,6 +20,7 @@ defmodule Panic.Models do
       Panic.Models.CogPromptParrot,
       Panic.Models.GPT4Turbo,
       Panic.Models.SDXL,
+      Panic.Models.FluxSchnell,
       Panic.Models.GPT4,
       Panic.Models.LLaVA,
       Panic.Models.StableDiffusion,

@@ -164,6 +164,44 @@ defmodule Panic.Models.StableDiffusion do
   end
 end
 
+defmodule Panic.Models.FluxSchnell do
+  @behaviour Panic.Model
+  alias Panic.Platforms.Replicate
+
+  @impl true
+  def info do
+    %Panic.Models.ModelInfo{
+      id: "black-forest-labs/flux-schnell",
+      platform: Replicate,
+      path: "black-forest-labs/flux-schnell",
+      name: "FLUX.1 [schnell]",
+      description: "",
+      input_type: :text,
+      output_type: :image
+    }
+  end
+
+  @impl true
+  def fetch!(field) do
+    info() |> Map.fetch!(field)
+  end
+
+  @impl true
+  def invoke(input) do
+    input_params = %{
+      prompt: input,
+      output_format: "jpg",
+      aspect_ratio: "16:9",
+      disable_safety_checker: true
+    }
+
+    with {:ok, %{"output" => image_url}} <-
+           Replicate.create_and_wait(__MODULE__, input_params) do
+      {:ok, image_url}
+    end
+  end
+end
+
 defmodule Panic.Models.SDXL do
   @behaviour Panic.Model
   alias Panic.Platforms.Replicate
