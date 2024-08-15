@@ -119,13 +119,17 @@ defmodule Panic.Engine.Invocation do
     end
 
     update :invoke do
-      change fn changeset, _context ->
-        %{model: model, input: input} = changeset.data
+      change fn
+        changeset, _context ->
+          %{model: model, input: input} = changeset.data
 
-        {:ok, output} = model.invoke(input)
+          case model.invoke(input) do
+            {:ok, output} ->
+              Ash.Changeset.change_attribute(changeset, :output, output)
 
-        changeset
-        |> Ash.Changeset.change_attribute(:output, output)
+            {:error, message} ->
+              Ash.Changeset.add_error(changeset, message)
+          end
       end
     end
   end
