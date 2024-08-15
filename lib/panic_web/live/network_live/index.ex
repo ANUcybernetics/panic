@@ -25,7 +25,7 @@ defmodule PanicWeb.NetworkLive.Index do
           <.link navigate={~p"/networks/#{network}"}>Show</.link>
         </div>
 
-        <.link patch={~p"/networks/#{network}/edit"}>Edit</.link>
+        <.link patch={~p"/networks/#{network}/show/edit"}>Edit</.link>
       </:action>
 
       <:action :let={{id, network}}>
