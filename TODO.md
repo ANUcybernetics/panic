@@ -1,6 +1,5 @@
 # Panic TODO
 
-- add model validation
 - add pubsub notifications for all new/updated invocations
 - get the platform modules to pull API keys from the user
 - put access control on all resources (with tests)
