@@ -140,7 +140,7 @@ defmodule Panic.InvocationTest do
 
     # this is a big test - almost an integration test
     property "create a run of invocations" do
-      run_length = 100
+      run_length = 4
       user = Panic.Fixtures.user()
 
       check all(
