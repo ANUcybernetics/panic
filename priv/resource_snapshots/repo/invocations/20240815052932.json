@@ -26,7 +26,17 @@
       "type": "text",
       "source": "model",
       "references": null,
-      "allow_nil?": true,
+      "allow_nil?": false,
+      "generated?": false,
+      "primary_key?": false
+    },
+    {
+      "default": "%{}",
+      "size": null,
+      "type": "map",
+      "source": "metadata",
+      "references": null,
+      "allow_nil?": false,
       "generated?": false,
       "primary_key?": false
     },
@@ -61,16 +71,6 @@
       "primary_key?": false
     },
     {
-      "default": "%{}",
-      "size": null,
-      "type": "map",
-      "source": "metadata",
-      "references": null,
-      "allow_nil?": false,
-      "generated?": false,
-      "primary_key?": false
-    },
-    {
       "default": "nil",
       "size": null,
       "type": "utc_datetime_usec",
@@ -100,8 +100,8 @@
         "table": "networks",
         "multitenancy": {
           "global": null,
-          "attribute": null,
-          "strategy": null
+          "strategy": null,
+          "attribute": null
         },
         "primary_key?": true,
         "destination_attribute": "id",
@@ -117,13 +117,13 @@
     }
   ],
   "table": "invocations",
-  "hash": "3622E2D1FC1C53FD3876CDE5084888831175553F14C12D6EF91C28E73CFE4AAD",
+  "hash": "6513A695F070F9045C465383630FECD1FEBF9C27C9D4D75BB9A38E19EB75AF3F",
   "repo": "Elixir.Panic.Repo",
   "identities": [],
   "multitenancy": {
     "global": null,
-    "attribute": null,
-    "strategy": null
+    "strategy": null,
+    "attribute": null
   },
   "base_filter": null,
   "custom_indexes": [],

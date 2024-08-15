@@ -7,8 +7,8 @@
       "source": "id",
       "references": null,
       "allow_nil?": false,
-      "primary_key?": true,
-      "generated?": true
+      "generated?": true,
+      "primary_key?": true
     },
     {
       "default": "nil",
@@ -17,8 +17,8 @@
       "source": "name",
       "references": null,
       "allow_nil?": false,
-      "primary_key?": false,
-      "generated?": false
+      "generated?": false,
+      "primary_key?": false
     },
     {
       "default": "nil",
@@ -27,8 +27,8 @@
       "source": "value",
       "references": null,
       "allow_nil?": false,
-      "primary_key?": false,
-      "generated?": false
+      "generated?": false,
+      "primary_key?": false
     },
     {
       "default": "nil",
@@ -38,26 +38,26 @@
       "references": {
         "name": "api_tokens_user_id_fkey",
         "table": "users",
-        "primary_key?": true,
-        "destination_attribute": "id",
-        "on_delete": null,
-        "on_update": null,
-        "deferrable": false,
         "multitenancy": {
           "global": null,
           "strategy": null,
           "attribute": null
         },
+        "primary_key?": true,
+        "destination_attribute": "id",
+        "on_delete": null,
+        "deferrable": false,
         "destination_attribute_default": null,
-        "destination_attribute_generated": null
+        "destination_attribute_generated": null,
+        "on_update": null
       },
       "allow_nil?": false,
-      "primary_key?": false,
-      "generated?": false
+      "generated?": false,
+      "primary_key?": false
     }
   ],
   "table": "api_tokens",
-  "hash": "C34FA3A98C2F3CF3DBED21804973869EA60159C6460F8B5BC4C05B5E7BD013CE",
+  "hash": "5388624D35F59944DAF042F97F77E939D490B58AA70F8FF50771F0A1030DCC98",
   "repo": "Elixir.Panic.Repo",
   "identities": [
     {
@@ -66,17 +66,17 @@
         "name",
         "user_id"
       ],
-      "base_filter": null,
-      "index_name": "api_tokens_token_index"
+      "index_name": "api_tokens_token_index",
+      "base_filter": null
     }
   ],
-  "custom_indexes": [],
-  "base_filter": null,
-  "custom_statements": [],
   "multitenancy": {
     "global": null,
     "strategy": null,
     "attribute": null
   },
+  "base_filter": null,
+  "custom_indexes": [],
+  "custom_statements": [],
   "has_create_action": true
 }

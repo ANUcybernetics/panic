@@ -1,4 +1,4 @@
-defmodule Panic.Repo.Migrations.AnotherReset do
+defmodule :"Elixir.Panic.Repo.Migrations.Reset without tokens" do
   @moduledoc """
   Updates resources based on their most recent snapshots.
 
@@ -15,16 +15,6 @@ defmodule Panic.Repo.Migrations.AnotherReset do
     end
 
     create unique_index(:users, [:email], name: "users_unique_email_index")
-
-    create table(:tokens, primary_key: false) do
-      add :jti, :text, null: false, primary_key: true
-      add :subject, :text, null: false
-      add :expires_at, :utc_datetime, null: false
-      add :purpose, :text, null: false
-      add :extra_data, :map
-      add :created_at, :utc_datetime_usec, null: false
-      add :updated_at, :utc_datetime_usec, null: false
-    end
 
     create table(:networks, primary_key: false) do
       add :user_id, references(:users, column: :id, name: "networks_user_id_fkey", type: :bigint),
@@ -47,11 +37,11 @@ defmodule Panic.Repo.Migrations.AnotherReset do
 
       add :updated_at, :utc_datetime_usec, null: false
       add :inserted_at, :utc_datetime_usec, null: false
-      add :metadata, :map, null: false, default: %{}
       add :run_number, :bigint
       add :sequence_number, :bigint, null: false
       add :output, :text
-      add :model, :text
+      add :metadata, :map, null: false, default: %{}
+      add :model, :text, null: false
       add :input, :text, null: false
       add :id, :bigserial, null: false, primary_key: true
     end
@@ -66,11 +56,11 @@ defmodule Panic.Repo.Migrations.AnotherReset do
       add :id, :bigserial, null: false, primary_key: true
     end
 
-    create unique_index(:api_tokens, [:name, :value], name: "api_tokens_token_index")
+    create unique_index(:api_tokens, [:name, :user_id], name: "api_tokens_token_index")
   end
 
   def down do
-    drop_if_exists unique_index(:api_tokens, [:name, :value], name: "api_tokens_token_index")
+    drop_if_exists unique_index(:api_tokens, [:name, :user_id], name: "api_tokens_token_index")
 
     drop constraint(:api_tokens, "api_tokens_user_id_fkey")
 
@@ -83,8 +73,6 @@ defmodule Panic.Repo.Migrations.AnotherReset do
     drop constraint(:networks, "networks_user_id_fkey")
 
     drop table(:networks)
-
-    drop table(:tokens)
 
     drop_if_exists unique_index(:users, [:email], name: "users_unique_email_index")
 
