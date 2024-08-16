@@ -9,7 +9,7 @@ defmodule PanicWeb.NetworkLive.Show do
       <:subtitle>This is a network record from your database.</:subtitle>
 
       <:actions>
-        <.link patch={~p"/networks/#{@network}/show/edit"} phx-click={JS.push_focus()}>
+        <.link patch={~p"/networks/#{@network}/edit"} phx-click={JS.push_focus()}>
           <.button>Edit network</.button>
         </.link>
       </:actions>

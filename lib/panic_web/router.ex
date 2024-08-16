@@ -36,16 +36,17 @@ defmodule PanicWeb.Router do
         live "/", UserLive.Index, :index
         live "/new", UserLive.Index, :new
         live "/:user_id", UserLive.Show, :show
-        live "/:user_id/show/edit", UserLive.Show, :edit
+        live "/:user_id/edit", UserLive.Show, :edit
+        live "/:user_id/new_network", UserLive.Show, :new_network
       end
 
       scope "/networks" do
-        live "/", NetworkLive.Index, :index
+        # no "network list" view, because UserLive.Show fulfils that role
         live "/new", NetworkLive.Index, :new
         live "/:network_id", NetworkLive.Show, :show
-        live "/:network_id/show/edit", NetworkLive.Show, :edit
-        live "/:network_id/invocations/:invocation_id", InvocationLive.Show, :show
-        live "/:network_id/invocations/live/:type/a/b", InvocationLive.Show, :live
+        live "/:network_id/edit", NetworkLive.Show, :edit
+        live "/:network_id/terminal", NetworkLive.Show, :terminal
+        live "/:network_id/live/:type/:a/:b", NetworkLive.Show, :live
       end
     end
 
