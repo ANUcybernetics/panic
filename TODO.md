@@ -1,18 +1,18 @@
 # Panic TODO
 
-- get the platform modules to pull API keys from the user
+- add phoenix_test for testing liveviews
+- `req_new` pulls API keys from the user (with tests)
 - add views
   - network
     - assigns: network, ready_at (ts), invocations (stream, if running), form,
       watchers (presence?), screen/grid params (to be passed to live component)
+    - add LiveSelect for "add new model" functionality
   - user
   - terminal
-  - landing page
+  - "panic button" landing page
   - livegrid component
   - prediction component
     - text x image x audio grid (as per notebook)
-- add LiveSelect for model choosing
-- add phoenix_test for testing liveviews
 - pubsub notifications for all new/updated invocations
 - access control on all resources (with tests)
 - put all the identities/unique constraints in
@@ -20,8 +20,8 @@
 - add embeddings for all outputs (possibly via an ash oban trigger)
 - add "slow down over time" (and scheduling) logic to runs
 - write model descriptions
-- add network permalinks (look in the history - there's some deleted `router.ex`
-  code in there)
+- TDA code
+- add HUD or other vis for
 
 ### ideas (not necessarily TODO, but y'know...)
 
