@@ -28,6 +28,8 @@ defmodule PanicWeb.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import PanicWeb.ConnCase
+
+      import PhoenixTest
     end
   end
 

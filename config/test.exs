@@ -17,7 +17,9 @@ config :panic, PanicWeb.Endpoint,
   secret_key_base: "6fMtFbo7K5GsdxuA9hk6X1hEn80aqXOJ37byZ//ba4YknWXTQDDJinMCdbXRj1aR",
   server: false
 
+config :phoenix_test, :endpoint, PanicWeb.Endpoint
 # In test we don't send emails.
+
 config :panic, Panic.Mailer, adapter: Swoosh.Adapters.Test
 
 # Disable swoosh api client as it is only required for production adapters.
