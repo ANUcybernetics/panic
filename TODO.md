@@ -1,6 +1,7 @@
 # Panic TODO
 
 - add phoenix_test for testing liveviews
+- Oban invoker job
 - `req_new` pulls API keys from the user (with tests)
 - add views
   - network
