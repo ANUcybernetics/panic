@@ -19,7 +19,7 @@ defmodule PanicWeb.NetworkLive.Show do
       <:item title="Id"><%= @network.id %></:item>
     </.list>
 
-    <.back navigate={~p"/networks"}>Back to networks</.back>
+    <.back navigate={~p"/"}>Back to networks</.back>
 
     <.modal
       :if={@live_action == :edit}

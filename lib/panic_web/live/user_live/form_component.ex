@@ -70,10 +70,10 @@ defmodule PanicWeb.UserLive.FormComponent do
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
-  defp assign_form(%{assigns: %{user: user}} = socket) do
+  defp assign_form(%{assigns: %{user: _user}} = socket) do
     # NOTE: this was the auto-generated "default action" stuff, which doesn't really make sense for panic accounts.
 
-    changeset = AshPhoenix.Form.for_update(Panic.Accounts.User, :create, as: "network")
+    _changeset = AshPhoenix.Form.for_update(Panic.Accounts.User, :create, as: "network")
 
     # assign(socket, form: to_form(form))
     socket

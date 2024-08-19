@@ -38,19 +38,14 @@ defmodule PanicWeb.NetworkLive.Index do
       </:action>
     </.table>
 
-    <.modal
-      :if={@live_action in [:new, :edit]}
-      id="network-modal"
-      show
-      on_cancel={JS.patch(~p"/networks")}
-    >
+    <.modal :if={@live_action in [:new, :edit]} id="network-modal" show on_cancel={JS.patch(~p"/")}>
       <.live_component
         module={PanicWeb.NetworkLive.FormComponent}
         id={(@network && @network.id) || :new}
         title={@page_title}
         action={@live_action}
         network={@network}
-        patch={~p"/networks"}
+        patch={~p"/"}
       />
     </.modal>
     """
