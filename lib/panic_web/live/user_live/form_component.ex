@@ -18,18 +18,14 @@ defmodule PanicWeb.UserLive.FormComponent do
         phx-submit="save"
       >
         <%= if @form.source.type == :create do %>
-          <.input field={@form[:password]} type="text" label="Password" /><.input
-            field={@form[:password_confirmation]}
+          <.input field={@form[:name]} type="text" label="Name" /><.input
+            field={@form[:description]}
             type="text"
-            label="Password confirmation"
-          /><.input field={@form[:email]} type="text" label="Email" />
+            label="Description"
+          />
         <% end %>
         <%= if @form.source.type == :update do %>
-          <.input field={@form[:email]} type="text" label="Email" /><.input
-            field={@form[:hashed_password]}
-            type="text"
-            label="Hashed password"
-          />
+          <.input field={@form[:state]} type="text" label="State" />
         <% end %>
 
         <:actions>
@@ -42,6 +38,8 @@ defmodule PanicWeb.UserLive.FormComponent do
 
   @impl true
   def update(assigns, socket) do
+    dbg()
+
     {:ok,
      socket
      |> assign(assigns)
@@ -73,16 +71,11 @@ defmodule PanicWeb.UserLive.FormComponent do
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
   defp assign_form(%{assigns: %{user: user}} = socket) do
-    form =
-      if user do
-        AshPhoenix.Form.for_update(user, :update, as: "user", actor: socket.assigns.current_user)
-      else
-        AshPhoenix.Form.for_create(Panic.Accounts.User, :register_with_password,
-          as: "user",
-          actor: socket.assigns.current_user
-        )
-      end
+    # NOTE: this was the auto-generated "default action" stuff, which doesn't really make sense for panic accounts.
 
-    assign(socket, form: to_form(form))
+    changeset = AshPhoenix.Form.for_update(Panic.Accounts.User, :create, as: "network")
+
+    # assign(socket, form: to_form(form))
+    socket
   end
 end
