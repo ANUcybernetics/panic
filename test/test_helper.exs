@@ -24,8 +24,8 @@ defmodule Panic.Generators do
     |> map(fn i -> "user-#{i}@example.com" end)
   end
 
-  def user do
-    gen all(email <- email(), password <- password()) do
+  def user(password_generator \\ password()) do
+    gen all(email <- email(), password <- password_generator) do
       Panic.Accounts.User
       |> Ash.Changeset.for_create(
         :register_with_password,
@@ -74,7 +74,15 @@ defmodule Panic.Fixtures do
   @moduledoc """
   Test fixtures for Panic resources.
   """
+  def user(password) do
+    password
+    |> StreamData.constant()
+    |> Panic.Generators.user()
+    |> ExUnitProperties.pick()
+  end
+
   def user() do
-    Panic.Generators.user() |> ExUnitProperties.pick()
+    Panic.Generators.user()
+    |> ExUnitProperties.pick()
   end
 end
