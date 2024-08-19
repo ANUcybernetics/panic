@@ -38,8 +38,6 @@ defmodule PanicWeb.UserLive.FormComponent do
 
   @impl true
   def update(assigns, socket) do
-    dbg()
-
     {:ok,
      socket
      |> assign(assigns)
