@@ -20,8 +20,6 @@ defmodule PanicWeb.Router do
   scope "/", PanicWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
-
     # Leave out `register_path` and `reset_path` if you don't want to support
     # user registration and/or password resets respectively.
     # sign_in_route(register_path: "/register", reset_path: "/reset")
@@ -55,7 +53,7 @@ defmodule PanicWeb.Router do
 
     ash_authentication_live_session :authentication_optional,
       on_mount: {PanicWeb.LiveUserAuth, :live_user_optional} do
-      live "/", PanicWebLive.Index, :index
+      live "/", IndexLive, :index
     end
   end
 
