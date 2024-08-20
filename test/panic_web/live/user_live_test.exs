@@ -1,14 +1,17 @@
 defmodule PanicWeb.UserLiveTest do
   use PanicWeb.ConnCase
 
-  describe "logged in user can" do
-    test "user can log in", %{conn: conn} do
+  describe "user can" do
+    test "log in", %{conn: conn} do
+      password = "abcd1234"
+      user = Panic.Fixtures.user(password)
+
       conn
       |> visit("/sign-in")
-      |> fill_in("Email", with: "ben@benswift.me")
-      |> fill_in("Password", with: "asdfjkl;")
+      |> fill_in("Email", with: user.email)
+      |> fill_in("Password", with: password)
       |> submit()
-      |> assert_has(".email", text: "ben@benswift.me")
+      |> assert_has("body", text: "Panic is live.")
     end
   end
 end
