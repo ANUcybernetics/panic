@@ -5,7 +5,6 @@ defmodule PanicWeb.IndexLive do
   def render(assigns) do
     ~H"""
     <p>Panic is really live now.</p>
-    <p :if={@current_user}>Current user: <%= @current_user.email %></p>
     """
   end
 
