@@ -10,7 +10,7 @@ defmodule PanicWeb.UserLiveTest do
       |> visit("/sign-in")
       |> fill_in("Email", with: user.email)
       |> fill_in("Password", with: password)
-      |> submit()
+      |> click_button("Sign in")
       |> assert_has("body", text: "Panic is live.")
     end
   end
