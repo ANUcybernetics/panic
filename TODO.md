@@ -1,7 +1,6 @@
 # Panic TODO
 
-- add phoenix_test for testing liveviews
-- Oban invoker job
+- terminal (which can then be used for testing)
 - `req_new` pulls API keys from the user (with tests)
 - add views
   - network
@@ -9,7 +8,6 @@
       watchers (presence?), screen/grid params (to be passed to live component)
     - add LiveSelect for "add new model" functionality
   - user
-  - terminal
   - "panic button" landing page
   - livegrid component
   - prediction component
