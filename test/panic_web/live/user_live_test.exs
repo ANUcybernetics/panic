@@ -1,4 +1,4 @@
-defmodule PanicWeb.UserDashboardLiveTest do
+defmodule PanicWeb.UserLiveTest do
   @moduledoc """
   Test the user dashboard
 
