@@ -1,6 +1,7 @@
 # Panic TODO
 
 - terminal (which can then be used for testing)
+- make invocation run in a before transaction hook (for better concurrency maybe?)
 - `req_new` pulls API keys from the user (with tests)
 - add views
   - network
