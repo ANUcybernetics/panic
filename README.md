@@ -107,7 +107,3 @@ generative AI model platforms (in terms of cost, time, and knowledge) means that
 more and more of us are using them. But just because we _can_ put our
 text/images/audio into these models and have them provide new text/images/audio
 in return, does it mean that we _should_?
-
-PANIC will be running on the SXSW Expo floor from TIME to TIME every day. In
-addition, PANIC's creators will give a short artist talk/how-it-works demo every
-day at TIME, TIME and TIME.
