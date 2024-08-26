@@ -1,4 +1,4 @@
-defmodule PanicWeb.NetworkLive.TerminalInputComponent do
+defmodule PanicWeb.NetworkLive.TerminalComponent do
   use PanicWeb, :live_component
 
   @impl true

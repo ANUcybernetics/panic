@@ -9,7 +9,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
     </.header>
 
     <.live_component
-      module={PanicWeb.NetworkLive.TerminalInputComponent}
+      module={PanicWeb.NetworkLive.TerminalComponent}
       network={@network}
       id={"network-#{@network.id}-terminal"}
     />
