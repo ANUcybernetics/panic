@@ -86,3 +86,25 @@ defmodule Panic.Fixtures do
     |> ExUnitProperties.pick()
   end
 end
+
+defmodule PanicWeb.Helpers do
+  def create_and_sign_in_user(%{conn: conn}) do
+    password = "abcd1234"
+    user = Panic.Fixtures.user(password)
+    strategy = AshAuthentication.Info.strategy!(Panic.Accounts.User, :password)
+
+    {:ok, user} =
+      AshAuthentication.Strategy.action(strategy, :sign_in, %{
+        email: user.email,
+        password: password
+      })
+
+    %{
+      conn:
+        conn
+        |> Phoenix.ConnTest.init_test_session(%{})
+        |> AshAuthentication.Plug.Helpers.store_in_session(user),
+      user: user
+    }
+  end
+end

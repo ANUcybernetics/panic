@@ -10,7 +10,7 @@ defmodule PanicWeb.UserDashboardLiveTest do
   # import Phoenix.LiveViewTest
 
   describe "user IS logged in" do
-    setup [:create_and_sign_in_user]
+    setup {PanicWeb.Helpers, :create_and_sign_in_user}
 
     test "and their email shows in the top-right", %{conn: conn, user: user} do
       conn
@@ -27,25 +27,5 @@ defmodule PanicWeb.UserDashboardLiveTest do
       |> visit("/")
       |> refute_has("#current-user-email")
     end
-  end
-
-  defp create_and_sign_in_user(%{conn: conn}) do
-    password = "abcd1234"
-    user = Panic.Fixtures.user(password)
-    strategy = AshAuthentication.Info.strategy!(Panic.Accounts.User, :password)
-
-    assert {:ok, user} =
-             AshAuthentication.Strategy.action(strategy, :sign_in, %{
-               email: user.email,
-               password: password
-             })
-
-    %{
-      conn:
-        conn
-        |> Phoenix.ConnTest.init_test_session(%{})
-        |> AshAuthentication.Plug.Helpers.store_in_session(user),
-      user: user
-    }
   end
 end
