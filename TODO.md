@@ -22,6 +22,13 @@
 - TDA code
 - add HUD or other vis for
 
+### good citizen things
+
+- log some issues to ash_sqlite
+  - mostly around alter table
+  - change "manual" pk to an int one
+  - rename attribute (might work?)
+
 ### ideas (not necessarily TODO, but y'know...)
 
 - add "alias" links for a given network (or maybe just use the slugs in the URL
