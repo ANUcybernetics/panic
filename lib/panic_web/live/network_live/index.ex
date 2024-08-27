@@ -42,6 +42,7 @@ defmodule PanicWeb.NetworkLive.Index do
       <.live_component
         module={PanicWeb.NetworkLive.FormComponent}
         id={(@network && @network.id) || :new}
+        current_user={@current_user}
         title={@page_title}
         action={@live_action}
         network={@network}
