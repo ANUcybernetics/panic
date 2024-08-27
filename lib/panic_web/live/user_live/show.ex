@@ -44,10 +44,15 @@ defmodule PanicWeb.UserLive.Show do
 
   @impl true
   def handle_params(%{"user_id" => id}, _, socket) do
+    user =
+      Panic.Accounts.User
+      |> Ash.get!(id, actor: socket.assigns.current_user)
+      |> Ash.load!(:api_tokens, actor: socket.assigns.current_user)
+
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:user, Ash.get!(Panic.Accounts.User, id, actor: socket.assigns.current_user))}
+     |> assign(:user, user)}
   end
 
   defp page_title(:show), do: "Show User"
