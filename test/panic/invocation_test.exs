@@ -101,7 +101,7 @@ defmodule Panic.InvocationTest do
 
       check all(
               network <- Panic.Generators.network_with_models(user),
-              input <- binary(min_length: 1)
+              input <- Panic.Generators.ascii_sentence()
             ) do
         invocation = Panic.Engine.prepare_first!(network, input)
         refute invocation.input == nil
