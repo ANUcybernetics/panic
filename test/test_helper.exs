@@ -7,6 +7,12 @@ defmodule Panic.Generators do
   """
   use ExUnitProperties
 
+  def ascii_sentence do
+    StreamData.string(:ascii, min_length: 1)
+    |> StreamData.map(&String.trim/1)
+    |> StreamData.filter(&(String.length(&1) > 0))
+  end
+
   def model(filters \\ []) do
     filters
     |> Panic.Models.list()

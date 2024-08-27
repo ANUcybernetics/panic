@@ -87,7 +87,7 @@ defmodule Panic.InvocationTest do
 
       check all(
               network <- Panic.Generators.network_with_models(user),
-              input <- string(:alphanumeric, min_length: 1)
+              input <- Panic.Generators.ascii_sentence()
             ) do
         invocation = Panic.Engine.prepare_first!(network, input)
         assert invocation.id == Panic.Engine.get_invocation!(invocation.id).id
@@ -119,7 +119,7 @@ defmodule Panic.InvocationTest do
 
       check all(
               network <- Panic.Generators.network_with_models(user),
-              input <- string(:alphanumeric, min_length: 1)
+              input <- Panic.Generators.ascii_sentence()
             ) do
         invocation = Panic.Engine.prepare_first!(network, input)
         invoked = Panic.Engine.invoke!(invocation)
@@ -132,7 +132,7 @@ defmodule Panic.InvocationTest do
 
       check all(
               network <- Panic.Generators.network_with_models(user),
-              input <- string(:alphanumeric, min_length: 1)
+              input <- Panic.Generators.ascii_sentence()
             ) do
         invocation = Panic.Engine.prepare_first!(network, input)
         invoked = Panic.Engine.invoke!(invocation)
