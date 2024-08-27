@@ -87,7 +87,7 @@ defmodule Panic.InvocationTest do
 
       check all(
               network <- Panic.Generators.network_with_models(user),
-              input <- binary(min_length: 1)
+              input <- string(:alphanumeric, min_length: 1)
             ) do
         invocation = Panic.Engine.prepare_first!(network, input)
         assert invocation.id == Panic.Engine.get_invocation!(invocation.id).id
