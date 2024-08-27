@@ -16,8 +16,13 @@ defmodule PanicWeb.UserLiveTest do
       conn
       |> visit("/")
       |> assert_has("#current-user-email", text: user.email |> Ash.CiString.value())
+    end
 
-      # open_browser(view)
+    test "and can visit the user index page", %{conn: conn, user: user} do
+      conn
+      |> visit("/users")
+      |> assert_has("#current-user-email", text: user.email |> Ash.CiString.value())
+      |> assert_has("#users", text: user.email |> Ash.CiString.value())
     end
   end
 
