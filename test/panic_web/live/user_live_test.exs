@@ -24,6 +24,15 @@ defmodule PanicWeb.UserLiveTest do
       |> assert_has("#current-user-email", text: user.email |> Ash.CiString.value())
       |> assert_has("#users", text: user.email |> Ash.CiString.value())
     end
+
+    test "and can visit the user index page and click on their own name", %{
+      conn: conn,
+      user: user
+    } do
+      conn
+      |> visit("/users")
+      |> click_link("#users-#{user.id} > td:nth-child(1)", Integer.to_string(user.id))
+    end
   end
 
   describe "user is NOT logged in" do
