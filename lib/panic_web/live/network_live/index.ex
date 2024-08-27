@@ -18,7 +18,7 @@ defmodule PanicWeb.NetworkLive.Index do
       rows={@streams.networks}
       row_click={fn {_id, network} -> JS.navigate(~p"/networks/#{network}") end}
     >
-      <:col :let={{_id, network}} label="Id"><%= network.id %></:col>
+      <:col :let={{_id, network}} label="ID"><%= network.id %></:col>
 
       <:action :let={{_id, network}}>
         <div class="sr-only">

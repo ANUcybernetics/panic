@@ -16,7 +16,7 @@ defmodule PanicWeb.UserLive.Show do
     </.header>
 
     <.list>
-      <:item title="Id"><%= @user.id %></:item>
+      <:item title="ID"><%= @user.id %></:item>
 
       <:item title="Email"><%= @user.email %></:item>
     </.list>

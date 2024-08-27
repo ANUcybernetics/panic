@@ -16,7 +16,7 @@ defmodule PanicWeb.NetworkLive.Show do
     </.header>
 
     <.list>
-      <:item title="Id"><%= @network.id %></:item>
+      <:item title="ID"><%= @network.id %></:item>
     </.list>
 
     <.back navigate={~p"/"}>Back to networks</.back>
