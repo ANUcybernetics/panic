@@ -16,7 +16,13 @@ defmodule Panic.Accounts.User do
   end
 
   actions do
-    defaults [:read, :destroy, update: [:email, :hashed_password]]
+    defaults [:read, :destroy]
+
+    update :update do
+      accept [:email]
+      argument :api_tokens, {:array, :map}
+      change manage_relationship(:api_tokens, type: :direct_control)
+    end
   end
 
   authentication do

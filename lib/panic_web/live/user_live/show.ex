@@ -55,6 +55,11 @@ defmodule PanicWeb.UserLive.Show do
      |> assign(:user, user)}
   end
 
+  @impl true
+  def handle_info({PanicWeb.UserLive.FormComponent, {:saved, user}}, socket) do
+    {:noreply, assign(socket, user: user)}
+  end
+
   defp page_title(:show), do: "Show User"
   defp page_title(:edit), do: "Edit User"
 end
