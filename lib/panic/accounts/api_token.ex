@@ -55,10 +55,9 @@ defmodule Panic.Accounts.ApiToken do
   end
 
   policies do
-    policy action_type(:read) do
-      authorize_if relates_to_actor_via(:user)
-      # authorize_if actor_present()
-    end
+    policy action_type(:read), do: authorize_if(relates_to_actor_via(:user))
+    policy action_type(:update), do: authorize_if(relates_to_actor_via(:user))
+    policy action_type(:destroy), do: authorize_if(relates_to_actor_via(:user))
 
     policy action_type(:create) do
       authorize_if actor_present()
