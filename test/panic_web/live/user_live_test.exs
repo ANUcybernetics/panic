@@ -33,6 +33,21 @@ defmodule PanicWeb.UserLiveTest do
       |> visit("/users")
       |> click_link("#users-#{user.id} > td:nth-child(1)", Integer.to_string(user.id))
     end
+
+    test "and can visit the user index page and add an API token", %{
+      conn: conn,
+      user: user
+    } do
+      token_value = ";laskdfjhnlkjlkj"
+
+      conn
+      |> visit("/users")
+      |> click_link("#users-#{user.id} > td:nth-child(1)", Integer.to_string(user.id))
+      |> click_link("Edit user")
+      |> fill_in("Replicate API Token", with: token_value)
+      |> submit()
+      |> assert_has("#token-list", text: token_value)
+    end
   end
 
   describe "user is NOT logged in" do

@@ -15,14 +15,16 @@ defmodule PanicWeb.UserLive.Show do
 
     <h2 class="py-4">API Tokens</h2>
 
-    <.list>
-      <:item title="Replicate"><%= @user.replicate_token %></:item>
-      <:item title="OpenAI"><%= @user.openai_token %></:item>
-      <:item title="Vestaboard 1"><%= @user.vestaboard_panic_1_token %></:item>
-      <:item title="Vestaboard 2"><%= @user.vestaboard_panic_2_token %></:item>
-      <:item title="Vestaboard 3"><%= @user.vestaboard_panic_3_token %></:item>
-      <:item title="Vestaboard 4"><%= @user.vestaboard_panic_4_token %></:item>
-    </.list>
+    <div id="token-list">
+      <.list>
+        <:item title="Replicate"><%= @user.replicate_token %></:item>
+        <:item title="OpenAI"><%= @user.openai_token %></:item>
+        <:item title="Vestaboard 1"><%= @user.vestaboard_panic_1_token %></:item>
+        <:item title="Vestaboard 2"><%= @user.vestaboard_panic_2_token %></:item>
+        <:item title="Vestaboard 3"><%= @user.vestaboard_panic_3_token %></:item>
+        <:item title="Vestaboard 4"><%= @user.vestaboard_panic_4_token %></:item>
+      </.list>
+    </div>
 
     <.back navigate={~p"/users"}>Back to users</.back>
 
