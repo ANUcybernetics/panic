@@ -41,14 +41,17 @@ defmodule Panic.Generators do
     end
   end
 
+  def set_all_tokens(user) do
+    Application.get_env(:panic, :api_tokens)
+    |> Enum.map(fn {name, value} ->
+      Panic.Accounts.set_token!(user, name, value)
+    end)
+    |> List.last()
+  end
+
   def user_with_tokens do
     gen all(user <- user()) do
-      # TODO check these work!
-      Application.get_env(:panic, :api_tokens)
-      |> Enum.each(fn {name, value} ->
-        "TODO #{name} #{value}"
-      end)
-
+      user = set_all_tokens(user)
       Ash.get!(Panic.Accounts.User, user.id)
     end
   end
@@ -96,7 +99,12 @@ end
 defmodule PanicWeb.Helpers do
   def create_and_sign_in_user(%{conn: conn}) do
     password = "abcd1234"
-    user = Panic.Fixtures.user(password)
+
+    user =
+      password
+      |> Panic.Fixtures.user()
+      |> Panic.Generators.set_all_tokens()
+
     strategy = AshAuthentication.Info.strategy!(Panic.Accounts.User, :password)
 
     {:ok, user} =
