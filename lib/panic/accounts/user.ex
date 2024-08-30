@@ -17,7 +17,7 @@ defmodule Panic.Accounts.User do
     #   constraints one_of: [:user, :admin]
     # end
 
-    # API tokens... easiest to just have them as attrs on User in the end
+    # API tokens... this could (should?) be a map? oh well, easy to change later
     attribute :replicate_token, :string, sensitive?: true
     attribute :openai_token, :string, sensitive?: true
     attribute :vestaboard_panic_1_token, :string, sensitive?: true
@@ -33,15 +33,15 @@ defmodule Panic.Accounts.User do
       accept [:email]
     end
 
-    update :add_token do
+    update :set_token do
       argument :token_name, :atom do
         constraints one_of: [
-                      :replicate,
-                      :openai,
-                      :vestaboard_panic_1,
-                      :vestaboard_panic_2,
-                      :vestaboard_panic_3,
-                      :vestaboard_panic_4
+                      :replicate_token,
+                      :openai_token,
+                      :vestaboard_panic_1_token,
+                      :vestaboard_panic_2_token,
+                      :vestaboard_panic_3_token,
+                      :vestaboard_panic_4_token
                     ]
 
         allow_nil? false
@@ -49,7 +49,17 @@ defmodule Panic.Accounts.User do
 
       argument :token_value, :string, allow_nil?: false, sensitive?: true
 
-      set_attribute(arg(:token_name), arg(:token_value))
+      # just a convenience for the fact that there are several tokens, and
+      # it's a pain to have an action for setting each one
+      change fn changeset, _context ->
+        if changeset.valid? do
+          {:ok, token_name} = Ash.Changeset.fetch_argument(changeset, :token_name)
+          {:ok, token_value} = Ash.Changeset.fetch_argument(changeset, :token_value)
+          Ash.Changeset.force_change_attribute(changeset, token_name, token_value)
+        else
+          changeset
+        end
+      end
     end
   end
 
