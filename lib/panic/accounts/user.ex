@@ -13,15 +13,43 @@ defmodule Panic.Accounts.User do
     integer_primary_key :id
     attribute :email, :ci_string, allow_nil?: false, public?: true
     attribute :hashed_password, :string, allow_nil?: false, sensitive?: true
+    # attribute :role, :atom do
+    #   constraints one_of: [:user, :admin]
+    # end
+
+    # API tokens... easiest to just have them as attrs on User in the end
+    attribute :replicate_token, :string, sensitive?: true
+    attribute :openai_token, :string, sensitive?: true
+    attribute :vestaboard_panic_1_token, :string, sensitive?: true
+    attribute :vestaboard_panic_2_token, :string, sensitive?: true
+    attribute :vestaboard_panic_3_token, :string, sensitive?: true
+    attribute :vestaboard_panic_4_token, :string, sensitive?: true
   end
 
   actions do
     defaults [:read, :destroy]
 
-    update :update do
+    update :change_email do
       accept [:email]
-      argument :api_tokens, {:array, :map}
-      change manage_relationship(:api_tokens, type: :direct_control)
+    end
+
+    update :add_token do
+      argument :token_name, :atom do
+        constraints one_of: [
+                      :replicate,
+                      :openai,
+                      :vestaboard_panic_1,
+                      :vestaboard_panic_2,
+                      :vestaboard_panic_3,
+                      :vestaboard_panic_4
+                    ]
+
+        allow_nil? false
+      end
+
+      argument :token_value, :string, allow_nil?: false, sensitive?: true
+
+      set_attribute(arg(:token_name), arg(:token_value))
     end
   end
 
@@ -41,10 +69,6 @@ defmodule Panic.Accounts.User do
 
   identities do
     identity :unique_email, [:email]
-  end
-
-  relationships do
-    has_many :api_tokens, Panic.Accounts.ApiToken
   end
 
   # You can customize this if you wish, but this is a safe default that

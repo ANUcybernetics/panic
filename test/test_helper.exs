@@ -46,7 +46,7 @@ defmodule Panic.Generators do
       # TODO check these work!
       Application.get_env(:panic, :api_tokens)
       |> Enum.each(fn {name, value} ->
-        Panic.Accounts.create_api_token!(name, value, actor: user)
+        "TODO #{name} #{value}"
       end)
 
       Ash.get!(Panic.Accounts.User, user.id)

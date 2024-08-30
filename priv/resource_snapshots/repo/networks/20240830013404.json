@@ -14,7 +14,7 @@
       "default": "nil",
       "size": null,
       "type": "text",
-      "source": "input",
+      "source": "name",
       "references": null,
       "allow_nil?": false,
       "generated?": false,
@@ -24,37 +24,20 @@
       "default": "nil",
       "size": null,
       "type": "text",
-      "source": "model",
-      "references": null,
-      "allow_nil?": false,
-      "generated?": false,
-      "primary_key?": false
-    },
-    {
-      "default": "%{}",
-      "size": null,
-      "type": "map",
-      "source": "metadata",
-      "references": null,
-      "allow_nil?": false,
-      "generated?": false,
-      "primary_key?": false
-    },
-    {
-      "default": "nil",
-      "size": null,
-      "type": "text",
-      "source": "output",
+      "source": "description",
       "references": null,
       "allow_nil?": true,
       "generated?": false,
       "primary_key?": false
     },
     {
-      "default": "nil",
+      "default": "[]",
       "size": null,
-      "type": "bigint",
-      "source": "sequence_number",
+      "type": [
+        "array",
+        "text"
+      ],
+      "source": "models",
       "references": null,
       "allow_nil?": false,
       "generated?": false,
@@ -63,8 +46,18 @@
     {
       "default": "nil",
       "size": null,
-      "type": "bigint",
-      "source": "run_number",
+      "type": "text",
+      "source": "state",
+      "references": null,
+      "allow_nil?": false,
+      "generated?": false,
+      "primary_key?": false
+    },
+    {
+      "default": "nil",
+      "size": null,
+      "type": "text",
+      "source": "slug",
       "references": null,
       "allow_nil?": true,
       "generated?": false,
@@ -94,21 +87,21 @@
       "default": "nil",
       "size": null,
       "type": "bigint",
-      "source": "network_id",
+      "source": "user_id",
       "references": {
-        "name": "invocations_network_id_fkey",
-        "table": "networks",
+        "name": "networks_user_id_fkey",
+        "table": "users",
         "multitenancy": {
           "global": null,
-          "strategy": null,
-          "attribute": null
+          "attribute": null,
+          "strategy": null
         },
         "primary_key?": true,
         "destination_attribute": "id",
-        "on_delete": null,
         "deferrable": false,
         "destination_attribute_default": null,
         "destination_attribute_generated": null,
+        "on_delete": null,
         "on_update": null
       },
       "allow_nil?": false,
@@ -116,14 +109,14 @@
       "primary_key?": false
     }
   ],
-  "table": "invocations",
-  "hash": "6513A695F070F9045C465383630FECD1FEBF9C27C9D4D75BB9A38E19EB75AF3F",
+  "table": "networks",
+  "hash": "1A3352213936543B05B83F3708D6D3C2406EAC7861C8A17CE68A245ECEF3EBAF",
   "repo": "Elixir.Panic.Repo",
   "identities": [],
   "multitenancy": {
     "global": null,
-    "strategy": null,
-    "attribute": null
+    "attribute": null,
+    "strategy": null
   },
   "base_filter": null,
   "custom_indexes": [],

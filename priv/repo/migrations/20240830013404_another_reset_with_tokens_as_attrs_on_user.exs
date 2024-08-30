@@ -1,4 +1,4 @@
-defmodule :"Elixir.Panic.Repo.Migrations.Reset without tokens" do
+defmodule Panic.Repo.Migrations.AnotherResetWithTokensAsAttrsOnUser do
   @moduledoc """
   Updates resources based on their most recent snapshots.
 
@@ -9,6 +9,12 @@ defmodule :"Elixir.Panic.Repo.Migrations.Reset without tokens" do
 
   def up do
     create table(:users, primary_key: false) do
+      add :vestaboard_panic_4_token, :text
+      add :vestaboard_panic_3_token, :text
+      add :vestaboard_panic_2_token, :text
+      add :vestaboard_panic_1_token, :text
+      add :openai_token, :text
+      add :replicate_token, :text
       add :hashed_password, :text, null: false
       add :email, :citext, null: false
       add :id, :bigserial, null: false, primary_key: true
@@ -45,27 +51,9 @@ defmodule :"Elixir.Panic.Repo.Migrations.Reset without tokens" do
       add :input, :text, null: false
       add :id, :bigserial, null: false, primary_key: true
     end
-
-    create table(:api_tokens, primary_key: false) do
-      add :user_id,
-          references(:users, column: :id, name: "api_tokens_user_id_fkey", type: :bigint),
-          null: false
-
-      add :value, :text, null: false
-      add :name, :text, null: false
-      add :id, :bigserial, null: false, primary_key: true
-    end
-
-    create unique_index(:api_tokens, [:name, :user_id], name: "api_tokens_token_index")
   end
 
   def down do
-    drop_if_exists unique_index(:api_tokens, [:name, :user_id], name: "api_tokens_token_index")
-
-    drop constraint(:api_tokens, "api_tokens_user_id_fkey")
-
-    drop table(:api_tokens)
-
     drop constraint(:invocations, "invocations_network_id_fkey")
 
     drop table(:invocations)

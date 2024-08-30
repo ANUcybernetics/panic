@@ -19,14 +19,7 @@ defmodule Panic.UsersTest do
       for name <- token_names do
         value = string(:ascii, min_length: 1) |> pick()
 
-        Panic.Accounts.ApiToken
-        |> Ash.Changeset.for_create(:create, %{name: name, value: value}, actor: user)
-        |> Ash.create!()
-
-        token =
-          Panic.Accounts.ApiToken
-          |> Ash.Query.for_read(:get_by_name, %{name: name}, actor: user)
-          |> Ash.read_one!()
+        # TODO: add then read all the tokens
 
         assert token.user_id == user.id
         assert token.value == value
@@ -153,10 +146,7 @@ defmodule Panic.UsersTest do
       |> Ash.Changeset.for_create(:create, %{name: token_name, value: token_value}, actor: user)
       |> Ash.create!()
 
-      replicate_token =
-        Ash.load!(user, :api_tokens, actor: user)
-        |> Map.get(:api_tokens)
-        |> Enum.find(fn token -> token.name == token_name end)
+      replicate_token = "TODO"
 
       assert replicate_token.value == token_value
     end

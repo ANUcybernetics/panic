@@ -47,7 +47,6 @@ defmodule PanicWeb.UserLive.Show do
     user =
       Panic.Accounts.User
       |> Ash.get!(id, actor: socket.assigns.current_user)
-      |> Ash.load!(:api_tokens, actor: socket.assigns.current_user)
 
     {:noreply,
      socket
