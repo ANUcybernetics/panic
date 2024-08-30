@@ -33,6 +33,17 @@ defmodule Panic.Accounts.User do
       accept [:email]
     end
 
+    update :update_tokens do
+      accept [
+        :replicate_token,
+        :openai_token,
+        :vestaboard_panic_1_token,
+        :vestaboard_panic_2_token,
+        :vestaboard_panic_3_token,
+        :vestaboard_panic_4_token
+      ]
+    end
+
     update :set_token do
       argument :token_name, :atom do
         constraints one_of: [

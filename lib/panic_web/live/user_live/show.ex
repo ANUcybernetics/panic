@@ -5,9 +5,7 @@ defmodule PanicWeb.UserLive.Show do
   def render(assigns) do
     ~H"""
     <.header>
-      User <%= @user.id %>
-      <:subtitle>This is a user record from your database.</:subtitle>
-
+      User <%= @user.id %>: <%= @user.email %>
       <:actions>
         <.link patch={~p"/users/#{@user}/edit"} phx-click={JS.push_focus()}>
           <.button>Edit user</.button>
@@ -15,10 +13,15 @@ defmodule PanicWeb.UserLive.Show do
       </:actions>
     </.header>
 
-    <.list>
-      <:item title="ID"><%= @user.id %></:item>
+    <h2 class="py-4">API Tokens</h2>
 
-      <:item title="Email"><%= @user.email %></:item>
+    <.list>
+      <:item title="Replicate"><%= @user.replicate_token %></:item>
+      <:item title="OpenAI"><%= @user.openai_token %></:item>
+      <:item title="Vestaboard 1"><%= @user.vestaboard_panic_1_token %></:item>
+      <:item title="Vestaboard 2"><%= @user.vestaboard_panic_2_token %></:item>
+      <:item title="Vestaboard 3"><%= @user.vestaboard_panic_3_token %></:item>
+      <:item title="Vestaboard 4"><%= @user.vestaboard_panic_4_token %></:item>
     </.list>
 
     <.back navigate={~p"/users"}>Back to users</.back>

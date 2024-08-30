@@ -16,43 +16,30 @@ defmodule PanicWeb.UserLive.FormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <%!-- Attributes for the parent resource --%>
         <.input type="email" label="Email" field={@form[:email]} />
-        <%!-- Render nested forms for related data --%>
-        <.inputs_for :let={api_token_form} field={@form[:api_tokens]}>
-          <.input
-            type="select"
-            label="Name"
-            field={api_token_form[:name]}
-            options={[
-              :replicate,
-              :openai,
-              :vestaboard_panic_1,
-              :vestaboard_panic_2,
-              :vestaboard_panic_3,
-              :vestaboard_panic_4
-            ]}
-          />
-
-          <.input type="text" label="Token" field={api_token_form[:value]} />
-          <.button
-            type="button"
-            phx-click="remove_token"
-            phx-value-path={api_token_form.name}
-            phx-target={@myself}
-          >
-            Remove
-          </.button>
-        </.inputs_for>
+        <.input type="text" label="Replicate API Token" field={@form[:replicate_token]} />
+        <.input type="text" label="OpenAI API Token" field={@form[:openai_token]} />
+        <.input
+          type="text"
+          label="Vestaboard Panic 1 API Token"
+          field={@form[:vestaboard_panic_1_token]}
+        />
+        <.input
+          type="text"
+          label="Vestaboard Panic 2 API Token"
+          field={@form[:vestaboard_panic_2_token]}
+        />
+        <.input
+          type="text"
+          label="Vestaboard Panic 3 API Token"
+          field={@form[:vestaboard_panic_3_token]}
+        />
+        <.input
+          type="text"
+          label="Vestaboard Panic 4 API Token"
+          field={@form[:vestaboard_panic_4_token]}
+        />
         <:actions>
-          <.button
-            type="button"
-            phx-click="add_token"
-            phx-value-path={@form[:api_tokens].name}
-            phx-target={@myself}
-          >
-            Add API Token
-          </.button>
           <.button>Save</.button>
         </:actions>
       </.simple_form>
@@ -93,16 +80,6 @@ defmodule PanicWeb.UserLive.FormComponent do
     end
   end
 
-  def handle_event("add_token", %{"path" => params}, socket) do
-    form = AshPhoenix.Form.add_form(socket.assigns.form, params)
-    {:noreply, assign(socket, form: form)}
-  end
-
-  def handle_event("remove_token", %{"path" => params}, socket) do
-    form = AshPhoenix.Form.remove_form(socket.assigns.form, params)
-    {:noreply, assign(socket, form: form)}
-  end
-
   def handle_event(_, _params, socket) do
     {:noreply, socket}
   end
@@ -112,22 +89,12 @@ defmodule PanicWeb.UserLive.FormComponent do
   defp assign_form(%{assigns: %{user: user}} = socket) do
     form =
       user
-      |> AshPhoenix.Form.for_update(:update,
-        forms: [
-          api_tokens: [
-            type: :list,
-            data: user.api_tokens,
-            resource: Panic.Accounts.ApiToken,
-            update_action: :update,
-            create_action: :create
-          ]
-        ],
+      |> AshPhoenix.Form.for_update(:update_tokens,
         as: "user",
         actor: socket.assigns.current_user
       )
-      |> AshPhoenix.Form.add_form([:api_tokens])
       |> to_form()
 
-    assign(socket, form: to_form(form))
+    assign(socket, form: form)
   end
 end
