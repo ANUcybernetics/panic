@@ -13,7 +13,7 @@ defmodule PanicWeb.UserLive.Show do
       </:actions>
     </.header>
 
-    <h2 class="py-4">API Tokens</h2>
+    <h2 class="mt-8 font-semibold">API Tokens</h2>
 
     <div id="token-list">
       <.list>
@@ -26,6 +26,11 @@ defmodule PanicWeb.UserLive.Show do
       </.list>
     </div>
 
+    <h2 class="mt-8 font-semibold">Networks</h2>
+
+    <div id="network-list">
+      TODO
+    </div>
     <.back navigate={~p"/users"}>Back to users</.back>
 
     <.modal :if={@live_action == :edit} id="user-modal" show on_cancel={JS.patch(~p"/users/#{@user}")}>

@@ -1,6 +1,6 @@
 # Panic TODO
 
-- make sure actors are getting passed through on all the views
+- network creation (also ensure that the last->first ends match up)
 - terminal (which can then be used for testing)
 - make invocation run in a before transaction hook (for better concurrency maybe?)
 - `req_new` pulls API keys from the user (with tests)
