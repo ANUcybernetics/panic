@@ -3,8 +3,8 @@ defmodule Panic.UsersTest do
   use ExUnitProperties
   # alias Panic.Accounts.User
 
-  describe "ApiToken resource actions" do
-    test "can set replicate token" do
+  describe "User token management" do
+    test "sets replicate token successfully" do
       user = Panic.Fixtures.user()
       token_name = :replicate_token
       token_value = "alksdjf;asl"
@@ -12,7 +12,7 @@ defmodule Panic.UsersTest do
       assert user.replicate_token == token_value
     end
 
-    test "set api token (for all valid token names)" do
+    test "sets all valid API tokens" do
       user = Panic.Fixtures.user()
 
       token_names = [
@@ -32,7 +32,7 @@ defmodule Panic.UsersTest do
       end
     end
 
-    property "can read (real) tokens from user_with_tokens generator" do
+    property "generates users with all valid tokens" do
       token_names = [
         :replicate_token,
         :openai_token,
@@ -50,7 +50,7 @@ defmodule Panic.UsersTest do
       end
     end
 
-    test "fails with unsupported api token" do
+    test "raises error for unsupported API token" do
       user = Panic.Fixtures.user()
 
       assert_raise Ash.Error.Invalid, fn ->
@@ -59,9 +59,8 @@ defmodule Panic.UsersTest do
     end
   end
 
-  describe "CRUD actions" do
-    #   # now if our action inputs are invalid when we think they should be valid, we will find out here
-    property "accepts all valid input" do
+  describe "User registration" do
+    property "accepts valid registration input" do
       check all(
               email <- Panic.Generators.email(),
               password <- Panic.Generators.password()

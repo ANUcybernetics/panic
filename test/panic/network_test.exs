@@ -3,9 +3,9 @@ defmodule Panic.NetworkTest do
   use ExUnitProperties
   alias Panic.Engine.Network
 
-  describe "CRUD actions" do
+  describe "Network CRUD operations" do
     # now if our action inputs are invalid when we think they should be valid, we will find out here
-    property "accepts all valid input" do
+    property "create changeset accepts valid input without actor" do
       user = Panic.Fixtures.user()
 
       check all(input <- input_for_create()) do
@@ -18,7 +18,7 @@ defmodule Panic.NetworkTest do
       end
     end
 
-    property "accepts all valid input (with an actor)" do
+    property "create changeset accepts valid input with actor" do
       user = Panic.Generators.user()
 
       check all(input <- input_for_create()) do
@@ -32,7 +32,7 @@ defmodule Panic.NetworkTest do
       end
     end
 
-    property "succeeds on all valid input" do
+    property "create action succeeds with valid input" do
       user = Panic.Fixtures.user()
 
       check all(input <- input_for_create()) do
@@ -42,7 +42,7 @@ defmodule Panic.NetworkTest do
       end
     end
 
-    property "succeeds on all valid input (code interface version)" do
+    property "create action via code interface succeeds with valid input" do
       user = Panic.Fixtures.user()
 
       check all(input <- input_for_create()) do
@@ -63,7 +63,7 @@ defmodule Panic.NetworkTest do
 
     # TODO what's the best way with property testing to test that it gives the right invalid changeset on invalid input?
 
-    property "Network read action" do
+    property "read action retrieves correct network and raises on invalid ID" do
       user = Panic.Fixtures.user()
 
       check all(network <- Panic.Generators.network(user)) do
@@ -73,7 +73,7 @@ defmodule Panic.NetworkTest do
       end
     end
 
-    property "Network set_state action" do
+    property "set_state action updates network state correctly" do
       user = Panic.Fixtures.user()
 
       check all(
@@ -85,7 +85,7 @@ defmodule Panic.NetworkTest do
       end
     end
 
-    property "can append models with correct modality" do
+    property "append_model action adds models in correct order" do
       user = Panic.Fixtures.user()
 
       check all(network <- Panic.Generators.network(user)) do
@@ -101,7 +101,7 @@ defmodule Panic.NetworkTest do
       end
     end
 
-    test "network_with_models generator" do
+    test "network_with_models generator creates network with valid models" do
       user = Panic.Fixtures.user()
       network = Panic.Generators.network_with_models(user) |> pick()
       assert [first_model | _] = network.models

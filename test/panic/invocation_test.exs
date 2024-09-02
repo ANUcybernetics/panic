@@ -3,9 +3,8 @@ defmodule Panic.InvocationTest do
   use ExUnitProperties
   alias Panic.Engine.Invocation
 
-  describe "basic CRUD (no real API calls)" do
-    # now if our action inputs are invalid when we think they should be valid, we will find out here
-    property "accepts all valid input (with networks of length at least 1)" do
+  describe "Invocation CRUD operations" do
+    property "accepts valid input with non-empty networks" do
       check all(input <- input_for_prepare_first()) do
         assert %Ash.Changeset{valid?: true} =
                  Panic.Engine.changeset_to_prepare_first(
@@ -16,7 +15,7 @@ defmodule Panic.InvocationTest do
       end
     end
 
-    property "cannot prepare first when network has no models" do
+    property "rejects preparation when network has no models" do
       user = Panic.Fixtures.user()
 
       check all(
@@ -34,7 +33,7 @@ defmodule Panic.InvocationTest do
       end
     end
 
-    property "gives error changeset when :input is invalid" do
+    property "returns error changeset for invalid input" do
       user = Panic.Fixtures.user()
 
       check all(
@@ -53,7 +52,7 @@ defmodule Panic.InvocationTest do
       end
     end
 
-    property "succeeds on all valid input" do
+    property "creates invocation with correct attributes" do
       user = Panic.Fixtures.user()
 
       check all(input <- input_for_prepare_first()) do
@@ -70,7 +69,7 @@ defmodule Panic.InvocationTest do
       end
     end
 
-    property "succeeds on all valid input (code interface version)" do
+    property "prepares first invocation using code interface" do
       check all(input <- input_for_prepare_first()) do
         Panic.Engine.prepare_first!(
           input.network,
@@ -82,7 +81,7 @@ defmodule Panic.InvocationTest do
 
     # TODO what's the best way with property testing to test that it gives the right invalid changeset on invalid input?
 
-    property "Invocation missing read action throws Invalid error" do
+    property "raises NotFound error for non-existent invocation" do
       user = Panic.Fixtures.user()
 
       check all(
@@ -91,12 +90,11 @@ defmodule Panic.InvocationTest do
             ) do
         invocation = Panic.Engine.prepare_first!(network, input)
         assert invocation.id == Panic.Engine.get_invocation!(invocation.id).id
-        # there shouldn't ever be a negative ID in the db, so this should always raise
         assert_raise Ash.Error.Query.NotFound, fn -> Panic.Engine.get_invocation!(-1) end
       end
     end
 
-    property "Invocation pre-invocation has no output" do
+    property "initial invocation has no output" do
       user = Panic.Fixtures.user()
 
       check all(
@@ -111,10 +109,10 @@ defmodule Panic.InvocationTest do
     end
   end
 
-  describe "invoke with real API calls" do
+  describe "Invocation with API calls" do
     @describetag skip: "requires API keys"
 
-    property "invoke the invocation" do
+    property "invocation produces output" do
       user = Panic.Fixtures.user()
 
       check all(
@@ -127,7 +125,7 @@ defmodule Panic.InvocationTest do
       end
     end
 
-    property "invoke and prepare next" do
+    property "next invocation maintains run number and increments sequence" do
       user = Panic.Fixtures.user()
 
       check all(
@@ -142,8 +140,7 @@ defmodule Panic.InvocationTest do
       end
     end
 
-    # this is a big test - almost an integration test
-    property "create a run of invocations" do
+    property "run of invocations maintains consistency and order" do
       run_length = 4
       user = Panic.Fixtures.user()
 

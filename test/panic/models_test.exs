@@ -12,8 +12,8 @@ defmodule Panic.ModelsTest do
   #   {:ok, user: user}
   # end
 
-  describe "model helpers" do
-    property "model generators work" do
+  describe "model generators" do
+    property "generate models with correct attributes" do
       check all(
               model <- Panic.Generators.model(),
               text_input_model <- Panic.Generators.model(input_type: :text),
@@ -27,7 +27,7 @@ defmodule Panic.ModelsTest do
       end
     end
 
-    property "model list filters work" do
+    property "filter models by input type" do
       check all(
               input_type <- one_of([:text, :image]),
               model <- Panic.Generators.model(input_type: input_type)
@@ -40,12 +40,16 @@ defmodule Panic.ModelsTest do
   describe "Replicate models" do
     @describetag skip: "requires API keys"
 
-    test "list models" do
+    test "get latest StableDiffusion model version" do
       {:ok, version} = Panic.Platforms.Replicate.get_latest_model_version(Models.StableDiffusion)
       assert String.match?(version, ~r/^[a-f0-9]{64}$/)
     end
+  end
 
-    test "OpenAI models" do
+  describe "OpenAI models" do
+    @describetag skip: "requires API keys"
+
+    test "invoke text models with predefined response" do
       # models for which we have canned responses
       models =
         Panic.Platforms.OpenAI
