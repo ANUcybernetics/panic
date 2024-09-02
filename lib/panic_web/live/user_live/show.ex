@@ -6,31 +6,46 @@ defmodule PanicWeb.UserLive.Show do
     ~H"""
     <.header>
       User <%= @user.id %>: <%= @user.email %>
-      <:actions>
-        <.link patch={~p"/users/#{@user}/edit"} phx-click={JS.push_focus()}>
-          <.button>Edit user</.button>
-        </.link>
-      </:actions>
     </.header>
 
-    <h2 class="mt-16 font-semibold">API Tokens</h2>
+    <section>
+      <div class="flex justify-between items-center mt-16">
+        <h2 class="font-semibold">API Tokens</h2>
+        <.link patch={~p"/users/#{@user}/edit"} phx-click={JS.push_focus()}>
+          <.button>Update API Tokens</.button>
+        </.link>
+      </div>
 
-    <div id="token-list">
-      <.list>
-        <:item title="Replicate"><%= @user.replicate_token %></:item>
-        <:item title="OpenAI"><%= @user.openai_token %></:item>
-        <:item title="Vestaboard 1"><%= @user.vestaboard_panic_1_token %></:item>
-        <:item title="Vestaboard 2"><%= @user.vestaboard_panic_2_token %></:item>
-        <:item title="Vestaboard 3"><%= @user.vestaboard_panic_3_token %></:item>
-        <:item title="Vestaboard 4"><%= @user.vestaboard_panic_4_token %></:item>
-      </.list>
-    </div>
+      <div id="token-list">
+        <.list>
+          <:item title="Replicate"><%= @user.replicate_token %></:item>
+          <:item title="OpenAI"><%= @user.openai_token %></:item>
+          <:item title="Vestaboard 1"><%= @user.vestaboard_panic_1_token %></:item>
+          <:item title="Vestaboard 2"><%= @user.vestaboard_panic_2_token %></:item>
+          <:item title="Vestaboard 3"><%= @user.vestaboard_panic_3_token %></:item>
+          <:item title="Vestaboard 4"><%= @user.vestaboard_panic_4_token %></:item>
+        </.list>
+      </div>
+    </section>
 
-    <h2 class="mt-16 font-semibold">Networks</h2>
+    <hr class="h-px my-8 bg-gray-300 border-0" />
 
-    <.table id="network-list" rows={@networks}>
-      <:col :let={network} label="Name"><%= network.name %></:col>
-    </.table>
+    <section>
+      <div class="flex justify-between items-center mt-16">
+        <h2 class="font-semibold">Networks</h2>
+        <.link patch={~p"/users/#{@user}/add-network"} phx-click={JS.push_focus()}>
+          <.button>Add network</.button>
+        </.link>
+      </div>
+
+      <%= if @networks != [] do %>
+        <.table id="network-list" rows={@networks}>
+          <:col :let={network} label="Name"><%= network.name %></:col>
+        </.table>
+      <% else %>
+        <p class="mt-8">User has no networks.</p>
+      <% end %>
+    </section>
 
     <.back navigate={~p"/users"}>Back to users</.back>
 
