@@ -2,7 +2,7 @@ defmodule Panic.Accounts.User do
   use Ash.Resource,
     data_layer: AshSqlite.DataLayer,
     extensions: [AshAuthentication],
-    # authorizers: [Ash.Policy.Authorizer],
+    authorizers: [Ash.Policy.Authorizer],
     domain: Panic.Accounts
 
   resource do
@@ -92,15 +92,24 @@ defmodule Panic.Accounts.User do
     identity :unique_email, [:email]
   end
 
-  # You can customize this if you wish, but this is a safe default that
-  # only allows user data to be interacted with via AshAuthentication.
-  # policies do
-  #   bypass AshAuthentication.Checks.AshAuthenticationInteraction do
-  #     authorize_if always()
-  #   end
+  policies do
+    bypass AshAuthentication.Checks.AshAuthenticationInteraction do
+      authorize_if always()
+    end
 
-  #   policy always() do
-  #     forbid_if always()
-  #   end
-  # end
+    # in future, update this so that only role: admin users can create new users (although)
+    # there may still be a bootstrapping problem there?
+    policy action_type(:create) do
+      authorize_if always()
+    end
+
+    # can only read & update User if the actor is the User being updated
+    policy action_type(:read) do
+      authorize_if expr(id == ^actor(:id))
+    end
+
+    policy action_type(:update) do
+      authorize_if expr(id == ^actor(:id))
+    end
+  end
 end

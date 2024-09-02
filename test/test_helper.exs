@@ -44,7 +44,7 @@ defmodule Panic.Generators do
   def set_all_tokens(user) do
     Application.get_env(:panic, :api_tokens)
     |> Enum.map(fn {name, value} ->
-      Panic.Accounts.set_token!(user, name, value)
+      Panic.Accounts.set_token!(user, name, value, actor: user)
     end)
     |> List.last()
   end
@@ -52,7 +52,7 @@ defmodule Panic.Generators do
   def user_with_tokens do
     gen all(user <- user()) do
       user = set_all_tokens(user)
-      Ash.get!(Panic.Accounts.User, user.id)
+      Ash.get!(Panic.Accounts.User, user.id, actor: user)
     end
   end
 

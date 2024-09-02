@@ -8,7 +8,7 @@ defmodule Panic.UsersTest do
       user = Panic.Fixtures.user()
       token_name = :replicate_token
       token_value = "alksdjf;asl"
-      user = Panic.Accounts.set_token!(user, token_name, token_value)
+      user = Panic.Accounts.set_token!(user, token_name, token_value, actor: user)
       assert user.replicate_token == token_value
     end
 
@@ -27,7 +27,7 @@ defmodule Panic.UsersTest do
       for name <- token_names do
         value = string(:ascii, min_length: 1) |> pick()
 
-        user = Panic.Accounts.set_token!(user, name, value)
+        user = Panic.Accounts.set_token!(user, name, value, actor: user)
         assert Map.get(user, name) == value
       end
     end
@@ -54,7 +54,7 @@ defmodule Panic.UsersTest do
       user = Panic.Fixtures.user()
 
       assert_raise Ash.Error.Invalid, fn ->
-        Panic.Accounts.set_token!(user, :bad_token_name, "bad_value")
+        Panic.Accounts.set_token!(user, :bad_token_name, "bad_value", actor: user)
       end
     end
   end
@@ -73,7 +73,7 @@ defmodule Panic.UsersTest do
           )
           |> Ash.create!()
 
-        assert user.email == email
+        assert user.email |> Ash.CiString.value() == email
       end
     end
   end
