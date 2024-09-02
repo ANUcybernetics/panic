@@ -41,4 +41,7 @@ config :panic, Oban, testing: :inline
 config :bcrypt_elixir, log_rounds: 1
 config :panic, :token_signing_secret, "keep_out"
 
+# useful for debugging authorization policy issues
+# config :ash, :policies, log_policy_breakdowns: :error
+
 import_config "secrets.exs"

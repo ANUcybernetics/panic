@@ -67,9 +67,9 @@ defmodule Panic.NetworkTest do
       user = Panic.Fixtures.user()
 
       check all(network <- Panic.Generators.network(user)) do
-        assert network.id == Panic.Engine.get_network!(network.id).id
+        assert network.id == Panic.Engine.get_network!(network.id, actor: user).id
         # there shouldn't ever be a negative ID in the db, so this should always raise
-        assert_raise Ash.Error.Invalid, fn -> Ash.get!(Network, -1) end
+        assert_raise Ash.Error.Invalid, fn -> Ash.get!(Network, -1, actor: user) end
       end
     end
 
@@ -80,7 +80,7 @@ defmodule Panic.NetworkTest do
               network <- Panic.Generators.network(user),
               state <- member_of([:starting, :running, :paused, :stopped])
             ) do
-        network = Panic.Engine.set_state!(network, state)
+        network = Panic.Engine.set_state!(network, state, actor: user)
         assert network.state == state
       end
     end
@@ -94,8 +94,8 @@ defmodule Panic.NetworkTest do
 
         network =
           network
-          |> Panic.Engine.append_model!(model1)
-          |> Panic.Engine.append_model!(model2)
+          |> Panic.Engine.append_model!(model1, actor: user)
+          |> Panic.Engine.append_model!(model2, actor: user)
 
         assert [^model1, ^model2] = network.models
       end

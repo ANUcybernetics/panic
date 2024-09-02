@@ -4,7 +4,8 @@ defmodule Panic.Engine.Network do
   """
   use Ash.Resource,
     domain: Panic.Engine,
-    data_layer: AshSqlite.DataLayer
+    data_layer: AshSqlite.DataLayer,
+    authorizers: [Ash.Policy.Authorizer]
 
   sqlite do
     table "networks"
@@ -93,6 +94,24 @@ defmodule Panic.Engine.Network do
 
   relationships do
     belongs_to :user, Panic.Accounts.User, allow_nil?: false
+  end
+
+  policies do
+    policy action_type(:create) do
+      authorize_if relating_to_actor(:user)
+    end
+
+    policy action_type(:read) do
+      authorize_if relates_to_actor_via(:user)
+    end
+
+    policy action_type(:update) do
+      authorize_if relates_to_actor_via(:user)
+    end
+
+    policy action_type(:destroy) do
+      authorize_if relates_to_actor_via(:user)
+    end
   end
 
   def validate_model_io_types(models) do

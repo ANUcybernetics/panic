@@ -7,7 +7,8 @@ defmodule Panic.Engine.Invocation do
   """
   use Ash.Resource,
     domain: Panic.Engine,
-    data_layer: AshSqlite.DataLayer
+    data_layer: AshSqlite.DataLayer,
+    authorizers: [Ash.Policy.Authorizer]
 
   sqlite do
     table "invocations"
@@ -75,7 +76,7 @@ defmodule Panic.Engine.Invocation do
           Ash.Changeset.add_error(changeset, "No models in network")
         else
           changeset
-          |> Ash.Changeset.change_attribute(:model, List.first(network.models))
+          |> Ash.Changeset.force_change_attribute(:model, List.first(network.models))
           |> Ash.Changeset.manage_relationship(:network, network, type: :append_and_remove)
         end
       end
@@ -85,7 +86,7 @@ defmodule Panic.Engine.Invocation do
       change after_action(fn changeset, invocation, _context ->
                invocation
                |> Ash.Changeset.for_update(:set_run_number, %{run_number: invocation.id})
-               |> Ash.update!()
+               |> Ash.update!(authorize?: false)
                |> then(&{:ok, &1})
              end)
     end
@@ -114,10 +115,10 @@ defmodule Panic.Engine.Invocation do
         model = Enum.at(models, model_index)
 
         changeset
-        |> Ash.Changeset.change_attribute(:model, model)
-        |> Ash.Changeset.change_attribute(:run_number, run_number)
-        |> Ash.Changeset.change_attribute(:sequence_number, prev_sequence_number + 1)
-        |> Ash.Changeset.change_attribute(:input, prev_output)
+        |> Ash.Changeset.force_change_attribute(:model, model)
+        |> Ash.Changeset.force_change_attribute(:run_number, run_number)
+        |> Ash.Changeset.force_change_attribute(:sequence_number, prev_sequence_number + 1)
+        |> Ash.Changeset.force_change_attribute(:input, prev_output)
         |> Ash.Changeset.manage_relationship(:network, network, type: :append_and_remove)
       end
     end
@@ -129,7 +130,7 @@ defmodule Panic.Engine.Invocation do
 
           case model.invoke(input) do
             {:ok, output} ->
-              Ash.Changeset.change_attribute(changeset, :output, output)
+              Ash.Changeset.force_change_attribute(changeset, :output, output)
 
             {:error, message} ->
               Ash.Changeset.add_error(changeset, message)
@@ -140,5 +141,27 @@ defmodule Panic.Engine.Invocation do
 
   relationships do
     belongs_to :network, Panic.Engine.Network, allow_nil?: false
+  end
+
+  policies do
+    policy action_type(:create) do
+      authorize_if always()
+    end
+
+    policy action_type(:read) do
+      authorize_if relates_to_actor_via([:network, :user])
+    end
+
+    policy action(:set_run_number) do
+      authorize_if always()
+    end
+
+    policy action_type(:update) do
+      authorize_if relates_to_actor_via([:network, :user])
+    end
+
+    policy action_type(:destroy) do
+      authorize_if relates_to_actor_via([:network, :user])
+    end
   end
 end

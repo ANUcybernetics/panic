@@ -59,7 +59,7 @@ defmodule PanicWeb.UserLive.Show do
       Panic.Accounts.User
       |> Ash.get!(id, actor: socket.assigns.current_user)
 
-    networks = Ash.read!(Panic.Engine.Network)
+    networks = Ash.read!(Panic.Engine.Network, actor: socket.assigns.current_user)
 
     {:noreply,
      socket

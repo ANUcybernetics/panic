@@ -5,12 +5,16 @@ defmodule Panic.InvocationTest do
 
   describe "Invocation CRUD operations" do
     property "accepts valid input with non-empty networks" do
-      check all(input <- input_for_prepare_first()) do
+      user = Panic.Fixtures.user()
+
+      check all(
+              network <- Panic.Generators.network_with_models(user),
+              input <- Panic.Generators.ascii_sentence()
+            ) do
         assert %Ash.Changeset{valid?: true} =
                  Panic.Engine.changeset_to_prepare_first(
-                   input.network,
-                   input.input,
-                   authorize?: false
+                   network,
+                   input
                  )
       end
     end
@@ -19,16 +23,13 @@ defmodule Panic.InvocationTest do
       user = Panic.Fixtures.user()
 
       check all(
-              input <-
-                Ash.Generator.action_input(Panic.Engine.Invocation, :prepare_first, %{
-                  network: Panic.Generators.network(user)
-                })
+              network <- Panic.Generators.network(user),
+              input <- Panic.Generators.ascii_sentence()
             ) do
         assert %Ash.Changeset{valid?: false} =
                  Panic.Engine.changeset_to_prepare_first(
-                   input.network,
-                   input.input,
-                   authorize?: false
+                   network,
+                   input
                  )
       end
     end
@@ -37,17 +38,14 @@ defmodule Panic.InvocationTest do
       user = Panic.Fixtures.user()
 
       check all(
-              input <-
-                Ash.Generator.action_input(Panic.Engine.Invocation, :prepare_first, %{
-                  network: Panic.Generators.network(user),
-                  input: integer()
-                })
+              network <- Panic.Generators.network_with_models(user),
+              input <- integer()
             ) do
         assert %Ash.Changeset{valid?: false} =
                  Panic.Engine.changeset_to_prepare_first(
-                   input.network,
-                   input.input,
-                   authorize?: false
+                   network,
+                   input,
+                   actor: user
                  )
       end
     end
@@ -55,14 +53,19 @@ defmodule Panic.InvocationTest do
     property "creates invocation with correct attributes" do
       user = Panic.Fixtures.user()
 
-      check all(input <- input_for_prepare_first()) do
+      check all(
+              network <- Panic.Generators.network_with_models(user),
+              input <- Panic.Generators.ascii_sentence()
+            ) do
         invocation =
           Invocation
-          |> Ash.Changeset.for_create(:prepare_first, input, actor: user)
+          |> Ash.Changeset.for_create(:prepare_first, %{network: network, input: input},
+            actor: user
+          )
           |> Ash.create!()
 
-        assert invocation.network_id == input.network.id
-        assert invocation.input == input.input
+        assert invocation.network_id == network.id
+        assert invocation.input == input
         assert invocation.output == nil
         assert invocation.sequence_number == 0
         assert invocation.run_number == invocation.id
@@ -70,27 +73,31 @@ defmodule Panic.InvocationTest do
     end
 
     property "prepares first invocation using code interface" do
-      check all(input <- input_for_prepare_first()) do
-        Panic.Engine.prepare_first!(
-          input.network,
-          input.input,
-          authorize?: false
-        )
-      end
-    end
-
-    # TODO what's the best way with property testing to test that it gives the right invalid changeset on invalid input?
-
-    property "raises NotFound error for non-existent invocation" do
       user = Panic.Fixtures.user()
 
       check all(
               network <- Panic.Generators.network_with_models(user),
               input <- Panic.Generators.ascii_sentence()
             ) do
-        invocation = Panic.Engine.prepare_first!(network, input)
-        assert invocation.id == Panic.Engine.get_invocation!(invocation.id).id
-        assert_raise Ash.Error.Query.NotFound, fn -> Panic.Engine.get_invocation!(-1) end
+        Panic.Engine.prepare_first!(
+          network,
+          input,
+          actor: user
+        )
+      end
+    end
+
+    # TODO what's the best way with property testing to test that it gives the right invalid changeset on invalid input?
+
+    property "raises the correct error for non-existent or forbidden invocations" do
+      user = Panic.Fixtures.user()
+
+      assert_raise Ash.Error.Query.NotFound, fn ->
+        Panic.Engine.get_invocation!(-1, actor: user)
+      end
+
+      assert_raise Ash.Error.Forbidden, fn ->
+        Panic.Engine.get_invocation!(1)
       end
     end
 
@@ -101,7 +108,7 @@ defmodule Panic.InvocationTest do
               network <- Panic.Generators.network_with_models(user),
               input <- Panic.Generators.ascii_sentence()
             ) do
-        invocation = Panic.Engine.prepare_first!(network, input)
+        invocation = Panic.Engine.prepare_first!(network, input, actor: user)
         refute invocation.input == nil
         assert invocation.output == nil
         assert invocation.id == invocation.run_number
@@ -119,8 +126,8 @@ defmodule Panic.InvocationTest do
               network <- Panic.Generators.network_with_models(user),
               input <- Panic.Generators.ascii_sentence()
             ) do
-        invocation = Panic.Engine.prepare_first!(network, input)
-        invoked = Panic.Engine.invoke!(invocation)
+        invocation = Panic.Engine.prepare_first!(network, input, actor: user)
+        invoked = Panic.Engine.invoke!(invocation, actor: user)
         refute invoked.output == nil
       end
     end
@@ -179,13 +186,5 @@ defmodule Panic.InvocationTest do
         assert most_recent.sequence_number == Enum.max(sequence_numbers)
       end
     end
-  end
-
-  defp input_for_prepare_first() do
-    user = Panic.Fixtures.user()
-
-    Ash.Generator.action_input(Panic.Engine.Invocation, :prepare_first, %{
-      network: Panic.Generators.network_with_models(user)
-    })
   end
 end

@@ -69,7 +69,7 @@ defmodule Panic.Generators do
       {network, :text}
       |> Stream.unfold(fn {network, input_type} ->
         next_model = model(input_type: input_type) |> pick()
-        network = Panic.Engine.append_model!(network, next_model)
+        network = Panic.Engine.append_model!(network, next_model, actor: user)
         {network, {network, next_model.fetch!(:output_type)}}
       end)
       |> Enum.take(length)
