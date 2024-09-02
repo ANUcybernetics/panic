@@ -104,12 +104,9 @@ defmodule Panic.Accounts.User do
     end
 
     # can only read & update User if the actor is the User being updated
-    policy action_type(:read) do
-      authorize_if expr(id == ^actor(:id))
-    end
-
-    policy action_type(:update) do
-      authorize_if expr(id == ^actor(:id))
+    policy_group expr(id == ^actor(:id)) do
+      policy action_type(:read), do: authorize_if(always())
+      policy action_type(:update), do: authorize_if(always())
     end
   end
 end
