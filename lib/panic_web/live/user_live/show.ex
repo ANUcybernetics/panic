@@ -13,7 +13,7 @@ defmodule PanicWeb.UserLive.Show do
       </:actions>
     </.header>
 
-    <h2 class="mt-8 font-semibold">API Tokens</h2>
+    <h2 class="mt-16 font-semibold">API Tokens</h2>
 
     <div id="token-list">
       <.list>
@@ -26,11 +26,12 @@ defmodule PanicWeb.UserLive.Show do
       </.list>
     </div>
 
-    <h2 class="mt-8 font-semibold">Networks</h2>
+    <h2 class="mt-16 font-semibold">Networks</h2>
 
-    <div id="network-list">
-      TODO
-    </div>
+    <.table id="network-list" rows={@networks}>
+      <:col :let={network} label="Name"><%= network.name %></:col>
+    </.table>
+
     <.back navigate={~p"/users"}>Back to users</.back>
 
     <.modal :if={@live_action == :edit} id="user-modal" show on_cancel={JS.patch(~p"/users/#{@user}")}>
@@ -58,10 +59,12 @@ defmodule PanicWeb.UserLive.Show do
       Panic.Accounts.User
       |> Ash.get!(id, actor: socket.assigns.current_user)
 
+    networks = Ash.read!(Panic.Engine.Network)
+
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:user, user)}
+     |> assign(user: user, networks: networks)}
   end
 
   @impl true
