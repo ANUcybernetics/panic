@@ -8,9 +8,7 @@ defmodule Panic.Engine do
       define :append_model, args: [:model], action: :append_model
       define :set_state, args: [:state], action: :set_state
     end
-  end
 
-  resources do
     resource Panic.Engine.Invocation do
       define :prepare_first, args: [:network, :input], action: :prepare_first
       define :prepare_next, args: [:previous_invocation], action: :prepare_next
