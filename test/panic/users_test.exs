@@ -65,13 +65,15 @@ defmodule Panic.UsersTest do
               email <- Panic.Generators.email(),
               password <- Panic.Generators.password()
             ) do
-        Panic.Accounts.User
-        |> Ash.Changeset.for_create(
-          :register_with_password,
-          %{email: email, password: password, password_confirmation: password}
-        )
-        # NOTE: doesn't check that the data is persisted correctly
-        |> Ash.create!()
+        user =
+          Panic.Accounts.User
+          |> Ash.Changeset.for_create(
+            :register_with_password,
+            %{email: email, password: password, password_confirmation: password}
+          )
+          |> Ash.create!()
+
+        assert user.email == email
       end
     end
   end
