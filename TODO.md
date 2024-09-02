@@ -2,7 +2,8 @@
 
 - network creation (also ensure that the last->first ends match up)
 - terminal (which can then be used for testing)
-- make invocation run in a before transaction hook (for better concurrency maybe?)
+- make invocation run in a before transaction hook (for better concurrency
+  maybe?)
 - `req_new` pulls API keys from the user (with tests)
 - add views
   - network
@@ -15,7 +16,8 @@
   - prediction component
     - text x image x audio grid (as per notebook)
 - pubsub notifications for all new/updated invocations
-- access control on all resources (with tests)
+- flesh out the tests to make sure the authorisation policies work properly
+  (mostly adding "negative versions" of current positive tests)
 - put all the identities/unique constraints in
 - set up tigris to host the images (because replicate outputs now expire in 1h)
 - add embeddings for all outputs (possibly via an ash oban trigger)
