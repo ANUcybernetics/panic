@@ -15,6 +15,17 @@ defmodule PanicWeb.NetworkLive.Show do
       </:actions>
     </.header>
 
+    <div class="mt-8">
+      State:
+      <span class={[
+        "rounded-lg px-2 py-2 font-semibold",
+        @network.state == :stopped && "bg-red-100 text-red-800",
+        @network.state != :stopped && "bg-green-100 text-green-800"
+      ]}>
+        <%= @network.state %>
+      </span>
+    </div>
+
     <.back navigate={~p"/"}>Back to networks</.back>
 
     <.modal
