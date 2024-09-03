@@ -74,6 +74,28 @@ defmodule Panic.NetworkTest do
       end
     end
 
+    property ":update action updates name & description" do
+      user = Panic.Fixtures.user()
+
+      check all(
+              network <- Panic.Generators.network(user),
+              updated_name <- string(:utf8, min_length: 1),
+              updated_description <- string(:utf8, min_length: 1)
+            ) do
+        network =
+          network
+          |> Ash.Changeset.for_update(
+            :update,
+            %{name: updated_name, description: updated_description},
+            actor: user
+          )
+          |> Ash.update!()
+
+        assert network.name == updated_name
+        assert network.description == updated_description
+      end
+    end
+
     property "set_state action updates network state correctly" do
       user = Panic.Fixtures.user()
 
