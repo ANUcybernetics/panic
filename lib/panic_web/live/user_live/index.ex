@@ -26,8 +26,6 @@ defmodule PanicWeb.UserLive.Index do
         <div class="sr-only">
           <.link navigate={~p"/users/#{user}"}>Show</.link>
         </div>
-
-        <.link patch={~p"/users/#{user}/edit"}>Edit</.link>
       </:action>
 
       <:action :let={{id, user}}>

@@ -48,17 +48,12 @@ defmodule Panic.Engine.Network do
   end
 
   actions do
-    defaults [:destroy]
+    defaults [:read, :destroy]
 
     create :create do
       accept [:name, :description]
       set_attribute(:models, [])
       change relate_actor(:user)
-    end
-
-    read :by_id do
-      get_by :id
-      primary? true
     end
 
     update :append_model do

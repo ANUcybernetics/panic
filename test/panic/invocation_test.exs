@@ -92,12 +92,12 @@ defmodule Panic.InvocationTest do
     property "raises the correct error for non-existent or forbidden invocations" do
       user = Panic.Fixtures.user()
 
-      assert_raise Ash.Error.Query.NotFound, fn ->
-        Panic.Engine.get_invocation!(-1, actor: user)
+      assert_raise Ash.Error.Invalid, fn ->
+        Ash.get!(Panic.Engine.Invocation, -1, actor: user)
       end
 
       assert_raise Ash.Error.Forbidden, fn ->
-        Panic.Engine.get_invocation!(1)
+        Ash.get!(Panic.Engine.Invocation, 1)
       end
     end
 

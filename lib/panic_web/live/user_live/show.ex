@@ -11,7 +11,7 @@ defmodule PanicWeb.UserLive.Show do
     <section>
       <div class="flex justify-between items-center mt-16">
         <h2 class="font-semibold">API Tokens</h2>
-        <.link patch={~p"/users/#{@user}/edit"} phx-click={JS.push_focus()}>
+        <.link patch={~p"/users/#{@user}/update-tokens"} phx-click={JS.push_focus()}>
           <.button>Update API Tokens</.button>
         </.link>
       </div>
@@ -33,7 +33,7 @@ defmodule PanicWeb.UserLive.Show do
     <section>
       <div class="flex justify-between items-center mt-16">
         <h2 class="font-semibold">Networks</h2>
-        <.link patch={~p"/users/#{@user}/add-network"} phx-click={JS.push_focus()}>
+        <.link patch={~p"/users/#{@user}/new-network"} phx-click={JS.push_focus()}>
           <.button>Add network</.button>
         </.link>
       </div>
@@ -49,7 +49,12 @@ defmodule PanicWeb.UserLive.Show do
 
     <.back navigate={~p"/users"}>Back to users</.back>
 
-    <.modal :if={@live_action == :edit} id="user-modal" show on_cancel={JS.patch(~p"/users/#{@user}")}>
+    <.modal
+      :if={@live_action == :update_tokens}
+      id="api-token-modal"
+      show
+      on_cancel={JS.patch(~p"/users/#{@user}")}
+    >
       <.live_component
         module={PanicWeb.UserLive.FormComponent}
         id={@user.id}
@@ -57,6 +62,23 @@ defmodule PanicWeb.UserLive.Show do
         action={@live_action}
         current_user={@current_user}
         user={@user}
+        patch={~p"/users/#{@user}"}
+      />
+    </.modal>
+
+    <.modal
+      :if={@live_action == :new_network}
+      id="new-network-modal"
+      show
+      on_cancel={JS.patch(~p"/users/#{@user}")}
+    >
+      <.live_component
+        module={PanicWeb.NetworkLive.FormComponent}
+        id={:new}
+        title={@page_title}
+        action={@live_action}
+        current_user={@current_user}
+        network={nil}
         patch={~p"/users/#{@user}"}
       />
     </.modal>
@@ -87,6 +109,12 @@ defmodule PanicWeb.UserLive.Show do
     {:noreply, assign(socket, user: user)}
   end
 
+  @impl true
+  def handle_info({PanicWeb.NetworkLive.FormComponent, {:saved, network}}, socket) do
+    {:noreply, update(socket, :networks, &[network | &1])}
+  end
+
   defp page_title(:show), do: "Show User"
-  defp page_title(:edit), do: "Edit User"
+  defp page_title(:update_tokens), do: "Update API Tokens"
+  defp page_title(:new_network), do: "Add Network"
 end

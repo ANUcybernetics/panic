@@ -5,8 +5,8 @@ defmodule Panic.Workers.Invoker do
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"invocation_id" => invocation_id}}) do
-    with {:ok, invocation} <- Engine.get_invocation(invocation_id),
-         {:ok, network} <- Engine.get_network(invocation.network_id),
+    with {:ok, invocation} <- Ash.get(Panic.Engine.Invocation, invocation_id),
+         {:ok, network} <- Ash.get(Panic.Engine.Network, invocation.network_id),
          {:ok, invoked_invocation} <- Panic.Engine.invoke(invocation),
          :ok <- maybe_schedule_next_invocation(network, invoked_invocation) do
       :ok

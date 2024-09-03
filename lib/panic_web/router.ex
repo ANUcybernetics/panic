@@ -37,8 +37,8 @@ defmodule PanicWeb.Router do
         live "/", UserLive.Index, :index
         live "/new", UserLive.Index, :new
         live "/:user_id", UserLive.Show, :show
-        live "/:user_id/edit", UserLive.Show, :edit
-        live "/:user_id/new_network", UserLive.Show, :new_network
+        live "/:user_id/update-tokens", UserLive.Show, :update_tokens
+        live "/:user_id/new-network", UserLive.Show, :new_network
       end
 
       scope "/networks" do

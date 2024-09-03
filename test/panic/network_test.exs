@@ -63,13 +63,14 @@ defmodule Panic.NetworkTest do
 
     # TODO what's the best way with property testing to test that it gives the right invalid changeset on invalid input?
 
-    property "read action retrieves correct network and raises on invalid ID" do
+    property "read action retrieves correct network, raises on invalid ID, and forbidden with no actor" do
       user = Panic.Fixtures.user()
 
       check all(network <- Panic.Generators.network(user)) do
-        assert network.id == Panic.Engine.get_network!(network.id, actor: user).id
+        assert network.id == Ash.get!(Network, network.id, actor: user).id
         # there shouldn't ever be a negative ID in the db, so this should always raise
         assert_raise Ash.Error.Invalid, fn -> Ash.get!(Network, -1, actor: user) end
+        assert_raise Ash.Error.Forbidden, fn -> Ash.get!(Network, -1) end
       end
     end
 

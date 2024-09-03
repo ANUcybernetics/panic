@@ -41,8 +41,9 @@ defmodule Panic.Engine.Invocation do
   end
 
   actions do
-    read :by_id, get_by: :id
+    defaults [:read, :destroy]
 
+    # TODO could this be a calculation/aggregate
     read :most_recent do
       argument :network_id, :integer
       argument :limit, :integer
