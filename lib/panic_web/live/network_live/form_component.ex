@@ -7,7 +7,6 @@ defmodule PanicWeb.NetworkLive.FormComponent do
     <div>
       <.header>
         <%= @title %>
-        <:subtitle>Use this form to manage network records in your database.</:subtitle>
       </.header>
 
       <.simple_form
@@ -68,12 +67,12 @@ defmodule PanicWeb.NetworkLive.FormComponent do
       if network do
         AshPhoenix.Form.for_update(network, :update,
           as: "network",
-          actor: socket.assigns.current_user
+          actor: socket.assigns[:current_user]
         )
       else
         AshPhoenix.Form.for_create(Panic.Engine.Network, :create,
           as: "network",
-          actor: socket.assigns.current_user
+          actor: socket.assigns[:current_user]
         )
       end
 

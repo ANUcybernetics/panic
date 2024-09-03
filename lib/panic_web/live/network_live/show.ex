@@ -5,8 +5,8 @@ defmodule PanicWeb.NetworkLive.Show do
   def render(assigns) do
     ~H"""
     <.header>
-      Network <%= @network.id %>
-      <:subtitle>This is a network record from your database.</:subtitle>
+      <%= @network.name %>
+      <:subtitle><%= @network.description %></:subtitle>
 
       <:actions>
         <.link patch={~p"/networks/#{@network}/edit"} phx-click={JS.push_focus()}>
@@ -49,8 +49,13 @@ defmodule PanicWeb.NetworkLive.Show do
   def handle_params(%{"network_id" => id}, _, socket) do
     {:noreply,
      socket
-     |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:network, Ash.get!(Panic.Engine.Network, id, actor: socket.assigns.current_user))}
+     |> assign(:page_title, page_title(socket.assigns[:live_action]))
+     |> assign(:network, Ash.get!(Panic.Engine.Network, id, actor: socket.assigns[:current_user]))}
+  end
+
+  @impl true
+  def handle_info({PanicWeb.NetworkLive.FormComponent, {:saved, network}}, socket) do
+    {:noreply, assign(socket, network: network)}
   end
 
   defp page_title(:show), do: "Show Network"

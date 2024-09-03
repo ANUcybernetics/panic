@@ -99,9 +99,9 @@ defmodule PanicWeb.UserLive.Show do
   def handle_params(%{"user_id" => id}, _, socket) do
     user =
       Panic.Accounts.User
-      |> Ash.get!(id, actor: socket.assigns.current_user)
+      |> Ash.get!(id, actor: socket.assigns[:current_user])
 
-    networks = Ash.read!(Panic.Engine.Network, actor: socket.assigns.current_user)
+    networks = Ash.read!(Panic.Engine.Network, actor: socket.assigns[:current_user])
 
     {:noreply,
      socket

@@ -91,7 +91,7 @@ defmodule PanicWeb.UserLive.FormComponent do
       user
       |> AshPhoenix.Form.for_update(:update_tokens,
         as: "user",
-        actor: socket.assigns.current_user
+        actor: socket.assigns[:current_user]
       )
       |> to_form()
 

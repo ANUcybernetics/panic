@@ -68,7 +68,7 @@ defmodule PanicWeb.UserLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit User")
-    |> assign(:user, Ash.get!(Panic.Accounts.User, id, actor: socket.assigns.current_user))
+    |> assign(:user, Ash.get!(Panic.Accounts.User, id, actor: socket.assigns[:current_user]))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -90,8 +90,8 @@ defmodule PanicWeb.UserLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    user = Ash.get!(Panic.Accounts.User, id, actor: socket.assigns.current_user)
-    Ash.destroy!(user, actor: socket.assigns.current_user)
+    user = Ash.get!(Panic.Accounts.User, id, actor: socket.assigns[:current_user])
+    Ash.destroy!(user, actor: socket.assigns[:current_user])
 
     {:noreply, stream_delete(socket, :users, user)}
   end
