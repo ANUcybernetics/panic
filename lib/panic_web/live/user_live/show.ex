@@ -41,6 +41,7 @@ defmodule PanicWeb.UserLive.Show do
       <%= if @networks != [] do %>
         <.table id="network-list" rows={@networks}>
           <:col :let={network} label="Name"><%= network.name %></:col>
+          <:col :let={network} label="Description"><%= network.description %></:col>
         </.table>
       <% else %>
         <p class="mt-8">User has no networks.</p>
