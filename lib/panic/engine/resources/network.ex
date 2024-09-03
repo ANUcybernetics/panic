@@ -56,6 +56,10 @@ defmodule Panic.Engine.Network do
       change relate_actor(:user)
     end
 
+    update :update_models do
+      accept [:models]
+    end
+
     update :append_model do
       # describe("Append a model to the end of the list of models")
       argument :model, Ash.Type.Module, allow_nil?: false

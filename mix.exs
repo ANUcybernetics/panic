@@ -67,7 +67,8 @@ defmodule Panic.MixProject do
       {:ash_oban, "~> 0.2.3"},
       {:ash_authentication, "~> 4.0"},
       {:ash_authentication_phoenix, "~> 2.0"},
-      {:recon, "~> 2.5"}
+      {:recon, "~> 2.5"},
+      {:live_select, "~> 1.0"}
     ]
   end
 

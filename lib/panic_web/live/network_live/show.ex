@@ -30,6 +30,12 @@ defmodule PanicWeb.NetworkLive.Show do
 
     <section class="mt-16">
       <h2 class="font-semibold">Models</h2>
+
+      <.live_component
+        module={PanicWeb.NetworkLive.ModelSelectComponent}
+        id="model-select"
+        network={@network}
+      />
     </section>
 
     <.back navigate={~p"/"}>Back to networks</.back>
