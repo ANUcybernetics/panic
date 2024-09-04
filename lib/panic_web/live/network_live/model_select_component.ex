@@ -71,7 +71,6 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
         {:noreply, socket}
 
       {:error, form} ->
-        dbg(form)
         {:noreply, assign(socket, form: form)}
     end
   end
