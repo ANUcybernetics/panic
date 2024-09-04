@@ -48,7 +48,11 @@ defmodule PanicWeb.PanicComponents do
 
   def model_list(assigns) do
     ~H"""
-    <div class="flex flex-wrap gap-6">
+    <div class={[
+      "flex flex-wrap gap-6 border-2 p-2 rounded-md",
+      Panic.Engine.Network.validate_model_io_types(@models) != :ok &&
+        "border-red-500"
+    ]}>
       <div class="size-16 rounded-md grid place-content-center text-center text-xs relative bg-gray-100 shadow-sm">
         T
         <div class={[
