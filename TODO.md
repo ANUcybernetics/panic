@@ -1,6 +1,7 @@
 # Panic TODO
 
-- network creation (also ensure that the last->first ends match up)
+- for MSC, populate the whole list on focus
+- make MSC store (as an assign) the list of models (on "change"), and
 - terminal (which can then be used for testing)
 - make invocation run in a before transaction hook (for better concurrency
   maybe?)
@@ -9,8 +10,6 @@
   - network
     - assigns: network, ready_at (ts), invocations (stream, if running), form,
       watchers (presence?), screen/grid params (to be passed to live component)
-    - add LiveSelect for "add new model" functionality
-  - user
   - "panic button" landing page
   - livegrid component
   - prediction component
