@@ -15,22 +15,8 @@ defmodule PanicWeb.PanicComponents do
   Useful for displaying a representation of a model (e.g. in a "network list")
   component.
   """
-
   attr :model, :atom, required: true, doc: "module which implements Panic.Model behaviour"
 
-  @doc """
-  Renders a model box.
-
-  Displays a representation of a model with input and output type indicators.
-
-  ## Attributes
-
-    * `:model` - An atom representing the module that implements the Panic.Model behaviour.
-
-  ## Examples
-
-      <.model_box model={model} />
-  """
   def model_box(assigns) do
     ~H"""
     <div class="size-16 rounded-md grid place-content-center text-center text-xs relative bg-gray-200 shadow-sm">
@@ -49,10 +35,6 @@ defmodule PanicWeb.PanicComponents do
     """
   end
 
-  attr :models, :list,
-    required: true,
-    doc: "List of model modules implementing Panic.Model behaviour"
-
   @doc """
   Renders a list of models in a flexbox layout.
 
@@ -60,6 +42,10 @@ defmodule PanicWeb.PanicComponents do
 
       <.model_list models={@models} />
   """
+  attr :models, :list,
+    required: true,
+    doc: "List of model modules implementing Panic.Model behaviour"
+
   def model_list(assigns) do
     ~H"""
     <div class="flex flex-wrap gap-6">
