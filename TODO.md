@@ -25,6 +25,7 @@
 - write model descriptions
 - TDA code
 - add HUD or other vis for
+- go back to the model IO type validation stuff and figure out a nicer way to do that (perhaps a validation module?)
 
 ### good citizen things
 

@@ -66,14 +66,7 @@ defmodule Panic.Engine.Network do
 
       change fn changeset, _ ->
         models = changeset.data.models ++ [Ash.Changeset.get_argument(changeset, :model)]
-
-        case validate_model_io_types(models) do
-          :ok ->
-            Ash.Changeset.change_attribute(changeset, :models, models)
-
-          {:error, message} ->
-            Ash.Changeset.add_error(changeset, field: :models, message: message)
-        end
+        Ash.Changeset.force_change_attribute(changeset, :models, models)
       end
     end
 
@@ -113,6 +106,8 @@ defmodule Panic.Engine.Network do
     end
   end
 
+  def validate_model_io_types([]), do: {:error, "empty network cannot be run"}
+
   def validate_model_io_types(models) do
     # validate that each "interface" matches
     models
@@ -130,12 +125,23 @@ defmodule Panic.Engine.Network do
         ]
       end
     end)
+    # finally, check the loop can be completed
+    |> then(fn errors ->
+      if(List.last(models).fetch!(:output_type) == List.first(models).fetch!(:input_type)) do
+        errors
+      else
+        [
+          "final model output (#{List.last(models).fetch!(:output_type)}) does not match first model input (#{List.first(models).fetch!(:output_type)})"
+          | errors
+        ]
+      end
+    end)
     |> case do
       [] ->
         :ok
 
       error_string ->
-        {:error, Enum.join(error_string, ", ")}
+        {:error, error_string |> Enum.reverse() |> Enum.join(", ")}
     end
   end
 end
