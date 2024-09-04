@@ -31,10 +31,15 @@ defmodule PanicWeb.NetworkLive.Show do
     <section class="mt-16">
       <h2 class="font-semibold">Models</h2>
 
+      <ol :for={model <- @network.models}>
+        <li><%= model.fetch!(:name) %></li>
+      </ol>
+
       <.live_component
         module={PanicWeb.NetworkLive.ModelSelectComponent}
         id="model-select"
         network={@network}
+        current_user={@current_user}
       />
     </section>
 
@@ -66,14 +71,21 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_params(%{"network_id" => id}, _, socket) do
+    network = Ash.get!(Panic.Engine.Network, id, actor: socket.assigns.current_user)
+
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns[:live_action]))
-     |> assign(:network, Ash.get!(Panic.Engine.Network, id, actor: socket.assigns[:current_user]))}
+     |> assign(network: network)}
   end
 
   @impl true
   def handle_info({PanicWeb.NetworkLive.FormComponent, {:saved, network}}, socket) do
+    {:noreply, assign(socket, network: network)}
+  end
+
+  @impl true
+  def handle_info({PanicWeb.NetworkLive.ModelSelectComponent, {:models_updated, network}}, socket) do
     {:noreply, assign(socket, network: network)}
   end
 

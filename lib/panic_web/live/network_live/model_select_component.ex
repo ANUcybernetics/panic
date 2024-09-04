@@ -5,14 +5,14 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   def render(assigns) do
     ~H"""
     <div>
-      <.form :let={f} for={@form} phx-submit="save">
+      <.form :let={f} for={@form} phx-change="change" phx-submit="save" phx-target={@myself}>
         <LiveSelect.live_select
-          field={f[:models]}
-          mode={:tags}
-          placeholder="Search for models to append"
+          field={f[:model]}
+          placeholder="Search for a model to append"
           phx-target={@myself}
         />
-        <.button type="submit">Add Models</.button>
+
+        <.button phx-disable-with="Adding model...">Add model</.button>
       </.form>
     </div>
     """
@@ -23,7 +23,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
     next_input =
       case Enum.reverse(assigns.network.models) do
         [] -> :text
-        [last | _] -> last.fetch!(:input_type)
+        [last | _] -> last.fetch!(:output_type)
       end
 
     {:ok,
@@ -47,45 +47,42 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   end
 
   @impl true
-  def handle_event("change", %{"network" => %{"models" => models}}, socket) do
-    # list_of_coords will contain the list of the JSON-encoded coordinates of the selected cities, for example:
-    # ["[-46.565,-23.69389]", "[-48.27722,-18.91861]"]
-    dbg()
-
+  def handle_event("change", _params, socket) do
     {:noreply, socket}
   end
 
   @impl true
-  def handle_event("validate", %{"network" => network_params}, socket) do
-    {:noreply,
-     assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, network_params))}
-  end
+  def handle_event("save", %{"network" => %{"model" => model_name}}, socket) do
+    # this _should_ be safe...
+    model = String.to_atom(model_name)
 
-  @impl true
-  def handle_event("save", %{"network" => network_params}, socket) do
-    case AshPhoenix.Form.submit(socket.assigns.form, params: network_params) do
-      {:ok, _network} ->
-        # notify_parent({:models_updated, network})
+    case AshPhoenix.Form.submit(socket.assigns.form,
+           params: %{model: model}
+         ) do
+      {:ok, network} ->
+        notify_parent({:models_updated, network})
 
         socket =
           socket
-          |> put_flash(:info, "Models updated successfully")
-          |> push_patch(to: socket.assigns.patch)
+          |> put_flash(:info, "Model appended successfully")
+          |> assign(network: network)
+          |> assign_form()
 
         {:noreply, socket}
 
       {:error, form} ->
+        dbg(form)
         {:noreply, assign(socket, form: form)}
     end
   end
 
-  # defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
+  defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
   defp assign_form(%{assigns: %{network: network}} = socket) do
     form =
-      AshPhoenix.Form.for_update(network, :update_models,
+      AshPhoenix.Form.for_update(network, :append_model,
         as: "network",
-        actor: socket.assigns[:current_user]
+        actor: socket.assigns.current_user
       )
 
     assign(socket, form: to_form(form))
