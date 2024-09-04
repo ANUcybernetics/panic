@@ -12,9 +12,7 @@ defmodule Panic.UsersTest do
       assert user.replicate_token == token_value
     end
 
-    test "sets all valid API tokens" do
-      user = Panic.Fixtures.user()
-
+    property "sets all valid API tokens" do
       token_names = [
         :replicate_token,
         :openai_token,
@@ -24,9 +22,11 @@ defmodule Panic.UsersTest do
         :vestaboard_panic_4_token
       ]
 
-      for name <- token_names do
-        value = string(:ascii, min_length: 1) |> pick()
-
+      check all(
+              user <- Panic.Generators.user(),
+              name <- one_of(token_names),
+              value <- Panic.Generators.ascii_sentence()
+            ) do
         user = Panic.Accounts.set_token!(user, name, value, actor: user)
         assert Map.get(user, name) == value
       end
