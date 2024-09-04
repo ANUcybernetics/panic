@@ -18,20 +18,62 @@ defmodule PanicWeb.PanicComponents do
 
   attr :model, :atom, required: true, doc: "module which implements Panic.Model behaviour"
 
+  @doc """
+  Renders a model box.
+
+  Displays a representation of a model with input and output type indicators.
+
+  ## Attributes
+
+    * `:model` - An atom representing the module that implements the Panic.Model behaviour.
+
+  ## Examples
+
+      <.model_box model={model} />
+  """
   def model_box(assigns) do
     ~H"""
-    <div class="w-16 h-16 rounded-md grid place-content-center text-center text-xs relative">
+    <div class="size-16 rounded-md grid place-content-center text-center text-xs relative bg-gray-200 shadow-sm">
       <div class={[
-        "w-3 h-3 rounded-full absolute left-0 top-1/2 -translate-y-1/2",
+        "size-4 rounded-full absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 -z-10",
         @model.fetch!(:input_type) |> io_colour_mapper()
       ]}>
       </div>
       <%= @model.fetch!(:name) %>
       <div class={[
-        "w-3 h-3 rounded-full absolute right-0 top-1/2 -translate-y-1/2",
+        "size-4 rounded-full absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 -z-10",
         @model.fetch!(:output_type) |> io_colour_mapper()
       ]}>
       </div>
+    </div>
+    """
+  end
+
+  attr :models, :list,
+    required: true,
+    doc: "List of model modules implementing Panic.Model behaviour"
+
+  @doc """
+  Renders a list of models in a flexbox layout.
+
+  ## Examples
+
+      <.model_list models={@models} />
+  """
+  def model_list(assigns) do
+    ~H"""
+    <div class="flex flex-wrap gap-6">
+      <div class="size-16 rounded-md grid place-content-center text-center text-xs relative bg-gray-100 shadow-sm">
+        T
+        <div class={[
+          "size-4 rounded-full absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 -z-10",
+          io_colour_mapper(:text)
+        ]}>
+        </div>
+      </div>
+      <%= for model <- @models do %>
+        <.model_box model={model} />
+      <% end %>
     </div>
     """
   end
