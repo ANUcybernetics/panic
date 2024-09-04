@@ -24,7 +24,8 @@
 - write model descriptions
 - TDA code
 - add HUD or other vis for
-- go back to the model IO type validation stuff and figure out a nicer way to do that (perhaps a validation module?)
+- go back to the model IO type validation stuff and figure out a nicer way to do
+  that (perhaps a validation module?)
 
 ### good citizen things
 
@@ -35,6 +36,9 @@
 
 ### ideas (not necessarily TODO, but y'know...)
 
+- use [this](https://departuremono.com) for the font and
+  [this](https://ryanmulligan.dev/blog/css-property-new-style/) for the fancy
+  panic button (although the latter probs won't work on the silk browsers)
 - add "alias" links for a given network (or maybe just use the slugs in the URL
   anyway), or even just have a `/links` page (still hosted on Panic) of links to
   e.g. "TV screens", which would really help with entering the long URLs on TV
