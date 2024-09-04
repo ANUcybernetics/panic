@@ -58,6 +58,7 @@ defmodule Panic.Engine.Network do
 
     update :update_models do
       accept [:models]
+      validate Panic.Validations.ModelIOConnections
     end
 
     update :append_model do
@@ -103,45 +104,6 @@ defmodule Panic.Engine.Network do
 
     policy action_type(:destroy) do
       authorize_if relates_to_actor_via(:user)
-    end
-  end
-
-  def validate_model_io_types([]), do: {:error, "empty network cannot be run"}
-
-  def validate_model_io_types(models) do
-    # validate that each "interface" matches
-    models
-    |> Enum.map(&{&1.fetch!(:name), &1.fetch!(:input_type), &1.fetch!(:output_type)})
-    # hack to ensure first input is :text
-    |> List.insert_at(0, {"Initial input", nil, :text})
-    |> Enum.chunk_every(2, 1, :discard)
-    |> Enum.reduce([], fn [{name_1, _, output_type}, {name_2, input_type, _}], errors ->
-      if output_type == input_type do
-        errors
-      else
-        [
-          "#{name_1} output (#{output_type}) does not match #{name_2} input (#{input_type})"
-          | errors
-        ]
-      end
-    end)
-    # finally, check the loop can be completed
-    |> then(fn errors ->
-      if(List.last(models).fetch!(:output_type) == List.first(models).fetch!(:input_type)) do
-        errors
-      else
-        [
-          "final model output (#{List.last(models).fetch!(:output_type)}) does not match first model input (#{List.first(models).fetch!(:output_type)})"
-          | errors
-        ]
-      end
-    end)
-    |> case do
-      [] ->
-        :ok
-
-      error_string ->
-        {:error, error_string |> Enum.reverse() |> Enum.join(", ")}
     end
   end
 end
