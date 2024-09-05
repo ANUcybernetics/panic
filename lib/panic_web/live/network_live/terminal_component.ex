@@ -61,8 +61,6 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
         actor: socket.assigns.current_user
       )
 
-    dbg(form |> AshPhoenix.Form.hidden_fields())
-
     assign(socket, form: to_form(form))
   end
 end
