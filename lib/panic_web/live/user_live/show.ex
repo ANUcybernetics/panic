@@ -116,7 +116,8 @@ defmodule PanicWeb.UserLive.Show do
 
   @impl true
   def handle_info({PanicWeb.NetworkLive.FormComponent, {:saved, network}}, socket) do
-    {:noreply, update(socket, :networks, &[network | &1])}
+    # do nothing, because it re-triggers a handle_params, where we just read all the networks from the db
+    {:noreply, socket}
   end
 
   defp page_title(:show), do: "Show User"
