@@ -31,6 +31,7 @@ defmodule Panic.Validations.ModelIOConnections do
     |> Enum.map(&{&1.fetch!(:name), &1.fetch!(:input_type), &1.fetch!(:output_type)})
     # hack to ensure first input is :text
     |> List.insert_at(0, {"Initial input", nil, :text})
+    |> List.insert_at(-1, {"Final (loopback) output", :text, nil})
     |> Enum.chunk_every(2, 1, :discard)
     |> Enum.reduce([], fn [{name_1, _, output_type}, {name_2, input_type, _}], errors ->
       if output_type == input_type do
@@ -38,17 +39,6 @@ defmodule Panic.Validations.ModelIOConnections do
       else
         [
           "#{name_1} output (#{output_type}) does not match #{name_2} input (#{input_type})"
-          | errors
-        ]
-      end
-    end)
-    # finally, check the loop can be completed
-    |> then(fn errors ->
-      if(List.last(models).fetch!(:output_type) == List.first(models).fetch!(:input_type)) do
-        errors
-      else
-        [
-          "final model output (#{List.last(models).fetch!(:output_type)}) does not match first model input (#{List.first(models).fetch!(:output_type)})"
           | errors
         ]
       end
