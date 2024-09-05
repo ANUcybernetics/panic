@@ -66,15 +66,23 @@ defmodule Panic.Generators do
 
   def network_with_models(user) do
     gen all(network <- network(user), length <- integer(1..10)) do
-      {network, :text}
-      |> Stream.unfold(fn {network, input_type} ->
-        next_model = model(input_type: input_type) |> pick()
-        network = Panic.Engine.append_model!(network, next_model, actor: user)
-        {network, {network, next_model.fetch!(:output_type)}}
-      end)
-      |> Enum.take(length)
-      # return the last network (with the latest :models attr) from the generator
-      |> Enum.at(-1)
+      network =
+        {network, :text}
+        |> Stream.unfold(fn {network, input_type} ->
+          next_model = model(input_type: input_type) |> pick()
+          network = Panic.Engine.append_model!(network, next_model, actor: user)
+          {network, {network, next_model.fetch!(:output_type)}}
+        end)
+        |> Enum.take(length)
+        |> Enum.at(-1)
+
+      # make sure the network is runnable
+      if List.last(network.models).fetch!(:output_type) != :text do
+        final_model = model(output_type: :text) |> pick()
+        Panic.Engine.append_model!(network, final_model, actor: user)
+      else
+        network
+      end
     end
   end
 end

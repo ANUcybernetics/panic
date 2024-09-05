@@ -2,6 +2,8 @@ defmodule Panic.NetworkTest do
   use Panic.DataCase
   use ExUnitProperties
   alias Panic.Engine.Network
+  # for network_runnable?
+  import Panic.Validations.ModelIOConnections
 
   describe "Network CRUD operations" do
     # now if our action inputs are invalid when we think they should be valid, we will find out here
@@ -125,7 +127,6 @@ defmodule Panic.NetworkTest do
     end
 
     test "model IO types in network can be validated with helper fn" do
-      import Panic.Validations.ModelIOConnections
       user = Panic.Fixtures.user()
       network = Panic.Generators.network(user) |> pick()
 
@@ -144,9 +145,10 @@ defmodule Panic.NetworkTest do
 
     test "network_with_models generator creates network with valid models" do
       user = Panic.Fixtures.user()
-      network = Panic.Generators.network_with_models(user) |> pick()
-      assert [first_model | _] = network.models
-      assert first_model.fetch!(:input_type) == :text
+
+      check all(network <- Panic.Generators.network_with_models(user)) do
+        assert :ok = network_runnable?(network.models)
+      end
     end
   end
 
