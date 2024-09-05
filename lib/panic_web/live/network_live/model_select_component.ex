@@ -16,6 +16,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
         phx-submit="save"
         phx-target={@myself}
       >
+        <label for="network_model_text_input">Add model</label>
         <LiveSelect.live_select
           field={f[:model]}
           placeholder="Search for a model to append"
