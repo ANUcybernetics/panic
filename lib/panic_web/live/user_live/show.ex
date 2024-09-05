@@ -115,7 +115,7 @@ defmodule PanicWeb.UserLive.Show do
   end
 
   @impl true
-  def handle_info({PanicWeb.NetworkLive.FormComponent, {:saved, network}}, socket) do
+  def handle_info({PanicWeb.NetworkLive.FormComponent, {:saved, _network}}, socket) do
     # do nothing, because it re-triggers a handle_params, where we just read all the networks from the db
     {:noreply, socket}
   end
