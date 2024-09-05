@@ -7,7 +7,15 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
     ~H"""
     <div>
       <.model_list models={@models} phx_target={@myself} />
-      <.form :let={f} for={@form} phx-change="change" phx-submit="save" phx-target={@myself}>
+
+      <.form
+        :let={f}
+        class="mt-8"
+        for={@form}
+        phx-change="change"
+        phx-submit="save"
+        phx-target={@myself}
+      >
         <LiveSelect.live_select
           field={f[:model]}
           placeholder="Search for a model to append"
@@ -15,7 +23,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
           phx-focus="populate_options"
         />
 
-        <.button phx-disable-with="Updating models...">Update models</.button>
+        <.button class="mt-4" phx-disable-with="Updating models...">Update models</.button>
       </.form>
     </div>
     """
