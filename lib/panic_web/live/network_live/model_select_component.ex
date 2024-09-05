@@ -6,7 +6,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   def render(assigns) do
     ~H"""
     <div>
-      <.model_list models={@models} />
+      <.model_list models={@models} phx_target={@myself} />
       <.form :let={f} for={@form} phx-change="change" phx-submit="save" phx-target={@myself}>
         <LiveSelect.live_select
           field={f[:model]}

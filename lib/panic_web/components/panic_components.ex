@@ -48,6 +48,8 @@ defmodule PanicWeb.PanicComponents do
     required: true,
     doc: "List of model modules implementing Panic.Model behaviour"
 
+  attr :phx_target, :any, default: nil
+
   def model_list(assigns) do
     ~H"""
     <div class={[
@@ -69,6 +71,7 @@ defmodule PanicWeb.PanicComponents do
             <button
               phx-click="remove_model"
               phx-value-index={idx}
+              phx-target={@phx_target}
               class="absolute size-4 top-0 right-0 text-xs text-gray-500 hover:text-gray-700"
             >
               ×
