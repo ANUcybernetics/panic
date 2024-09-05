@@ -64,7 +64,7 @@ defmodule PanicWeb.PanicComponents do
         </div>
       </div>
       <%= for {model, idx} <- Enum.with_index(@models) do %>
-        <.model_box model={model} model_index={idx}>
+        <.model_box model={model}>
           <:action>
             <button
               phx-click="remove_model"
