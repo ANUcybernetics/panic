@@ -45,6 +45,7 @@ defmodule PanicWeb.UserLive.Show do
               <%= network.name %>
             </.link>
           </:col>
+          <:col :let={network} label="Length"><%= length(network.models) %></:col>
           <:col :let={network} label="Description"><%= network.description %></:col>
         </.table>
       <% else %>
