@@ -1,8 +1,5 @@
 # Panic TODO
 
-- for MSC, populate the whole list on focus
-- make MSC store (as an assign) the list of models (on "change"), and
-- terminal (which can then be used for testing)
 - make invocation run in a before transaction hook (for better concurrency
   maybe?)
 - `req_new` pulls API keys from the user (with tests)
@@ -24,8 +21,8 @@
 - write model descriptions
 - TDA code
 - add HUD or other vis for
-- go back to the model IO type validation stuff and figure out a nicer way to do
-  that (perhaps a validation module?)
+- refactor user/network liveviews to use streams for the lists
+
 
 ### good citizen things
 
