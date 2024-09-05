@@ -38,6 +38,8 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   def handle_event("start-run", %{"invocation" => invocation_params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: invocation_params) do
       {:ok, invocation} ->
+        notify_parent({:new_invocation, invocation})
+
         socket =
           socket
           |> put_flash(:info, "Invocation #{invocation.id} prepared... about to run")
@@ -49,7 +51,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
     end
   end
 
-  # defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
+  defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
   defp assign_form(%{assigns: %{network: network}} = socket) do
     form =
