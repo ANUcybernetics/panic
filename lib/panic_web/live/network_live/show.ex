@@ -1,6 +1,5 @@
 defmodule PanicWeb.NetworkLive.Show do
   use PanicWeb, :live_view
-  import PanicWeb.PanicComponents
 
   @impl true
   def render(assigns) do
@@ -31,8 +30,6 @@ defmodule PanicWeb.NetworkLive.Show do
 
     <section class="mt-16">
       <h2 class="font-semibold">Models</h2>
-
-      <.model_list models={@network.models} />
 
       <.live_component
         module={PanicWeb.NetworkLive.ModelSelectComponent}
