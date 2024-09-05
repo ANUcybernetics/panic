@@ -125,20 +125,21 @@ defmodule Panic.NetworkTest do
     end
 
     test "model IO types in network can be validated with helper fn" do
+      import Panic.Validations.ModelIOConnections
       user = Panic.Fixtures.user()
       network = Panic.Generators.network(user) |> pick()
 
-      assert {:error, _} = Panic.Engine.Network.validate_model_io_types(network.models)
+      assert {:error, _} = network_runnable?(network.models)
 
       network = Panic.Engine.append_model!(network, Panic.Models.SDXL, actor: user)
-      assert {:error, _} = Panic.Engine.Network.validate_model_io_types(network.models)
+      assert {:error, _} = network_runnable?(network.models)
 
       network = Panic.Engine.append_model!(network, Panic.Models.BLIP2, actor: user)
-      assert :ok = Panic.Engine.Network.validate_model_io_types(network.models)
+      assert :ok = network_runnable?(network.models)
 
       # the final time it should fail because the "loop connection" doesnt match
       network = Panic.Engine.append_model!(network, Panic.Models.SDXL, actor: user)
-      assert {:error, _} = Panic.Engine.Network.validate_model_io_types(network.models)
+      assert {:error, _} = network_runnable?(network.models)
     end
 
     test "network_with_models generator creates network with valid models" do

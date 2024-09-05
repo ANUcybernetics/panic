@@ -1,5 +1,6 @@
 defmodule Panic.Validations.ModelIOConnections do
   use Ash.Resource.Validation
+
   @moduledoc """
   This module provides a custom validation for checking the compatibility
   of input and output types in a sequence of models within a network.
@@ -15,15 +16,16 @@ defmodule Panic.Validations.ModelIOConnections do
   @impl true
   def validate(changeset, _opts, _context) do
     models = Ash.Changeset.get_attribute(changeset, :models)
-    case validate_model_io_types(models) do
+
+    case network_runnable?(models) do
       :ok -> :ok
       {:error, message} -> {:error, message: message, field: :models}
     end
   end
 
-  def validate_model_io_types([]), do: {:error, "empty network cannot be run"}
+  def network_runnable?([]), do: {:error, "empty network cannot be run"}
 
-  def validate_model_io_types(models) do
+  def network_runnable?(models) do
     # validate that each "interface" matches
     models
     |> Enum.map(&{&1.fetch!(:name), &1.fetch!(:input_type), &1.fetch!(:output_type)})
