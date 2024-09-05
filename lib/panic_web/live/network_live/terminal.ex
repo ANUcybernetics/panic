@@ -5,16 +5,15 @@ defmodule PanicWeb.NetworkLive.Terminal do
   def render(assigns) do
     ~H"""
     <.header>
-      Terminal for network "<%= @network.name %>".
+      <%= @network.name %> Terminal
     </.header>
 
     <.live_component
       module={PanicWeb.NetworkLive.TerminalComponent}
       network={@network}
-      id={"network-#{@network.id}-terminal"}
+      current_user={@current_user}
+      id={@network.id}
     />
-
-    <.back navigate={~p"/"}>Back to landing page</.back>
     """
   end
 
@@ -28,6 +27,6 @@ defmodule PanicWeb.NetworkLive.Terminal do
     {:noreply,
      socket
      |> assign(:page_title, "Network #{id} terminal")
-     |> assign(:network, Ash.get!(Panic.Engine.Network, id))}
+     |> assign(:network, Ash.get!(Panic.Engine.Network, id, actor: socket.assigns.current_user))}
   end
 end

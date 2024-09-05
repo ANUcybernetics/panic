@@ -70,15 +70,20 @@ defmodule Panic.Engine.Invocation do
       change set_attribute(:sequence_number, 0)
 
       change fn changeset, _context ->
-        {:ok, network} = Ash.Changeset.fetch_argument(changeset, :network)
-        network_length = Enum.count(network.models)
+        case Ash.Changeset.fetch_argument(changeset, :network) do
+          {:ok, network} ->
+            network_length = Enum.count(network.models)
 
-        if network_length == 0 do
-          Ash.Changeset.add_error(changeset, "No models in network")
-        else
-          changeset
-          |> Ash.Changeset.force_change_attribute(:model, List.first(network.models))
-          |> Ash.Changeset.manage_relationship(:network, network, type: :append_and_remove)
+            if network_length == 0 do
+              Ash.Changeset.add_error(changeset, "No models in network")
+            else
+              changeset
+              |> Ash.Changeset.force_change_attribute(:model, List.first(network.models))
+              |> Ash.Changeset.manage_relationship(:network, network, type: :append_and_remove)
+            end
+
+          :error ->
+            Ash.Changeset.add_error(changeset, "missing :network argument")
         end
       end
 
