@@ -77,13 +77,12 @@ guides should help you out.
 Inside the codebase here's a (domain) glossary to help you figure out what's
 going on:
 
-- **model**: a particular AI model (e.g. _Stable Diffusion_, _GPT3 Davinci
-  instruct_)
+- **model**: a particular AI model (e.g. _Stable Diffusion_, _GPT4o_)
 - **platform**: model-hosting cloud platform (e.g.
   [Replicate](https://replicate.com), [OpenAI](https://openai.com))
 - **network**: a specific network (i.e. cyclic graph) of models, designed so
   that the output of one is fed as input to the next
-- **invocation**: a specific "inference" run for a single model; includes both
+- **invocation**: a specific "inference" event for a single model; includes both
   the input (prompt) an the output (prediction) along with some other metadata
 - **run**: a specific sequence of predictions starting from an initial prompt
   and following the models in a network

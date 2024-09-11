@@ -3,6 +3,7 @@
 - make invocation run in a before transaction hook (for better concurrency
   maybe?)
 - `req_new` pulls API keys from the user (with tests)
+- update the BLIP caption model to be more expressive
 - add views
   - network
     - assigns: network, ready_at (ts), invocations (stream, if running), form,
@@ -20,9 +21,12 @@
 - add "slow down over time" (and scheduling) logic to runs
 - write model descriptions
 - TDA code
+- add cost/credit balance lookup stuff to the user UI
 - add HUD or other vis for
 - refactor user/network liveviews to use streams for the lists
 
+- honestly, not 100% sure there's not a race condition in the invoker (should
+  enqueue next job) logic
 
 ### good citizen things
 
