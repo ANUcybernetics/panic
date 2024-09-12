@@ -77,8 +77,12 @@ defmodule Panic.Generators do
         |> Enum.at(-1)
 
       # make sure the network is runnable
-      if List.last(network.models).fetch!(:output_type) != :text do
-        final_model = model(output_type: :text) |> pick()
+      last_model = List.last(network.models)
+
+      if last_model.fetch!(:output_type) != :text do
+        final_model =
+          model(input_type: last_model.fetch!(:output_type), output_type: :text) |> pick()
+
         Panic.Engine.append_model!(network, final_model, actor: user)
       else
         network
@@ -87,6 +91,7 @@ defmodule Panic.Generators do
   end
 end
 
+# seed 768476
 defmodule Panic.Fixtures do
   @moduledoc """
   Test fixtures for Panic resources.
