@@ -143,11 +143,25 @@ defmodule Panic.NetworkTest do
       assert {:error, _} = network_runnable?(network.models)
     end
 
-    test "network_with_models generator creates network with valid models" do
+    property "network_with_models generator creates network with valid models" do
       user = Panic.Fixtures.user()
 
       check all(network <- Panic.Generators.network_with_models(user)) do
         assert :ok = network_runnable?(network.models)
+      end
+    end
+
+    @tag skip: "requires API keys"
+    property "supports :start_run action" do
+      user = Panic.Fixtures.user()
+
+      check all(
+              network <- Panic.Generators.network_with_models(user),
+              invocation <- Panic.Generators.invocation(network)
+            ) do
+        Panic.Engine.Network
+        |> Ash.ActionInput.for_action(:start_run, %{first_invocation: invocation}, actor: user)
+        |> Ash.run_action!()
       end
     end
   end

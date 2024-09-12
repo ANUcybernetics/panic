@@ -2,6 +2,7 @@ defmodule Panic.Engine.Network do
   @moduledoc """
   A Network represents a specific network (i.e. cyclic graph) of models.
   """
+
   use Ash.Resource,
     domain: Panic.Engine,
     data_layer: AshSqlite.DataLayer,
@@ -71,6 +72,18 @@ defmodule Panic.Engine.Network do
       end
     end
 
+    action :start_run do
+      argument :first_invocation, :struct do
+        constraints instance_of: Panic.Engine.Invocation
+        allow_nil? false
+      end
+
+      run fn input, context ->
+        invocation = Panic.Engine.invoke!(input.arguments.first_invocation, actor: context.actor)
+        :ok
+      end
+    end
+
     # update :drop_model
     # update :swap_model
     # action :start_run
@@ -90,6 +103,12 @@ defmodule Panic.Engine.Network do
   end
 
   policies do
+    # this is for the :start_run action for now
+    # perhaps find a better way to authorize
+    policy action_type(:action) do
+      authorize_if always()
+    end
+
     policy action_type(:create) do
       authorize_if relating_to_actor(:user)
     end

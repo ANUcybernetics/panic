@@ -6,6 +6,7 @@ defmodule Panic.Engine do
       define :create_network, args: [:name, :description], action: :create
       define :append_model, args: [:model], action: :append_model
       define :set_state, args: [:state], action: :set_state
+      define :start_run, args: [:first_invocation], action: :start_run
     end
 
     resource Panic.Engine.Invocation do

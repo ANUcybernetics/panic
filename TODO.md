@@ -3,6 +3,8 @@
 - make invocation run in a before transaction hook (for better concurrency
   maybe?)
 - `req_new` pulls API keys from the user (with tests)
+- remove :state from network, and make sure it's being used properly in
+  invocation
 - update the BLIP caption model to be more expressive
 - add views
   - network
@@ -37,6 +39,8 @@
 
 ### ideas (not necessarily TODO, but y'know...)
 
+- remove the Model behaviour altogether, and just make each model a struct with
+  a fn as the `:invoke` key
 - use [this](https://departuremono.com) for the font and
   [this](https://ryanmulligan.dev/blog/css-property-new-style/) for the fancy
   panic button (although the latter probs won't work on the silk browsers)

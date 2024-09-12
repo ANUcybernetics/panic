@@ -61,16 +61,5 @@ defmodule Panic.Platforms.OpenAI do
     |> Keyword.merge(Application.get_env(:panic, :openai_req_options, []))
     |> Keyword.merge(opts)
     |> Req.new()
-    |> Req.Request.prepend_request_steps(add_api_token: &add_api_token/1)
-  end
-
-  @doc """
-  add the API token to the request headers
-
-  The API token for the current user (actor) must
-  exist in the DB.
-  """
-  def add_api_token(request) do
-    put_in(request.options[:auth], {:bearer, "test API key, not real"})
   end
 end

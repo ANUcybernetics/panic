@@ -50,6 +50,28 @@ defmodule Panic.InvocationTest do
       end
     end
 
+    property "can creates invocation using :prepare_first" do
+      user = Panic.Fixtures.user()
+
+      check all(
+              network <- Panic.Generators.network_with_models(user),
+              input <- Panic.Generators.ascii_sentence()
+            ) do
+        invocation =
+          Invocation
+          |> Ash.Changeset.for_create(:prepare_first, %{network: network, input: input},
+            actor: user
+          )
+          |> Ash.create!()
+
+        assert invocation.network_id == network.id
+        assert invocation.input == input
+        assert invocation.output == nil
+        assert invocation.sequence_number == 0
+        assert invocation.run_number == invocation.id
+      end
+    end
+
     property "creates invocation with correct attributes" do
       user = Panic.Fixtures.user()
 

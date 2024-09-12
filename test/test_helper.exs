@@ -89,6 +89,16 @@ defmodule Panic.Generators do
       end
     end
   end
+
+  def invocation(network) do
+    user = Ash.get!(Panic.Accounts.User, network.user_id, authorize?: false)
+
+    gen all(input <- Panic.Generators.ascii_sentence()) do
+      Panic.Engine.Invocation
+      |> Ash.Changeset.for_create(:prepare_first, %{input: input, network: network}, actor: user)
+      |> Ash.create!()
+    end
+  end
 end
 
 # seed 768476
