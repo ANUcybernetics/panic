@@ -1,4 +1,4 @@
-defmodule Panic.ModelsTest do
+defmodule Panic.ModelTest do
   use Panic.DataCase
   use ExUnitProperties
   alias Panic.Model
