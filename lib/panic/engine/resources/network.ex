@@ -62,16 +62,6 @@ defmodule Panic.Engine.Network do
       validate Panic.Validations.ModelIOConnections
     end
 
-    update :append_model do
-      # describe("Append a model to the end of the list of models")
-      argument :model_id, :string, allow_nil?: false
-
-      change fn changeset, _ ->
-        models = changeset.data.models ++ [Ash.Changeset.get_argument(changeset, :model_id)]
-        Ash.Changeset.force_change_attribute(changeset, :models, models)
-      end
-    end
-
     action :start_run do
       argument :first_invocation, :struct do
         constraints instance_of: Panic.Engine.Invocation

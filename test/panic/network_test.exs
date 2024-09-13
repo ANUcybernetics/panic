@@ -110,37 +110,15 @@ defmodule Panic.NetworkTest do
       end
     end
 
-    property "append_model action adds models in correct order" do
-      user = Panic.Fixtures.user()
-
-      check all(network <- Panic.Generators.network(user)) do
-        model1 = "stability-ai/sdxl"
-        model2 = "salesforce/blip-2"
-
-        network =
-          network
-          |> Panic.Engine.append_model!(model1, actor: user)
-          |> Panic.Engine.append_model!(model2, actor: user)
-
-        assert [^model1, ^model2] = network.models
-      end
-    end
-
-    test "model IO types in network can be validated with helper fn" do
+    test "update_models validates things correctly" do
       user = Panic.Fixtures.user()
       network = Panic.Generators.network(user) |> pick()
 
-      assert {:error, _} = network_runnable?(network.models)
+      valid_model_ids = ["stability-ai/sdxl", "salesforce/blip-2"]
+      assert {:ok, _} = Panic.Engine.update_models(network, valid_model_ids, actor: user)
 
-      network = Panic.Engine.append_model!(network, "stability-ai/sdxl", actor: user)
-      assert {:error, _} = network_runnable?(network.models)
-
-      network = Panic.Engine.append_model!(network, "salesforce/blip-2", actor: user)
-      assert :ok = network_runnable?(network.models)
-
-      # the final time it should fail because the "loop connection" doesnt match
-      network = Panic.Engine.append_model!(network, "stability-ai/sdxl", actor: user)
-      assert {:error, _} = network_runnable?(network.models)
+      invalid_model_ids = ["stability-ai/sdxl", "stability-ai/sdxl"]
+      assert {:error, _} = Panic.Engine.update_models(network, invalid_model_ids, actor: user)
     end
 
     property "network_with_models generator creates network with valid models" do
