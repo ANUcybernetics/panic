@@ -53,7 +53,11 @@ defmodule Panic.Platforms.Replicate do
   end
 
   def cancel(prediction_id, token) do
-    req_new(method: :post, url: "predictions/#{prediction_id}/cancel", auth: {:bearer, token})
+    req_new(
+      method: :post,
+      url: "predictions/#{prediction_id}/cancel",
+      auth: {:bearer, token}
+    )
     |> Req.request()
   end
 

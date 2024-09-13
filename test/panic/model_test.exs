@@ -26,22 +26,26 @@ defmodule Panic.ModelTest do
     end
   end
 
-  describe "Replicate models" do
+  describe "Replicate platform" do
+    alias Panic.Platforms.Replicate
     @describetag skip: "requires API keys"
 
-    test "get latest StableDiffusion model version" do
-      {:ok, version} =
-        Panic.Platforms.Replicate.get_latest_model_version(Models.StableDiffusion, "bad token")
+    test "provides a sensible latest version" do
+      user = Panic.Fixtures.user_with_tokens()
+      models = Model.all(platform: Replicate)
 
-      assert String.match?(version, ~r/^[a-f0-9]{64}$/)
+      for model <- models do
+        assert {:ok, version} = Replicate.get_latest_model_version(model, user.replicate_token)
+        assert String.match?(version, ~r/^[a-f0-9]{64}$/)
+      end
     end
   end
 
-  describe "OpenAI models" do
+  describe "OpenAI platform" do
     alias Panic.Platforms.OpenAI
     @describetag skip: "requires API keys"
 
-    test "invoke text models with predefined response" do
+    test "generates the right* answer for all models" do
       # models for which we have canned responses
       user = Panic.Fixtures.user_with_tokens()
       models = Model.all(platform: OpenAI)
