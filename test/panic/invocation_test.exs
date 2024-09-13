@@ -139,10 +139,8 @@ defmodule Panic.InvocationTest do
   end
 
   describe "Invocation with API calls" do
-    @describetag skip: "requires API keys"
-
     property "invocation produces output" do
-      user = Panic.Fixtures.user()
+      user = Panic.Fixtures.user_with_tokens()
 
       check all(
               network <- Panic.Generators.network_with_models(user),

@@ -131,15 +131,28 @@ defmodule Panic.Engine.Invocation do
 
     update :invoke do
       change before_action(fn
-               changeset, _context ->
-                 %{model: model, input: input} = changeset.data
+               changeset, context ->
+                 %{model: model_id, input: input} = changeset.data
 
-                 case model.invoke(input) do
-                   {:ok, output} ->
-                     Ash.Changeset.force_change_attribute(changeset, :output, output)
+                 model = Panic.Model.by_id!(model_id)
+                 %Panic.Model{invoke: invoke_fn, platform: platform} = model
 
-                   {:error, message} ->
-                     Ash.Changeset.add_error(changeset, message)
+                 token =
+                   case platform do
+                     Panic.Platforms.OpenAI -> context.actor.openai_token
+                     Panic.Platforms.Replicate -> context.actor.replicate_token
+                   end
+
+                 if token do
+                   case invoke_fn.(model, input, token) do
+                     {:ok, output} ->
+                       Ash.Changeset.force_change_attribute(changeset, :output, output)
+
+                     {:error, message} ->
+                       Ash.Changeset.add_error(changeset, message)
+                   end
+                 else
+                   Ash.Changeset.add_error(changeset, "user has no auth token for #{platform}")
                  end
              end)
     end

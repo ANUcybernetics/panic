@@ -1,6 +1,6 @@
 defmodule Panic.Platforms.Replicate do
-  def get_latest_model_version(model, token) do
-    req_new(url: "models/#{model.path}", auth: {:bearer, token})
+  def get_latest_model_version(%Panic.Model{path: path}, token) do
+    req_new(url: "models/#{path}", auth: {:bearer, token})
     |> Req.request()
     |> case do
       {:ok, %Req.Response{body: body, status: 200}} ->

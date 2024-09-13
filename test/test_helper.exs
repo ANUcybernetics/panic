@@ -111,6 +111,11 @@ defmodule Panic.Fixtures do
     Panic.Generators.user()
     |> ExUnitProperties.pick()
   end
+
+  def user_with_tokens() do
+    Panic.Generators.user_with_tokens()
+    |> ExUnitProperties.pick()
+  end
 end
 
 defmodule PanicWeb.Helpers do

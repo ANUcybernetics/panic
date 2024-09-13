@@ -19,9 +19,9 @@ defmodule Panic.Platforms.OpenAI do
     end
   end
 
-  def invoke(model, input, token) do
+  def invoke(%Panic.Model{path: path}, input, token) do
     request_body = %{
-      model: model.path,
+      model: path,
       messages: [
         # %{
         #   "role" => "system",

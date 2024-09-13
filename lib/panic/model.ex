@@ -58,8 +58,8 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :text,
         platform: OpenAI,
-        invoke: fn input, token ->
-          OpenAI.invoke("gpt-4", input, token)
+        invoke: fn model, input, token ->
+          OpenAI.invoke(model, input, token)
         end
       },
       %__MODULE__{
@@ -69,8 +69,8 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :text,
         platform: OpenAI,
-        invoke: fn input, token ->
-          OpenAI.invoke("gpt-4-turbo", input, token)
+        invoke: fn model, input, token ->
+          OpenAI.invoke(model, input, token)
         end
       },
       %__MODULE__{
@@ -80,8 +80,8 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :text,
         platform: OpenAI,
-        invoke: fn input, token ->
-          OpenAI.invoke("gpt-4o", input, token)
+        invoke: fn model, input, token ->
+          OpenAI.invoke(model, input, token)
         end
       },
 
@@ -93,9 +93,9 @@ defmodule Panic.Model do
         name: "Cog Prompt Parrot",
         input_type: :text,
         output_type: :text,
-        invoke: fn input, token ->
+        invoke: fn model, input, token ->
           with {:ok, %{"output" => text}} <-
-                 Replicate.invoke("2feet6inches/cog-prompt-parrot", %{prompt: input}, token) do
+                 Replicate.invoke(model, %{prompt: input}, token) do
             {:ok, text |> String.split("\n") |> Enum.random()}
           end
         end
@@ -107,9 +107,9 @@ defmodule Panic.Model do
         name: "Clip Prefix Caption",
         input_type: :image,
         output_type: :text,
-        invoke: fn input, token ->
+        invoke: fn model, input, token ->
           with {:ok, %{"output" => text}} <-
-                 Replicate.invoke("rmokady/clip_prefix_caption", %{image: input}, token) do
+                 Replicate.invoke(model, %{image: input}, token) do
             {:ok, text}
           end
         end
@@ -121,9 +121,9 @@ defmodule Panic.Model do
         name: "Clip Caption Reward",
         input_type: :image,
         output_type: :text,
-        invoke: fn input, token ->
+        invoke: fn model, input, token ->
           with {:ok, %{"output" => text}} <-
-                 Replicate.invoke("j-min/clip-caption-reward", %{image: input}, token) do
+                 Replicate.invoke(model, %{image: input}, token) do
             {:ok, text}
           end
         end
@@ -135,13 +135,9 @@ defmodule Panic.Model do
         name: "BLIP2",
         input_type: :image,
         output_type: :text,
-        invoke: fn input, token ->
+        invoke: fn model, input, token ->
           with {:ok, %{"output" => text}} <-
-                 Replicate.invoke(
-                   "salesforce/blip-2",
-                   %{image: input, caption: true},
-                   token
-                 ) do
+                 Replicate.invoke(model, %{image: input, caption: true}, token) do
             {:ok, text}
           end
         end
@@ -153,7 +149,7 @@ defmodule Panic.Model do
         name: "Stable Diffusion",
         input_type: :text,
         output_type: :image,
-        invoke: fn input, token ->
+        invoke: fn model, input, token ->
           input_params = %{
             prompt: input,
             num_inference_steps: 50,
@@ -163,7 +159,7 @@ defmodule Panic.Model do
           }
 
           with {:ok, %{"output" => [image_url]}} <-
-                 Replicate.invoke("stability-ai/stable-diffusion", input_params, token) do
+                 Replicate.invoke(model, input_params, token) do
             {:ok, image_url}
           end
         end
@@ -175,7 +171,7 @@ defmodule Panic.Model do
         name: "FLUX.1 [schnell]",
         input_type: :text,
         output_type: :image,
-        invoke: fn input, token ->
+        invoke: fn model, input, token ->
           input_params = %{
             prompt: input,
             output_format: "jpg",
@@ -184,7 +180,7 @@ defmodule Panic.Model do
           }
 
           with {:ok, %{"output" => image_url}} <-
-                 Replicate.invoke("black-forest-labs/flux-schnell", input_params, token) do
+                 Replicate.invoke(model, input_params, token) do
             {:ok, image_url}
           end
         end
@@ -196,7 +192,7 @@ defmodule Panic.Model do
         name: "Stable Diffusion XL",
         input_type: :text,
         output_type: :image,
-        invoke: fn input, token ->
+        invoke: fn model, input, token ->
           input_params = %{
             prompt: input,
             num_inference_steps: 50,
@@ -206,7 +202,7 @@ defmodule Panic.Model do
           }
 
           with {:ok, %{"output" => [image_url]}} <-
-                 Replicate.invoke("stability-ai/sdxl", input_params, token) do
+                 Replicate.invoke(model, input_params, token) do
             {:ok, image_url}
           end
         end
@@ -218,7 +214,7 @@ defmodule Panic.Model do
         name: "LLaVA 34B text-to-image",
         input_type: :image,
         output_type: :text,
-        invoke: fn input, token ->
+        invoke: fn model, input, token ->
           input_params = %{
             image: input,
             prompt:
@@ -226,7 +222,7 @@ defmodule Panic.Model do
           }
 
           with {:ok, %{"output" => description_list}} <-
-                 Replicate.invoke("yorickvp/llava-v1.6-34b", input_params, token) do
+                 Replicate.invoke(model, input_params, token) do
             {:ok, Enum.join(description_list)}
           end
         end
@@ -238,9 +234,9 @@ defmodule Panic.Model do
         name: "LLaMa 8B Instruct",
         input_type: :text,
         output_type: :text,
-        invoke: fn input, token ->
+        invoke: fn model, input, token ->
           with {:ok, %{"output" => output_list}} <-
-                 Replicate.invoke("meta/meta-llama-3-8b-instruct", %{prompt: input}, token) do
+                 Replicate.invoke(model, %{prompt: input}, token) do
             {:ok, Enum.join(output_list)}
           end
         end
