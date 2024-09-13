@@ -15,8 +15,8 @@ defmodule Panic.Generators do
 
   def model(filters \\ []) do
     filters
-    |> Panic.Models.list()
-    |> one_of()
+    |> Panic.Model.all()
+    |> member_of()
   end
 
   def password do
@@ -66,27 +66,21 @@ defmodule Panic.Generators do
 
   def network_with_models(user) do
     gen all(network <- network(user), length <- integer(1..10)) do
-      network =
-        {network, :text}
-        |> Stream.unfold(fn {network, input_type} ->
+      model_ids =
+        Stream.unfold(:text, fn input_type ->
           next_model = model(input_type: input_type) |> pick()
-          network = Panic.Engine.append_model!(network, next_model, actor: user)
-          {network, {network, next_model.fetch!(:output_type)}}
+          {next_model, Map.fetch!(next_model, :output_type)}
         end)
-        |> Enum.take(length)
-        |> Enum.at(-1)
+        |> Stream.transform([], fn model, acc ->
+          if length(acc) >= length && acc |> List.last() |> Map.fetch!(:output_type) == :text do
+            {:halt, acc}
+          else
+            {[model], acc ++ [model]}
+          end
+        end)
+        |> Enum.map(fn %Panic.Model{id: id} -> id end)
 
-      # make sure the network is runnable
-      last_model = List.last(network.models)
-
-      if last_model.fetch!(:output_type) != :text do
-        final_model =
-          model(input_type: last_model.fetch!(:output_type), output_type: :text) |> pick()
-
-        Panic.Engine.append_model!(network, final_model, actor: user)
-      else
-        network
-      end
+      Panic.Engine.update_models!(network, model_ids, actor: user)
     end
   end
 

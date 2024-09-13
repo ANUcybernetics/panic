@@ -114,8 +114,8 @@ defmodule Panic.NetworkTest do
       user = Panic.Fixtures.user()
 
       check all(network <- Panic.Generators.network(user)) do
-        model1 = Panic.Models.SDXL
-        model2 = Panic.Models.BLIP2
+        model1 = "stability-ai/sdxl"
+        model2 = "salesforce/blip-2"
 
         network =
           network
@@ -132,14 +132,14 @@ defmodule Panic.NetworkTest do
 
       assert {:error, _} = network_runnable?(network.models)
 
-      network = Panic.Engine.append_model!(network, Panic.Models.SDXL, actor: user)
+      network = Panic.Engine.append_model!(network, "stability-ai/sdxl", actor: user)
       assert {:error, _} = network_runnable?(network.models)
 
-      network = Panic.Engine.append_model!(network, Panic.Models.BLIP2, actor: user)
+      network = Panic.Engine.append_model!(network, "salesforce/blip-2", actor: user)
       assert :ok = network_runnable?(network.models)
 
       # the final time it should fail because the "loop connection" doesnt match
-      network = Panic.Engine.append_model!(network, Panic.Models.SDXL, actor: user)
+      network = Panic.Engine.append_model!(network, "stability-ai/sdxl", actor: user)
       assert {:error, _} = network_runnable?(network.models)
     end
 

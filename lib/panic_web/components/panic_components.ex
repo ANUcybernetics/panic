@@ -15,7 +15,7 @@ defmodule PanicWeb.PanicComponents do
   Useful for displaying a representation of a model (e.g. in a "network list")
   component.
   """
-  attr :model, :atom, required: true, doc: "module which implements Panic.Model behaviour"
+  attr :model, :string, required: true, doc: "model id"
   slot :action, doc: "the slot for showing user actions in the model box"
 
   def model_box(assigns) do
@@ -23,13 +23,13 @@ defmodule PanicWeb.PanicComponents do
     <div class="size-16 rounded-md grid place-content-center text-center text-xs relative bg-gray-200 shadow-sm">
       <div class={[
         "size-6 absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 -z-10",
-        @model.fetch!(:input_type) |> io_colour_mapper()
+        @model.input_type |> io_colour_mapper()
       ]}>
       </div>
-      <%= @model.fetch!(:name) %>
+      <%= @model.name %>
       <div class={[
         "size-6 absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 -z-10",
-        @model.fetch!(:output_type) |> io_colour_mapper()
+        @model.output_type |> io_colour_mapper()
       ]}>
       </div>
       <%= render_slot(@action) %>
@@ -44,9 +44,7 @@ defmodule PanicWeb.PanicComponents do
 
       <.model_list models={@models} />
   """
-  attr :models, :list,
-    required: true,
-    doc: "List of model modules implementing Panic.Model behaviour"
+  attr :models, :list, required: true, doc: "List of model ids"
 
   attr :phx_target, :any, default: nil
 

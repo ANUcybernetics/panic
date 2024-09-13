@@ -28,7 +28,10 @@ defmodule Panic.Validations.ModelIOConnections do
   def network_runnable?(models) do
     # validate that each "interface" matches
     models
-    |> Enum.map(&{&1.fetch!(:name), &1.fetch!(:input_type), &1.fetch!(:output_type)})
+    |> Enum.map(fn model_id ->
+      %{name: name, input_type: input, output_type: output} = Panic.Model.by_id!(model_id)
+      {name, input, output}
+    end)
     # hack to ensure first input is :text
     |> List.insert_at(0, {"Initial input", nil, :text})
     |> List.insert_at(-1, {"Final (loopback) output", :text, nil})

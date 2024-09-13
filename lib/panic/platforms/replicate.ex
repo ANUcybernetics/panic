@@ -1,6 +1,6 @@
 defmodule Panic.Platforms.Replicate do
-  def get_latest_model_version(model) do
-    req_new(url: "models/#{model.fetch!(:path)}")
+  def get_latest_model_version(model, token) do
+    req_new(url: "models/#{model.path}", auth: {:bearer, token})
     |> Req.request()
     |> case do
       {:ok, %Req.Response{body: body, status: 200}} ->
@@ -15,8 +15,8 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
-  def get_status(prediction_id) do
-    req_new(url: "predictions/#{prediction_id}")
+  def get_status(prediction_id, token) do
+    req_new(url: "predictions/#{prediction_id}", auth: {:bearer, token})
     |> Req.request()
     |> case do
       {:ok, %Req.Response{body: body, status: 200}} ->
@@ -27,8 +27,8 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
-  def get(prediction_id) do
-    req_new(url: "predictions/#{prediction_id}")
+  def get(prediction_id, token) do
+    req_new(url: "predictions/#{prediction_id}", auth: {:bearer, token})
     |> Req.request()
     |> case do
       {:ok, %Req.Response{body: body, status: 200}} ->
@@ -44,7 +44,7 @@ defmodule Panic.Platforms.Replicate do
 
           %{"status" => status} when status in ~w(starting processing) ->
             ## recursion case; doesn't need a tuple
-            get(prediction_id)
+            get(prediction_id, token)
         end
 
       {:error, reason} ->
@@ -52,26 +52,26 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
-  def cancel(prediction_id) do
-    req_new(method: :post, url: "predictions/#{prediction_id}/cancel")
+  def cancel(prediction_id, token) do
+    req_new(method: :post, url: "predictions/#{prediction_id}/cancel", auth: {:bearer, token})
     |> Req.request()
   end
 
-  def create_and_wait(model, input) do
+  def invoke(model, input, token) do
     version =
-      case model.info() do
+      case model do
         %{version: version} -> {:ok, version}
-        _ -> get_latest_model_version(model)
+        _ -> get_latest_model_version(model, token)
       end
 
     with {:ok, version_id} <- version do
       request_body = %{version: version_id, input: input}
 
-      req_new(url: "predictions", method: :post, json: request_body)
+      req_new(url: "predictions", method: :post, json: request_body, auth: {:bearer, token})
       |> Req.request()
       |> case do
         {:ok, %Req.Response{body: %{"id" => id}, status: 201}} ->
-          get(id)
+          get(id, token)
       end
     end
   end

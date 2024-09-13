@@ -27,10 +27,10 @@ defmodule Panic.Engine.Network do
 
     attribute :description, :string
 
-    attribute :models, {:array, :module} do
+    # :models is an array of strings - each one corresponding to the :id of a known %Pamic.Model{}
+    attribute :models, {:array, :string} do
       default []
       allow_nil? false
-      # TODO validate that the module conforms to the Model behaviour
     end
 
     attribute :state, :atom do
@@ -64,10 +64,10 @@ defmodule Panic.Engine.Network do
 
     update :append_model do
       # describe("Append a model to the end of the list of models")
-      argument :model, Ash.Type.Module, allow_nil?: false
+      argument :model_id, :string, allow_nil?: false
 
       change fn changeset, _ ->
-        models = changeset.data.models ++ [Ash.Changeset.get_argument(changeset, :model)]
+        models = changeset.data.models ++ [Ash.Changeset.get_argument(changeset, :model_id)]
         Ash.Changeset.force_change_attribute(changeset, :models, models)
       end
     end

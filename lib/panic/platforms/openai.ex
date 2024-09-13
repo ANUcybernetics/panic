@@ -3,8 +3,8 @@ defmodule Panic.Platforms.OpenAI do
   @temperature 0.7
   @max_tokens 50
 
-  def list_engines do
-    req_new(url: "/engines")
+  def list_engines(token) do
+    req_new(url: "/engines", auth: {:bearer, token})
     |> Req.request()
     |> case do
       {:ok, %Req.Response{body: body, status: 200}} ->
@@ -19,9 +19,9 @@ defmodule Panic.Platforms.OpenAI do
     end
   end
 
-  def create(model, input) do
+  def invoke(model, input, token) do
     request_body = %{
-      model: model.fetch!(:id),
+      model: model.path,
       messages: [
         # %{
         #   "role" => "system",
@@ -34,7 +34,7 @@ defmodule Panic.Platforms.OpenAI do
       max_tokens: @max_tokens
     }
 
-    req_new(method: :post, url: "/chat/completions", json: request_body)
+    req_new(method: :post, url: "/chat/completions", json: request_body, auth: {:bearer, token})
     |> Req.request()
     |> case do
       {:ok, %Req.Response{body: body, status: 200}} ->

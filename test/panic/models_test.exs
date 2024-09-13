@@ -1,29 +1,18 @@
 defmodule Panic.ModelsTest do
   use Panic.DataCase
   use ExUnitProperties
-  alias Panic.Models
-
-  # setup do
-  #   user = Panic.Fixtures.user()
-  #   # set the real token, for "live" tests
-  #   token = System.get_env("OPENAI_API_TOKEN")
-  #   Panic.Accounts.create_api_token!(:openai, token, actor: user)
-
-  #   {:ok, user: user}
-  # end
+  alias Panic.Model
 
   describe "model generators" do
     property "generate models with correct attributes" do
       check all(
-              model <- Panic.Generators.model(),
               text_input_model <- Panic.Generators.model(input_type: :text),
               image_ouput_model <- Panic.Generators.model(output_type: :image),
               replicate_model <- Panic.Generators.model(platform: Panic.Platforms.Replicate)
             ) do
-        assert %Panic.Models.ModelInfo{} = model.info()
-        assert text_input_model.fetch!(:input_type) == :text
-        assert image_ouput_model.fetch!(:output_type) == :image
-        assert replicate_model.fetch!(:platform) == Panic.Platforms.Replicate
+        assert %Panic.Model{input_type: :text} = text_input_model
+        assert %Panic.Model{output_type: :image} = image_ouput_model
+        assert %Panic.Model{platform: Panic.Platforms.Replicate} = replicate_model
       end
     end
 
@@ -32,7 +21,7 @@ defmodule Panic.ModelsTest do
               input_type <- one_of([:text, :image]),
               model <- Panic.Generators.model(input_type: input_type)
             ) do
-        assert model.fetch!(:input_type) == input_type
+        assert model.input_type == input_type
       end
     end
   end
@@ -41,7 +30,9 @@ defmodule Panic.ModelsTest do
     @describetag skip: "requires API keys"
 
     test "get latest StableDiffusion model version" do
-      {:ok, version} = Panic.Platforms.Replicate.get_latest_model_version(Models.StableDiffusion)
+      {:ok, version} =
+        Panic.Platforms.Replicate.get_latest_model_version(Models.StableDiffusion, "bad token")
+
       assert String.match?(version, ~r/^[a-f0-9]{64}$/)
     end
   end
@@ -53,8 +44,8 @@ defmodule Panic.ModelsTest do
       # models for which we have canned responses
       models =
         Panic.Platforms.OpenAI
-        |> Models.list()
-        |> Enum.filter(fn model -> model.fetch!(:input_type) == :text end)
+        |> Model.all()
+        |> Enum.filter(fn model -> model.input_type == :text end)
 
       for model <- models do
         assert {:ok, output} =

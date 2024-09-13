@@ -45,17 +45,18 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   defp get_next_input_type([]), do: :text
 
   defp get_next_input_type(models) do
-    List.last(models).fetch!(:output_type)
+    %Panic.Model{output_type: type} = List.last(models)
+    type
   end
 
   @impl true
   def handle_event("live_select_change", %{"text" => model_name, "id" => live_select_id}, socket) do
     model_options =
-      Panic.Models.list(input_type: socket.assigns.next_input)
+      Panic.Model.all(input_type: socket.assigns.next_input)
       |> Enum.filter(fn model ->
-        String.downcase(model.fetch!(:name)) =~ String.downcase(model_name)
+        String.downcase(model.name) =~ String.downcase(model_name)
       end)
-      |> Enum.map(fn model -> %{label: model.fetch!(:name), value: model} end)
+      |> Enum.map(fn model -> %{label: model.name, value: model} end)
 
     send_update(LiveSelect.Component, id: live_select_id, options: model_options)
     {:noreply, socket}
@@ -65,7 +66,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   def handle_event("change", %{"network" => %{"model" => model_name}}, socket) do
     model = String.to_existing_atom(model_name)
     updated_models = socket.assigns.models ++ [model]
-    next_input = model.fetch!(:output_type)
+    next_input = model.output_type
 
     {:noreply, socket |> assign(models: updated_models, next_input: next_input)}
   end
@@ -107,11 +108,11 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   end
 
   defp get_model_options(search_term, input_type) do
-    Panic.Models.list(input_type: input_type)
+    Panic.Model.all(input_type: input_type)
     |> Enum.filter(fn model ->
-      String.downcase(model.fetch!(:name)) =~ String.downcase(search_term)
+      String.downcase(model.name) =~ String.downcase(search_term)
     end)
-    |> Enum.map(fn model -> %{label: model.fetch!(:name), value: model} end)
+    |> Enum.map(fn model -> %{label: model.name, value: model} end)
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})

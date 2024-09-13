@@ -1,4 +1,4 @@
-defmodule Panic.Repo.Migrations.AnotherResetWithTokensAsAttrsOnUser do
+defmodule Panic.Repo.Migrations.MigrateResources1 do
   @moduledoc """
   Updates resources based on their most recent snapshots.
 

@@ -23,7 +23,7 @@ defmodule Panic.Engine.Invocation do
     integer_primary_key :id
 
     attribute :input, :string, allow_nil?: false
-    attribute :model, :module, allow_nil?: false
+    attribute :model, :string, allow_nil?: false
     attribute :metadata, :map, allow_nil?: false, default: %{}
     attribute :output, :string
 

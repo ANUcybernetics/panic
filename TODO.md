@@ -39,8 +39,6 @@
 
 ### ideas (not necessarily TODO, but y'know...)
 
-- remove the Model behaviour altogether, and just make each model a struct with
-  a fn as the `:invoke` key
 - use [this](https://departuremono.com) for the font and
   [this](https://ryanmulligan.dev/blog/css-property-new-style/) for the fancy
   panic button (although the latter probs won't work on the silk browsers)
