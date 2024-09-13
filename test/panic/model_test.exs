@@ -30,7 +30,7 @@ defmodule Panic.ModelTest do
     alias Panic.Platforms.Replicate
     @describetag skip: "requires API keys"
 
-    test "provides a sensible latest version" do
+    test "can list latest model version for all models" do
       user = Panic.Fixtures.user_with_tokens()
       models = Model.all(platform: Replicate)
 
@@ -38,6 +38,16 @@ defmodule Panic.ModelTest do
         assert {:ok, version} = Replicate.get_latest_model_version(model, user.replicate_token)
         assert String.match?(version, ~r/^[a-f0-9]{64}$/)
       end
+    end
+
+    test "can generate a stable diffusion image" do
+      user = Panic.Fixtures.user_with_tokens()
+      model = Model.by_id!("stability-ai/stable-diffusion")
+
+      {:ok, img_url} =
+        Replicate.invoke(model, "I could eat a peach for hours.", user.replicate_token)
+
+      assert String.match?(img_url, ~r|^https://.*$|)
     end
   end
 
