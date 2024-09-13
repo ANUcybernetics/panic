@@ -38,19 +38,20 @@ defmodule Panic.ModelTest do
   end
 
   describe "OpenAI models" do
+    alias Panic.Platforms.OpenAI
     @describetag skip: "requires API keys"
 
     test "invoke text models with predefined response" do
       # models for which we have canned responses
-      models =
-        Panic.Platforms.OpenAI
-        |> Model.all()
-        |> Enum.filter(fn model -> model.input_type == :text end)
+      user = Panic.Fixtures.user_with_tokens()
+      models = Model.all(platform: OpenAI)
 
       for model <- models do
         assert {:ok, output} =
-                 model.invoke(
-                   "Respond with just the word 'bananaphone'. Do not include any other content (even punctuation)."
+                 OpenAI.invoke(
+                   model,
+                   "Respond with just the word 'bananaphone'. Do not include any other content (even punctuation).",
+                   user.openai_token
                  )
 
         assert output == "bananaphone"

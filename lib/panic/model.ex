@@ -52,31 +52,20 @@ defmodule Panic.Model do
     [
       ## OpenAI
       %__MODULE__{
-        id: "gpt-4",
-        path: "gpt-4",
-        name: "GPT-4",
-        input_type: :text,
-        output_type: :text,
-        platform: OpenAI,
-        invoke: fn model, input, token ->
-          OpenAI.invoke(model, input, token)
-        end
-      },
-      %__MODULE__{
-        id: "gpt-4-turbo",
-        path: "gpt-4-turbo",
-        name: "GPT4 Turbo",
-        input_type: :text,
-        output_type: :text,
-        platform: OpenAI,
-        invoke: fn model, input, token ->
-          OpenAI.invoke(model, input, token)
-        end
-      },
-      %__MODULE__{
         id: "gpt-4o",
-        path: "gpt-4",
-        name: "GPT4o",
+        path: "gpt-4o",
+        name: "GPT-4o",
+        input_type: :text,
+        output_type: :text,
+        platform: OpenAI,
+        invoke: fn model, input, token ->
+          OpenAI.invoke(model, input, token)
+        end
+      },
+      %__MODULE__{
+        id: "gpt-4o-mini",
+        path: "gpt-4o-mini",
+        name: "GPT-4o mini",
         input_type: :text,
         output_type: :text,
         platform: OpenAI,
