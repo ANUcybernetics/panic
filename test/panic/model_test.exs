@@ -42,10 +42,10 @@ defmodule Panic.ModelTest do
 
     test "can generate a stable diffusion image" do
       user = Panic.Fixtures.user_with_tokens()
-      model = Model.by_id!("stability-ai/stable-diffusion")
+      %Model{invoke: invoke_fn} = model = Model.by_id!("stability-ai/stable-diffusion")
 
       {:ok, img_url} =
-        Replicate.invoke(model, "I could eat a peach for hours.", user.replicate_token)
+        invoke_fn.(model, "I could eat a peach for hours.", user.replicate_token)
 
       assert String.match?(img_url, ~r|^https://.*$|)
     end
