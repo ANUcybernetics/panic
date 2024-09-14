@@ -139,72 +139,77 @@ defmodule Panic.InvocationTest do
   end
 
   describe "Invocation with API calls" do
-    property "invocation produces output" do
+    @describetag skip: "requires API keys"
+    # NOTE: these ones shouldn't be properties, because that'd be spendy. Just tests are fine.
+    test "produce output" do
       user = Panic.Fixtures.user_with_tokens()
+      network = Panic.Fixtures.network_with_models(user)
+      input = "can you tell me a story?"
 
-      check all(
-              network <- Panic.Generators.network_with_models(user),
-              input <- Panic.Generators.ascii_sentence()
-            ) do
-        invocation = Panic.Engine.prepare_first!(network, input, actor: user)
-        invoked = Panic.Engine.invoke!(invocation, actor: user)
-        refute invoked.output == nil
-      end
+      invocation =
+        network
+        |> Panic.Engine.prepare_first!(input, actor: user)
+        |> Panic.Engine.invoke!(actor: user)
+
+      refute invocation.output == nil
     end
 
-    property "next invocation maintains run number and increments sequence" do
-      user = Panic.Fixtures.user()
+    test "next invocation maintains run number and increments sequence" do
+      user = Panic.Fixtures.user_with_tokens()
+      network = Panic.Fixtures.network_with_models(user)
+      input = "can you tell me a story?"
 
-      check all(
-              network <- Panic.Generators.network_with_models(user),
-              input <- Panic.Generators.ascii_sentence()
-            ) do
-        invocation = Panic.Engine.prepare_first!(network, input)
-        invoked = Panic.Engine.invoke!(invocation)
-        next = Panic.Engine.prepare_next!(invoked)
-        assert invoked.run_number == next.run_number
-        assert invoked.sequence_number + 1 == next.sequence_number
-      end
+      first =
+        network
+        |> Panic.Engine.prepare_first!(input, actor: user)
+        |> Panic.Engine.invoke!(actor: user)
+
+      next = Panic.Engine.prepare_next!(first)
+      assert first.run_number == next.run_number
+      assert first.output == next.input
+      assert first.sequence_number + 1 == next.sequence_number
     end
 
-    property "run of invocations maintains consistency and order" do
+    test "run of invocations maintains consistency and order" do
       run_length = 4
-      user = Panic.Fixtures.user()
+      user = Panic.Fixtures.user_with_tokens()
+      network = Panic.Fixtures.network_with_models(user)
+      input = "can you tell me a story?"
 
-      check all(
-              network <- Panic.Generators.network_with_models(user),
-              input <- string(:printable, min_length: 1)
-            ) do
-        first_invocation = Panic.Engine.prepare_first!(network, input)
+      first =
+        network
+        |> Panic.Engine.prepare_first!(input, actor: user)
+        |> Panic.Engine.invoke!(actor: user)
 
-        first_invocation
-        |> Stream.iterate(fn inv ->
-          inv
-          |> Panic.Engine.invoke!()
-          |> Panic.Engine.prepare_next!()
-        end)
-        |> Stream.take(run_length)
-        |> Stream.run()
+      first
+      |> Stream.iterate(fn inv ->
+        # IO.puts("preparing to invoke #{inv.model} with input #{inv.input}")
 
-        invocations =
-          Panic.Engine.all_in_run!(network.id, first_invocation.run_number)
+        inv
+        |> Panic.Engine.invoke!(actor: user)
+        |> Panic.Engine.prepare_next!(actor: user)
+      end)
+      |> Stream.take(run_length)
+      |> Stream.run()
 
-        # check outputs match inputs
-        invocations
-        |> Enum.chunk_every(2, 1, :discard)
-        |> Enum.each(fn [a, b] ->
-          assert a.output == b.input
-        end)
+      invocations =
+        Panic.Engine.all_in_run!(network.id, first.run_number, actor: user)
 
-        # check the right number of invocations generated, and returned in the right order
-        assert Enum.count(invocations) == run_length
-        sequence_numbers = Enum.map(invocations, & &1.sequence_number)
-        assert sequence_numbers = Enum.sort(sequence_numbers, :asc)
+      # check outputs match inputs
+      invocations
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.each(fn [a, b] ->
+        assert a.output == b.input
+      end)
 
-        # check the most recent invocation action works
-        [most_recent] = Panic.Engine.most_recent_invocations!(network.id, 1)
-        assert most_recent.sequence_number == Enum.max(sequence_numbers)
-      end
+      # check the right number of invocations generated, and returned in the right order
+      assert Enum.count(invocations) == run_length
+      sequence_numbers = Enum.map(invocations, & &1.sequence_number)
+      assert sequence_numbers = Enum.sort(sequence_numbers, :asc)
+
+      # check the most recent invocation action works
+      [most_recent] = Panic.Engine.most_recent_invocations!(network.id, 1, actor: user)
+      assert most_recent.sequence_number == Enum.max(sequence_numbers)
     end
   end
 end
