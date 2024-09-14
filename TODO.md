@@ -1,5 +1,6 @@
 # Panic TODO
 
+- create a really cheap & bad replicate model (1 step, 1x1px?)for testing
 - make invocation run in a before transaction hook (for better concurrency
   maybe?)
 - `req_new` pulls API keys from the user (with tests)
@@ -39,6 +40,11 @@
 
 ### ideas (not necessarily TODO, but y'know...)
 
+- there's some messiness around whether the platform invoke fns should know
+  about the Model structs... currently they do. the issue is that maybe the
+  per-model transformation stuff should all be in the :invoke key of the model,
+  and the platform invoker function should just take "plain" args for path,
+  version, input etc. or maybe them knowing about the model is ok.
 - use [this](https://departuremono.com) for the font and
   [this](https://ryanmulligan.dev/blog/css-property-new-style/) for the fancy
   panic button (although the latter probs won't work on the silk browsers)
