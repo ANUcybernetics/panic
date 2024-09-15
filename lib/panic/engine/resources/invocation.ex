@@ -132,27 +132,37 @@ defmodule Panic.Engine.Invocation do
     update :invoke do
       change before_action(fn
                changeset, context ->
-                 %{model: model_id, input: input} = changeset.data
+                 case {changeset, context} do
+                   {_, %{actor: nil}} ->
+                     Ash.Changeset.add_error(
+                       changeset,
+                       "actor must be present (to obtain API token)"
+                     )
 
-                 model = Panic.Model.by_id!(model_id)
-                 %Panic.Model{invoke: invoke_fn, platform: platform} = model
+                   {%{data: %{model: model_id, input: input}}, %{actor: user}} ->
+                     model = Panic.Model.by_id!(model_id)
+                     %Panic.Model{invoke: invoke_fn, platform: platform} = model
 
-                 token =
-                   case platform do
-                     Panic.Platforms.OpenAI -> context.actor.openai_token
-                     Panic.Platforms.Replicate -> context.actor.replicate_token
-                   end
+                     token =
+                       case platform do
+                         Panic.Platforms.OpenAI -> context.actor.openai_token
+                         Panic.Platforms.Replicate -> context.actor.replicate_token
+                       end
 
-                 if token do
-                   case invoke_fn.(model, input, token) do
-                     {:ok, output} ->
-                       Ash.Changeset.force_change_attribute(changeset, :output, output)
+                     if token do
+                       case invoke_fn.(model, input, token) do
+                         {:ok, output} ->
+                           Ash.Changeset.force_change_attribute(changeset, :output, output)
 
-                     {:error, message} ->
-                       Ash.Changeset.add_error(changeset, message)
-                   end
-                 else
-                   Ash.Changeset.add_error(changeset, "user has no auth token for #{platform}")
+                         {:error, message} ->
+                           Ash.Changeset.add_error(changeset, message)
+                       end
+                     else
+                       Ash.Changeset.add_error(
+                         changeset,
+                         "user has no auth token for #{platform}"
+                       )
+                     end
                  end
              end)
     end
