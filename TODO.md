@@ -62,3 +62,4 @@
   it's
   [this issue](https://github.com/phoenixframework/phoenix_live_view/issues/624),
   so maybe not worth getting bogged down on)
+- set up [Styler](https://hexdocs.pm/styler/readme.html)
