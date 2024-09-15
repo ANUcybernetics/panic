@@ -1,7 +1,6 @@
 defmodule PanicWeb.TerminalLiveTest do
   use PanicWeb.ConnCase, async: true
   use ExUnitProperties
-  use Oban.Testing, repo: Panic.Repo
   # import Phoenix.LiveViewTest
 
   describe "user IS logged in" do

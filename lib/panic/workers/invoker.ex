@@ -20,40 +20,46 @@ defmodule Panic.Workers.Invoker do
 
   alias Panic.Engine
 
-  # note: you can get network_id from the invocation, but passing both makes it easier
+  # note: you can get network_id and user_id from the invocation, but passing both makes it easier
   # to query the jobs table
   @impl Oban.Worker
   def perform(%Oban.Job{
         args: %{
+          "user_id" => user_id,
           "invocation_id" => invocation_id,
           "network_id" => network_id,
           "run_number" => run_number,
           "sequence_number" => _sequence_number
         }
       }) do
-    with {:ok, invocation} <- Ash.get(Engine.Invocation, invocation_id, authorize?: false) do
+    # NOTE: authorization is tricky inside the Oban job, because we can only pass ids (well, things that JSON-ify nicely)
+    # in as args, so we cheat and pull the user "unauthorized", and then from there we can use that actor (which we need anyway for API tokens)
+    with {:ok, user} <- Ash.get(Panic.Accounts.User, user_id, authorize?: false),
+         {:ok, invocation} <- Ash.get(Engine.Invocation, invocation_id, actor: user) do
       get_running_jobs(network_id, run_number)
       |> case do
         [] ->
-          invoke_and_queue_next(invocation)
+          invoke_and_queue_next(invocation, user)
           :ok
 
         [first | _] = run ->
           if DateTime.diff(DateTime.utc_now(), first.inserted_at, :second) > 30 do
-            run |> List.last() |> invoke_and_queue_next()
+            run |> List.last() |> invoke_and_queue_next(user)
             :ok
           else
-            {:cancel, :too_soon}
+            {:cancel, :network_not_ready}
           end
       end
     end
   end
 
-  def invoke_and_queue_next(invocation) do
-    invocation = Engine.invoke!(invocation)
-    next_invocation = Engine.prepare_next!(invocation)
+  def invoke_and_queue_next(invocation, user) do
+    # see note above re: authorization
+    invocation = Engine.invoke!(invocation, actor: user)
+    next_invocation = Engine.prepare_next!(invocation, actor: user)
 
     __MODULE__.new(%{
+      "user_id" => user.id,
       "invocation_id" => next_invocation.id,
       "network_id" => next_invocation.network_id,
       "run_number" => next_invocation.run_number,
@@ -74,5 +80,17 @@ defmodule Panic.Workers.Invoker do
         where: job.state in ["scheduled", "available", "executing", "retryable"],
         order_by: [asc: job.args["sequence_number"]]
     )
+  end
+
+  def cancel_running_jobs(network_id) do
+    Panic.Repo.all(
+      from job in Oban.Job,
+        where: job.worker == "Panic.Workers.Invoker",
+        where: job.args["network_id"] == ^network_id,
+        where: job.state in ["scheduled", "available", "executing", "retryable"]
+    )
+    |> Enum.each(fn job ->
+      Oban.cancel_job(job.id)
+    end)
   end
 end

@@ -69,8 +69,19 @@ defmodule Panic.Engine.Network do
       end
 
       run fn input, context ->
-        invocation = Panic.Engine.invoke!(input.arguments.first_invocation, actor: context.actor)
-        :ok
+        # returns `:ok` on success, which is what this "no return" action needs
+        Panic.Workers.Invoker.invoke_and_queue_next(
+          input.arguments.first_invocation,
+          context.actor
+        )
+      end
+    end
+
+    action :stop_run do
+      argument :network_id, :integer, allow_nil?: false
+
+      run fn input, _context ->
+        Panic.Workers.Invoker.cancel_running_jobs(input.arguments.network_id)
       end
     end
 
