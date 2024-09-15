@@ -154,7 +154,7 @@ defmodule Panic.InvocationTest do
       refute invocation.output == nil
     end
 
-    test "next invocation maintains run number and increments sequence" do
+    test "creates a next invocation with the right run number and sequence" do
       user = Panic.Fixtures.user_with_tokens()
       network = Panic.Fixtures.network_with_models(user)
       input = "can you tell me a story?"
@@ -170,7 +170,7 @@ defmodule Panic.InvocationTest do
       assert first.sequence_number + 1 == next.sequence_number
     end
 
-    test "run of invocations maintains consistency and order" do
+    test "can make a 'run' which maintains io consistency and ordering" do
       run_length = 4
       user = Panic.Fixtures.user_with_tokens()
       network = Panic.Fixtures.network_with_models(user)
