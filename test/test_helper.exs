@@ -100,26 +100,33 @@ defmodule Panic.Fixtures do
   @moduledoc """
   Test fixtures for Panic resources.
   """
+  use ExUnitProperties
+
   def user(password) do
     password
     |> StreamData.constant()
     |> Panic.Generators.user()
-    |> ExUnitProperties.pick()
+    |> pick()
   end
 
   def user() do
     Panic.Generators.user()
-    |> ExUnitProperties.pick()
+    |> pick()
   end
 
   def user_with_tokens() do
     Panic.Generators.user_with_tokens()
-    |> ExUnitProperties.pick()
+    |> pick()
+  end
+
+  def network(user) do
+    Panic.Generators.network(user)
+    |> pick()
   end
 
   def network_with_models(user) do
     Panic.Generators.network_with_models(user)
-    |> ExUnitProperties.pick()
+    |> pick()
   end
 end
 
