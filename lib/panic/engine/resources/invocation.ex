@@ -154,6 +154,13 @@ defmodule Panic.Engine.Invocation do
                          {:ok, output} ->
                            Ash.Changeset.force_change_attribute(changeset, :output, output)
 
+                         {:error, :nsfw} ->
+                           Ash.Changeset.force_change_attribute(
+                             changeset,
+                             :output,
+                             "https://i.pinimg.com/736x/81/87/7b/81877bc8fe3de138963db9a1ce0e3286.jpg"
+                           )
+
                          {:error, message} ->
                            Ash.Changeset.add_error(changeset, message)
                        end
