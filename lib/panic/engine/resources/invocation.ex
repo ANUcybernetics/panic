@@ -107,7 +107,7 @@ defmodule Panic.Engine.Invocation do
         allow_nil? false
       end
 
-      change fn changeset, _context ->
+      change fn changeset, context ->
         {:ok, previous_invocation} = Ash.Changeset.fetch_argument(changeset, :previous_invocation)
 
         %{
@@ -115,7 +115,7 @@ defmodule Panic.Engine.Invocation do
           run_number: run_number,
           sequence_number: prev_sequence_number,
           output: prev_output
-        } = previous_invocation
+        } = Ash.load!(previous_invocation, :network, actor: context.actor)
 
         model_index = Integer.mod(prev_sequence_number + 1, Enum.count(models))
         model = Enum.at(models, model_index)
