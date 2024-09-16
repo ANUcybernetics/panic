@@ -76,7 +76,7 @@ defmodule Panic.Model do
 
       ## Replicate
       # %__MODULE__{
-      #   id: "rmokady/clip_prefix_caption",
+      #   id: "clip_prefix_caption",
       #   platform: Replicate,
       #   path: "rmokady/clip_prefix_caption",
       #   name: "Clip Prefix Caption",
@@ -90,7 +90,7 @@ defmodule Panic.Model do
       #   end
       # },
       # %__MODULE__{
-      #   id: "j-min/clip-caption-reward",
+      #   id: "clip-caption-reward",
       #   platform: Replicate,
       #   path: "j-min/clip-caption-reward",
       #   name: "Clip Caption Reward",
@@ -104,7 +104,7 @@ defmodule Panic.Model do
       #   end
       # },
       %__MODULE__{
-        id: "salesforce/blip-2",
+        id: "blip-2",
         platform: Replicate,
         path: "salesforce/blip-2",
         name: "BLIP2",
@@ -118,7 +118,7 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
-        id: "stability-ai/stable-diffusion-test",
+        id: "stable-diffusion-test",
         description: "SD, but really small/cheap/fast - useful for testing",
         platform: Replicate,
         path: "stability-ai/stable-diffusion",
@@ -141,7 +141,7 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
-        id: "stability-ai/stable-diffusion",
+        id: "stable-diffusion",
         platform: Replicate,
         path: "stability-ai/stable-diffusion",
         name: "Stable Diffusion",
@@ -163,7 +163,7 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
-        id: "black-forest-labs/flux-schnell",
+        id: "flux-schnell",
         platform: Replicate,
         path: "black-forest-labs/flux-schnell",
         name: "FLUX.1 [schnell]",
@@ -184,7 +184,7 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
-        id: "stability-ai/sdxl",
+        id: "sdxl",
         platform: Replicate,
         path: "stability-ai/sdxl",
         name: "Stable Diffusion XL",
@@ -206,7 +206,7 @@ defmodule Panic.Model do
         end
       },
       # %__MODULE__{
-      #   id: "yorickvp/llava-v1.6-34b",
+      #   id: "llava-v1.6-34b",
       #   platform: Replicate,
       #   path: "yorickvp/llava-v1.6-34b",
       #   name: "LLaVA 34B text-to-image",
@@ -226,7 +226,7 @@ defmodule Panic.Model do
       #   end
       # },
       %__MODULE__{
-        id: "meta/meta-llama-3-8b-instruct",
+        id: "meta-llama-3-8b-instruct",
         platform: Replicate,
         path: "meta/meta-llama-3-8b-instruct",
         name: "LLaMa 8B Instruct",
