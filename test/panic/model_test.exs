@@ -42,7 +42,7 @@ defmodule Panic.ModelTest do
 
     test "can generate a stable diffusion image" do
       user = Panic.Fixtures.user_with_tokens()
-      %Model{invoke: invoke_fn} = model = Model.by_id!("stability-ai/stable-diffusion")
+      %Model{invoke: invoke_fn} = model = Model.by_id!("stability-ai/stable-diffusion-test")
 
       {:ok, img_url} =
         invoke_fn.(model, "I could eat a peach for hours.", user.replicate_token)
