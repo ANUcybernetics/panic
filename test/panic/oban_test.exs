@@ -5,7 +5,7 @@ defmodule Panic.ObanTest do
   # alias Panic.Engine.Invocation
 
   describe "Panic.Workers.Invoker" do
-    # @describetag skip: "requires API keys"
+    @describetag skip: "requires API keys"
 
     test "can be successfully triggered via :start_run Network action" do
       user = Panic.Fixtures.user_with_tokens()

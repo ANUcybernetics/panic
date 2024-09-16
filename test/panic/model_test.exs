@@ -26,6 +26,18 @@ defmodule Panic.ModelTest do
     end
   end
 
+  describe "all platforms" do
+    test "have models with unique ids" do
+      model_ids =
+        Model.all()
+        |> Enum.map(fn %Panic.Model{id: id} -> id end)
+
+      unique_ids = Enum.uniq(model_ids)
+
+      assert length(model_ids) == length(unique_ids), "all model IDs should be unique"
+    end
+  end
+
   describe "Replicate platform" do
     alias Panic.Platforms.Replicate
     @describetag skip: "requires API keys"
