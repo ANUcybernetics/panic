@@ -76,20 +76,6 @@ defmodule Panic.Model do
 
       ## Replicate
       %__MODULE__{
-        id: "2feet6inches/cog-prompt-parrot",
-        platform: Replicate,
-        path: "2feet6inches/cog-prompt-parrot",
-        name: "Cog Prompt Parrot",
-        input_type: :text,
-        output_type: :text,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => text}} <-
-                 Replicate.invoke(model, %{prompt: input}, token) do
-            {:ok, text |> String.split("\n") |> Enum.random()}
-          end
-        end
-      },
-      %__MODULE__{
         id: "rmokady/clip_prefix_caption",
         platform: Replicate,
         path: "rmokady/clip_prefix_caption",
