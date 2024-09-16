@@ -132,6 +132,29 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
+        id: "stability-ai/stable-diffusion-test",
+        description: "SD, but really small/cheap/fast - useful for testing",
+        platform: Replicate,
+        path: "stability-ai/stable-diffusion",
+        name: "Stable Diffusion Test",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input,
+            num_inference_steps: 1,
+            guidance_scale: 5.0,
+            width: 64,
+            height: 64
+          }
+
+          with {:ok, %{"output" => [image_url]}} <-
+                 Replicate.invoke(model, input_params, token) do
+            {:ok, image_url}
+          end
+        end
+      },
+      %__MODULE__{
         id: "stability-ai/stable-diffusion",
         platform: Replicate,
         path: "stability-ai/stable-diffusion",

@@ -139,11 +139,19 @@ defmodule Panic.InvocationTest do
   end
 
   describe "Invocation with API calls" do
-    @describetag skip: "requires API keys"
+    # @describetag skip: "requires API keys"
     # NOTE: these ones shouldn't be properties, because that'd be spendy. Just tests are fine.
     test "produce output" do
       user = Panic.Fixtures.user_with_tokens()
-      network = Panic.Fixtures.network_with_models(user)
+      network = Panic.Fixtures.network(user)
+      # a pretty simple network, should be fast & cheap
+      network =
+        Panic.Engine.update_models!(
+          network,
+          ["stability-ai/stable-diffusion-test", "salesforce/blip-2"],
+          actor: user
+        )
+
       input = "can you tell me a story?"
 
       invocation =
