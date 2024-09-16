@@ -49,6 +49,25 @@ defmodule Panic.ModelTest do
 
       assert String.match?(img_url, ~r|^https://.*$|)
     end
+
+    test "can successfully invoke all models" do
+      user = Panic.Fixtures.user_with_tokens()
+      models = Model.all(platform: Replicate)
+
+      for %Model{id: id, invoke: invoke_fn} = model <- models do
+        IO.puts("invoking #{id}")
+
+        input =
+          case model do
+            %Model{input_type: :text} -> "describe a nice scene"
+            %Model{input_type: :image} -> "https://picsum.photos/400/225/"
+          end
+
+        assert {:ok, output} = invoke_fn.(model, input, user.replicate_token)
+        # assert output is not blank
+        assert String.match?(output, ~r/\S/)
+      end
+    end
   end
 
   describe "OpenAI platform" do

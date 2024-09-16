@@ -75,34 +75,34 @@ defmodule Panic.Model do
       },
 
       ## Replicate
-      %__MODULE__{
-        id: "rmokady/clip_prefix_caption",
-        platform: Replicate,
-        path: "rmokady/clip_prefix_caption",
-        name: "Clip Prefix Caption",
-        input_type: :image,
-        output_type: :text,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => text}} <-
-                 Replicate.invoke(model, %{image: input}, token) do
-            {:ok, text}
-          end
-        end
-      },
-      %__MODULE__{
-        id: "j-min/clip-caption-reward",
-        platform: Replicate,
-        path: "j-min/clip-caption-reward",
-        name: "Clip Caption Reward",
-        input_type: :image,
-        output_type: :text,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => text}} <-
-                 Replicate.invoke(model, %{image: input}, token) do
-            {:ok, text}
-          end
-        end
-      },
+      # %__MODULE__{
+      #   id: "rmokady/clip_prefix_caption",
+      #   platform: Replicate,
+      #   path: "rmokady/clip_prefix_caption",
+      #   name: "Clip Prefix Caption",
+      #   input_type: :image,
+      #   output_type: :text,
+      #   invoke: fn model, input, token ->
+      #     with {:ok, %{"output" => text}} <-
+      #            Replicate.invoke(model, %{image: input}, token) do
+      #       {:ok, text}
+      #     end
+      #   end
+      # },
+      # %__MODULE__{
+      #   id: "j-min/clip-caption-reward",
+      #   platform: Replicate,
+      #   path: "j-min/clip-caption-reward",
+      #   name: "Clip Caption Reward",
+      #   input_type: :image,
+      #   output_type: :text,
+      #   invoke: fn model, input, token ->
+      #     with {:ok, %{"output" => text}} <-
+      #            Replicate.invoke(model, %{image: input}, token) do
+      #       {:ok, text}
+      #     end
+      #   end
+      # },
       %__MODULE__{
         id: "salesforce/blip-2",
         platform: Replicate,
@@ -130,8 +130,8 @@ defmodule Panic.Model do
             prompt: input,
             num_inference_steps: 1,
             guidance_scale: 5.0,
-            width: 64,
-            height: 64
+            width: 128,
+            height: 128
           }
 
           with {:ok, %{"output" => [image_url]}} <-
@@ -177,7 +177,7 @@ defmodule Panic.Model do
             disable_safety_checker: true
           }
 
-          with {:ok, %{"output" => image_url}} <-
+          with {:ok, %{"output" => [image_url]}} <-
                  Replicate.invoke(model, input_params, token) do
             {:ok, image_url}
           end
@@ -205,26 +205,26 @@ defmodule Panic.Model do
           end
         end
       },
-      %__MODULE__{
-        id: "yorickvp/llava-v1.6-34b",
-        platform: Replicate,
-        path: "yorickvp/llava-v1.6-34b",
-        name: "LLaVA 34B text-to-image",
-        input_type: :image,
-        output_type: :text,
-        invoke: fn model, input, token ->
-          input_params = %{
-            image: input,
-            prompt:
-              "Provide a detailed description of this image for captioning purposes, including descriptions both the foreground and background."
-          }
+      # %__MODULE__{
+      #   id: "yorickvp/llava-v1.6-34b",
+      #   platform: Replicate,
+      #   path: "yorickvp/llava-v1.6-34b",
+      #   name: "LLaVA 34B text-to-image",
+      #   input_type: :image,
+      #   output_type: :text,
+      #   invoke: fn model, input, token ->
+      #     input_params = %{
+      #       image: input,
+      #       prompt:
+      #         "Provide a detailed description of this image for captioning purposes, including descriptions both the foreground and background."
+      #     }
 
-          with {:ok, %{"output" => description_list}} <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, Enum.join(description_list)}
-          end
-        end
-      },
+      #     with {:ok, %{"output" => description_list}} <-
+      #            Replicate.invoke(model, input_params, token) do
+      #       {:ok, Enum.join(description_list)}
+      #     end
+      #   end
+      # },
       %__MODULE__{
         id: "meta/meta-llama-3-8b-instruct",
         platform: Replicate,
