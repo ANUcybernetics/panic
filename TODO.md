@@ -1,9 +1,9 @@
 # Panic TODO
 
-- create a really cheap & bad replicate model (1 step, 1x1px?)for testing
+- make the start_run action async - currently it seems to be a blocking infinite
+  loop
 - make invocation run in a before transaction hook (for better concurrency
   maybe?)
-- `req_new` pulls API keys from the user (with tests)
 - remove :state from network, and make sure it's being used properly in
   invocation
 - update the BLIP caption model to be more expressive
