@@ -32,6 +32,8 @@ defmodule Panic.Workers.Invoker do
           "sequence_number" => _sequence_number
         }
       }) do
+    IO.puts("invoking id #{invocation_id}")
+
     # NOTE: authorization is tricky inside the Oban job, because we can only pass ids (well, things that JSON-ify nicely)
     # in as args, so we cheat and pull the user "unauthorized", and then from there we can use that actor (which we need anyway for API tokens)
     with {:ok, user} <- Ash.get(Panic.Accounts.User, user_id, authorize?: false),
