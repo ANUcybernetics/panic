@@ -60,13 +60,14 @@ defmodule Panic.Workers.Invoker do
     invocation = Engine.invoke!(invocation, actor: user)
     next_invocation = Engine.prepare_next!(invocation, actor: user)
 
-    __MODULE__.new(%{
+    %{
       "user_id" => user.id,
       "invocation_id" => next_invocation.id,
       "network_id" => next_invocation.network_id,
       "run_number" => next_invocation.run_number,
       "sequence_number" => next_invocation.sequence_number
-    })
+    }
+    |> __MODULE__.new()
     |> Oban.insert()
     |> case do
       {:ok, _job} -> :ok
