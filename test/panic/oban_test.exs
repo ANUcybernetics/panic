@@ -48,10 +48,13 @@ defmodule Panic.ObanTest do
 
       IO.write("stop the run and check everything worked correctly...")
       Panic.Engine.stop_run!(network.id, actor: user)
+
       assert [] = all_enqueued()
 
       invocations =
         Panic.Engine.list_run!(network.id, invocation.run_number, actor: user)
+
+      IO.puts("done (#{length(invocations)} created)")
 
       # check some invariants
       invocations
@@ -70,8 +73,6 @@ defmodule Panic.ObanTest do
                Ash.get(Panic.Engine.Invocation, timely_invocation.id, actor: user)
 
       assert is_binary(output) and output != ""
-
-      IO.puts("done (#{length(invocations)} created)")
     end
   end
 end
