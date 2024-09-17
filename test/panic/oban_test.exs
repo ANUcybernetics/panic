@@ -16,7 +16,7 @@ defmodule Panic.ObanTest do
         network
         |> Panic.Engine.prepare_first!("can you tell me a story?", actor: user)
 
-      IO.puts("about to run a ~45s integration test of the core Panic engine")
+      IO.puts("about to run a ~1min integration test of the core Panic engine")
       Panic.Engine.start_run!(invocation, actor: user)
       Process.sleep(5_000)
 
@@ -26,7 +26,7 @@ defmodule Panic.ObanTest do
         network
         |> Panic.Engine.prepare_first!("ok, tell me another one", actor: user)
 
-      Panic.Engine.start_run!(too_early_invocation, actor: user)
+      {:error, _} = Panic.Engine.start_run(too_early_invocation, actor: user)
       refute_enqueued(args: %{"invocation_id" => too_early_invocation.id})
       IO.puts("done")
 
@@ -41,7 +41,9 @@ defmodule Panic.ObanTest do
         )
 
       Panic.Engine.start_run!(timely_invocation, actor: user)
+      assert_enqueued(args: %{"invocation_id" => timely_invocation.id})
 
+      Process.sleep(30_000)
       IO.puts("done")
 
       IO.write("stop the run and check everything worked correctly...")
@@ -60,6 +62,14 @@ defmodule Panic.ObanTest do
         assert a.run_number == invocation.run_number
         assert a.network_id == invocation.network_id
       end)
+
+      assert {:ok, %Panic.Engine.Invocation{output: nil}} =
+               Ash.get(Panic.Engine.Invocation, too_early_invocation.id, actor: user)
+
+      assert {:ok, %Panic.Engine.Invocation{output: output}} =
+               Ash.get(Panic.Engine.Invocation, timely_invocation.id, actor: user)
+
+      assert is_binary(output) and output != ""
 
       IO.puts("done (#{length(invocations)} created)")
     end

@@ -19,7 +19,7 @@ defmodule Panic.Workers.Invoker do
   # `:period` sets the amount of time to disallow new runs when an existing one has just started
   use Oban.Worker,
     queue: :default,
-    unique: [period: 30, keys: [:network_id, :run_number, :sequence_number]]
+    unique: [period: 30, keys: [:network_id, :sequence_number]]
 
   alias Panic.Engine
 
@@ -33,37 +33,38 @@ defmodule Panic.Workers.Invoker do
           "user_id" => user_id,
           "invocation_id" => invocation_id,
           "network_id" => _network_id,
-          "run_number" => _run_number,
-          "sequence_number" => _sequence_number
+          "run_number" => run_number,
+          "sequence_number" => sequence_number
         }
       }) do
-    IO.puts("invoking id #{invocation_id}")
+    IO.puts("invoking #{run_number}-#{sequence_number}")
 
     # NOTE: authorization is tricky inside the Oban job, because we can only pass ids (well, things that JSON-ify nicely)
     # in as args, so we cheat and pull the user "unauthorized", and then from there we can use that actor (which we need anyway for API tokens)
     with {:ok, user} <- Ash.get(Panic.Accounts.User, user_id, authorize?: false),
-         {:ok, invocation} <- Ash.get(Engine.Invocation, invocation_id, actor: user) do
-      invoke_and_queue_next(invocation, user)
+         {:ok, invocation} <- Ash.get(Engine.Invocation, invocation_id, actor: user),
+         {:ok, invocation} <- Engine.invoke(invocation, actor: user),
+         {:ok, next_invocation} <- Engine.prepare_next(invocation, actor: user) do
+      dbg()
+      insert(next_invocation, user)
+
+      :ok
     end
   end
 
-  def invoke_and_queue_next(invocation, user) do
-    # see note above re: authorization
-    invocation = Engine.invoke!(invocation, actor: user)
-    next_invocation = Engine.prepare_next!(invocation, actor: user)
-
+  def insert(invocation, user) do
     %{
       "user_id" => user.id,
-      "invocation_id" => next_invocation.id,
-      "network_id" => next_invocation.network_id,
-      "run_number" => next_invocation.run_number,
-      "sequence_number" => next_invocation.sequence_number
+      "invocation_id" => invocation.id,
+      "network_id" => invocation.network_id,
+      "run_number" => invocation.run_number,
+      "sequence_number" => invocation.sequence_number
     }
     |> __MODULE__.new()
     |> Oban.insert()
     |> case do
       {:ok, %Oban.Job{conflict?: true}} -> {:error, :network_not_ready}
-      {:ok, _job} -> :ok
+      {:ok, job} -> {:ok, job}
       {:error, reason} -> {:error, reason}
     end
   end

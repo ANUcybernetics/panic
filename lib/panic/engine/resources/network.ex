@@ -62,19 +62,14 @@ defmodule Panic.Engine.Network do
       validate Panic.Validations.ModelIOConnections
     end
 
-    action :start_run do
+    action :start_run, :term do
       argument :first_invocation, :struct do
         constraints instance_of: Panic.Engine.Invocation
         allow_nil? false
       end
 
       run fn input, context ->
-        Panic.Workers.Invoker.invoke_and_queue_next(
-          input.arguments.first_invocation,
-          context.actor
-        )
-
-        :ok
+        Panic.Workers.Invoker.insert(input.arguments.first_invocation, context.actor)
       end
     end
 
