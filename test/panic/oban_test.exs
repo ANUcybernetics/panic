@@ -7,19 +7,46 @@ defmodule Panic.ObanTest do
   describe "Oban-powered Panic.Workers.Invoker" do
     # @describetag skip: "requires API keys"
 
+    @tag timeout: 120_000
     test "can be successfully started, run for 30s and stopped" do
-      IO.write("about to run a 30s test of the Oban prepare-and-invoke process...")
       user = Panic.Fixtures.user_with_tokens()
       network = Panic.Fixtures.network_with_models(user)
-      input = "can you tell me a story?"
 
       invocation =
         network
-        |> Panic.Engine.prepare_first!(input, actor: user)
+        |> Panic.Engine.prepare_first!("can you tell me a story?", actor: user)
 
+      IO.puts("about to run a ~45s integration test of the core Panic engine")
       Panic.Engine.start_run!(invocation, actor: user)
+      Process.sleep(5_000)
+
+      IO.write("check that new runs *can't* be triggered within 30s of run start...")
+
+      too_early_invocation =
+        network
+        |> Panic.Engine.prepare_first!("ok, tell me another one", actor: user)
+
+      Panic.Engine.start_run!(too_early_invocation, actor: user)
+      refute_enqueued(args: %{"invocation_id" => too_early_invocation.id})
+      IO.puts("done")
+
       Process.sleep(30_000)
+
+      IO.write("check that new runs *can* be triggered more than 30s from run start...")
+
+      timely_invocation =
+        network
+        |> Panic.Engine.prepare_first!("ok, tell me a third story, different from the first two",
+          actor: user
+        )
+
+      Panic.Engine.start_run!(timely_invocation, actor: user)
+
+      IO.puts("done")
+
+      IO.write("stop the run and check everything worked correctly...")
       Panic.Engine.stop_run!(network.id, actor: user)
+      assert [] = all_enqueued()
 
       invocations =
         Panic.Engine.list_run!(network.id, invocation.run_number, actor: user)
