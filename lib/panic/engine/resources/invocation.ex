@@ -51,6 +51,7 @@ defmodule Panic.Engine.Invocation do
       prepare build(sort: [updated_at: :desc], limit: arg(:limit))
     end
 
+    # TODO maybe rename to list_run or something?
     read :all_in_run do
       argument :network_id, :integer
       argument :run_number, :integer

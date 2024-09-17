@@ -69,11 +69,12 @@ defmodule Panic.Engine.Network do
       end
 
       run fn input, context ->
-        # returns `:ok` on success, which is what this "no return" action needs
         Panic.Workers.Invoker.invoke_and_queue_next(
           input.arguments.first_invocation,
           context.actor
         )
+
+        :ok
       end
     end
 

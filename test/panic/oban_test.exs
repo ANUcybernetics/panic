@@ -5,7 +5,7 @@ defmodule Panic.ObanTest do
   # alias Panic.Engine.Invocation
 
   describe "Panic.Workers.Invoker" do
-    @describetag skip: "requires API keys"
+    # @describetag skip: "requires API keys"
 
     test "can be successfully triggered via :start_run Network action" do
       user = Panic.Fixtures.user_with_tokens()
@@ -17,15 +17,15 @@ defmodule Panic.ObanTest do
         |> Panic.Engine.prepare_first!(input, actor: user)
 
       Panic.Engine.start_run!(invocation, actor: user)
+      Process.sleep(15_000)
+      Panic.Engine.stop_run!(network.id, actor: user)
 
-      assert_enqueued(
-        worker: Panic.Workers.Invoker,
-        args: %{
-          "invocation_id" => invocation.id,
-          "network_id" => network.id,
-          "sequence_number" => 0
-        }
-      )
+      [first, second | _rest] =
+        Panic.Engine.all_in_run!(network.id, invocation.run_number, actor: user)
+
+      assert Ash.load(first, :network, actor: user) == invocation
+      assert second.run_number == invocation.run_number
+      assert second.sequence_number == 1
     end
   end
 end

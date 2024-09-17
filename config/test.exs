@@ -35,7 +35,7 @@ config :phoenix_live_view,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true
 
-config :panic, Oban, testing: :inline
+config :panic, Oban, testing: :manual
 
 # Do NOT set this value for production
 config :bcrypt_elixir, log_rounds: 1
