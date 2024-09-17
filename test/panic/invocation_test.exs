@@ -146,11 +146,7 @@ defmodule Panic.InvocationTest do
       network = Panic.Fixtures.network(user)
       # a pretty simple network, should be fast & cheap
       network =
-        Panic.Engine.update_models!(
-          network,
-          ["stability-ai/stable-diffusion-test", "salesforce/blip-2"],
-          actor: user
-        )
+        Panic.Engine.update_models!(network, ["stable-diffusion-test", "blip-2"], actor: user)
 
       input = "can you tell me a story?"
 
