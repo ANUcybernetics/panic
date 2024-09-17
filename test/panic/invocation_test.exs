@@ -178,7 +178,7 @@ defmodule Panic.InvocationTest do
       assert first.sequence_number + 1 == next.sequence_number
     end
 
-    test "can make a 'run' which maintains io consistency and ordering" do
+    test "can make a 'run' with invoke! and prepare_next! which maintains io consistency and ordering" do
       run_length = 4
       user = Panic.Fixtures.user_with_tokens()
       network = Panic.Fixtures.network_with_models(user)
@@ -201,7 +201,7 @@ defmodule Panic.InvocationTest do
       |> Stream.run()
 
       invocations =
-        Panic.Engine.all_in_run!(network.id, first.run_number, actor: user)
+        Panic.Engine.list_run!(network.id, first.run_number, actor: user)
 
       # check outputs match inputs
       invocations

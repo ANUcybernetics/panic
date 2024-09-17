@@ -52,7 +52,7 @@ defmodule Panic.Engine.Invocation do
     end
 
     # TODO maybe rename to list_run or something?
-    read :all_in_run do
+    read :list_run do
       argument :network_id, :integer
       argument :run_number, :integer
       prepare build(sort: [sequence_number: :asc])
