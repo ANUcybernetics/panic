@@ -45,7 +45,6 @@ defmodule Panic.Workers.Invoker do
          {:ok, invocation} <- Ash.get(Engine.Invocation, invocation_id, actor: user),
          {:ok, invocation} <- Engine.invoke(invocation, actor: user),
          {:ok, next_invocation} <- Engine.prepare_next(invocation, actor: user) do
-      dbg()
       insert(next_invocation, user)
 
       :ok
