@@ -5,7 +5,7 @@ defmodule Panic.ObanTest do
   # alias Panic.Engine.Invocation
 
   describe "Oban-powered Panic.Workers.Invoker" do
-    # @describetag skip: "requires API keys"
+    @describetag skip: "requires API keys"
 
     @tag timeout: 120_000
     test "can be successfully started, run for 30s and stopped" do
