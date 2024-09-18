@@ -8,12 +8,10 @@ defmodule Panic.Workers.Invoker do
   This Oban job assumes that the invocation has already been prepared (and is therefore
   in the db) with the `:prepare_next` action on the Invocation resource.
 
-  The general logic is:
-  - check if there's already a running invocation job (i.e. an instance of this worker)
-    - if there's not, run the job (call the model and update the invocation) and queue the next job
-    - if there is, check if the first invocation in the current run is < 30s old
-      - if it is, then return `{:error, :starting}`
-      - if it's not, then cancel the currently running job, invoke the new invocation and then queue the next job
+  The "uninterruptible" period (within 30s of run start) is handled by using Oban's
+  unique jobs feature, with uniqueness based on network and sequence number (*not* run number).
+  So if there's a new first run (`sequence_number == 0`) within 30s of the last one, the Oban
+  job insertion will fail with `{:error, :network_not_ready}`.
   """
 
   # `:period` sets the amount of time to disallow new runs when an existing one has just started
@@ -25,8 +23,20 @@ defmodule Panic.Workers.Invoker do
 
   import Ecto.Query
 
-  # note: you can get network_id and user_id from the invocation, but passing both makes it easier
-  # to query the jobs table
+  @doc """
+  Performs the invocation job.
+
+  This callback is the implementation of the Oban.Worker behavior. It processes
+  the job with the given arguments, invoking the AI model and preparing the next
+  invocation if necessary.
+
+  This function shouldn't be called directly; use `insert/2` in this same module
+  instead.
+
+  ## Returns
+    - :ok if the job is successfully processed.
+    - Any error returned by the underlying operations.
+  """
   @impl Oban.Worker
   def perform(%Oban.Job{
         args: %{
@@ -51,6 +61,25 @@ defmodule Panic.Workers.Invoker do
     end
   end
 
+  @doc """
+  Inserts a new Oban job for the given invocation and user.
+
+  This function creates a new Oban job with the provided invocation and user (actor),
+  and attempts to insert it into the Oban job queue. It handles potential conflicts
+  and returns appropriate results based on the insertion outcome.
+
+  This is really just a wrapper around `Oban.insert` which handles pulling the args out
+  of the `invocation` struct, plus returning a more meaningful error on (uniqueness) conflict.
+
+  ## Parameters
+    - invocation: The invocation struct containing necessary details.
+    - user: The user struct associated with the invocation.
+
+  ## Returns
+    - `{:ok, job}` if the job is successfully inserted.
+    - `{:error, :network_not_ready}` if there's a conflict with an existing job.
+    - `{:error, reason}` for any other insertion errors.
+  """
   def insert(invocation, user) do
     %{
       "user_id" => user.id,
@@ -68,6 +97,20 @@ defmodule Panic.Workers.Invoker do
     end
   end
 
+  @doc """
+  Cancels all running jobs for a specific network.
+
+  This function retrieves all Oban jobs for the Panic.Workers.Invoker worker
+  that are associated with the given network_id and are in a state that allows
+  cancellation (scheduled, available, executing, or retryable). It then cancels
+  each of these jobs.
+
+  ## Parameters
+    - network_id: The ID of the network for which to cancel jobs.
+
+  ## Returns
+    - :ok (The function always returns :ok as Enum.each/2 returns :ok)
+  """
   def cancel_running_jobs(network_id) do
     Panic.Repo.all(
       from job in Oban.Job,
