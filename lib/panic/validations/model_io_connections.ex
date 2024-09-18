@@ -1,6 +1,4 @@
 defmodule Panic.Validations.ModelIOConnections do
-  use Ash.Resource.Validation
-
   @moduledoc """
   This module provides a custom validation for checking the compatibility
   of input and output types in a sequence of models within a network.
@@ -9,6 +7,8 @@ defmodule Panic.Validations.ModelIOConnections do
 
   The empty network (i.e. models == []) is considered invalid.
   """
+
+  use Ash.Resource.Validation
 
   @impl true
   def init(opts), do: {:ok, opts}

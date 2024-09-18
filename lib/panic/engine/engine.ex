@@ -1,4 +1,5 @@
 defmodule Panic.Engine do
+  @moduledoc false
   use Ash.Domain
 
   resources do

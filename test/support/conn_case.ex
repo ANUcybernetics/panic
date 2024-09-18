@@ -19,17 +19,15 @@ defmodule PanicWeb.ConnCase do
 
   using do
     quote do
+      use PanicWeb, :verified_routes
+      import PanicWeb.ConnCase
+      import Phoenix.ConnTest
+      import PhoenixTest
+      import Plug.Conn
       # The default endpoint for testing
       @endpoint PanicWeb.Endpoint
 
-      use PanicWeb, :verified_routes
-
       # Import conveniences for testing with connections
-      import Plug.Conn
-      import Phoenix.ConnTest
-      import PanicWeb.ConnCase
-
-      import PhoenixTest
     end
   end
 

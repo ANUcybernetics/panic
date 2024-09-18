@@ -1,5 +1,7 @@
 defmodule PanicWeb.AuthOverrides do
+  @moduledoc false
   use AshAuthentication.Phoenix.Overrides
+
   alias AshAuthentication.Phoenix.Components
 
   override Components.Password do

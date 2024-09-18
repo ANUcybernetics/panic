@@ -7,8 +7,12 @@ defmodule Panic.Generators do
   """
   use ExUnitProperties
 
+  alias Panic.Accounts.User
+  alias Panic.Engine.Network
+
   def ascii_sentence do
-    string(:ascii, min_length: 1)
+    :ascii
+    |> string(min_length: 1)
     |> map(&String.trim/1)
     |> filter(&(String.length(&1) > 0))
   end
@@ -20,19 +24,21 @@ defmodule Panic.Generators do
   end
 
   def password do
-    string(:utf8, min_length: 8)
+    :utf8
+    |> string(min_length: 8)
     |> filter(fn s -> not Regex.match?(~r/^[[:space:]]*$/, s) end)
     |> filter(fn s -> String.length(s) >= 8 end)
   end
 
   def email do
-    repeatedly(fn -> System.unique_integer([:positive]) end)
+    fn -> System.unique_integer([:positive]) end
+    |> repeatedly()
     |> map(fn i -> "user-#{i}@example.com" end)
   end
 
   def user(password_generator \\ password()) do
     gen all(email <- email(), password <- password_generator) do
-      Panic.Accounts.User
+      User
       |> Ash.Changeset.for_create(
         :register_with_password,
         %{email: email, password: password, password_confirmation: password}
@@ -42,7 +48,8 @@ defmodule Panic.Generators do
   end
 
   def set_all_tokens(user) do
-    Application.get_env(:panic, :api_tokens)
+    :panic
+    |> Application.get_env(:api_tokens)
     |> Enum.map(fn {name, value} ->
       Panic.Accounts.set_token!(user, name, value, actor: user)
     end)
@@ -52,13 +59,13 @@ defmodule Panic.Generators do
   def user_with_tokens do
     gen all(user <- user()) do
       user = set_all_tokens(user)
-      Ash.get!(Panic.Accounts.User, user.id, actor: user)
+      Ash.get!(User, user.id, actor: user)
     end
   end
 
   def network(user) do
-    gen all(input <- Ash.Generator.action_input(Panic.Engine.Network, :create)) do
-      Panic.Engine.Network
+    gen all(input <- Ash.Generator.action_input(Network, :create)) do
+      Network
       |> Ash.Changeset.for_create(:create, input, actor: user)
       |> Ash.create!()
     end
@@ -67,8 +74,9 @@ defmodule Panic.Generators do
   def network_with_models(user) do
     gen all(network <- network(user), length <- integer(1..10)) do
       model_ids =
-        Stream.unfold(:text, fn input_type ->
-          next_model = model(input_type: input_type) |> pick()
+        :text
+        |> Stream.unfold(fn input_type ->
+          next_model = [input_type: input_type] |> model() |> pick()
           {next_model, Map.fetch!(next_model, :output_type)}
         end)
         |> Stream.transform([], fn model, acc ->
@@ -85,7 +93,7 @@ defmodule Panic.Generators do
   end
 
   def invocation(network) do
-    user = Ash.get!(Panic.Accounts.User, network.user_id, authorize?: false)
+    user = Ash.get!(User, network.user_id, authorize?: false)
 
     gen all(input <- Panic.Generators.ascii_sentence()) do
       Panic.Engine.Invocation
@@ -109,28 +117,29 @@ defmodule Panic.Fixtures do
     |> pick()
   end
 
-  def user() do
-    Panic.Generators.user()
-    |> pick()
+  def user do
+    pick(Panic.Generators.user())
   end
 
-  def user_with_tokens() do
-    Panic.Generators.user_with_tokens()
-    |> pick()
+  def user_with_tokens do
+    pick(Panic.Generators.user_with_tokens())
   end
 
   def network(user) do
-    Panic.Generators.network(user)
+    user
+    |> Panic.Generators.network()
     |> pick()
   end
 
   def network_with_models(user) do
-    Panic.Generators.network_with_models(user)
+    user
+    |> Panic.Generators.network_with_models()
     |> pick()
   end
 end
 
 defmodule PanicWeb.Helpers do
+  @moduledoc false
   def create_and_sign_in_user(%{conn: conn}) do
     password = "abcd1234"
 

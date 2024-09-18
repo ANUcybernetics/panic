@@ -1,4 +1,5 @@
 defmodule PanicWeb.NetworkLive.Display do
+  @moduledoc false
   use PanicWeb, :live_view
 
   @impl true

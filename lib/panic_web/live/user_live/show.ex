@@ -1,4 +1,5 @@
 defmodule PanicWeb.UserLive.Show do
+  @moduledoc false
   use PanicWeb, :live_view
 
   @impl true
@@ -99,8 +100,7 @@ defmodule PanicWeb.UserLive.Show do
   @impl true
   def handle_params(%{"user_id" => id}, _, socket) do
     user =
-      Panic.Accounts.User
-      |> Ash.get!(id, actor: socket.assigns.current_user)
+      Ash.get!(Panic.Accounts.User, id, actor: socket.assigns.current_user)
 
     networks = Ash.read!(Panic.Engine.Network, actor: socket.assigns.current_user)
 

@@ -48,12 +48,7 @@ defmodule Panic.MixProject do
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
       {:heroicons,
-       github: "tailwindlabs/heroicons",
-       tag: "v2.1.4",
-       sparse: "optimized",
-       app: false,
-       compile: false,
-       depth: 1},
+       github: "tailwindlabs/heroicons", tag: "v2.1.4", sparse: "optimized", app: false, compile: false, depth: 1},
       {:swoosh, "~> 1.5"},
       {:finch, "~> 0.18"},
       {:telemetry_metrics, "~> 1.0"},
@@ -68,6 +63,7 @@ defmodule Panic.MixProject do
       {:ash_authentication, "~> 4.0"},
       {:ash_authentication_phoenix, "~> 2.0"},
       {:recon, "~> 2.5"},
+      {:styler, "~> 1.0.0", only: [:dev, :test], runtime: false},
       {:live_select, "~> 1.0"}
     ]
   end

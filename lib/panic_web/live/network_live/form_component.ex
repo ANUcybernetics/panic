@@ -1,4 +1,5 @@
 defmodule PanicWeb.NetworkLive.FormComponent do
+  @moduledoc false
   use PanicWeb, :live_component
 
   @impl true
@@ -37,8 +38,7 @@ defmodule PanicWeb.NetworkLive.FormComponent do
 
   @impl true
   def handle_event("validate", %{"network" => network_params}, socket) do
-    {:noreply,
-     assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, network_params))}
+    {:noreply, assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, network_params))}
   end
 
   def handle_event("save", %{"network" => network_params}, socket) do

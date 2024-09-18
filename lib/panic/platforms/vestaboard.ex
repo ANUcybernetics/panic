@@ -1,6 +1,8 @@
 defmodule Panic.Platforms.Vestaboard do
+  @moduledoc false
   def send_text(board_name, text) do
-    req_new(board_name, method: :post, json: %{"text" => text})
+    board_name
+    |> req_new(method: :post, json: %{"text" => text})
     |> Req.request()
     |> case do
       {:ok, %Req.Response{status: 200, body: %{"id" => id}}} ->
@@ -26,14 +28,12 @@ defmodule Panic.Platforms.Vestaboard do
     token = Application.fetch_env!(:panic, :"vestaboard_api_token_#{to_string(board_name)}")
     headers = [{"X-Vestaboard-Read-Write-Key", token}]
 
-    Keyword.merge(
-      [
-        base_url: "https://rw.vestaboard.com/",
-        receive_timeout: 10_000,
-        headers: headers
-      ],
-      opts
-    )
+    [
+      base_url: "https://rw.vestaboard.com/",
+      receive_timeout: 10_000,
+      headers: headers
+    ]
+    |> Keyword.merge(opts)
     |> Req.new()
   end
 end

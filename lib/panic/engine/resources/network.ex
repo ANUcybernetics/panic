@@ -8,6 +8,8 @@ defmodule Panic.Engine.Network do
     data_layer: AshSqlite.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
+  alias Panic.Workers.Invoker
+
   sqlite do
     table "networks"
     repo Panic.Repo
@@ -69,7 +71,7 @@ defmodule Panic.Engine.Network do
       end
 
       run fn input, context ->
-        Panic.Workers.Invoker.insert(input.arguments.first_invocation, context.actor)
+        Invoker.insert(input.arguments.first_invocation, context.actor)
       end
     end
 
@@ -77,7 +79,7 @@ defmodule Panic.Engine.Network do
       argument :network_id, :integer, allow_nil?: false
 
       run fn input, _context ->
-        Panic.Workers.Invoker.cancel_running_jobs(input.arguments.network_id)
+        Invoker.cancel_running_jobs(input.arguments.network_id)
       end
     end
 

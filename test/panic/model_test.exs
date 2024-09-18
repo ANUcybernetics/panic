@@ -1,6 +1,7 @@
 defmodule Panic.ModelTest do
   use Panic.DataCase
   use ExUnitProperties
+
   alias Panic.Model
 
   describe "model generators" do
@@ -29,8 +30,7 @@ defmodule Panic.ModelTest do
   describe "all platforms" do
     test "have models with unique ids" do
       model_ids =
-        Model.all()
-        |> Enum.map(fn %Panic.Model{id: id} -> id end)
+        Enum.map(Model.all(), fn %Panic.Model{id: id} -> id end)
 
       unique_ids = Enum.uniq(model_ids)
 
@@ -40,6 +40,7 @@ defmodule Panic.ModelTest do
 
   describe "Replicate platform" do
     alias Panic.Platforms.Replicate
+
     @describetag skip: "requires API keys"
     @describetag timeout: 300_000
 
@@ -85,6 +86,7 @@ defmodule Panic.ModelTest do
 
   describe "OpenAI platform" do
     alias Panic.Platforms.OpenAI
+
     @describetag skip: "requires API keys"
 
     test "generates the right* answer for all models" do

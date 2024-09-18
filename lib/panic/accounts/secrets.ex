@@ -1,4 +1,5 @@
 defmodule Panic.Accounts.Secrets do
+  @moduledoc false
   use AshAuthentication.Secret
 
   def secret_for([:authentication, :tokens, :signing_secret], Panic.Accounts.User, _) do

@@ -23,10 +23,11 @@ defmodule PanicWeb do
     quote do
       use Phoenix.Router, helpers: true
 
-      # Import common connection and controller functions to use in pipelines
-      import Plug.Conn
       import Phoenix.Controller
       import Phoenix.LiveView.Router
+
+      # Import common connection and controller functions to use in pipelines
+      import Plug.Conn
     end
   end
 
@@ -42,8 +43,8 @@ defmodule PanicWeb do
         formats: [:html, :json],
         layouts: [html: PanicWeb.Layouts]
 
-      import Plug.Conn
       import PanicWeb.Gettext
+      import Plug.Conn
 
       unquote(verified_routes())
     end
@@ -81,11 +82,11 @@ defmodule PanicWeb do
 
   defp html_helpers do
     quote do
+      import PanicWeb.CoreComponents
+      import PanicWeb.Gettext
       # HTML escaping functionality
       import Phoenix.HTML
       # Core UI components and translation
-      import PanicWeb.CoreComponents
-      import PanicWeb.Gettext
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS

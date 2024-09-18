@@ -10,8 +10,7 @@ defmodule Panic.Application do
     children = [
       PanicWeb.Telemetry,
       Panic.Repo,
-      {Ecto.Migrator,
-       repos: Application.fetch_env!(:panic, :ecto_repos), skip: skip_migrations?()},
+      {Ecto.Migrator, repos: Application.fetch_env!(:panic, :ecto_repos), skip: skip_migrations?()},
       {Oban,
        AshOban.config(
          Application.fetch_env!(:panic, :ash_domains),
@@ -42,7 +41,7 @@ defmodule Panic.Application do
     :ok
   end
 
-  defp skip_migrations?() do
+  defp skip_migrations? do
     # By default, sqlite migrations are run when using a release
     System.get_env("RELEASE_NAME") != nil
   end

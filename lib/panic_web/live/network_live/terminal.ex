@@ -1,4 +1,5 @@
 defmodule PanicWeb.NetworkLive.Terminal do
+  @moduledoc false
   use PanicWeb, :live_view
 
   @impl true
@@ -31,10 +32,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
   end
 
   @impl true
-  def handle_info(
-        {PanicWeb.NetworkLive.TerminalComponent, {:new_invocation, _invocation}},
-        socket
-      ) do
+  def handle_info({PanicWeb.NetworkLive.TerminalComponent, {:new_invocation, _invocation}}, socket) do
     {:noreply, socket}
   end
 end

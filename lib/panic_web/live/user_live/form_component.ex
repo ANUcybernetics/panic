@@ -1,4 +1,5 @@
 defmodule PanicWeb.UserLive.FormComponent do
+  @moduledoc false
   use PanicWeb, :live_component
 
   @impl true

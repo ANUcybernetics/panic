@@ -1,4 +1,5 @@
 defmodule Panic.Accounts.User do
+  @moduledoc false
   use Ash.Resource,
     data_layer: AshSqlite.DataLayer,
     extensions: [AshAuthentication],

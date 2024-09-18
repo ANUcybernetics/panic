@@ -1,6 +1,8 @@
 defmodule Panic.Platforms.Replicate do
+  @moduledoc false
   def get_latest_model_version(%Panic.Model{path: path}, token) do
-    req_new(url: "models/#{path}", auth: {:bearer, token})
+    [url: "models/#{path}", auth: {:bearer, token}]
+    |> req_new()
     |> Req.request()
     |> case do
       {:ok, %Req.Response{body: body, status: 200}} ->
@@ -16,7 +18,8 @@ defmodule Panic.Platforms.Replicate do
   end
 
   def get_status(prediction_id, token) do
-    req_new(url: "predictions/#{prediction_id}", auth: {:bearer, token})
+    [url: "predictions/#{prediction_id}", auth: {:bearer, token}]
+    |> req_new()
     |> Req.request()
     |> case do
       {:ok, %Req.Response{body: body, status: 200}} ->
@@ -28,7 +31,8 @@ defmodule Panic.Platforms.Replicate do
   end
 
   def get(prediction_id, token) do
-    req_new(url: "predictions/#{prediction_id}", auth: {:bearer, token})
+    [url: "predictions/#{prediction_id}", auth: {:bearer, token}]
+    |> req_new()
     |> Req.request()
     |> case do
       {:ok, %Req.Response{body: body, status: 200}} ->
@@ -53,11 +57,8 @@ defmodule Panic.Platforms.Replicate do
   end
 
   def cancel(prediction_id, token) do
-    req_new(
-      method: :post,
-      url: "predictions/#{prediction_id}/cancel",
-      auth: {:bearer, token}
-    )
+    [method: :post, url: "predictions/#{prediction_id}/cancel", auth: {:bearer, token}]
+    |> req_new()
     |> Req.request()
   end
 
@@ -71,7 +72,8 @@ defmodule Panic.Platforms.Replicate do
     with {:ok, version_id} <- version do
       request_body = %{version: version_id, input: input}
 
-      req_new(url: "predictions", method: :post, json: request_body, auth: {:bearer, token})
+      [url: "predictions", method: :post, json: request_body, auth: {:bearer, token}]
+      |> req_new()
       |> Req.request()
       |> case do
         {:ok, %Req.Response{body: %{"id" => id}, status: 201}} ->

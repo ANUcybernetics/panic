@@ -23,9 +23,7 @@ defmodule PanicWeb.Router do
     # Leave out `register_path` and `reset_path` if you don't want to support
     # user registration and/or password resets respectively.
     # sign_in_route(register_path: "/register", reset_path: "/reset")
-    sign_in_route(
-      overrides: [PanicWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
-    )
+    sign_in_route(overrides: [PanicWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default])
 
     sign_out_route AuthController
     auth_routes_for Panic.Accounts.User, to: AuthController

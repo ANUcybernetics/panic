@@ -3,6 +3,7 @@ defmodule Panic.ObanTest do
   use ExUnitProperties
   use Oban.Testing, repo: Panic.Repo
   # alias Panic.Engine.Invocation
+  alias Panic.Engine.Invocation
 
   describe "Oban-powered Panic.Workers.Invoker" do
     @describetag skip: "requires API keys"
@@ -13,8 +14,7 @@ defmodule Panic.ObanTest do
       network = Panic.Fixtures.network_with_models(user)
 
       invocation =
-        network
-        |> Panic.Engine.prepare_first!("can you tell me a story?", actor: user)
+        Panic.Engine.prepare_first!(network, "can you tell me a story?", actor: user)
 
       IO.puts("about to run a ~1min integration test of the core Panic engine")
       Panic.Engine.start_run!(invocation, actor: user)
@@ -23,8 +23,7 @@ defmodule Panic.ObanTest do
       IO.write("check that new runs *can't* be triggered within 30s of run start...")
 
       too_early_invocation =
-        network
-        |> Panic.Engine.prepare_first!("ok, tell me another one", actor: user)
+        Panic.Engine.prepare_first!(network, "ok, tell me another one", actor: user)
 
       {:error, _} = Panic.Engine.start_run(too_early_invocation, actor: user)
       refute_enqueued(args: %{"invocation_id" => too_early_invocation.id})
@@ -35,10 +34,7 @@ defmodule Panic.ObanTest do
       IO.write("check that new runs *can* be triggered more than 30s from run start...")
 
       timely_invocation =
-        network
-        |> Panic.Engine.prepare_first!("ok, tell me a third story, different from the first two",
-          actor: user
-        )
+        Panic.Engine.prepare_first!(network, "ok, tell me a third story, different from the first two", actor: user)
 
       Panic.Engine.start_run!(timely_invocation, actor: user)
       assert_enqueued(args: %{"invocation_id" => timely_invocation.id})
@@ -66,11 +62,11 @@ defmodule Panic.ObanTest do
         assert a.network_id == invocation.network_id
       end)
 
-      assert {:ok, %Panic.Engine.Invocation{output: nil}} =
-               Ash.get(Panic.Engine.Invocation, too_early_invocation.id, actor: user)
+      assert {:ok, %Invocation{output: nil}} =
+               Ash.get(Invocation, too_early_invocation.id, actor: user)
 
-      assert {:ok, %Panic.Engine.Invocation{output: output}} =
-               Ash.get(Panic.Engine.Invocation, timely_invocation.id, actor: user)
+      assert {:ok, %Invocation{output: output}} =
+               Ash.get(Invocation, timely_invocation.id, actor: user)
 
       assert is_binary(output) and output != ""
     end

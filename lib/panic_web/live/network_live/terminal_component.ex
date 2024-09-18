@@ -1,4 +1,5 @@
 defmodule PanicWeb.NetworkLive.TerminalComponent do
+  @moduledoc false
   use PanicWeb, :live_component
 
   @impl true
@@ -31,8 +32,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
 
   @impl true
   def handle_event("validate", %{"invocation" => invocation_params}, socket) do
-    {:noreply,
-     assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, invocation_params))}
+    {:noreply, assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, invocation_params))}
   end
 
   def handle_event("start-run", %{"invocation" => invocation_params}, socket) do
@@ -42,8 +42,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
         notify_parent({:new_invocation, invocation})
 
         socket =
-          socket
-          |> put_flash(:info, "Invocation #{invocation.id} prepared... about to run")
+          put_flash(socket, :info, "Invocation #{invocation.id} prepared... about to run")
 
         {:noreply, socket}
 

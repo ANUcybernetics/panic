@@ -1,5 +1,7 @@
 defmodule PanicWeb.NetworkLive.ModelSelectComponent do
+  @moduledoc false
   use PanicWeb, :live_component
+
   import PanicWeb.PanicComponents
 
   @impl true
@@ -52,7 +54,8 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   @impl true
   def handle_event("live_select_change", %{"text" => model_name, "id" => live_select_id}, socket) do
     model_options =
-      Panic.Model.all(input_type: socket.assigns.next_input)
+      [input_type: socket.assigns.next_input]
+      |> Panic.Model.all()
       |> Enum.filter(fn model ->
         String.downcase(model.name) =~ String.downcase(model_name)
       end)
@@ -68,7 +71,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
     updated_models = socket.assigns.models ++ [model]
     next_input = model.output_type
 
-    {:noreply, socket |> assign(models: updated_models, next_input: next_input)}
+    {:noreply, assign(socket, models: updated_models, next_input: next_input)}
   end
 
   @impl true
@@ -86,10 +89,11 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
          |> assign_form()}
 
       {:error, form} ->
-        {:noreply,
-         socket
-         # |> put_flash(:error, "Failed to update models: #{error_messages(form)}")
-         |> assign(form: form)}
+        {
+          :noreply,
+          assign(socket, form: form)
+          # |> put_flash(:error, "Failed to update models: #{error_messages(form)}")
+        }
     end
   end
 
@@ -108,7 +112,8 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   end
 
   defp get_model_options(search_term, input_type) do
-    Panic.Model.all(input_type: input_type)
+    [input_type: input_type]
+    |> Panic.Model.all()
     |> Enum.filter(fn model ->
       String.downcase(model.name) =~ String.downcase(search_term)
     end)

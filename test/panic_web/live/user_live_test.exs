@@ -15,14 +15,14 @@ defmodule PanicWeb.UserLiveTest do
     test "and their email shows in the top-right", %{conn: conn, user: user} do
       conn
       |> visit("/")
-      |> assert_has("#current-user-email", text: user.email |> Ash.CiString.value())
+      |> assert_has("#current-user-email", text: Ash.CiString.value(user.email))
     end
 
     test "and can visit the user index page", %{conn: conn, user: user} do
       conn
       |> visit("/users")
-      |> assert_has("#current-user-email", text: user.email |> Ash.CiString.value())
-      |> assert_has("#users", text: user.email |> Ash.CiString.value())
+      |> assert_has("#current-user-email", text: Ash.CiString.value(user.email))
+      |> assert_has("#users", text: Ash.CiString.value(user.email))
     end
 
     test "and can visit the user index page and click on their own name", %{

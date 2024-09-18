@@ -48,7 +48,7 @@ defmodule Panic.Model do
           invoke: (String.t(), String.t() -> {:ok, String.t()} | {:error, String.t()})
         }
 
-  def all() do
+  def all do
     [
       ## OpenAI
       %__MODULE__{
@@ -243,11 +243,8 @@ defmodule Panic.Model do
   end
 
   def all(filters) do
-    all()
-    |> Enum.filter(fn model ->
-      filters
-      |> Enum.map(fn {output, type} -> Map.fetch!(model, output) == type end)
-      |> Enum.all?()
+    Enum.filter(all(), fn model ->
+      filters |> Enum.map(fn {output, type} -> Map.fetch!(model, output) == type end) |> Enum.all?()
     end)
   end
 

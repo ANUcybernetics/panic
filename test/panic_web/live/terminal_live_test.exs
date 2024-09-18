@@ -9,7 +9,7 @@ defmodule PanicWeb.TerminalLiveTest do
 
     test "and can create a new invocation in the terminal", %{conn: conn, user: user} do
       # TODO currently I can't get PhoenixTest to fill out the LiveSelect yet, so fake it for now
-      network = Panic.Generators.network_with_models(user) |> pick()
+      network = user |> Panic.Generators.network_with_models() |> pick()
 
       conn
       |> visit("/networks/#{network.id}/terminal")

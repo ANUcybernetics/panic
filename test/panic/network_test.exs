@@ -1,10 +1,11 @@
 defmodule Panic.NetworkTest do
   use Panic.DataCase
   use ExUnitProperties
-  alias Panic.Engine.Network
-  # for network_runnable?
+
   import Panic.Validations.ModelIOConnections
 
+  alias Panic.Engine.Network
+  # for network_runnable?
   describe "Network CRUD operations" do
     # now if our action inputs are invalid when we think they should be valid, we will find out here
     property "create changeset accepts valid input without actor" do
@@ -112,7 +113,7 @@ defmodule Panic.NetworkTest do
 
     test "update_models validates things correctly" do
       user = Panic.Fixtures.user()
-      network = Panic.Generators.network(user) |> pick()
+      network = user |> Panic.Generators.network() |> pick()
 
       valid_model_ids = ["sdxl", "blip-2"]
       assert {:ok, _} = Panic.Engine.update_models(network, valid_model_ids, actor: user)

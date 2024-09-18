@@ -1,5 +1,8 @@
 defmodule PanicWeb.NetworkLive.Index do
+  @moduledoc false
   use PanicWeb, :live_view
+
+  alias Panic.Engine.Network
 
   @impl true
   def render(assigns) do
@@ -54,7 +57,7 @@ defmodule PanicWeb.NetworkLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :networks, Ash.read!(Panic.Engine.Network))}
+    {:ok, stream(socket, :networks, Ash.read!(Network))}
   end
 
   @impl true
@@ -65,7 +68,7 @@ defmodule PanicWeb.NetworkLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit Network")
-    |> assign(:network, Ash.get!(Panic.Engine.Network, id))
+    |> assign(:network, Ash.get!(Network, id))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -87,7 +90,7 @@ defmodule PanicWeb.NetworkLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    network = Ash.get!(Panic.Engine.Network, id)
+    network = Ash.get!(Network, id)
     Ash.destroy!(network)
 
     {:noreply, stream_delete(socket, :networks, network)}

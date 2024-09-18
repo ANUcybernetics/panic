@@ -19,9 +19,9 @@ defmodule Panic.Workers.Invoker do
     queue: :default,
     unique: [period: 30, keys: [:network_id, :sequence_number]]
 
-  alias Panic.Engine
-
   import Ecto.Query
+
+  alias Panic.Engine
 
   @doc """
   Performs the invocation job.
@@ -112,12 +112,12 @@ defmodule Panic.Workers.Invoker do
     - :ok (The function always returns :ok as Enum.each/2 returns :ok)
   """
   def cancel_running_jobs(network_id) do
-    Panic.Repo.all(
-      from job in Oban.Job,
-        where: job.worker == "Panic.Workers.Invoker",
-        where: job.args["network_id"] == ^network_id,
-        where: job.state in ["scheduled", "available", "executing", "retryable"]
+    from(job in Oban.Job,
+      where: job.worker == "Panic.Workers.Invoker",
+      where: job.args["network_id"] == ^network_id,
+      where: job.state in ["scheduled", "available", "executing", "retryable"]
     )
+    |> Panic.Repo.all()
     |> Enum.each(fn job ->
       Oban.cancel_job(job.id)
     end)

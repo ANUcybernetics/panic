@@ -1,6 +1,7 @@
 defmodule Panic.InvocationTest do
   use Panic.DataCase
   use ExUnitProperties
+
   alias Panic.Engine.Invocation
 
   describe "Invocation CRUD operations" do
@@ -59,9 +60,7 @@ defmodule Panic.InvocationTest do
             ) do
         invocation =
           Invocation
-          |> Ash.Changeset.for_create(:prepare_first, %{network: network, input: input},
-            actor: user
-          )
+          |> Ash.Changeset.for_create(:prepare_first, %{network: network, input: input}, actor: user)
           |> Ash.create!()
 
         assert invocation.network_id == network.id
@@ -81,9 +80,7 @@ defmodule Panic.InvocationTest do
             ) do
         invocation =
           Invocation
-          |> Ash.Changeset.for_create(:prepare_first, %{network: network, input: input},
-            actor: user
-          )
+          |> Ash.Changeset.for_create(:prepare_first, %{network: network, input: input}, actor: user)
           |> Ash.create!()
 
         assert invocation.network_id == network.id

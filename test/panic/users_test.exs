@@ -73,7 +73,7 @@ defmodule Panic.UsersTest do
           )
           |> Ash.create!()
 
-        assert user.email |> Ash.CiString.value() == email
+        assert Ash.CiString.value(user.email) == email
       end
     end
   end
