@@ -206,9 +206,8 @@ defmodule Panic.Engine.Invocation do
   end
 
   pub_sub do
-    module Phoenix.PubSub
+    module PanicWeb.Endpoint
     prefix "invocation"
-
     publish :invoke, ["invoked", :id]
     publish_all :create, ["prepared", :id]
   end
