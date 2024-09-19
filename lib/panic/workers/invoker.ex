@@ -120,6 +120,11 @@ defmodule Panic.Workers.Invoker do
     |> Panic.Repo.all()
     |> Enum.each(fn job ->
       Oban.cancel_job(job.id)
+
+      # also mark the invocation as state: :cancelled
+      Panic.Engine.Invocation
+      |> Ash.get!(job.invocation_id, authorize?: false)
+      |> Panic.Engine.cancel!()
     end)
   end
 end

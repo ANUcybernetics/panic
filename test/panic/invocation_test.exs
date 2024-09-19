@@ -153,6 +153,7 @@ defmodule Panic.InvocationTest do
         |> Panic.Engine.invoke!(actor: user)
 
       refute invocation.output == nil
+      assert invocation.state == :completed
     end
 
     test "creates a next invocation with the right run number and sequence" do

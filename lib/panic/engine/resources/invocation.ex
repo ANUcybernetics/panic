@@ -26,6 +26,13 @@ defmodule Panic.Engine.Invocation do
     integer_primary_key :id
 
     attribute :input, :string, allow_nil?: false
+
+    attribute :state, :atom do
+      constraints one_of: [:waiting, :completed, :failed]
+      allow_nil? false
+      default :waiting
+    end
+
     attribute :model, :string, allow_nil?: false
     attribute :metadata, :map, allow_nil?: false, default: %{}
     attribute :output, :string
@@ -175,6 +182,12 @@ defmodule Panic.Engine.Invocation do
                      end
                  end
              end)
+
+      change set_attribute(:state, :completed)
+    end
+
+    update :cancel do
+      change set_attribute(:state, :failed)
     end
   end
 
