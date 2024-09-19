@@ -2,11 +2,28 @@ defmodule Panic.ObanTest do
   use Panic.DataCase
   use ExUnitProperties
   use Oban.Testing, repo: Panic.Repo
-  # alias Panic.Engine.Invocation
+
   alias Panic.Engine.Invocation
 
   describe "Oban-powered Panic.Workers.Invoker" do
-    @describetag skip: "requires API keys"
+    # @describetag skip: "requires API keys"
+
+    test "has a working perform/1 callback" do
+      user = Panic.Fixtures.user_with_tokens()
+      network = Panic.Fixtures.network_with_models(user)
+
+      invocation =
+        Panic.Engine.prepare_first!(network, "can you tell me a story?", actor: user)
+
+      assert :ok =
+               perform_job(Panic.Workers.Invoker, %{
+                 "user_id" => user.id,
+                 "invocation_id" => invocation.id,
+                 "network_id" => invocation.network_id,
+                 "run_number" => invocation.run_number,
+                 "sequence_number" => invocation.sequence_number
+               })
+    end
 
     @tag timeout: 120_000
     test "can be successfully started, run for 30s and stopped" do
