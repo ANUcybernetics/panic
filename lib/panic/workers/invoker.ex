@@ -43,11 +43,11 @@ defmodule Panic.Workers.Invoker do
           "user_id" => user_id,
           "invocation_id" => invocation_id,
           "network_id" => _network_id,
-          "run_number" => run_number,
-          "sequence_number" => sequence_number
+          "run_number" => _run_number,
+          "sequence_number" => _sequence_number
         }
       }) do
-    IO.puts("invoking #{run_number}-#{sequence_number}")
+    # IO.puts("Network #{network_id}: invoking #{run_number}-#{sequence_number}")
 
     # NOTE: authorization is tricky inside the Oban job, because we can only pass ids (well, things that JSON-ify nicely)
     # in as args, so we cheat and pull the user "unauthorized", and then from there we can use that actor (which we need anyway for API tokens)
