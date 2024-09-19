@@ -1,11 +1,7 @@
 # Panic TODO
 
-- make the start_run action async - currently it seems to be a blocking infinite
-  loop
 - make invocation run in a before transaction hook (for better concurrency
   maybe?)
-- remove :state from network, and make sure it's being used properly in
-  invocation
 - update the BLIP caption model to be more expressive
 - add views
   - network
@@ -62,4 +58,3 @@
   it's
   [this issue](https://github.com/phoenixframework/phoenix_live_view/issues/624),
   so maybe not worth getting bogged down on)
-- set up [Styler](https://hexdocs.pm/styler/readme.html)

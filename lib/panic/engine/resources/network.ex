@@ -35,14 +35,6 @@ defmodule Panic.Engine.Network do
       allow_nil? false
     end
 
-    attribute :state, :atom do
-      default :stopped
-
-      # `:starting` represents the initial "uninterruptible" period
-      constraints one_of: [:starting, :running, :paused, :stopped]
-      allow_nil? false
-    end
-
     attribute :slug, :string
     create_timestamp :inserted_at
     update_timestamp :updated_at
@@ -81,19 +73,6 @@ defmodule Panic.Engine.Network do
       run fn input, _context ->
         Invoker.cancel_running_jobs(input.arguments.network_id)
       end
-    end
-
-    # update :drop_model
-    # update :swap_model
-    # action :start_run
-    # read :statistics
-    # read :state
-    # update :set_state
-    # create :duplicate # duplicate the network
-
-    update :set_state do
-      argument :state, :atom, allow_nil?: false
-      change atomic_update(:state, arg(:state))
     end
   end
 

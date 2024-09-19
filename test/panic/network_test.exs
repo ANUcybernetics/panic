@@ -60,7 +60,6 @@ defmodule Panic.NetworkTest do
         # FIXME there might be an issue here with "" vs nil?
         # assert network.description == input.description
         assert network.models == []
-        assert network.state == :stopped
       end
     end
 
@@ -96,18 +95,6 @@ defmodule Panic.NetworkTest do
 
         assert network.name == updated_name
         assert network.description == updated_description
-      end
-    end
-
-    property "set_state action updates network state correctly" do
-      user = Panic.Fixtures.user()
-
-      check all(
-              network <- Panic.Generators.network(user),
-              state <- member_of([:starting, :running, :paused, :stopped])
-            ) do
-        network = Panic.Engine.set_state!(network, state, actor: user)
-        assert network.state == state
       end
     end
 
