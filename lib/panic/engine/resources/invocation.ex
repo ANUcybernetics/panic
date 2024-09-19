@@ -8,7 +8,8 @@ defmodule Panic.Engine.Invocation do
   use Ash.Resource,
     domain: Panic.Engine,
     data_layer: AshSqlite.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub]
 
   alias Panic.Engine.Network
 
@@ -202,5 +203,13 @@ defmodule Panic.Engine.Invocation do
     policy action_type(:destroy) do
       authorize_if relates_to_actor_via([:network, :user])
     end
+  end
+
+  pub_sub do
+    module Phoenix.PubSub
+    prefix "invocation"
+
+    publish :invoke, ["invoked", :id]
+    publish_all :create, ["prepared", :id]
   end
 end
