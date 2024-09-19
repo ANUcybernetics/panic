@@ -15,11 +15,7 @@ defmodule Panic.Engine do
       define :prepare_next, args: [:previous_invocation], action: :prepare_next
       define :invoke, args: [], action: :invoke
       define :list_run, args: [:network_id, :run_number], action: :list_run, get?: false
-
-      define :most_recent_invocations,
-        args: [:network_id, :limit],
-        action: :most_recent,
-        get?: false
+      define :most_recent, args: [:network_id], action: :most_recent, get?: true
     end
   end
 end

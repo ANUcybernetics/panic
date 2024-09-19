@@ -49,12 +49,11 @@ defmodule Panic.Engine.Invocation do
     # TODO could this be a calculation/aggregate
     read :most_recent do
       argument :network_id, :integer
-      argument :limit, :integer
       filter expr(network_id == ^arg(:network_id))
-      prepare build(sort: [updated_at: :desc], limit: arg(:limit))
+      prepare build(sort: [updated_at: :desc], limit: 1)
+      get? true
     end
 
-    # TODO maybe rename to list_run or something?
     read :list_run do
       argument :network_id, :integer
       argument :run_number, :integer
