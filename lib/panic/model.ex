@@ -20,6 +20,8 @@ defmodule Panic.Model do
   because of the fact each model needs bespoke "turn result into something that works as an
   invocation output" code.
   """
+  @behaviour Access
+
   alias Panic.Platforms.OpenAI
   alias Panic.Platforms.Replicate
 
@@ -47,6 +49,20 @@ defmodule Panic.Model do
           homepage: String.t() | nil,
           invoke: (String.t(), String.t() -> {:ok, String.t()} | {:error, String.t()})
         }
+
+  @impl Access
+  def fetch(model, key), do: Map.fetch(model, key)
+
+  @impl Access
+  def get_and_update(model, key, fun) do
+    Map.get_and_update(model, key, fun)
+  end
+
+  @impl Access
+  def pop(model, key) do
+    {value, new_model} = Map.pop(model, key)
+    {value, struct(__MODULE__, Map.to_list(new_model))}
+  end
 
   def all do
     [
