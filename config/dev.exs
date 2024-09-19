@@ -84,4 +84,7 @@ config :swoosh, :api_client, false
 # useful for debugging authorization policy issues
 # config :ash, :policies, log_policy_breakdowns: :error
 
+# for debugging
+# config :ash, :pub_sub, debug?: true
+
 import_config "secrets.exs"
