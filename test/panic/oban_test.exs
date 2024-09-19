@@ -6,7 +6,7 @@ defmodule Panic.ObanTest do
   alias Panic.Engine.Invocation
 
   defp drain_default_queue(limit) do
-    Oban.drain_queue(queue: :default, with_limit: 1, with_recursion: true)
+    Oban.drain_queue(queue: :default, with_limit: limit, with_recursion: true)
   end
 
   describe "Oban-powered Panic.Workers.Invoker" do
