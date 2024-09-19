@@ -34,7 +34,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
 
   @impl true
   def update(assigns, socket) do
-    models = assigns.network.models
+    models = Enum.map(assigns.network.models, &Panic.Model.by_id!/1)
     next_input = get_next_input_type(models)
 
     {:ok,
@@ -47,10 +47,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   defp get_next_input_type([]), do: :text
 
   defp get_next_input_type(models) do
-    %Panic.Model{output_type: type} =
-      models
-      |> List.last()
-      |> Panic.Model.by_id!()
+    %Panic.Model{output_type: type} = List.last(models)
 
     type
   end
@@ -63,15 +60,15 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
       |> Enum.filter(fn model ->
         String.downcase(model.name) =~ String.downcase(model_name)
       end)
-      |> Enum.map(fn model -> %{label: model.name, value: model} end)
+      |> Enum.map(fn model -> %{label: model.name, value: model.id} end)
 
     send_update(LiveSelect.Component, id: live_select_id, options: model_options)
     {:noreply, socket}
   end
 
   @impl true
-  def handle_event("change", %{"network" => %{"model" => model_name}}, socket) do
-    model = String.to_existing_atom(model_name)
+  def handle_event("change", %{"network" => %{"model" => model_id}}, socket) do
+    model = Panic.Model.by_id!(model_id)
     updated_models = socket.assigns.models ++ [model]
     next_input = model.output_type
 
@@ -80,16 +77,18 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
 
   @impl true
   def handle_event("save", _params, socket) do
-    # ignoring the params here is a bit gross... perhaps there's a nice form-ier
-    # way to do it with e.g. hidden inputs?
-    case AshPhoenix.Form.submit(socket.assigns.form, params: %{models: socket.assigns.models}) do
+    # Convert model structs to IDs before submission
+    models = socket.assigns.models
+    model_ids = Enum.map(models, fn model -> model.id end)
+
+    case AshPhoenix.Form.submit(socket.assigns.form, params: %{models: model_ids}) do
       {:ok, updated_network} ->
         notify_parent({:models_updated, updated_network})
 
         {:noreply,
          socket
          |> put_flash(:info, "Models updated successfully")
-         |> assign(network: updated_network, models: updated_network.models)
+         |> assign(network: updated_network, models: models)
          |> assign_form()}
 
       {:error, form} ->
@@ -121,7 +120,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
     |> Enum.filter(fn model ->
       String.downcase(model.name) =~ String.downcase(search_term)
     end)
-    |> Enum.map(fn model -> %{label: model.name, value: model} end)
+    |> Enum.map(fn model -> %{label: model.name, value: model.id} end)
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})

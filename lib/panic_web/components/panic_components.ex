@@ -15,7 +15,7 @@ defmodule PanicWeb.PanicComponents do
   Useful for displaying a representation of a model (e.g. in a "network list")
   component.
   """
-  attr :model, :string, required: true, doc: "model id"
+  attr :model, :any, required: true, doc: "Panic.Model struct"
   slot :action, doc: "the slot for showing user actions in the model box"
 
   def model_box(assigns) do
@@ -23,13 +23,13 @@ defmodule PanicWeb.PanicComponents do
     <div class="size-16 rounded-md grid place-content-center text-center text-xs relative bg-gray-200 shadow-sm">
       <div class={[
         "size-6 absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 -z-10",
-        @model.input_type |> io_colour_mapper()
+        io_colour_mapper(@model, :input_type)
       ]}>
       </div>
       <%= @model.name %>
       <div class={[
         "size-6 absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 -z-10",
-        @model.output_type |> io_colour_mapper()
+        io_colour_mapper(@model, :output_type)
       ]}>
       </div>
       <%= render_slot(@action) %>
@@ -44,22 +44,18 @@ defmodule PanicWeb.PanicComponents do
 
       <.model_list models={@models} />
   """
-  attr :models, :list, required: true, doc: "List of model ids"
+  attr :models, :list, required: true, doc: "List of Panic.Model structs"
 
   attr :phx_target, :any, default: nil
 
   def model_list(assigns) do
     ~H"""
-    <div class={[
-      "flex flex-wrap gap-6 border-2 p-2 rounded-md",
-      Panic.Validations.ModelIOConnections.network_runnable?(@models) != :ok &&
-        "border-red-500"
-    ]}>
+    <div class="flex flex-wrap gap-6 border-2 p-2 rounded-md">
       <div class="size-16 rounded-md grid place-content-center text-center text-xs relative bg-gray-100 shadow-sm">
         T
         <div class={[
           "size-6 absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 -z-10",
-          io_colour_mapper(:text)
+          io_colour_mapper(nil, :input_type)
         ]}>
         </div>
       </div>
@@ -81,7 +77,14 @@ defmodule PanicWeb.PanicComponents do
     """
   end
 
-  defp io_colour_mapper(:text), do: "bg-purple-500"
-  defp io_colour_mapper(:image), do: "bg-green-500"
-  defp io_colour_mapper(:audio), do: "bg-purple-500"
+  # a hack to handle the "first model" case
+  defp io_colour_mapper(nil, :input_type), do: "bg-purple-500"
+
+  defp io_colour_mapper(model, key) do
+    case model[key] do
+      :text -> "bg-purple-500"
+      :image -> "bg-green-500"
+      :audio -> "bg-purple-500"
+    end
+  end
 end
