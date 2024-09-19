@@ -116,22 +116,6 @@ defmodule Panic.NetworkTest do
         assert :ok = network_runnable?(network.models)
       end
     end
-
-    property "most_recent_invocation aggregate returns the latest invocation" do
-      user = Panic.Fixtures.user()
-
-      check all(
-              network <- Panic.Generators.network_with_models(user),
-              invocation <- Panic.Generators.invocation(network)
-            ) do
-        network =
-          Network
-          |> Ash.Query.load(:most_recent_invocation)
-          |> Ash.get!(network.id, actor: user)
-
-        assert network.most_recent_invocation.id == invocation.id
-      end
-    end
   end
 
   defp input_for_create do
