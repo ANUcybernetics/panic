@@ -112,7 +112,15 @@ defmodule Panic.Model do
         output_type: :text,
         invoke: fn model, input, token ->
           with {:ok, %{"output" => text}} <-
-                 Replicate.invoke(model, %{image: input, caption: true}, token) do
+                 Replicate.invoke(
+                   model,
+                   %{
+                     image: input,
+                     question:
+                       "Describe this picture in detail, using lots of descriptive adjectives. Include information about both foreground and background elements."
+                   },
+                   token
+                 ) do
             {:ok, text}
           end
         end
