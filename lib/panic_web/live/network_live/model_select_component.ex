@@ -47,7 +47,11 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   defp get_next_input_type([]), do: :text
 
   defp get_next_input_type(models) do
-    %Panic.Model{output_type: type} = List.last(models)
+    %Panic.Model{output_type: type} =
+      models
+      |> List.last()
+      |> Panic.Model.by_id!()
+
     type
   end
 
