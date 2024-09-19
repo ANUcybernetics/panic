@@ -6,7 +6,6 @@ defmodule Panic.NetworkTest do
 
   alias Panic.Engine.Network
 
-  # for network_runnable?
   describe "Network CRUD operations" do
     # now if our action inputs are invalid when we think they should be valid, we will find out here
     property "create changeset accepts valid input without actor" do
@@ -131,20 +130,6 @@ defmodule Panic.NetworkTest do
           |> Ash.get!(network.id, actor: user)
 
         assert network.most_recent_invocation.id == invocation.id
-      end
-    end
-
-    @tag skip: "requires API keys"
-    property "supports :start_run action" do
-      user = Panic.Fixtures.user()
-
-      check all(
-              network <- Panic.Generators.network_with_models(user),
-              invocation <- Panic.Generators.invocation(network)
-            ) do
-        Panic.Engine.Network
-        |> Ash.ActionInput.for_action(:start_run, %{first_invocation: invocation}, actor: user)
-        |> Ash.run_action!()
       end
     end
   end
