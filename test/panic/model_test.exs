@@ -64,6 +64,19 @@ defmodule Panic.ModelTest do
       assert String.match?(img_url, ~r|^https://.*$|)
     end
 
+    test "BLIP2 captioner is sufficiently expressive" do
+      user = Panic.Fixtures.user_with_tokens()
+      %Model{invoke: invoke_fn} = model = Model.by_id!("blip-2")
+      # TODO the rate limit here is pretty low, so maybe switch to a static image somewhere?
+      input_img = "https://picsum.photos/400/225/"
+
+      {:ok, caption} =
+        invoke_fn.(model, input_img, user.replicate_token)
+
+      # not a 100% reliable test, but we're going for descriptive captions here
+      assert String.length(caption) > 10
+    end
+
     test "can successfully invoke all models" do
       user = Panic.Fixtures.user_with_tokens()
       models = Model.all(platform: Replicate)
