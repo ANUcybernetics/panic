@@ -166,7 +166,7 @@ defmodule Panic.InvocationTest do
         |> Panic.Engine.prepare_first!(input, actor: user)
         |> Panic.Engine.invoke!(actor: user)
 
-      next = Panic.Engine.prepare_next!(first)
+      next = Panic.Engine.prepare_next!(first, actor: user)
       assert first.run_number == next.run_number
       assert first.output == next.input
       assert first.sequence_number + 1 == next.sequence_number
