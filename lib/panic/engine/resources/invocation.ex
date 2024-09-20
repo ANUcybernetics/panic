@@ -62,10 +62,21 @@ defmodule Panic.Engine.Invocation do
     end
 
     read :list_run do
-      argument :network_id, :integer
-      argument :run_number, :integer
+      argument :network_id, :integer, allow_nil?: false
+      argument :run_number, :integer, allow_nil?: false
       prepare build(sort: [sequence_number: :asc])
       filter expr(network_id == ^arg(:network_id) and run_number == ^arg(:run_number))
+    end
+
+    read :current_run do
+      argument :network_id, :integer, allow_nil?: false
+      argument :limit, :integer, default: 100
+      prepare build(sort: [sequence_number: :asc], limit: arg(:limit))
+
+      filter expr(
+               network_id == ^arg(:network_id) and
+                 run_number == fragment("SELECT MAX(run_number) FROM invocations WHERE network_id = ?", ^arg(:network_id))
+             )
     end
 
     # maybe "prepare"?

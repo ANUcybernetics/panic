@@ -136,7 +136,7 @@ defmodule Panic.InvocationTest do
   end
 
   describe "Invocation with API calls" do
-    @describetag skip: "requires API keys"
+    # @describetag skip: "requires API keys"
     # NOTE: these ones shouldn't be properties, because that'd be spendy. Just tests are fine.
     test "produce output" do
       user = Panic.Fixtures.user_with_tokens()
@@ -196,6 +196,12 @@ defmodule Panic.InvocationTest do
 
       invocations =
         Panic.Engine.list_run!(network.id, first.run_number, actor: user)
+
+      [second_last_in_current_run, last_in_current_run] =
+        Panic.Engine.current_run!(network.id, 2, actor: user)
+
+      assert second_last_in_current_run.sequence_number == last_in_current_run.sequence_number - 1
+      assert second_last_in_current_run.run_number == last_in_current_run.run_number
 
       # check outputs match inputs
       invocations
