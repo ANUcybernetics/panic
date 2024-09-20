@@ -70,11 +70,6 @@ defmodule PanicWeb.NetworkLive.Show do
     {:noreply, assign(socket, network: network)}
   end
 
-  @impl true
-  def handle_info(message, socket) do
-    {:noreply, socket}
-  end
-
   defp page_title(:show), do: "Show Network"
   defp page_title(:edit), do: "Edit Network"
 end
