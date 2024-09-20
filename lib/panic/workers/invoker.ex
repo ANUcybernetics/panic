@@ -142,6 +142,6 @@ defmodule Panic.Workers.Invoker do
 
     Invocation
     |> Ash.get!(job.args["invocation_id"], authorize?: false)
-    |> Panic.Engine.cancel!()
+    |> Panic.Engine.cancel!(authorize?: false)
   end
 end

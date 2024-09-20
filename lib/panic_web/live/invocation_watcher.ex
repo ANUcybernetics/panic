@@ -28,7 +28,7 @@ defmodule PanicWeb.InvocationWatcher do
 
       def subscribe_to_network(socket, network_id, actor) do
         network = Ash.get!(Panic.Engine.Network, network_id, actor: actor)
-        if connected?(socket), do: PanicWeb.Endpoint.subscribe("invocations:#{network.id}:*")
+        if connected?(socket), do: PanicWeb.Endpoint.subscribe("invocation:#{network.id}")
 
         invocations =
           Panic.Engine.current_run!(network.id, stream_limit(socket.assigns.watcher), actor: actor)
@@ -38,9 +38,8 @@ defmodule PanicWeb.InvocationWatcher do
         |> stream(:invocations, invocations)
       end
 
-      def handle_info("invocations:" <> topic, socket) do
-        # FIXME pull the info from the topic
-        invocation = Ash.get!(Panic.Engine.Invocation, 1, authorize?: false)
+      def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
+        invocation = message.payload.data
 
         case socket.assigns.watcher do
           {:grid, _row, _col} ->

@@ -73,6 +73,7 @@ defmodule Panic.Engine.Invocation do
       argument :limit, :integer, default: 100
       prepare build(sort: [sequence_number: :asc], limit: arg(:limit))
 
+      # FIXME make sure this is done with a db index (perhaps via an identity?) for performance reasons
       filter expr(
                network_id == ^arg(:network_id) and
                  run_number == fragment("SELECT MAX(run_number) FROM invocations WHERE network_id = ?", ^arg(:network_id))
@@ -231,7 +232,7 @@ defmodule Panic.Engine.Invocation do
   pub_sub do
     module PanicWeb.Endpoint
     prefix "invocation"
-    publish_all :update, ["updated", :network_id, :id]
-    publish_all :create, ["prepared", :network_id, :id]
+    publish_all :update, [:network_id]
+    publish_all :create, [:network_id]
   end
 end
