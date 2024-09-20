@@ -136,7 +136,7 @@ defmodule Panic.InvocationTest do
   end
 
   describe "Invocation with API calls" do
-    # @describetag skip: "requires API keys"
+    @describetag skip: "requires API keys"
     # NOTE: these ones shouldn't be properties, because that'd be spendy. Just tests are fine.
     test "produce output" do
       user = Panic.Fixtures.user_with_tokens()
