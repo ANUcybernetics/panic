@@ -49,6 +49,15 @@ defmodule PanicWeb.NetworkLive.Show do
         patch={~p"/networks/#{@network}"}
       />
     </.modal>
+
+    <section class="mt-16">
+      <h2 class="font-semibold">Current run</h2>
+
+      <ol>
+        <li class="mb-4" :for={{id, invocation} <- @streams.invocations} id={id}><%= invocation.model %> (<%= invocation.sequence_number%>): <%= invocation.output %></li>
+      </ol>
+
+    </section>
     """
   end
 
