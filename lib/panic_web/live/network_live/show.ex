@@ -1,6 +1,7 @@
 defmodule PanicWeb.NetworkLive.Show do
   @moduledoc false
   use PanicWeb, :live_view
+  use PanicWeb.InvocationWatcher, watcher: {:grid, 2, 3}
 
   @impl true
   def render(assigns) do
@@ -52,18 +53,11 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   @impl true
-  def mount(_params, _session, socket) do
-    {:ok, socket}
-  end
-
-  @impl true
-  def handle_params(%{"network_id" => id}, _, socket) do
-    network = Ash.get!(Panic.Engine.Network, id, actor: socket.assigns.current_user)
-
+  def handle_params(%{"network_id" => network_id}, _session, socket) do
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns[:live_action]))
-     |> assign(network: network)}
+     |> subscribe_to_network(network_id, socket.assigns.current_user)}
   end
 
   @impl true
