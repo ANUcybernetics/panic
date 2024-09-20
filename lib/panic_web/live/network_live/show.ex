@@ -53,7 +53,7 @@ defmodule PanicWeb.NetworkLive.Show do
     <section class="mt-16">
       <h2 class="font-semibold">Current run</h2>
 
-      <ol>
+      <ol id="current-inovocations" phx-update="stream">
         <li class="mb-4" :for={{id, invocation} <- @streams.invocations} id={id}><%= invocation.model %> (<%= invocation.sequence_number%>): <%= invocation.output %></li>
       </ol>
 
