@@ -5,19 +5,19 @@ defmodule Panic.Engine do
   resources do
     resource Panic.Engine.Network do
       define :create_network, args: [:name, :description], action: :create
-      define :update_models, args: [:models], action: :update_models
-      define :start_run, args: [:first_invocation], action: :start_run
-      define :stop_run, args: [:network_id], action: :stop_run
+      define :update_models, args: [:models]
+      define :start_run, args: [:first_invocation]
+      define :stop_run, args: [:network_id]
     end
 
     resource Panic.Engine.Invocation do
-      define :prepare_first, args: [:network, :input], action: :prepare_first
-      define :prepare_next, args: [:previous_invocation], action: :prepare_next
-      define :invoke, args: [], action: :invoke
-      define :cancel, args: [], action: :cancel
-      define :list_run, args: [:network_id, :run_number], action: :list_run
-      define :current_run, args: [:network_id, {:optional, :limit}], action: :current_run
-      define :most_recent, args: [:network_id], action: :most_recent, get?: true
+      define :prepare_first, args: [:network, :input]
+      define :prepare_next, args: [:previous_invocation]
+      define :invoke, args: []
+      define :cancel, args: []
+      define :list_run, args: [:network_id, :run_number]
+      define :current_run, args: [:network_id, {:optional, :limit}]
+      define :most_recent, args: [:network_id], get?: true
     end
   end
 end
