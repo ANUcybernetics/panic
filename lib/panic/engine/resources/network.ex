@@ -8,6 +8,7 @@ defmodule Panic.Engine.Network do
     data_layer: AshSqlite.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
+  alias Panic.Engine.Invocation
   alias Panic.Workers.Invoker
 
   sqlite do
@@ -58,7 +59,7 @@ defmodule Panic.Engine.Network do
 
     action :start_run, :term do
       argument :first_invocation, :struct do
-        constraints instance_of: Panic.Engine.Invocation
+        constraints instance_of: Invocation
         allow_nil? false
       end
 
@@ -78,6 +79,7 @@ defmodule Panic.Engine.Network do
 
   relationships do
     belongs_to :user, Panic.Accounts.User, allow_nil?: false
+    has_many :invocations, Invocation
   end
 
   policies do
