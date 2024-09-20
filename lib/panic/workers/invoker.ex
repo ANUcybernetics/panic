@@ -22,6 +22,9 @@ defmodule Panic.Workers.Invoker do
   import Ecto.Query
 
   alias Panic.Engine
+  alias Panic.Engine.Invocation
+
+  require Logger
 
   @doc """
   Performs the invocation job.
@@ -118,13 +121,27 @@ defmodule Panic.Workers.Invoker do
       where: job.state in ["scheduled", "available", "executing", "retryable"]
     )
     |> Panic.Repo.all()
-    |> Enum.each(fn job ->
-      Oban.cancel_job(job.id)
+    |> Enum.map(&cancel_job/1)
+    |> Enum.count()
+    |> then(fn n -> Logger.info("cancelled #{n} jobs for network #{network_id}") end)
+  end
 
-      # also mark the invocation as state: :cancelled
-      Panic.Engine.Invocation
-      |> Ash.get!(job.invocation_id, authorize?: false)
-      |> Panic.Engine.cancel!()
-    end)
+  def cancel_running_jobs do
+    from(job in Oban.Job,
+      where: job.worker == "Panic.Workers.Invoker",
+      where: job.state in ["scheduled", "available", "executing", "retryable"]
+    )
+    |> Panic.Repo.all()
+    |> Enum.map(&cancel_job/1)
+    |> Enum.count()
+    |> then(fn n -> Logger.info("cancelled #{n} jobs") end)
+  end
+
+  defp cancel_job(job) do
+    Oban.cancel_job(job.id)
+
+    Invocation
+    |> Ash.get!(job.args["invocation_id"], authorize?: false)
+    |> Panic.Engine.cancel!()
   end
 end
