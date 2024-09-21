@@ -32,12 +32,9 @@ defmodule PanicWeb.InvocationWatcher do
         network = Ash.get!(Panic.Engine.Network, network_id, actor: actor)
         if connected?(socket), do: PanicWeb.Endpoint.subscribe("invocation:#{network.id}")
 
-        invocations =
-          Panic.Engine.current_run!(network.id, stream_limit(socket.assigns.watcher), actor: actor)
-
         socket
         |> assign(:network, network)
-        |> stream(:invocations, invocations)
+        |> stream(:invocations, [])
       end
 
       def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
