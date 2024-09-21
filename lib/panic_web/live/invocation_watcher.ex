@@ -37,6 +37,7 @@ defmodule PanicWeb.InvocationWatcher do
         |> stream(:invocations, [])
       end
 
+      @impl true
       def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
         watcher = socket.assigns.watcher
         invocation = message.payload.data
