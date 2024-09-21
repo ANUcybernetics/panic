@@ -20,6 +20,7 @@ defmodule PanicWeb.ConnCase do
   using do
     quote do
       use PanicWeb, :verified_routes
+
       import PanicWeb.ConnCase
       import Phoenix.ConnTest
       import PhoenixTest

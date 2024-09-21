@@ -31,24 +31,21 @@ defmodule PanicWeb.NetworkLive.Show do
       />
     </section>
 
-    <.back navigate={~p"/"}>Back to networks</.back>
 
-    <.modal
-      :if={@live_action == :edit}
-      id="network-modal"
-      show
-      on_cancel={JS.patch(~p"/networks/#{@network}")}
-    >
+
+    <section>
       <.live_component
-        module={PanicWeb.NetworkLive.FormComponent}
-        id={@network.id}
-        title={@page_title}
-        current_user={@current_user}
-        action={@live_action}
+        module={PanicWeb.NetworkLive.TerminalComponent}
         network={@network}
-        patch={~p"/networks/#{@network}"}
+        current_user={@current_user}
+        id={@network.id}
       />
-    </.modal>
+
+      <.button phx-click="stop" class="bg-red-500 mt-2">
+        Stop
+      </.button>
+    </section>
+
 
     <section class="mt-16">
       <h2 class="font-semibold">Current run</h2>
@@ -56,8 +53,26 @@ defmodule PanicWeb.NetworkLive.Show do
       <ol id="current-inovocations" phx-update="stream">
         <li class="mb-4" :for={{id, invocation} <- @streams.invocations} id={id}><%= invocation.model %> (<%= invocation.sequence_number%>): <%= invocation.output %></li>
       </ol>
-
     </section>
+
+    <.back navigate={~p"/"}>Back to networks</.back>
+
+    <.modal
+          :if={@live_action == :edit}
+          id="network-modal"
+          show
+          on_cancel={JS.patch(~p"/networks/#{@network}")}
+        >
+          <.live_component
+            module={PanicWeb.NetworkLive.FormComponent}
+            id={@network.id}
+            title={@page_title}
+            current_user={@current_user}
+            action={@live_action}
+            network={@network}
+            patch={~p"/networks/#{@network}"}
+          />
+        </.modal>
     """
   end
 
@@ -77,6 +92,12 @@ defmodule PanicWeb.NetworkLive.Show do
   @impl true
   def handle_info({PanicWeb.NetworkLive.ModelSelectComponent, {:models_updated, network}}, socket) do
     {:noreply, assign(socket, network: network)}
+  end
+
+  @impl true
+  def handle_event("stop", _params, socket) do
+    Panic.Workers.Invoker.cancel_running_jobs(socket.assigns.network.id)
+    {:noreply, socket}
   end
 
   defp page_title(:show), do: "Show Network"

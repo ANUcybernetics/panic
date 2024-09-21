@@ -30,9 +30,4 @@ defmodule PanicWeb.NetworkLive.Terminal do
      |> assign(:page_title, "Network #{id} terminal")
      |> assign(:network, Ash.get!(Panic.Engine.Network, id, actor: socket.assigns.current_user))}
   end
-
-  @impl true
-  def handle_info({PanicWeb.NetworkLive.TerminalComponent, {:new_invocation, _invocation}}, socket) do
-    {:noreply, socket}
-  end
 end
