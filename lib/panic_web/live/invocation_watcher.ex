@@ -9,7 +9,7 @@ defmodule PanicWeb.InvocationWatcher do
   - `handle_info/2` callbacks to keep your `:invocations` stream up-to-date as new invocations are created & completed
   - a `:watcher` assign, which is a 3-tuple that's either
     - `{:grid, row, col}` for a row x col "grid" (although rendering the invocations into a grid is up to you)
-    - `{:screen, stride, offset}` for a single "screen", so that invocations stream is always length 1
+    - `{:single, stride, offset}` for a single "screen", so that invocations stream is always length 1
   """
   alias Panic.Engine.Invocation
 
@@ -53,19 +53,16 @@ defmodule PanicWeb.InvocationWatcher do
               stream_insert(socket, :invocations, invocation)
 
             # screen view, "hit"
-            {sequence_number, {:screen, stride, offset}} when rem(sequence_number, stride) == offset ->
+            {sequence_number, {:single, stride, offset}} when rem(sequence_number, stride) == offset ->
               stream_insert(socket, :invocations, invocation, at: 0, limit: 1)
 
             # screen view, "miss"
-            {_, {:screen, _}} ->
+            {_, {:single, _}} ->
               socket
           end
 
         {:noreply, socket}
       end
-
-      defp stream_limit({:grid, rows, cols}), do: rows * cols
-      defp stream_limit({:screen, _, _}), do: 1
 
       defp dom_id(%Invocation{sequence_number: sequence_number}, {:grid, rows, cols}) do
         slot = Integer.mod(sequence_number, rows * cols)
@@ -73,7 +70,7 @@ defmodule PanicWeb.InvocationWatcher do
       end
 
       # for screen, return slot-0 if this one "matches", and nil otherwise
-      defp dom_id(%Invocation{sequence_number: sequence_number}, {:screen, stride, offset}) do
+      defp dom_id(%Invocation{sequence_number: sequence_number}, {:single, stride, offset}) do
         if rem(sequence_number, stride) == offset, do: "slot-0"
       end
     end
