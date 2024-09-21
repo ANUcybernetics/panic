@@ -15,7 +15,15 @@ defmodule PanicWeb.InvocationWatcher do
     quote do
       @impl true
       def mount(_params, _session, socket) do
-        {:ok, assign(socket, watcher: unquote(opts[:watcher]))}
+        watcher = unquote(opts[:watcher])
+
+        # this config can only happen once, so needs to be in mount/3
+        socket =
+          socket
+          |> assign(watcher: watcher)
+          |> stream_configure(:invocations, dom_id: fn invocation -> dom_id(invocation, watcher) end)
+
+        {:ok, socket}
       end
 
       def subscribe_to_network(socket, network_id, actor) do
@@ -23,9 +31,7 @@ defmodule PanicWeb.InvocationWatcher do
         if connected?(socket), do: PanicWeb.Endpoint.subscribe("invocation:#{network.id}")
 
         invocations =
-          network.id
-          |> Panic.Engine.current_run!(stream_limit(socket.assigns.watcher), actor: actor)
-          |> Enum.map(fn invocation -> clip_id(invocation, socket.assigns.watcher) end)
+          Panic.Engine.current_run!(network.id, stream_limit(socket.assigns.watcher), actor: actor)
 
         socket
         |> assign(:network, network)
@@ -34,7 +40,7 @@ defmodule PanicWeb.InvocationWatcher do
 
       def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
         watcher = socket.assigns.watcher
-        invocation = clip_id(message.payload.data, watcher)
+        invocation = message.payload.data
 
         case watcher do
           {:grid, _row, _col} ->
@@ -52,12 +58,15 @@ defmodule PanicWeb.InvocationWatcher do
       defp stream_limit({:grid, rows, cols}), do: rows * cols
       defp stream_limit({:screen, _, _}), do: 1
 
-      # this hack required because "replace item in stream" only works by :id
-      defp clip_id(invocation, {:grid, rows, cols}) do
-        Map.update!(invocation, :id, fn id -> Integer.mod(invocation.sequence_number, rows * cols) end)
+      defp dom_id(%Panic.Engine.Invocation{sequence_number: sequence_number}, {:grid, rows, cols}) do
+        slot = Integer.mod(sequence_number, rows * cols)
+        "slot-#{slot}"
       end
 
-      defp clip_id(invocation, {:screen, _, _}), do: invocation
+      # for screen, return slot-0 if this one "matches", and nil otherwise
+      defp dom_id(%Panic.Engine.Invocation{sequence_number: sequence_number}, {:screen, stride, offset}) do
+        if rem(sequence_number, stride) == offset, do: "slot-0"
+      end
     end
   end
 end
