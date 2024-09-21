@@ -11,6 +11,8 @@ defmodule PanicWeb.InvocationWatcher do
     - `{:grid, row, col}` for a row x col "grid" (although rendering the invocations into a grid is up to you)
     - `{:screen, stride, offset}` for a single "screen", so that invocations stream is always length 1
   """
+  alias Panic.Engine.Invocation
+
   defmacro __using__(opts) do
     quote do
       @impl true
@@ -42,29 +44,38 @@ defmodule PanicWeb.InvocationWatcher do
         watcher = socket.assigns.watcher
         invocation = message.payload.data
 
-        case watcher do
-          {:grid, _row, _col} ->
-            {:noreply, stream_insert(socket, :invocations, invocation)}
+        socket =
+          case {invocation.sequence_number, watcher} do
+            # grid view, new run
+            {0, {:grid, _row, _col}} ->
+              stream(socket, :invocations, [invocation], reset: true)
 
-          {:screen, stride, offset} = watcher ->
-            if rem(invocation.sequence_number, stride) == offset do
-              {:noreply, stream_insert(socket, :invocations, invocation, at: 0, limit: 1)}
-            else
-              {:noreply, socket}
-            end
-        end
+            # grid view, existing run
+            {_, {:grid, _row, _col}} ->
+              stream_insert(socket, :invocations, invocation)
+
+            # screen view, "hit"
+            {sequence_number, {:screen, stride, offset}} when rem(sequence_number, stride) == offset ->
+              stream_insert(socket, :invocations, invocation, at: 0, limit: 1)
+
+            # screen view, "miss"
+            {_, {:screen, _}} ->
+              socket
+          end
+
+        {:noreply, socket}
       end
 
       defp stream_limit({:grid, rows, cols}), do: rows * cols
       defp stream_limit({:screen, _, _}), do: 1
 
-      defp dom_id(%Panic.Engine.Invocation{sequence_number: sequence_number}, {:grid, rows, cols}) do
+      defp dom_id(%Invocation{sequence_number: sequence_number}, {:grid, rows, cols}) do
         slot = Integer.mod(sequence_number, rows * cols)
         "slot-#{slot}"
       end
 
       # for screen, return slot-0 if this one "matches", and nil otherwise
-      defp dom_id(%Panic.Engine.Invocation{sequence_number: sequence_number}, {:screen, stride, offset}) do
+      defp dom_id(%Invocation{sequence_number: sequence_number}, {:screen, stride, offset}) do
         if rem(sequence_number, stride) == offset, do: "slot-0"
       end
     end
