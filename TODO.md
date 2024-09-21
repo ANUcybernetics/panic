@@ -1,5 +1,7 @@
 # Panic TODO
 
+- fix the watcher code, which needs to pull the :a and :b values from the params
+  (not hardcoded in the `:watcher` part of the macro as it currently stands)
 - add views
   - network
     - assigns: network, ready_at (ts), invocations (stream, if running),
