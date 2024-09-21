@@ -1,26 +1,21 @@
 # Panic TODO
 
-- make invocation run in a before transaction hook (for better concurrency
-  maybe?)
 - add views
   - network
-    - assigns: network, ready_at (ts), invocations (stream, if running), form,
-      watchers (presence?), screen/grid params (to be passed to live component)
+    - assigns: network, ready_at (ts), invocations (stream, if running),
   - "panic button" landing page
-  - livegrid component
-  - prediction component
+  - invocation function component
     - text x image x audio grid (as per notebook)
 - flesh out the tests to make sure the authorisation policies work properly
   (mostly adding "negative versions" of current positive tests)
 - add an indicator to the model select component to say a) if the network has
   been saved and b) if it's runnable
-  - in the "cancel all jobs" code, also cancel the invocations (need to add
-    action)
 - put all the identities/unique constraints in
 - set up tigris to host the images (because replicate outputs now expire in 1h)
-- add embeddings for all outputs (possibly via an ash oban trigger)
+- add embeddings for all outputs (another Oban worker)
 - add "slow down over time" (and scheduling) logic to runs
-- write model descriptions
+- write model descriptions (perhaps in md and use
+  [MDEx](https://github.com/leandrocp/mdex))
 - TDA code
 - add cost/credit balance lookup stuff to the user UI
 - add HUD or other vis for
@@ -60,3 +55,5 @@
   it's
   [this issue](https://github.com/phoenixframework/phoenix_live_view/issues/624),
   so maybe not worth getting bogged down on)
+- add prsence to network views so that it'll say how many people are watching a
+  particular network
