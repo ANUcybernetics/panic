@@ -38,11 +38,18 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   def handle_event("start-run", %{"invocation" => invocation_params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: invocation_params) do
       {:ok, invocation} ->
-        Panic.Engine.start_run!(invocation, actor: socket.assigns.current_user)
-        notify_parent({:new_invocation, invocation})
-
         socket =
-          put_flash(socket, :info, "Invocation #{invocation.id} prepared... about to run")
+          case Panic.Engine.start_run!(invocation, actor: socket.assigns.current_user) do
+            {:ok, _job} ->
+              notify_parent({:new_invocation, invocation})
+              put_flash(socket, :info, "Invocation #{invocation.id} prepared... about to run")
+
+            {:error, :network_not_ready} ->
+              put_flash(socket, :info, "Network not ready for re-prompting - hang tight.")
+
+            {:error, reason} ->
+              put_flash(socket, :error, "Panic failure: #{IO.inspect(reason)}")
+          end
 
         {:noreply, socket}
 
