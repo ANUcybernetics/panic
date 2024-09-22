@@ -1,7 +1,7 @@
 defmodule PanicWeb.NetworkLive.Display do
   @moduledoc false
   use PanicWeb, :live_view
-  use PanicWeb.InvocationWatcher, watcher: {:single, 2, 0}
+  use PanicWeb.InvocationWatcher
 
   @impl true
   def render(assigns) do
@@ -17,6 +17,6 @@ defmodule PanicWeb.NetworkLive.Display do
     {:noreply,
      socket
      |> assign(:page_title, "Panic display (network #{network_id})")
-     |> subscribe_to_network(network_id, socket.assigns.current_user)}
+     |> configure_display_stream(network_id, {:screen, 2, 0})}
   end
 end

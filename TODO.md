@@ -1,7 +1,7 @@
 # Panic TODO
 
-- fix the watcher code, which needs to pull the :a and :b values from the params
-  (not hardcoded in the `:watcher` part of the macro as it currently stands)
+- fix the display code, which needs to pull the :a and :b values from the params
+  (not hardcoded in the `:display` part of the macro as it currently stands)
 - add views
   - network
     - assigns: network, ready_at (ts), invocations (stream, if running),
@@ -12,7 +12,8 @@
   (mostly adding "negative versions" of current positive tests)
 - add an indicator to the model select component to say a) if the network has
   been saved and b) if it's runnable
-- put all the identities/unique constraints in
+- allow "display" screens to be un-logged-in
+  - put all the identities/unique constraints in
 - set up tigris to host the images (because replicate outputs now expire in 1h)
 - add embeddings for all outputs (another Oban worker)
 - add "slow down over time" (and scheduling) logic to runs

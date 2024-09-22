@@ -2,38 +2,34 @@ defmodule PanicWeb.InvocationWatcher do
   @moduledoc ~S"""
   A behaviour module for subscribing to and managing a stream of invocations in a LiveView.
 
-  `use`ing this module adds
+  `use` this module in a LiveView to add:
+  - a `mount/3` handler which
+  - `handle_info/2` callbacks to keep your `:invocations` stream up-to-date as
+    new invocations are created & completed
+  - a `configure_display_stream/3` function which sets up and configures the
+    `:invocations` stream (accessible through `@stream.invocations` in your
+    controller/template) and subscribes to the relevant topic to listen for all
+    invocation-related events
 
-  - a `mount/3` handler which configures the `:invocations` stream (accessible through `@stream.invocations` in your controller/template)
-  - a `subscribe_to_network/3` function which initialises the `:invocations stream with values and subscribes to the relevant topic to listen for all invocation-related events
-  - `handle_info/2` callbacks to keep your `:invocations` stream up-to-date as new invocations are created & completed
-  - a `:watcher` assign, which is a 3-tuple that's either
+  If you don't use `configure_display_stream/3` it's up to you to to ensure that you
+  set the following assigns:
+  - `:network` (a `%Panic.Engine.Network`)
+  - a `:display` assign, which is a 3-tuple that's either
     - `{:grid, row, col}` for a row x col "grid" (although rendering the invocations into a grid is up to you)
     - `{:single, stride, offset}` for a single "screen", so that invocations stream is always length 1
   """
   alias Panic.Engine.Invocation
 
-  defmacro __using__(opts) do
+  defmacro __using__(_opts) do
     quote do
-      @impl true
-      def mount(_params, _session, socket) do
-        watcher = unquote(opts[:watcher])
-
-        # this config can only happen once, so needs to be in mount/3
-        socket =
-          socket
-          |> assign(watcher: watcher)
-          |> stream_configure(:invocations, dom_id: fn invocation -> dom_id(invocation, watcher) end)
-
-        {:ok, socket}
-      end
-
-      def subscribe_to_network(socket, network_id, actor) do
-        network = Ash.get!(Panic.Engine.Network, network_id, actor: actor)
+      def configure_display_stream(socket, network_id, display) do
+        network = Ash.get!(Panic.Engine.Network, network_id, actor: socket.assigns.current_user)
         if connected?(socket), do: PanicWeb.Endpoint.subscribe("invocation:#{network.id}")
 
         socket
         |> assign(:network, network)
+        # TODO this shouldn't run more than once... but needs to be in handle_params
+        |> stream_configure(:invocations, dom_id: fn invocation -> dom_id(invocation, display) end)
         |> stream(:invocations, [])
       end
 
