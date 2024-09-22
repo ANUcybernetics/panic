@@ -27,7 +27,7 @@ defmodule PanicWeb.InvocationWatcher do
         if connected?(socket), do: PanicWeb.Endpoint.subscribe("invocation:#{network.id}")
 
         socket
-        |> assign(:network, network)
+        |> assign(network: network, display: display)
         # TODO this shouldn't run more than once... but needs to be in handle_params
         |> stream_configure(:invocations, dom_id: fn invocation -> dom_id(invocation, display) end)
         |> stream(:invocations, [])
@@ -35,11 +35,11 @@ defmodule PanicWeb.InvocationWatcher do
 
       @impl true
       def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
-        watcher = socket.assigns.watcher
+        display = socket.assigns.display
         invocation = message.payload.data
 
         socket =
-          case {invocation.sequence_number, watcher} do
+          case {invocation.sequence_number, display} do
             # grid view, new run
             {0, {:grid, _row, _col}} ->
               stream(socket, :invocations, [invocation], reset: true)
