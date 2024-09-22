@@ -57,7 +57,7 @@ defmodule Panic.Engine.Network do
       validate Panic.Validations.ModelIOConnections
     end
 
-    action :start_run, :term do
+    action :start_run do
       argument :first_invocation, :struct do
         constraints instance_of: Invocation
         allow_nil? false
