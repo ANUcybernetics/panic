@@ -1,7 +1,7 @@
 defmodule PanicWeb.NetworkLive.Display do
   @moduledoc false
   use PanicWeb, :live_view
-  use PanicWeb.InvocationWatcher
+  use PanicWeb.DisplayStreamer
 
   @impl true
   def render(assigns) do

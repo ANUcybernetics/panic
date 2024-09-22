@@ -1,4 +1,4 @@
-defmodule PanicWeb.InvocationWatcher do
+defmodule PanicWeb.DisplayStreamer do
   @moduledoc ~S"""
   A behaviour module for subscribing to and managing a stream of invocations in a LiveView.
 
