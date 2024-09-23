@@ -76,7 +76,8 @@ defmodule Panic.Engine.Invocation do
       # FIXME make sure this is done with a db index (perhaps via an identity?) for performance reasons
       filter expr(
                network_id == ^arg(:network_id) and
-                 run_number == fragment("SELECT MAX(run_number) FROM invocations WHERE network_id = ?", ^arg(:network_id))
+                 run_number == fragment("SELECT MAX(run_number) FROM invocations WHERE network_id = ?", ^arg(:network_id)) and
+                 state == :completed
              )
     end
 
