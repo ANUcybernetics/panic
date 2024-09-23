@@ -1,13 +1,10 @@
 # Panic TODO
 
 - add views
-  - network
-    - assigns: network, ready_at (ts), invocations (stream, if running),
   - "panic button" landing page
   - invocation function component
     - text x image x audio grid (as per notebook)
-- flesh out the tests to make sure the authorisation policies work properly
-  (mostly adding "negative versions" of current positive tests)
+- add Vestaboards (to Models, perhaps?)
 - add an indicator to the model select component to say a) if the network has
   been saved and b) if it's runnable
 - allow "display" screens to be un-logged-in
@@ -34,6 +31,8 @@
 
 ### ideas (not necessarily TODO, but y'know...)
 
+- flesh out the tests to make sure the authorisation policies work properly
+  (mostly adding "negative versions" of current positive tests)
 - there's some messiness around whether the platform invoke fns should know
   about the Model structs... currently they do. the issue is that maybe the
   per-model transformation stuff should all be in the :invoke key of the model,
