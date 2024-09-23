@@ -1,5 +1,8 @@
 # Panic TODO
 
+- update the "disabled within 30s" logic so that when a new seq==0 invocation is
+  completed, some sort of timer is started which disables the input, but when it
+  ticks down it's re-enabled
 - add views
   - "panic button" landing page
   - invocation function component
