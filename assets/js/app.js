@@ -57,9 +57,9 @@ const hooks = {
 
     updateDisplay(timeLeft) {
       if (timeLeft > 0) {
-        this.el.innerHTML = `Starting up... re-promptible in ${timeLeft} second${timeLeft !== 1 ? "s" : ""}`;
+        this.el.placeholder = `Starting up... re-promptible in ${timeLeft} second${timeLeft !== 1 ? "s" : ""}`;
       } else {
-        this.el.innerHTML = "Ready";
+        this.el.placeholder = "Ready for new prompt";
         this.stopTimer();
       }
     },
