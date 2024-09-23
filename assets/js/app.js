@@ -26,10 +26,51 @@ import live_select from "live_select";
 let csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute("content");
+
+const hooks = {
+  TerminalLockoutTimer: {
+    mounted() {
+      this.timer = null;
+      this.startTimer();
+    },
+
+    destroyed() {
+      this.stopTimer();
+    },
+
+    stopTimer() {
+      if (this.timer) {
+        clearInterval(this.timer);
+        this.timer = null;
+      }
+    },
+
+    startTimer() {
+      this.stopTimer();
+      this.timer = setInterval(() => {
+        const readyAt = new Date(this.el.dataset.readyAt);
+        const now = new Date();
+        const timeLeft = Math.max(0, Math.ceil((readyAt - now) / 1000));
+        this.updateDisplay(timeLeft);
+      }, 1000);
+    },
+
+    updateDisplay(timeLeft) {
+      if (timeLeft > 0) {
+        this.el.innerHTML = `Starting up... re-promptible in ${timeLeft} second${timeLeft !== 1 ? "s" : ""}`;
+      } else {
+        this.el.innerHTML = "Ready";
+        this.stopTimer();
+      }
+    },
+  },
+  ...live_select,
+};
+
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: { _csrf_token: csrfToken },
-  hooks: live_select,
+  hooks: hooks,
 });
 
 // Show progress bar on live navigation and form submits

@@ -18,6 +18,11 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
           <.button phx-disable-with="Let's go...">PANIC!</.button>
         </:actions>
       </.simple_form>
+
+      <div class="mt-8" id="terminal-lockout-timer"
+           phx-hook="TerminalLockoutTimer"
+           data-ready-at={@ready_at}>
+      </div>
     </div>
     """
   end
@@ -26,6 +31,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   def update(assigns, socket) do
     {:ok,
      socket
+     |> assign(ready_at: DateTime.add(DateTime.utc_now(), 30, :second))
      |> assign(assigns)
      |> assign_form()}
   end
