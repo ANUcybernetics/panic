@@ -45,7 +45,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
 
             # TODO there's gotta be a nicer way to wrap the error in the generic :start_run
             # action so that I don't have to destructure it like this
-            {:error, :network_not_ready} ->
+            {:error, %Ash.Error.Unknown{errors: [%Ash.Error.Unknown.UnknownError{error: :network_not_ready}]}} ->
               put_flash(socket, :info, "Network not ready for re-prompting - hang tight.")
 
             {:error, _reason} ->
