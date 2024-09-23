@@ -48,12 +48,16 @@ defmodule PanicWeb.DisplayStreamer do
             {_, {:grid, _row, _col}} ->
               stream_insert(socket, :invocations, invocation)
 
-            # screen view, "hit"
+            # single screen view, "hit"
             {sequence_number, {:single, stride, offset}} when rem(sequence_number, stride) == offset ->
               stream_insert(socket, :invocations, invocation, at: 0, limit: 1)
 
             # screen view, "miss"
             {_, {:single, _, _}} ->
+              socket
+
+            # otherwise ignore
+            _ ->
               socket
           end
 
