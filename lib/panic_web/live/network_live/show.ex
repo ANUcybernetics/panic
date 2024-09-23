@@ -3,6 +3,8 @@ defmodule PanicWeb.NetworkLive.Show do
   use PanicWeb, :live_view
   use PanicWeb.DisplayStreamer
 
+  import PanicWeb.PanicComponents
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -49,10 +51,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
     <section class="mt-16">
       <h2 class="font-semibold">Current run</h2>
-
-      <ol id="current-inovocations" phx-update="stream">
-        <li class="mb-4" :for={{id, invocation} <- @streams.invocations} id={id}><%= invocation.model %> (<%= invocation.sequence_number%>): <%= invocation.output %></li>
-      </ol>
+      <.display_grid invocations={@streams.invocations} />
     </section>
 
     <.back navigate={~p"/"}>Back to networks</.back>

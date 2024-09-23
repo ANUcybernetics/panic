@@ -53,7 +53,7 @@ defmodule PanicWeb.DisplayStreamer do
               stream_insert(socket, :invocations, invocation, at: 0, limit: 1)
 
             # screen view, "miss"
-            {_, {:single, _}} ->
+            {_, {:single, _, _}} ->
               socket
           end
 

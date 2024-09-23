@@ -87,4 +87,16 @@ defmodule PanicWeb.PanicComponents do
       :audio -> "bg-purple-500"
     end
   end
+
+  ## display grid/screens
+
+  attr :invocations, :any, required: true, doc: "invocations stream"
+
+  def display_grid(assigns) do
+    ~H"""
+    <ol id="current-inovocations" phx-update="stream">
+      <li class="mb-4" :for={{id, invocation} <- @invocations} id={id}><%= invocation.model %> (<%= invocation.sequence_number%>): <%= invocation.output %></li>
+    </ol>
+    """
+  end
 end
