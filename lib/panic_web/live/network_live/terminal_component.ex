@@ -24,9 +24,18 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
 
   @impl true
   def update(assigns, socket) do
+    ready_at =
+      case Panic.Engine.current_run!(assigns.network.id, 1, actor: assigns.current_user) do
+        [first] ->
+          first.inserted_at
+
+        [] ->
+          DateTime.utc_now()
+      end
+
     {:ok,
      socket
-     |> assign(ready_at: DateTime.add(DateTime.utc_now(), 30, :second))
+     |> assign(ready_at: ready_at)
      |> assign(assigns)
      |> assign_form()}
   end
