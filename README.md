@@ -1,6 +1,41 @@
-# Panic!
+# Panic!: **P**layground **A**i **N**etwork for **I**nteractive **C**reativity
 
-## **P**layground **A**i **N**etwork for **I**nteractive **C**reativity
+_Panic!_ is an interactive installation where **you** can play with feedback
+loops of generative AI models hooked end-to-end. As well as generating
+intriguing text, images and audio, PANIC explores how different ways of
+connecting these models up can give rise to different patterns of outputs,
+emergent behaviours, recurring patterns, and degenerate cases. Today, the low
+barrier to entry in generative AI model platforms (in terms of cost, time, and
+knowledge) means that more and more of us are using them. But just because we
+_can_ put our text/images/audio into these models and have them provide new
+text/images/audio in return, does it mean that we _should_?
+
+## Development
+
+It's a standard Phoenix (v1.7) and Phoenix LiveView (v0.18) app, so all those
+guides should help you out.
+
+Inside the codebase here's a (domain) glossary to help you figure out what's
+going on:
+
+- **model**: a particular AI model (e.g. _Stable Diffusion_, _GPT4o_)
+- **platform**: model-hosting cloud platform (e.g.
+  [Replicate](https://replicate.com), [OpenAI](https://openai.com))
+- **network**: a specific network (i.e. cyclic graph) of models, designed so
+  that the output of one is fed as input to the next
+- **invocation**: a specific "inference" event for a single model; includes both
+  the input (prompt) an the output (prediction) along with some other metadata
+- **run**: a specific sequence of predictions starting from an initial prompt
+  and following the models in a network
+
+## Setup
+
+It's a [AshPhoenix](https://hexdocs.pm/ash_phoenix/) app.
+
+## More about Panic!
+
+_This is the blurb submitted for the original launch of the Panic! prototype at
+the UNSW Creative AI Symposium in July 2022._
 
 The rise of cloud AI platforms like OpenAI and HuggingFace means that using
 Creative AI models is no longer (necessarily) a toilsome struggle against
@@ -69,40 +104,10 @@ models, and in our preso we\'re happy to go into some of the cybernetic ideas
 behind the design - or to focus on the app (and its inputs/outputs) itself -
 happy to fit with whatever will make the most kickarse symposium for everyone.
 
-## Development
+### SXSW instructions
 
-It's a standard Phoenix (v1.7) and Phoenix LiveView (v0.18) app, so all those
-guides should help you out.
-
-Inside the codebase here's a (domain) glossary to help you figure out what's
-going on:
-
-- **model**: a particular AI model (e.g. _Stable Diffusion_, _GPT4o_)
-- **platform**: model-hosting cloud platform (e.g.
-  [Replicate](https://replicate.com), [OpenAI](https://openai.com))
-- **network**: a specific network (i.e. cyclic graph) of models, designed so
-  that the output of one is fed as input to the next
-- **invocation**: a specific "inference" event for a single model; includes both
-  the input (prompt) an the output (prediction) along with some other metadata
-- **run**: a specific sequence of predictions starting from an initial prompt
-  and following the models in a network
-
-## Setup
-
-We use [asdf](https://asdf-vm.com) for managing tool versions.
-
-The file `.tool-version` tells asdf which versions we use.
-
-Run `asdf install` to install those versions.
-
-## SXSW blurb
-
-PANIC is an interactive installation where **you** can play with feedback loops
-of generative AI models hooked end-to-end. As well as generating intriguing
-text, images and audio, PANIC explores how different ways of connecting these
-models up can give rise to different patterns of outputs, emergent behaviours,
-recurring patterns, and degenerate cases. Today, the low barrier to entry in
-generative AI model platforms (in terms of cost, time, and knowledge) means that
-more and more of us are using them. But just because we _can_ put our
-text/images/audio into these models and have them provide new text/images/audio
-in return, does it mean that we _should_?
+1. Type something (anything!) on the keyboard
+2. Hit the red button & get ready to PANIC!
+3. Keep watching to see the initial output, then the subsequent outputs
+4. What questions does this raise about feedback loops in genAI-augmented
+   systems?

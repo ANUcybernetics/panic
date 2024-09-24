@@ -32,6 +32,7 @@
 
 ### ideas (not necessarily TODO, but y'know...)
 
+- add <https://www.inference.net> platform
 - store the metadata
 - refactor user/network liveviews to use streams for the lists
 - add an indicator to the model select component to say a) if the network has
