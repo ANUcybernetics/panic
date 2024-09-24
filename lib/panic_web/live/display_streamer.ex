@@ -17,6 +17,7 @@ defmodule PanicWeb.DisplayStreamer do
   - a `:display` assign, which is a 3-tuple that's either
     - `{:grid, row, col}` for a row x col "grid" (although rendering the invocations into a grid is up to you)
     - `{:single, stride, offset}` for a single "screen", so that invocations stream is always length 1
+    - `:genesis_invocation` is the most-recent completed invocation with `:sequence_number == 0` (or `nil`)
   """
   alias Panic.Engine.Invocation
 
@@ -27,7 +28,7 @@ defmodule PanicWeb.DisplayStreamer do
         if connected?(socket), do: PanicWeb.Endpoint.subscribe("invocation:#{network.id}")
 
         socket
-        |> assign(network: network, display: display)
+        |> assign(network: network, display: display, genesis_invocation: nil)
         # TODO this shouldn't run more than once... but needs to be in handle_params
         |> stream_configure(:invocations, dom_id: fn invocation -> dom_id(invocation, display) end)
         |> stream(:invocations, [])
@@ -42,7 +43,9 @@ defmodule PanicWeb.DisplayStreamer do
           case {invocation.sequence_number, display} do
             # grid view, new run
             {0, {:grid, _row, _col}} ->
-              stream(socket, :invocations, [invocation], reset: true)
+              socket
+              |> assign(genesis_invocation: invocation)
+              |> stream(:invocations, [invocation], reset: true)
 
             # grid view, existing run
             {_, {:grid, _row, _col}} ->

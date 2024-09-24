@@ -2,6 +2,8 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   @moduledoc false
   use PanicWeb, :live_component
 
+  alias Panic.Engine.Invocation
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -25,12 +27,9 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   @impl true
   def update(assigns, socket) do
     ready_at =
-      case Panic.Engine.current_run!(assigns.network.id, 1, actor: assigns.current_user) do
-        [first] ->
-          first.inserted_at
-
-        [] ->
-          DateTime.utc_now()
+      case assigns.genesis_invocation do
+        %Invocation{inserted_at: inserted_at} -> DateTime.add(inserted_at, 30, :second)
+        nil -> DateTime.utc_now(:second)
       end
 
     {:ok,
@@ -76,7 +75,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
 
   defp assign_form(%{assigns: %{network: network}} = socket) do
     form =
-      AshPhoenix.Form.for_create(Panic.Engine.Invocation, :prepare_first,
+      AshPhoenix.Form.for_create(Invocation, :prepare_first,
         as: "invocation",
         prepare_source: fn changeset ->
           Ash.Changeset.set_argument(changeset, :network, network)

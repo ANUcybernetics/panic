@@ -12,6 +12,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
     <.live_component
       module={PanicWeb.NetworkLive.TerminalComponent}
       network={@network}
+      genesis_invocation={@genesis_invocation}
       current_user={@current_user}
       id={@network.id}
     />
