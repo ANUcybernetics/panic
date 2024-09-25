@@ -1,6 +1,7 @@
 defmodule PanicWeb.NetworkLive.Terminal do
   @moduledoc false
   use PanicWeb, :live_view
+  use PanicWeb.DisplayStreamer
 
   @impl true
   def render(assigns) do
@@ -25,10 +26,10 @@ defmodule PanicWeb.NetworkLive.Terminal do
   end
 
   @impl true
-  def handle_params(%{"network_id" => id}, _, socket) do
+  def handle_params(%{"network_id" => network_id}, _, socket) do
     {:noreply,
      socket
-     |> assign(:page_title, "Network #{id} terminal")
-     |> assign(:network, Ash.get!(Panic.Engine.Network, id, actor: socket.assigns.current_user))}
+     |> assign(:page_title, "Network #{network_id} terminal")
+     |> configure_display_stream(network_id, {:single, 1, 0})}
   end
 end
