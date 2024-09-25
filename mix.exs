@@ -62,8 +62,9 @@ defmodule Panic.MixProject do
       {:ash_oban, "~> 0.2.3"},
       {:ash_authentication, "~> 4.0"},
       {:ash_authentication_phoenix, "~> 2.0"},
+      {:picosat_elixir, "~> 0.2"},
       {:recon, "~> 2.5"},
-      {:styler, "~> 1.0.0", only: [:dev, :test], runtime: false},
+      {:styler, "~> 1.0", only: [:dev, :test], runtime: false},
       {:live_select, "~> 1.0"}
     ]
   end
