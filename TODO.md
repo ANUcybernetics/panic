@@ -13,6 +13,7 @@
 - add "slow down over time" (and scheduling) logic to runs
 - write model descriptions (perhaps in md and use
   [MDEx](https://github.com/leandrocp/mdex))
+- test Panic button, find keyboard, set up Mac Mini
 - clear the terminal input when a new prediction is triggered (well, actually
   it's
   [this issue](https://github.com/phoenixframework/phoenix_live_view/issues/624),
