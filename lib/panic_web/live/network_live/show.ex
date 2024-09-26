@@ -41,6 +41,7 @@ defmodule PanicWeb.NetworkLive.Show do
         current_user={@current_user}
         id={@network.id}
       />
+      <p :if={@genesis_invocation}>Current input: <%= @genesis_invocation.input %></p>
 
       <.button phx-click="stop" class="bg-red-500 mt-2">
         Stop

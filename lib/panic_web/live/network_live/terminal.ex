@@ -17,6 +17,8 @@ defmodule PanicWeb.NetworkLive.Terminal do
       current_user={@current_user}
       id={@network.id}
     />
+
+    <p :if={@genesis_invocation}>Current input: <%= @genesis_invocation.input %></p>
     """
   end
 
