@@ -1,7 +1,7 @@
 # Panic TODO
 
+- add a :invoking state, and set it in the before transaction?
 - show the current input on the relevant views (maybe on all of them?)
-- add invocation function components (text x image x audio, as per notebook)
 - add Vestaboards (to Models, perhaps?)
 - allow "display" screens to be un-logged-in
   - put all the identities/unique constraints in

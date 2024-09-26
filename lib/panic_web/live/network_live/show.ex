@@ -33,8 +33,6 @@ defmodule PanicWeb.NetworkLive.Show do
       />
     </section>
 
-
-
     <section>
       <.live_component
         module={PanicWeb.NetworkLive.TerminalComponent}
@@ -49,30 +47,29 @@ defmodule PanicWeb.NetworkLive.Show do
       </.button>
     </section>
 
-
     <section class="mt-16">
       <h2 class="font-semibold">Current run</h2>
-      <.display_grid invocations={@streams.invocations} />
+      <.display invocations={@streams.invocations} />
     </section>
 
     <.back navigate={~p"/"}>Back to networks</.back>
 
     <.modal
-          :if={@live_action == :edit}
-          id="network-modal"
-          show
-          on_cancel={JS.patch(~p"/networks/#{@network}")}
-        >
-          <.live_component
-            module={PanicWeb.NetworkLive.FormComponent}
-            id={@network.id}
-            title={@page_title}
-            current_user={@current_user}
-            action={@live_action}
-            network={@network}
-            patch={~p"/networks/#{@network}"}
-          />
-        </.modal>
+      :if={@live_action == :edit}
+      id="network-modal"
+      show
+      on_cancel={JS.patch(~p"/networks/#{@network}")}
+    >
+      <.live_component
+        module={PanicWeb.NetworkLive.FormComponent}
+        id={@network.id}
+        title={@page_title}
+        current_user={@current_user}
+        action={@live_action}
+        network={@network}
+        patch={~p"/networks/#{@network}"}
+      />
+    </.modal>
     """
   end
 

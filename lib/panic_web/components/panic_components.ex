@@ -7,7 +7,9 @@ defmodule PanicWeb.PanicComponents do
   (to avoid circular dep issues).
   """
   use Phoenix.Component
+
   # import PanicWeb.CoreComponents
+  alias Panic.Model
 
   @doc """
   Renders a model box.
@@ -92,49 +94,70 @@ defmodule PanicWeb.PanicComponents do
 
   attr :invocations, :any, required: true, doc: "invocations stream"
 
-  def display_grid(assigns) do
+  def display(assigns) do
     ~H"""
-    <ol id="current-inovocations" phx-update="stream">
-      <li class="mb-4" :for={{id, invocation} <- @invocations} id={id}><%= invocation.model %> (<%= invocation.sequence_number%>): <%= invocation.output %></li>
-    </ol>
+    <div class="grid grid-cols-1 gap-8 md:grid-cols-3" id="current-inovocations" phx-update="stream">
+      <.invocation :for={{id, invocation} <- @invocations} id={id} invocation={invocation} />
+    </div>
     """
   end
 
   # individual components
 
+  attr :invocation, :any, required: true, doc: "Panic.Engine.Invocation struct"
+  attr :id, :string, required: true
+
+  def invocation(%{invocation: nil} = assigns) do
+    ~H"""
+    <div id={@id} class="relative aspect-video overflow-hidden">
+      blank
+    </div>
+    """
+  end
+
   def invocation(assigns) do
     ~H"""
+    <div id={@id} class="relative aspect-video overflow-hidden">
+      <.invocation_io type={Model.by_id!(@invocation.model).output_type} value={@invocation.output} />
+      <div class="absolute top-0 left-0 aspect-video h-1/3">
+        <.invocation_io type={Model.by_id!(@invocation.model).input_type} value={@invocation.input} />
+      </div>
+    </div>
+    """
+  end
+
+  attr :type, :atom, required: true, doc: "the type (modality) of the invocation input or output"
+  attr :value, :string, required: true, doc: "the value of the invocation input or output"
+
+  def invocation_io(%{value: nil} = assigns) do
+    ~H"""
+    <p>pending...</p>
+    """
+  end
+
+  def invocation_io(%{type: :text} = assigns) do
+    ~H"""
     <div class="p-4 text-base text-left">
-      <%= for line <- String.split(@invocation.output, "\n\n") do %>
+      <%= for line <- String.split(@value, "\n\n") do %>
         <p :if={line != ""}><%= line %></p>
       <% end %>
     </div>
     """
   end
 
-  def image_run(assigns) do
+  def invocation_io(%{type: :image} = assigns) do
     ~H"""
     <div class="relative w-full">
-      <img class="w-full object-cover" src={@run.output} />
-      <span :if={false} class="absolute top-2 right-2 text-xl text-gray-300 text-right">
-        <%= @run.model %>
-      </span>
-      <%= if @show_input do %>
-        <span class="absolute left-[20px] bottom-[20px] text-2xl text-purple-700 text-left">
-          <%= @run.input %>
-        </span>
-        <span class="absolute left-[21px] bottom-[21px] text-2xl text-purple-300 text-left">
-          <%= @run.input %>
-        </span>
-      <% end %>
+      <img class="w-full object-cover" src={@value} />
     </div>
     """
   end
 
-  def audio_run(assigns) do
+  def invocation_io(%{type: :audio} = assigns) do
     ~H"""
-    <audio autoplay controls={false} src={@run.output} />
-    <%!-- volume_up --%>
+    <div class="relative w-full">
+      <audio autoplay controls={false} src={@value} />
+    </div>
     """
   end
 
@@ -142,14 +165,6 @@ defmodule PanicWeb.PanicComponents do
     ~H"""
     <div class="absolute inset-0 animate-pulse bg-rose-600 grid place-items-center">
       <span class="text-black text-5xl">panic!</span>
-    </div>
-    """
-  end
-
-  def run(%{run: nil} = assigns) do
-    ~H"""
-    <div class="aspect-w-16 aspect-h-9 overflow-hidden relative block w-full text-center text-gray-400 bg-gray-900 shadow-lg">
-      <div class="grid place-items-center">BLANK</div>
     </div>
     """
   end
@@ -164,14 +179,7 @@ defmodule PanicWeb.PanicComponents do
           <% :running -> %>
             <.running_run />
           <% :succeeded -> %>
-            <%= case Models.model_io(@run.model) do %>
-              <% {_, :text} -> %>
-                <.text_run run={@run} />
-              <% {_, :image} -> %>
-                <.image_run run={@run} show_input={@show_input} />
-              <% {_, :audio} -> %>
-                <.audio_run run={@run} />
-            <% end %>
+            text run
           <% :failed -> %>
             <%!-- x_circle --%>
         <% end %>
@@ -183,13 +191,8 @@ defmodule PanicWeb.PanicComponents do
     """
   end
 
-  def slots_grid(assigns) do
-    ~H"""
-    <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
-      <%= for {run, _idx} <- Enum.with_index(@slots) do %>
-        <.run run={run} show_input={false} />
-      <% end %>
-    </div>
-    """
+  defp pad_invocations(invocations, length) do
+    padding = List.duplicate(nil, max(0, length - Enum.count(invocations)))
+    Enum.concat(invocations, padding)
   end
 end
