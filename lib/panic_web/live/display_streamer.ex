@@ -41,10 +41,6 @@ defmodule PanicWeb.DisplayStreamer do
 
         socket =
           case {invocation, display} do
-            # drop these ones, because they might be in the first 30s
-            {%Invocation{sequence_number: 0, state: :ready}, _} ->
-              socket
-
             # grid view, new run
             {%Invocation{sequence_number: 0}, {:grid, _row, _col}} ->
               socket

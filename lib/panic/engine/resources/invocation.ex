@@ -242,6 +242,5 @@ defmodule Panic.Engine.Invocation do
     module PanicWeb.Endpoint
     prefix "invocation"
     publish_all :update, [:network_id]
-    publish_all :create, [:network_id]
   end
 end
