@@ -40,9 +40,13 @@ defmodule PanicWeb.DisplayStreamer do
         invocation = message.payload.data
 
         socket =
-          case {invocation.sequence_number, display} do
+          case {invocation, display} do
+            # drop these ones, because they might be in the first 30s
+            {%Invocation{sequence_number: 0, state: :ready}, _} ->
+              socket
+
             # grid view, new run
-            {0, {:grid, _row, _col}} ->
+            {%Invocation{sequence_number: 0}, {:grid, _row, _col}} ->
               socket
               |> assign(genesis_invocation: invocation)
               |> stream(:invocations, [invocation], reset: true)
@@ -52,7 +56,8 @@ defmodule PanicWeb.DisplayStreamer do
               stream_insert(socket, :invocations, invocation)
 
             # single screen view, "hit"
-            {sequence_number, {:single, stride, offset}} when rem(sequence_number, stride) == offset ->
+            {%Invocation{sequence_number: sequence_number}, {:single, stride, offset}}
+            when rem(sequence_number, stride) == offset ->
               stream_insert(socket, :invocations, invocation, at: 0, limit: 1)
 
             # screen view, "miss"

@@ -56,7 +56,8 @@ defmodule Panic.Workers.Invoker do
     # in as args, so we cheat and pull the user "unauthorized", and then from there we can use that actor (which we need anyway for API tokens)
     with {:ok, user} <- Ash.get(Panic.Accounts.User, user_id, authorize?: false),
          {:ok, invocation} <- Ash.get(Engine.Invocation, invocation_id, actor: user),
-         # TODO if there is a Panic.Engine.set_to_invoking action, call it here
+         # `:about_to_invoke` action is mostly for notification purposes
+         {:ok, invocation} <- Engine.about_to_invoke(invocation, actor: user),
          {:ok, invocation} <- Engine.invoke(invocation, actor: user),
          {:ok, next_invocation} <- Engine.prepare_next(invocation, actor: user) do
       insert(next_invocation, user)
