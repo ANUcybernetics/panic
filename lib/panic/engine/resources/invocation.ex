@@ -28,9 +28,9 @@ defmodule Panic.Engine.Invocation do
     attribute :input, :string, allow_nil?: false
 
     attribute :state, :atom do
-      constraints one_of: [:waiting, :completed, :failed]
+      constraints one_of: [:ready, :invoking, :completed, :failed]
       allow_nil? false
-      default :waiting
+      default :ready
     end
 
     attribute :model, :string, allow_nil?: false
@@ -124,6 +124,10 @@ defmodule Panic.Engine.Invocation do
       accept [:run_number]
     end
 
+    update :about_to_invoke do
+      change set_attribute(:state, :invoking)
+    end
+
     create :prepare_next do
       argument :previous_invocation, :struct do
         constraints instance_of: __MODULE__
@@ -175,23 +179,27 @@ defmodule Panic.Engine.Invocation do
               if token do
                 case invoke_fn.(model, input, token) do
                   {:ok, output} ->
-                    Ash.Changeset.force_change_attribute(changeset, :output, output)
+                    changeset
+                    |> Ash.Changeset.force_change_attribute(:output, output)
+                    |> Ash.Changeset.force_change_attribute(:state, :completed)
 
                   {:error, :nsfw} ->
-                    Ash.Changeset.force_change_attribute(
-                      changeset,
+                    changeset
+                    |> Ash.Changeset.force_change_attribute(
                       :output,
                       "https://i.pinimg.com/736x/81/87/7b/81877bc8fe3de138963db9a1ce0e3286.jpg"
                     )
+                    |> Ash.Changeset.force_change_attribute(:state, :completed)
 
                   {:error, message} ->
-                    Ash.Changeset.add_error(changeset, message)
+                    changeset
+                    |> Ash.Changeset.add_error(message)
+                    |> Ash.Changeset.force_change_attribute(:state, :failed)
                 end
               else
-                Ash.Changeset.add_error(
-                  changeset,
-                  "user has no auth token for #{platform}"
-                )
+                changeset
+                |> Ash.Changeset.add_error("user has no auth token for #{platform}")
+                |> Ash.Changeset.force_change_attribute(:state, :failed)
               end
           end
       end
