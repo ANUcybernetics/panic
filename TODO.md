@@ -1,6 +1,5 @@
 # Panic TODO
 
-- add a :invoking state, and set it in the before transaction?
 - add Vestaboards (to Models, perhaps?)
 - allow "display" screens to be un-logged-in
   - put all the identities/unique constraints in
@@ -13,9 +12,6 @@
 - write model descriptions (perhaps in md and use
   [MDEx](https://github.com/leandrocp/mdex))
 - test Panic button, find keyboard, set up Mac Mini
-- clear the terminal input when a new prediction is triggered (well, actually
-  it's
-  [this issue](https://github.com/phoenixframework/phoenix_live_view/issues/624),
 - TDA code
 - add HUD or other vis for the embedding trajectories
 - add animated "panic button" function component (maybe?)
