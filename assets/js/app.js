@@ -52,6 +52,7 @@ const hooks = {
         this.el.placeholder = "Ready for new prompt";
         this.el.disabled = false;
         this.stopTimer();
+        this.el.focus();
       }
     },
   },
