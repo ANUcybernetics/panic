@@ -3,9 +3,11 @@
 - add Vestaboards (to Models, perhaps?)
 - allow "display" screens to be un-logged-in
   - put all the identities/unique constraints in
+- text shadow component
 - set up tigris to host the images (because replicate outputs now expire in 1h)
 - add audio (perhaps with [this](https://audiomotion.dev/demo/multi.html)?)
 - update models
+- put it on fly.io
 - add helper for listing all the "screen" links
 - add embeddings for all outputs (another Oban worker)
 - add "slow down over time" (and scheduling) logic to runs
@@ -28,6 +30,7 @@
 
 ### ideas (not necessarily TODO, but y'know...)
 
+- replace the "split into `<p>`s based on double newline with proper md parsing
 - add <https://www.inference.net> platform
 - store the metadata
 - refactor user/network liveviews to use streams for the lists
