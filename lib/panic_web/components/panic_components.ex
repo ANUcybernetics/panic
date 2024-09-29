@@ -221,9 +221,4 @@ defmodule PanicWeb.PanicComponents do
     </div>
     """
   end
-
-  defp pad_invocations(invocations, length) do
-    padding = List.duplicate(nil, max(0, length - Enum.count(invocations)))
-    Enum.concat(invocations, padding)
-  end
 end
