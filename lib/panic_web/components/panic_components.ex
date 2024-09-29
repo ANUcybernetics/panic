@@ -141,7 +141,7 @@ defmodule PanicWeb.PanicComponents do
   def invocation(%{invocation: %Invocation{state: :failed}} = assigns) do
     ~H"""
     <.invocation_container id={@id}>
-      <p class="bg-rose-600">failed</p>
+      <p class="size-full grid place-items-center bg-rose-500">failed</p>
     </.invocation_container>
     """
   end
@@ -149,7 +149,7 @@ defmodule PanicWeb.PanicComponents do
   def invocation(%{invocation: %Invocation{state: :invoking}} = assigns) do
     ~H"""
     <.invocation_container id={@id}>
-      <p class="bg-yellow-600">invoking</p>
+      <p class="size-full grid place-items-center bg-yellow-300">invoking</p>
     </.invocation_container>
     """
   end
@@ -180,9 +180,7 @@ defmodule PanicWeb.PanicComponents do
 
   def invocation_slot(%{type: :image} = assigns) do
     ~H"""
-    <div class="relative w-full">
-      <img class="w-full object-cover" src={@value} />
-    </div>
+    <img class="object-cover" src={@value} />
     """
   end
 
