@@ -8,7 +8,7 @@ defmodule PanicWeb.PanicComponents do
   """
   use Phoenix.Component
 
-  # import PanicWeb.CoreComponents
+  alias Panic.Engine.Invocation
   alias Panic.Model
 
   @doc """
@@ -97,45 +97,78 @@ defmodule PanicWeb.PanicComponents do
   def display(assigns) do
     ~H"""
     <div class="grid grid-cols-1 gap-8 md:grid-cols-3" id="current-inovocations" phx-update="stream">
-      <.invocation :for={{id, invocation} <- @invocations} id={id} invocation={invocation} />
+      <.invocation
+        :for={{id, invocation} <- @invocations}
+        id={id}
+        invocation={invocation}
+        model={Model.by_id!(invocation.model)}
+      />
     </div>
     """
   end
 
   # individual components
 
+  attr :id, :string, required: true
+  slot :inner_block, required: true
+  slot :input, doc: "Optional input to render in the top left corner"
+
+  def invocation_container(assigns) do
+    ~H"""
+    <div id={@id} class="relative aspect-video overflow-hidden">
+      <%= render_slot(@inner_block) %>
+      <%= if @input do %>
+        <div class="absolute top-0 left-0 aspect-video h-1/3">
+          <%= render_slot(@input) %>
+        </div>
+      <% end %>
+    </div>
+    """
+  end
+
   attr :invocation, :any, required: true, doc: "Panic.Engine.Invocation struct"
+  attr :model, :any, required: true, doc: "Panic.Model struct"
   attr :id, :string, required: true
 
   def invocation(%{invocation: nil} = assigns) do
     ~H"""
-    <div id={@id} class="relative aspect-video overflow-hidden">
-      blank
-    </div>
+    <.invocation_container id={@id}>
+      <p class="bg-zinc-600">blank</p>
+    </.invocation_container>
+    """
+  end
+
+  def invocation(%{invocation: %Invocation{state: :failed}} = assigns) do
+    ~H"""
+    <.invocation_container id={@id}>
+      <p class="bg-rose-600">failed</p>
+    </.invocation_container>
+    """
+  end
+
+  def invocation(%{invocation: %Invocation{state: :invoking}} = assigns) do
+    ~H"""
+    <.invocation_container id={@id}>
+      <p class="bg-yellow-600">invoking</p>
+    </.invocation_container>
     """
   end
 
   def invocation(assigns) do
     ~H"""
-    <div id={@id} class="relative aspect-video overflow-hidden">
-      <.invocation_io type={Model.by_id!(@invocation.model).output_type} value={@invocation.output} />
-      <div class="absolute top-0 left-0 aspect-video h-1/3">
-        <.invocation_io type={Model.by_id!(@invocation.model).input_type} value={@invocation.input} />
-      </div>
-    </div>
+    <.invocation_container id={@id}>
+      <.invocation_slot type={@model.output_type} value={@invocation.output} />
+      <:input>
+        <.invocation_slot type={@model.input_type} value={@invocation.input} />
+      </:input>
+    </.invocation_container>
     """
   end
 
   attr :type, :atom, required: true, doc: "the type (modality) of the invocation input or output"
   attr :value, :string, required: true, doc: "the value of the invocation input or output"
 
-  def invocation_io(%{value: nil} = assigns) do
-    ~H"""
-    <p>pending...</p>
-    """
-  end
-
-  def invocation_io(%{type: :text} = assigns) do
+  def invocation_slot(%{type: :text} = assigns) do
     ~H"""
     <div class="p-4 text-base text-left">
       <%= for line <- String.split(@value, "\n\n") do %>
@@ -145,7 +178,7 @@ defmodule PanicWeb.PanicComponents do
     """
   end
 
-  def invocation_io(%{type: :image} = assigns) do
+  def invocation_slot(%{type: :image} = assigns) do
     ~H"""
     <div class="relative w-full">
       <img class="w-full object-cover" src={@value} />
@@ -153,7 +186,7 @@ defmodule PanicWeb.PanicComponents do
     """
   end
 
-  def invocation_io(%{type: :audio} = assigns) do
+  def invocation_slot(%{type: :audio} = assigns) do
     ~H"""
     <div class="relative w-full">
       <audio autoplay controls={false} src={@value} />
