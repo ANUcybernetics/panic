@@ -24,6 +24,7 @@ defmodule Panic.Model do
 
   alias Panic.Platforms.OpenAI
   alias Panic.Platforms.Replicate
+  alias Panic.Platforms.Vestaboard
 
   @enforce_keys [:id, :path, :name, :platform, :input_type, :output_type, :invoke]
   defstruct [
@@ -262,6 +263,53 @@ defmodule Panic.Model do
             {:ok, Enum.join(output_list)}
           end
         end
+      },
+
+      ## Vestaboards
+
+      %__MODULE__{
+        id: "vestaboard-panic-1",
+        platform: Vestaboard,
+        path: "panic_1",
+        name: "Vestaboard Panic 1",
+        input_type: :text,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          Vestaboard.send_text(model, input, token)
+        end
+      },
+      %__MODULE__{
+        id: "vestaboard-panic-2",
+        platform: Vestaboard,
+        path: "panic_2",
+        name: "Vestaboard Panic 2",
+        input_type: :text,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          Vestaboard.send_text(model, input, token)
+        end
+      },
+      %__MODULE__{
+        id: "vestaboard-panic-3",
+        platform: Vestaboard,
+        path: "panic_3",
+        name: "Vestaboard Panic 3",
+        input_type: :text,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          Vestaboard.send_text(model, input, token)
+        end
+      },
+      %__MODULE__{
+        id: "vestaboard-panic-4",
+        platform: Vestaboard,
+        path: "panic_4",
+        name: "Vestaboard Panic 4",
+        input_type: :text,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          Vestaboard.send_text(model, input, token)
+        end
       }
     ]
   end
@@ -282,6 +330,10 @@ defmodule Panic.Model do
 
   def model_url(%__MODULE__{platform: OpenAI}) do
     "https://platform.openai.com/docs/models/overview"
+  end
+
+  def model_url(%__MODULE__{platform: Vestaboard}) do
+    "https://www.vestaboard.com"
   end
 
   def model_url(%__MODULE__{platform: Replicate, path: path}) do

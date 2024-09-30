@@ -1,8 +1,10 @@
 defmodule Panic.Platforms.Vestaboard do
   @moduledoc false
-  def send_text(board_name, text) do
-    board_name
-    |> req_new(method: :post, json: %{"text" => text})
+  alias Panic.Model
+
+  def send_text(%Model{path: _board_name}, text, token) do
+    [method: :post, json: %{"text" => text}, headers: [{"X-Vestaboard-Read-Write-Key", token}]]
+    |> req_new()
     |> Req.request()
     |> case do
       {:ok, %Req.Response{status: 200, body: %{"id" => id}}} ->
@@ -19,21 +21,21 @@ defmodule Panic.Platforms.Vestaboard do
     end
   end
 
-  def clear(board_name) do
+  def clear(model, token) do
     # this is a workaround, because the RW API doesn't allow blank messages
-    send_text(board_name, "blank")
+    send_text(model, "P!", token)
   end
 
-  defp req_new(board_name, opts) do
-    token = Application.fetch_env!(:panic, :"vestaboard_api_token_#{to_string(board_name)}")
-    headers = [{"X-Vestaboard-Read-Write-Key", token}]
-
+  defp req_new(opts) do
     [
       base_url: "https://rw.vestaboard.com/",
-      receive_timeout: 10_000,
-      headers: headers
+      receive_timeout: 10_000
     ]
     |> Keyword.merge(opts)
     |> Req.new()
+  end
+
+  def token_for_model(%Model{path: board_name}) do
+    Application.fetch_env!(:panic, :"vestaboard_#{board_name}_token")
   end
 end
