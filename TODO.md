@@ -1,5 +1,6 @@
 # Panic TODO
 
+- fix race condition(?) when re-prompting a model
 - add Vestaboards (to Models, perhaps?)
 - allow "display" screens to be un-logged-in
   - put all the identities/unique constraints in
