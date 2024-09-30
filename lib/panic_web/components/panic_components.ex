@@ -172,7 +172,7 @@ defmodule PanicWeb.PanicComponents do
     ~H"""
     <div class="p-4 text-base text-left">
       <%= for line <- String.split(@value, "\n\n") do %>
-        <p :if={line != ""}><%= line %></p>
+        <.shadowed_text :if={line != ""}><%= line %></.shadowed_text>
       <% end %>
     </div>
     """
@@ -192,11 +192,11 @@ defmodule PanicWeb.PanicComponents do
     """
   end
 
-  def running_run(assigns) do
+  def shadowed_text(assigns) do
     ~H"""
-    <div class="absolute inset-0 animate-pulse bg-rose-600 grid place-items-center">
-      <span class="text-black text-5xl">panic!</span>
-    </div>
+    <p class="[text-shadow:2px_2px_0px_#FFF]">
+      <%= render_slot(@inner_block) %>
+    </p>
     """
   end
 
@@ -207,8 +207,6 @@ defmodule PanicWeb.PanicComponents do
         <%= case @run.status do %>
           <% :created -> %>
             <%!-- minus_circle --%>
-          <% :running -> %>
-            <.running_run />
           <% :succeeded -> %>
             text run
           <% :failed -> %>
