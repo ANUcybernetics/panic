@@ -32,7 +32,7 @@ defmodule Panic.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix_test, "~> 0.3"},
+      {:phoenix_test, "~> 0.3", only: :test},
       {:phoenix, "~> 1.7.12"},
       {:phoenix_ecto, "~> 4.4"},
       {:ash, "~> 3.0"},
