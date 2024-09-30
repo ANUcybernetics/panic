@@ -92,20 +92,28 @@ defmodule Panic.Model do
       },
 
       ## Replicate
-      # %__MODULE__{
-      #   id: "clip_prefix_caption",
-      #   platform: Replicate,
-      #   path: "rmokady/clip_prefix_caption",
-      #   name: "Clip Prefix Caption",
-      #   input_type: :image,
-      #   output_type: :text,
-      #   invoke: fn model, input, token ->
-      #     with {:ok, %{"output" => text}} <-
-      #            Replicate.invoke(model, %{image: input}, token) do
-      #       {:ok, text}
-      #     end
-      #   end
-      # },
+      %__MODULE__{
+        id: "bunny-phi-2-siglip",
+        platform: Replicate,
+        path: "adirik/bunny-phi-2-siglip",
+        name: "Clip Prefix Caption",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => text}} <-
+                 Replicate.invoke(
+                   model,
+                   %{
+                     image: input,
+                     prompt: "Give an interesting, concise caption for this image.",
+                     max_new_tokens: 40
+                   },
+                   token
+                 ) do
+            {:ok, text}
+          end
+        end
+      },
       # %__MODULE__{
       #   id: "clip-caption-reward",
       #   platform: Replicate,
