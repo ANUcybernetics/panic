@@ -19,6 +19,7 @@ defmodule Panic.Engine do
       define :list_run, args: [:network_id, :run_number]
       define :current_run, args: [:network_id, {:optional, :limit}]
       define :most_recent, args: [:network_id], get?: true
+      define :most_recent_genesis, args: [:network_id], get?: true
     end
   end
 end
