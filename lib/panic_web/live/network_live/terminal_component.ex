@@ -15,7 +15,13 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
         phx-change="validate"
         phx-submit="start-run"
       >
-        <.input field={@form[:input]} type="text" phx-hook="TerminalLockoutTimer" data-ready-at={@ready_at} placeholder="Starting up..." />
+        <.input
+          field={@form[:input]}
+          type="text"
+          phx-hook="TerminalLockoutTimer"
+          data-ready-at={@ready_at}
+          placeholder="Starting up..."
+        />
         <:actions>
           <.button phx-disable-with="Let's go...">PANIC!</.button>
         </:actions>
