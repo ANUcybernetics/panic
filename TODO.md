@@ -1,6 +1,8 @@
 # Panic TODO
 
-- fix race condition(?) when re-prompting a model
+- fix "multiple runs in parallel" problem, by either relaxing the uniqueness
+  args to be :network_id only, or to have the seq_no == 0 case also cancel any
+  stale jobs
 - allow "display" screens to be un-logged-in
   - put all the identities/unique constraints in
 - set up tigris to host the images (because replicate outputs now expire in 1h)
