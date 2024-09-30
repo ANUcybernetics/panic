@@ -41,6 +41,10 @@ defmodule PanicWeb.DisplayStreamer do
 
         socket =
           case {invocation, display} do
+            # can ignore "ready" invocations
+            {%Invocation{state: :ready}, _} ->
+              socket
+
             # grid view, new run
             {%Invocation{sequence_number: 0}, {:grid, _row, _col}} ->
               socket
