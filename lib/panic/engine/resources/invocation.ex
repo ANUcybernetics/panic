@@ -168,12 +168,13 @@ defmodule Panic.Engine.Invocation do
 
             {%{data: %{model: model_id, input: input}}, %{actor: user}} ->
               model = Panic.Model.by_id!(model_id)
-              %Panic.Model{invoke: invoke_fn, platform: platform} = model
+              %Panic.Model{path: path, invoke: invoke_fn, platform: platform} = model
 
               token =
                 case platform do
                   Panic.Platforms.OpenAI -> context.actor.openai_token
                   Panic.Platforms.Replicate -> context.actor.replicate_token
+                  Panic.Platforms.Vestaboard -> Map.fetch!(context.actor, :":vestaboard_#{path}_token")
                 end
 
               if token do
