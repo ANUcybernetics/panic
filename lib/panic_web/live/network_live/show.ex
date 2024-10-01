@@ -49,7 +49,7 @@ defmodule PanicWeb.NetworkLive.Show do
     </section>
 
     <section class="mt-16">
-      <h2 class="font-semibold">Current run</h2>
+      <h2 class="font-semibold mb-8">Current run</h2>
       <.display invocations={@streams.invocations} />
     </section>
 
