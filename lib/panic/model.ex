@@ -96,7 +96,7 @@ defmodule Panic.Model do
         id: "bunny-phi-2-siglip",
         platform: Replicate,
         path: "adirik/bunny-phi-2-siglip",
-        name: "Clip Prefix Caption",
+        name: "Bunny Phi 2 SigLIP",
         input_type: :image,
         output_type: :text,
         invoke: fn model, input, token ->
