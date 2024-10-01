@@ -41,7 +41,6 @@ defmodule PanicWeb.NetworkLive.Show do
         current_user={@current_user}
         id={@network.id}
       />
-      <p :if={@genesis_invocation}>Current input: <%= @genesis_invocation.input %></p>
 
       <.button phx-click="stop" class="bg-red-500 mt-2">
         Stop
@@ -49,7 +48,10 @@ defmodule PanicWeb.NetworkLive.Show do
     </section>
 
     <section class="mt-16">
-      <h2 class="font-semibold mb-8">Current run</h2>
+      <h2 class="font-semibold mb-8">
+        Current run <span :if={@genesis_invocation}>: <%= @genesis_invocation.input %></span>
+      </h2>
+
       <.display invocations={@streams.invocations} />
     </section>
 
