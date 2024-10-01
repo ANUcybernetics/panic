@@ -115,20 +115,20 @@ defmodule Panic.Model do
           end
         end
       },
-      # %__MODULE__{
-      #   id: "clip-caption-reward",
-      #   platform: Replicate,
-      #   path: "j-min/clip-caption-reward",
-      #   name: "Clip Caption Reward",
-      #   input_type: :image,
-      #   output_type: :text,
-      #   invoke: fn model, input, token ->
-      #     with {:ok, %{"output" => text}} <-
-      #            Replicate.invoke(model, %{image: input}, token) do
-      #       {:ok, text}
-      #     end
-      #   end
-      # },
+      %__MODULE__{
+        id: "joy-caption",
+        platform: Replicate,
+        path: "pipi32167/joy-caption",
+        name: "Joy Caption",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => text}} <-
+                 Replicate.invoke(model, %{image: input, prompt: "A descriptive caption for this image:"}, token) do
+            {:ok, text}
+          end
+        end
+      },
       %__MODULE__{
         id: "blip-2",
         platform: Replicate,
