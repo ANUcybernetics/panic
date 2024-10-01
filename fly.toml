@@ -1,44 +1,39 @@
-app = "panic"
-primary_region = "syd"
-kill_signal = "SIGTERM"
-kill_timeout = 5
-processes = []
+# fly.toml app configuration file generated for panic on 2024-10-01T21:18:23+10:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-[deploy]
-release_command = "/app/bin/migrate"
+app = 'panic'
+primary_region = 'syd'
+kill_signal = 'SIGTERM'
 
-[mounts]
-# fly volumes create panic_data --size 20
-source = "panic_data"
-destination = "/mnt/panic_data"
+[build]
 
 [env]
-PHX_HOST = "panic.fly.dev"
-PORT = "8080"
-DATABASE_PATH = "/mnt/panic_data/panic_data.db"
+DATABASE_PATH = '/mnt/panic_data/panic_data.db'
+PHX_HOST = 'panic.fly.dev'
+PORT = '8080'
 
-[[services]]
-http_checks = []
+[[mounts]]
+source = 'panic_data'
+destination = '/mnt/panic_data'
+processes = ['app']
+initial_size = '5gb'
+
+[http_service]
 internal_port = 8080
-processes = ["app"]
-protocol = "tcp"
-script_checks = []
-[services.concurrency]
-hard_limit = 25
-soft_limit = 20
-type = "connections"
-
-[[services.ports]]
 force_https = true
-handlers = ["http"]
-port = 80
+auto_stop_machines = 'stop'
+auto_start_machines = true
+min_machines_running = 0
+processes = ['app']
 
-[[services.ports]]
-handlers = ["tls", "http"]
-port = 443
+[http_service.concurrency]
+type = 'connections'
+hard_limit = 1000
+soft_limit = 1000
 
-[[services.tcp_checks]]
-grace_period = "1s"
-interval = "15s"
-restart_limit = 0
-timeout = "2s"
+[[vm]]
+memory = '4gb'
+cpu_kind = 'shared'
+cpus = 2

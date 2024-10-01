@@ -5,7 +5,6 @@
 - add audio (perhaps with [this](https://audiomotion.dev/demo/multi.html)?)
 - test the new switch
 - update models
-- put it on fly.io
 - add helper for listing all the "screen" links
 - add embeddings for all outputs (another Oban worker)
 - add "slow down over time" (and scheduling) logic to runs
@@ -52,3 +51,11 @@
   maybe not worth getting bogged down on)
 - add presence to network views so that it'll say how many people are watching a
   particular network
+- clean up the old panic (v1) machines (1x app machine, 2x db machines)
+
+## deployment notes
+
+- first, destroyed the old panic (app & machines)
+- did a clean(ish) fly deploy, to auto-detect Phoenix and provide the latest
+  suggested config
+- then got stuck in a boot loop, will investigate tomorrow
