@@ -5,7 +5,7 @@ defmodule PanicWeb.IndexLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <p>Panic is really live now.</p>
+    <p>Panic is having a coat of paint before SXSW. Stay tuned.</p>
     """
   end
 
