@@ -8,10 +8,11 @@ defmodule Panic.Workers.Invoker do
   This Oban job assumes that the invocation has already been prepared (and is therefore
   in the db) with the `:prepare_next` action on the Invocation resource.
 
-  The "uninterruptible" period (within 30s of run start) is handled by using Oban's
-  unique jobs feature, with uniqueness based on network and sequence number (*not* run number).
-  So if there's a new first run (`sequence_number == 0`) within 30s of the last one, the Oban
-  job insertion will fail with `{:error, :network_not_ready}`.
+  The module handles concurrent invocations and implements a "lockout" period
+  for new genesis invocations (within 30s of the previous genesis invocation).
+  If a new invocation is attempted during this lockout period, the job will be
+  dropped. Outside of this period, any running job will be cancelled in favor
+  of the new invocation.
   """
 
   use Oban.Worker, queue: :default
@@ -27,14 +28,12 @@ defmodule Panic.Workers.Invoker do
   Performs the invocation job.
 
   This callback is the implementation of the Oban.Worker behavior. It processes
-  the job with the given arguments, invoking the AI model and preparing the next
-  invocation if necessary.
-
-  This function shouldn't be called directly; use `insert/2` in this same module
-  instead.
+  the job with the given arguments, checking for running jobs, and either
+  invoking the AI model or handling conflicts as necessary.
 
   ## Returns
-    - :ok if the job is successfully processed.
+    - {:ok, :lockout} if a recent genesis invocation exists and the job is dropped.
+    - The result of invoke_and_insert_next/2 if the invocation proceeds.
     - Any error returned by the underlying operations.
   """
   @impl Oban.Worker
@@ -54,9 +53,9 @@ defmodule Panic.Workers.Invoker do
         :no_running_jobs ->
           invoke_and_insert_next(invocation, user)
 
-        :running_job_in_lockout ->
+        :lockout ->
           Logger.info("Recent genesis invocation for network #{invocation.network_id}. Dropping job.")
-          {:ok, :dropping}
+          {:ok, :lockout}
 
         {:running_job, job} ->
           Logger.info("Cancelling currently running job for network #{invocation.network_id} and starting new run.")
@@ -82,7 +81,7 @@ defmodule Panic.Workers.Invoker do
         genesis = Ash.get!(Invocation, running_job.args["run_number"], authorize?: false)
 
         if DateTime.diff(DateTime.utc_now(), genesis.inserted_at, :second) < 30 do
-          :running_job_in_lockout
+          :lockout
         else
           {:running_job, running_job}
         end
@@ -116,7 +115,7 @@ defmodule Panic.Workers.Invoker do
     - network_id: The ID of the network for which to cancel jobs.
 
   ## Returns
-    - :ok (The function always returns :ok as Enum.each/2 returns :ok)
+    - The number of cancelled jobs.
   """
   def cancel_running_jobs(network_id) do
     from(job in Oban.Job,
@@ -130,6 +129,15 @@ defmodule Panic.Workers.Invoker do
     |> tap(fn n -> Logger.info("cancelled #{n} jobs for network #{network_id}") end)
   end
 
+  @doc """
+  Cancels all running jobs for the Panic.Workers.Invoker worker.
+
+  This function retrieves and cancels all Oban jobs for the Panic.Workers.Invoker worker
+  that are in a state that allows cancellation (scheduled, available, executing, or retryable).
+
+  ## Returns
+    - The number of cancelled jobs.
+  """
   def cancel_running_jobs do
     from(job in Oban.Job,
       where: job.worker == "Panic.Workers.Invoker",

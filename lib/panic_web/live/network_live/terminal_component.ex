@@ -58,11 +58,9 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
             :ok ->
               put_flash(socket, :info, "Invocation #{invocation.id} prepared... about to run")
 
-            # TODO there's gotta be a nicer way to wrap the error in the generic :start_run
-            # action so that I don't have to destructure it like this
-            {:error, %Ash.Error.Unknown{errors: [%Ash.Error.Unknown.UnknownError{error: :network_not_ready}]}} ->
-              put_flash(socket, :info, "Network not ready for re-prompting - hang tight.")
-
+            # TODO it'd be nice tohandle the {:ok, :lockout} return here, but
+            # I'm not quite sure how it gets passed through the :start_run
+            # action, so this generic error catch will do for now
             {:error, _reason} ->
               put_flash(socket, :error, "Error: couldn't start run because reasons.")
           end
