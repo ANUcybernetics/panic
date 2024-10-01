@@ -8,7 +8,7 @@ defmodule PanicWeb.NetworkLive.Display do
   @impl true
   def render(assigns) do
     ~H"""
-    <p>
+    <p class="mb-8">
       Display mode: <%= with {type, _, _} <- @display, do: type %> (<%= Enum.count(
         @streams.invocations
       ) %> invocations)
