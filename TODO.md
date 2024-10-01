@@ -1,11 +1,11 @@
 # Panic TODO
 
-- put all the identities/unique constraints in
 - set up tigris to host the images (because replicate outputs now expire in 1h)
 - add audio (perhaps with [this](https://audiomotion.dev/demo/multi.html)?)
+- sort out the root layout
+- put all the identities/unique constraints in
 - test the new switch
-- update models
-- add helper for listing all the "screen" links
+- add/update models
 - add embeddings for all outputs (another Oban worker)
 - add "slow down over time" (and scheduling) logic to runs
 - write model descriptions (perhaps in md and use

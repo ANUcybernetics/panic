@@ -51,8 +51,12 @@ defmodule PanicWeb.Router do
     ash_authentication_live_session :authentication_optional,
       on_mount: {PanicWeb.LiveUserAuth, :live_user_optional} do
       live "/", IndexLive, :index
-      live "/networks/:network_id/display/single/:a/:b", NetworkLive.Display, :single
-      live "/networks/:network_id/display/grid/:a/:b", NetworkLive.Display, :grid
+
+      scope "/networks" do
+        live "/:network_id/display/single/:a/:b", NetworkLive.Display, :single
+        live "/:network_id/display/grid/:a/:b", NetworkLive.Display, :grid
+        live "/:network_id/display/links", NetworkLive.Display, :links
+      end
     end
   end
 
