@@ -106,7 +106,7 @@ defmodule Panic.Model do
                    %{
                      image: input,
                      prompt:
-                       "Give an interesting, concise caption for this image. Describe foreground and background elements.",
+                       "Provide an interesting, concise caption for this image. Describe foreground and background elements.",
                      max_new_tokens: 50
                    },
                    token
@@ -124,7 +124,15 @@ defmodule Panic.Model do
         output_type: :text,
         invoke: fn model, input, token ->
           with {:ok, %{"output" => text}} <-
-                 Replicate.invoke(model, %{image: input, prompt: "A descriptive caption for this image:"}, token) do
+                 Replicate.invoke(
+                   model,
+                   %{
+                     image: input,
+                     prompt:
+                       "Provide an interesting, concise caption for this image. Describe foreground and background elements."
+                   },
+                   token
+                 ) do
             {:ok, text}
           end
         end
