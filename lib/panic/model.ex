@@ -105,8 +105,9 @@ defmodule Panic.Model do
                    model,
                    %{
                      image: input,
-                     prompt: "Give an interesting, concise caption for this image.",
-                     max_new_tokens: 40
+                     prompt:
+                       "Give an interesting, concise caption for this image. Describe foreground and background elements.",
+                     max_new_tokens: 50
                    },
                    token
                  ) do
