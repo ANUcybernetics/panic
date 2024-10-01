@@ -61,13 +61,6 @@ defmodule Panic.Engine.Invocation do
       get? true
     end
 
-    read :most_recent_genesis do
-      argument :network_id, :integer
-      filter expr(network_id == ^arg(:network_id) and sequence_number == 0)
-      prepare build(sort: [updated_at: :desc], limit: 1)
-      get? true
-    end
-
     read :list_run do
       argument :network_id, :integer, allow_nil?: false
       argument :run_number, :integer, allow_nil?: false

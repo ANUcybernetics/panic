@@ -14,10 +14,7 @@ defmodule Panic.Workers.Invoker do
   job insertion will fail with `{:error, :network_not_ready}`.
   """
 
-  # `:period` sets the amount of time to disallow new runs when an existing one has just started
-  use Oban.Worker,
-    queue: :default,
-    unique: [period: 30, keys: [:network_id, :sequence_number]]
+  use Oban.Worker, queue: :default
 
   import Ecto.Query
 
@@ -46,60 +43,64 @@ defmodule Panic.Workers.Invoker do
           "user_id" => user_id,
           "invocation_id" => invocation_id,
           "network_id" => _network_id,
-          "run_number" => _run_number,
-          "sequence_number" => _sequence_number
+          "run_number" => _run_number
         }
       }) do
-    # IO.puts("Network #{network_id}: invoking #{run_number}-#{sequence_number}")
+    # Logger.info("Network #{network_id}: invoking for #{run_number}")
 
-    # NOTE: authorization is tricky inside the Oban job, because we can only pass ids (well, things that JSON-ify nicely)
-    # in as args, so we cheat and pull the user "unauthorized", and then from there we can use that actor (which we need anyway for API tokens)
     with {:ok, user} <- Ash.get(Panic.Accounts.User, user_id, authorize?: false),
-         {:ok, invocation} <- Ash.get(Engine.Invocation, invocation_id, actor: user),
-         # `:about_to_invoke` action is mostly for notification purposes
-         {:ok, invocation} <- Engine.about_to_invoke(invocation, actor: user),
-         {:ok, invocation} <- Engine.invoke(invocation, actor: user),
-         {:ok, next_invocation} <- Engine.prepare_next(invocation, actor: user) do
-      case insert(next_invocation, user) do
-        {:ok, _job} -> :ok
-        {:error, reason} -> {:error, reason}
+         {:ok, invocation} <- Ash.get(Engine.Invocation, invocation_id, actor: user) do
+      case check_running_jobs(invocation) do
+        :no_running_jobs ->
+          invoke_and_insert_next(invocation, user)
+
+        :running_job_in_lockout ->
+          Logger.info("Recent genesis invocation for network #{invocation.network_id}. Dropping job.")
+          {:ok, :dropping}
+
+        {:running_job, job} ->
+          Logger.info("Cancelling currently running job for network #{invocation.network_id} and starting new run.")
+          cancel_job(job)
+          invoke_and_insert_next(invocation, user)
       end
     end
   end
 
-  @doc """
-  Inserts a new Oban job for the given invocation and user.
-
-  This function creates a new Oban job with the provided invocation and user (actor),
-  and attempts to insert it into the Oban job queue. It handles potential conflicts
-  and returns appropriate results based on the insertion outcome.
-
-  This is really just a wrapper around `Oban.insert` which handles pulling the args out
-  of the `invocation` struct, plus returning a more meaningful error on (uniqueness) conflict.
-
-  ## Parameters
-    - invocation: The invocation struct containing necessary details.
-    - user: The user struct associated with the invocation.
-
-  ## Returns
-    - `{:ok, job}` if the job is successfully inserted.
-    - `{:error, :network_not_ready}` if there's a conflict with an existing job.
-    - `{:error, reason}` for any other insertion errors.
-  """
-  def insert(invocation, user) do
-    %{
-      "user_id" => user.id,
-      "invocation_id" => invocation.id,
-      "network_id" => invocation.network_id,
-      "run_number" => invocation.run_number,
-      "sequence_number" => invocation.sequence_number
-    }
-    |> __MODULE__.new()
-    |> Oban.insert()
+  defp check_running_jobs(invocation) do
+    from(job in Oban.Job,
+      where: job.worker == "Panic.Workers.Invoker",
+      where: job.args["invocation_id"] != ^invocation.id,
+      where: job.args["network_id"] == ^invocation.network_id,
+      where: job.state in ["scheduled", "available", "executing", "retryable"]
+    )
+    |> Panic.Repo.all()
     |> case do
-      {:ok, %Oban.Job{conflict?: true}} -> {:error, :network_not_ready}
-      {:ok, job} -> {:ok, job}
-      {:error, reason} -> {:error, reason}
+      [] ->
+        :no_running_jobs
+
+      [running_job] ->
+        genesis = Ash.get!(Invocation, running_job.args["run_number"], authorize?: false)
+
+        if DateTime.diff(DateTime.utc_now(), genesis.inserted_at, :second) < 30 do
+          :running_job_in_lockout
+        else
+          {:running_job, running_job}
+        end
+    end
+  end
+
+  defp invoke_and_insert_next(invocation, user) do
+    with {:ok, invocation} <- Engine.about_to_invoke(invocation, actor: user),
+         {:ok, invocation} <- Engine.invoke(invocation, actor: user),
+         {:ok, next_invocation} <- Engine.prepare_next(invocation, actor: user) do
+      %{
+        "user_id" => user.id,
+        "invocation_id" => next_invocation.id,
+        "network_id" => next_invocation.network_id,
+        "run_number" => next_invocation.run_number
+      }
+      |> __MODULE__.new()
+      |> Oban.insert()
     end
   end
 
@@ -126,7 +127,7 @@ defmodule Panic.Workers.Invoker do
     |> Panic.Repo.all()
     |> Enum.map(&cancel_job/1)
     |> Enum.count()
-    |> then(fn n -> Logger.info("cancelled #{n} jobs for network #{network_id}") end)
+    |> tap(fn n -> Logger.info("cancelled #{n} jobs for network #{network_id}") end)
   end
 
   def cancel_running_jobs do
@@ -137,7 +138,7 @@ defmodule Panic.Workers.Invoker do
     |> Panic.Repo.all()
     |> Enum.map(&cancel_job/1)
     |> Enum.count()
-    |> then(fn n -> Logger.info("cancelled #{n} jobs") end)
+    |> tap(fn n -> Logger.info("cancelled #{n} jobs") end)
   end
 
   defp cancel_job(job) do
