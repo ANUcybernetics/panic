@@ -52,7 +52,7 @@ defmodule PanicWeb.NetworkLive.Show do
         Current run <span :if={@genesis_invocation}>: <%= @genesis_invocation.input %></span>
       </h2>
 
-      <.display invocations={@streams.invocations} />
+      <.display invocations={@streams.invocations} display={@display} />
     </section>
 
     <.back navigate={~p"/"}>Back to networks</.back>

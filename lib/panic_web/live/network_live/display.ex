@@ -13,7 +13,7 @@ defmodule PanicWeb.NetworkLive.Display do
         @streams.invocations
       ) %> invocations)
     </p>
-    <.display invocations={@streams.invocations} />
+    <.display invocations={@streams.invocations} display={@display} />
     """
   end
 

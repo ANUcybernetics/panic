@@ -93,10 +93,15 @@ defmodule PanicWeb.PanicComponents do
   ## display grid/screens
 
   attr :invocations, :any, required: true, doc: "invocations stream"
+  attr :display, :any, required: true, doc: "the grid tuple: {:grid, row, col} or {:single, stride, offset}"
 
   def display(assigns) do
     ~H"""
-    <div class="grid grid-cols-1 gap-8 md:grid-cols-3" id="current-inovocations" phx-update="stream">
+    <div
+      id="current-inovocations"
+      class={"grid gap-4 grid-cols-#{num_cols(@display)}"}
+      phx-update="stream"
+    >
       <.invocation
         :for={{id, invocation} <- @invocations}
         id={id}
@@ -106,6 +111,9 @@ defmodule PanicWeb.PanicComponents do
     </div>
     """
   end
+
+  defp num_cols({:grid, _rows, cols}), do: cols
+  defp num_cols({:single, _, _}), do: 1
 
   # individual components
 
