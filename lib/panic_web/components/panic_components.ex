@@ -117,7 +117,7 @@ defmodule PanicWeb.PanicComponents do
     ~H"""
     <div id={@id} class="relative aspect-video overflow-hidden">
       <%= render_slot(@inner_block) %>
-      <%= if @input do %>
+      <%= if @input && false do %>
         <div class="absolute top-0 left-0 aspect-video h-1/3">
           <%= render_slot(@input) %>
         </div>
