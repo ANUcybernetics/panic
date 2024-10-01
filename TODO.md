@@ -1,7 +1,6 @@
 # Panic TODO
 
-- allow "display" screens to be un-logged-in
-  - put all the identities/unique constraints in
+- put all the identities/unique constraints in
 - set up tigris to host the images (because replicate outputs now expire in 1h)
 - add audio (perhaps with [this](https://audiomotion.dev/demo/multi.html)?)
 - test the new switch

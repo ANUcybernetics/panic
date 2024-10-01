@@ -45,14 +45,14 @@ defmodule PanicWeb.Router do
         live "/:network_id", NetworkLive.Show, :show
         live "/:network_id/edit", NetworkLive.Show, :edit
         live "/:network_id/terminal", NetworkLive.Terminal, :terminal
-        live "/:network_id/display/single/:a/:b", NetworkLive.Display, :single
-        live "/:network_id/display/grid/:a/:b", NetworkLive.Display, :grid
       end
     end
 
     ash_authentication_live_session :authentication_optional,
       on_mount: {PanicWeb.LiveUserAuth, :live_user_optional} do
       live "/", IndexLive, :index
+      live "/networks/:network_id/display/single/:a/:b", NetworkLive.Display, :single
+      live "/networks/:network_id/display/grid/:a/:b", NetworkLive.Display, :grid
     end
   end
 

@@ -24,7 +24,8 @@ defmodule PanicWeb.DisplayStreamer do
   defmacro __using__(_opts) do
     quote do
       def configure_display_stream(socket, network_id, display) do
-        network = Ash.get!(Panic.Engine.Network, network_id, actor: socket.assigns.current_user)
+        # authorize?: false because this might be used for non-logged in views
+        network = Ash.get!(Panic.Engine.Network, network_id, authorize?: false)
         if connected?(socket), do: PanicWeb.Endpoint.subscribe("invocation:#{network.id}")
 
         socket
