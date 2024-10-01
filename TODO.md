@@ -22,7 +22,8 @@
 - add animated "panic button" function component (maybe?)
 - add HUD or other vis for the embedding trajectories
 - TDA code
-- add QR code function component (with rolling cookie/URL param)
+- add [QR code function component](https://github.com/zhengkyl/qrframe) (with
+  rolling cookie/URL param)
 
 ## ideas (not necessarily TODO, but y'know...)
 
