@@ -1,6 +1,7 @@
 # Panic TODO
 
-- set up tigris to host the images (because replicate outputs now expire in 1h)
+- trigger tigrisizer jobs for all completed invocations
+- purge completed/failed Oban jobs
 - add audio (perhaps with [this](https://audiomotion.dev/demo/multi.html)?)
 - sort out the root layout
 - put all the identities/unique constraints in

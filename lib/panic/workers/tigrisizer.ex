@@ -48,9 +48,8 @@ defmodule Panic.Workers.Tigrisizer do
     - {:error, reason} if there's an error during the download or upload process
   """
   @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"user_id" => user_id, "invocation_id" => invocation_id}}) do
-    with {:ok, user} <- Ash.get(Panic.Accounts.User, user_id, authorize?: false),
-         {:ok, invocation} <- Ash.get(Panic.Engine.Invocation, invocation_id, actor: user) do
+  def perform(%Oban.Job{args: %{"invocation_id" => invocation_id}}) do
+    with {:ok, invocation} <- Ash.get(Panic.Engine.Invocation, invocation_id, authorize?: false) do
       case invocation.state do
         :completed ->
           upload_output_to_tigris(invocation)
@@ -64,12 +63,14 @@ defmodule Panic.Workers.Tigrisizer do
   defp upload_output_to_tigris(invocation) do
     extension = Path.extname(invocation.output)
     temp_path = Path.join(System.tmp_dir!(), "#{invocation.id}-output#{extension}")
+    filename = Path.basename(temp_path)
+    tigris_url = "https://fly.storage.tigris.dev/#{@bucket}/#{filename}"
 
     try do
       with {:ok, file_content} <- download_file(invocation.output),
            :ok <- File.write(temp_path, file_content),
-           :ok <- upload_to_s3("#{invocation.id}-output.jpg", file_content),
-           {:ok, _invocation} <- Panic.Engine.update_output(invocation, temp_path) do
+           :ok <- upload_to_s3(filename, file_content),
+           {:ok, _invocation} <- Panic.Engine.update_output(invocation, tigris_url, authorize?: false) do
         {:ok, :uploaded}
       else
         {:error, reason} ->
