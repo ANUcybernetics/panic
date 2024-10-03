@@ -124,6 +124,10 @@ defmodule Panic.Engine.Invocation do
       accept [:run_number]
     end
 
+    update :update_output do
+      accept [:output]
+    end
+
     update :about_to_invoke do
       change set_attribute(:state, :invoking)
     end

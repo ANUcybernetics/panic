@@ -58,6 +58,7 @@ defmodule Panic.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.2"},
       {:req, "~> 0.5"},
+      {:req_s3, "~> 0.2"},
       {:oban, "~> 2.17"},
       {:ash_oban, "~> 0.2.3"},
       {:ash_authentication, "~> 4.0"},
