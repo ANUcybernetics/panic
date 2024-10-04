@@ -10,7 +10,7 @@
 - add "slow down over time" (and scheduling) logic to runs
 - write model descriptions (perhaps in md and use
   [MDEx](https://github.com/leandrocp/mdex))
-- test Panic button, find keyboard, set up Mac Mini
+- test Panic button, find keyboard, set up Mac Mini (inc. WT desktop folder)
 - add/modify an "admin" panel which I can access on mobile (with e.g. stop all,
   maybe even logs?)
 

@@ -12,7 +12,7 @@ defmodule PanicWeb.NetworkLive.Show do
       <%= @network.name %>
 
       <:actions>
-        <.link patch={~p"/networks/#{@network}/edit"} phx-click={JS.push_focus()}>
+        <.link navigate={~p"/networks/#{@network}/edit"} phx-click={JS.push_focus()}>
           <.button>Edit network</.button>
         </.link>
       </:actions>
@@ -61,7 +61,7 @@ defmodule PanicWeb.NetworkLive.Show do
       :if={@live_action == :edit}
       id="network-modal"
       show
-      on_cancel={JS.patch(~p"/networks/#{@network}")}
+      on_cancel={JS.navigate(~p"/networks/#{@network}")}
     >
       <.live_component
         module={PanicWeb.NetworkLive.FormComponent}
@@ -70,7 +70,7 @@ defmodule PanicWeb.NetworkLive.Show do
         current_user={@current_user}
         action={@live_action}
         network={@network}
-        patch={~p"/networks/#{@network}"}
+        navigate={~p"/networks/#{@network}"}
       />
     </.modal>
     """

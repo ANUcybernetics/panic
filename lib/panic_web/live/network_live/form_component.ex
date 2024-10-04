@@ -49,7 +49,7 @@ defmodule PanicWeb.NetworkLive.FormComponent do
         socket =
           socket
           |> put_flash(:info, "Network #{socket.assigns.form.source.type}d successfully")
-          |> push_patch(to: socket.assigns.patch)
+          |> push_navigate(to: socket.assigns.navigate)
 
         {:noreply, socket}
 

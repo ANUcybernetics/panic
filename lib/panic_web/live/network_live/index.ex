@@ -49,7 +49,7 @@ defmodule PanicWeb.NetworkLive.Index do
         title={@page_title}
         action={@live_action}
         network={@network}
-        patch={~p"/"}
+        navigate={~p"/"}
       />
     </.modal>
     """
