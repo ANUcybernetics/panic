@@ -65,6 +65,17 @@ defmodule Panic.Workers.Invoker do
     end
   end
 
+  def insert(invocation, user) do
+    %{
+      "user_id" => user.id,
+      "invocation_id" => invocation.id,
+      "network_id" => invocation.network_id,
+      "run_number" => invocation.run_number
+    }
+    |> __MODULE__.new()
+    |> Oban.insert()
+  end
+
   defp check_running_jobs(invocation) do
     from(job in Oban.Job,
       where: job.worker == "Panic.Workers.Invoker",
@@ -91,15 +102,10 @@ defmodule Panic.Workers.Invoker do
   defp invoke_and_insert_next(invocation, user) do
     with {:ok, invocation} <- Engine.about_to_invoke(invocation, actor: user),
          {:ok, invocation} <- Engine.invoke(invocation, actor: user),
+         # trigger the "copy output to Tigris" job
+         # {:ok, _job} <- Panic.Workers.Tigrisizer.insert(invocation),
          {:ok, next_invocation} <- Engine.prepare_next(invocation, actor: user) do
-      %{
-        "user_id" => user.id,
-        "invocation_id" => next_invocation.id,
-        "network_id" => next_invocation.network_id,
-        "run_number" => next_invocation.run_number
-      }
-      |> __MODULE__.new()
-      |> Oban.insert()
+      insert(next_invocation, user)
     end
   end
 

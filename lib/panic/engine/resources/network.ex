@@ -64,16 +64,7 @@ defmodule Panic.Engine.Network do
       end
 
       run fn input, context ->
-        invocation = input.arguments.first_invocation
-
-        %{
-          "user_id" => context.actor.id,
-          "invocation_id" => invocation.id,
-          "network_id" => invocation.network_id,
-          "run_number" => invocation.run_number
-        }
-        |> Panic.Workers.Invoker.new()
-        |> Oban.insert()
+        Panic.Workers.Invoker.insert(input.arguments.first_invocation, context.actor)
       end
     end
 

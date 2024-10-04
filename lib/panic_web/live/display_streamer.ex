@@ -47,7 +47,7 @@ defmodule PanicWeb.DisplayStreamer do
               socket
 
             # grid view, new run
-            {%Invocation{sequence_number: 0}, {:grid, _row, _col}} ->
+            {%Invocation{sequence_number: 0, state: :invoking}, {:grid, _row, _col}} ->
               socket
               |> assign(genesis_invocation: invocation)
               |> stream(:invocations, [invocation], reset: true)

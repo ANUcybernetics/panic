@@ -60,6 +60,12 @@ defmodule Panic.Workers.Tigrisizer do
     end
   end
 
+  def insert(invocation) do
+    %{"invocation_id" => invocation.id}
+    |> __MODULE__.new()
+    |> Oban.insert()
+  end
+
   defp upload_output_to_tigris(invocation) do
     extension = Path.extname(invocation.output)
     temp_path = Path.join(System.tmp_dir!(), "#{invocation.id}-output#{extension}")
