@@ -11,7 +11,8 @@
 - write model descriptions (perhaps in md and use
   [MDEx](https://github.com/leandrocp/mdex))
 - test Panic button, find keyboard, set up Mac Mini
-- add/modify an "admin" panel which I can access on mobile (with e.g. stop all)
+- add/modify an "admin" panel which I can access on mobile (with e.g. stop all,
+  maybe even logs?)
 
 ## for v2 proper, but not (necessarily) for SXSW
 
