@@ -178,7 +178,7 @@ defmodule Panic.Engine.Invocation do
                 case platform do
                   Panic.Platforms.OpenAI -> context.actor.openai_token
                   Panic.Platforms.Replicate -> context.actor.replicate_token
-                  Panic.Platforms.Vestaboard -> Map.fetch!(context.actor, :":vestaboard_#{path}_token")
+                  Panic.Platforms.Vestaboard -> Map.fetch!(context.actor, :"vestaboard_#{path}_token")
                 end
 
               if token do

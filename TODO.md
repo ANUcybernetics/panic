@@ -1,5 +1,6 @@
 # Panic TODO
 
+- Vestaboard invocations probably don't need to hit the DB
 - add audio (perhaps with [this](https://audiomotion.dev/demo/multi.html)?)
 - sort out the root layout
 - put all the identities/unique constraints in

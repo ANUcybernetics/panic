@@ -26,6 +26,8 @@ defmodule Panic.Model do
   alias Panic.Platforms.Replicate
   alias Panic.Platforms.Vestaboard
 
+  @vestaboard_sleep :timer.seconds(5)
+
   @enforce_keys [:id, :path, :name, :platform, :input_type, :output_type, :invoke]
   defstruct [
     :id,
@@ -293,6 +295,8 @@ defmodule Panic.Model do
         output_type: :text,
         invoke: fn model, input, token ->
           Vestaboard.send_text(model, input, token)
+          Process.sleep(@vestaboard_sleep)
+          {:ok, input}
         end
       },
       %__MODULE__{
@@ -304,6 +308,8 @@ defmodule Panic.Model do
         output_type: :text,
         invoke: fn model, input, token ->
           Vestaboard.send_text(model, input, token)
+          Process.sleep(@vestaboard_sleep)
+          {:ok, input}
         end
       },
       %__MODULE__{
@@ -315,6 +321,8 @@ defmodule Panic.Model do
         output_type: :text,
         invoke: fn model, input, token ->
           Vestaboard.send_text(model, input, token)
+          Process.sleep(@vestaboard_sleep)
+          {:ok, input}
         end
       },
       %__MODULE__{
@@ -326,6 +334,8 @@ defmodule Panic.Model do
         output_type: :text,
         invoke: fn model, input, token ->
           Vestaboard.send_text(model, input, token)
+          Process.sleep(@vestaboard_sleep)
+          {:ok, input}
         end
       }
     ]
