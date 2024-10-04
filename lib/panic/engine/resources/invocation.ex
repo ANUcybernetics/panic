@@ -192,7 +192,7 @@ defmodule Panic.Engine.Invocation do
                     changeset
                     |> Ash.Changeset.force_change_attribute(
                       :output,
-                      "https://i.pinimg.com/736x/81/87/7b/81877bc8fe3de138963db9a1ce0e3286.jpg"
+                      "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-sign.png"
                     )
                     |> Ash.Changeset.force_change_attribute(:state, :completed)
 
