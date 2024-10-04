@@ -103,7 +103,7 @@ defmodule Panic.Workers.Invoker do
     with {:ok, invocation} <- Engine.about_to_invoke(invocation, actor: user),
          {:ok, invocation} <- Engine.invoke(invocation, actor: user),
          # trigger the "copy output to Tigris" job
-         # {:ok, _job} <- Panic.Workers.Tigrisizer.insert(invocation),
+         {:ok, _job} <- Panic.Workers.Tigrisizer.insert(invocation),
          {:ok, next_invocation} <- Engine.prepare_next(invocation, actor: user) do
       insert(next_invocation, user)
     end
