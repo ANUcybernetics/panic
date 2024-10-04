@@ -120,18 +120,6 @@ defmodule Panic.Engine.Invocation do
              end)
     end
 
-    update :set_run_number do
-      accept [:run_number]
-    end
-
-    update :update_output do
-      accept [:output]
-    end
-
-    update :about_to_invoke do
-      change set_attribute(:state, :invoking)
-    end
-
     create :prepare_next do
       argument :previous_invocation, :struct do
         constraints instance_of: __MODULE__
@@ -158,6 +146,18 @@ defmodule Panic.Engine.Invocation do
         |> Ash.Changeset.force_change_attribute(:input, prev_output)
         |> Ash.Changeset.manage_relationship(:network, network, type: :append_and_remove)
       end
+    end
+
+    update :set_run_number do
+      accept [:run_number]
+    end
+
+    update :update_output do
+      accept [:output]
+    end
+
+    update :about_to_invoke do
+      change set_attribute(:state, :invoking)
     end
 
     update :invoke do
