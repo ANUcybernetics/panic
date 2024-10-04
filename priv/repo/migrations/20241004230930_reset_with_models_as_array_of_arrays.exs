@@ -1,4 +1,4 @@
-defmodule Panic.Repo.Migrations.MigrateResources1 do
+defmodule Panic.Repo.Migrations.ResetWithModelsAsArrayOfArrays do
   @moduledoc """
   Updates resources based on their most recent snapshots.
 
@@ -29,8 +29,7 @@ defmodule Panic.Repo.Migrations.MigrateResources1 do
       add :updated_at, :utc_datetime_usec, null: false
       add :inserted_at, :utc_datetime_usec, null: false
       add :slug, :text
-      add :state, :text, null: false
-      add :models, {:array, :text}, null: false, default: []
+      add :models, {:array, {:array, :text}}, null: false, default: []
       add :description, :text
       add :name, :text, null: false
       add :id, :bigserial, null: false, primary_key: true
@@ -48,6 +47,7 @@ defmodule Panic.Repo.Migrations.MigrateResources1 do
       add :output, :text
       add :metadata, :map, null: false, default: %{}
       add :model, :text, null: false
+      add :state, :text, null: false
       add :input, :text, null: false
       add :id, :bigserial, null: false, primary_key: true
     end

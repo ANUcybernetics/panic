@@ -35,19 +35,12 @@
       "size": null,
       "type": [
         "array",
-        "text"
+        [
+          "array",
+          "text"
+        ]
       ],
       "source": "models",
-      "references": null,
-      "allow_nil?": false,
-      "generated?": false,
-      "primary_key?": false
-    },
-    {
-      "default": "nil",
-      "size": null,
-      "type": "text",
-      "source": "state",
       "references": null,
       "allow_nil?": false,
       "generated?": false,
@@ -91,6 +84,7 @@
       "references": {
         "name": "networks_user_id_fkey",
         "table": "users",
+        "on_delete": null,
         "multitenancy": {
           "global": null,
           "attribute": null,
@@ -101,7 +95,6 @@
         "deferrable": false,
         "destination_attribute_default": null,
         "destination_attribute_generated": null,
-        "on_delete": null,
         "on_update": null
       },
       "allow_nil?": false,
@@ -110,7 +103,7 @@
     }
   ],
   "table": "networks",
-  "hash": "1A3352213936543B05B83F3708D6D3C2406EAC7861C8A17CE68A245ECEF3EBAF",
+  "hash": "7A4BAA4EE0A346F49281754B4915928F1AEA14363CECD2A55BBDBFEC19DCA9EA",
   "repo": "Elixir.Panic.Repo",
   "identities": [],
   "multitenancy": {

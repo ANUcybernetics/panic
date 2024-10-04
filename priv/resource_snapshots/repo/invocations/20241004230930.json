@@ -24,6 +24,16 @@
       "default": "nil",
       "size": null,
       "type": "text",
+      "source": "state",
+      "references": null,
+      "allow_nil?": false,
+      "generated?": false,
+      "primary_key?": false
+    },
+    {
+      "default": "nil",
+      "size": null,
+      "type": "text",
       "source": "model",
       "references": null,
       "allow_nil?": false,
@@ -98,6 +108,7 @@
       "references": {
         "name": "invocations_network_id_fkey",
         "table": "networks",
+        "on_delete": null,
         "multitenancy": {
           "global": null,
           "attribute": null,
@@ -108,7 +119,6 @@
         "deferrable": false,
         "destination_attribute_default": null,
         "destination_attribute_generated": null,
-        "on_delete": null,
         "on_update": null
       },
       "allow_nil?": false,
@@ -117,7 +127,7 @@
     }
   ],
   "table": "invocations",
-  "hash": "9FE8262034E2AC6811EC5B5737412382AFA88FD40800F05FCF07401F608F31E8",
+  "hash": "E55F5E838D5D300C4D209C9537BD82D15D5F3C7BBAAC0C229190D399476FB77B",
   "repo": "Elixir.Panic.Repo",
   "identities": [],
   "multitenancy": {

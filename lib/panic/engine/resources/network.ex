@@ -31,7 +31,7 @@ defmodule Panic.Engine.Network do
     attribute :description, :string
 
     # :models is an array of strings - each one corresponding to the :id of a known %Pamic.Model{}
-    attribute :models, {:array, :string} do
+    attribute :models, {:array, {:array, :string}} do
       default []
       allow_nil? false
     end
