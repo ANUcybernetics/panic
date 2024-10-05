@@ -315,7 +315,7 @@ defmodule Panic.Model do
         input_type: :audio,
         output_type: :text,
         invoke: fn model, input, token ->
-          with {:ok, %{"transcription" => text}} <-
+          with {:ok, %{"output" => %{"transcription" => text}}} <-
                  Replicate.invoke(
                    model,
                    %{
