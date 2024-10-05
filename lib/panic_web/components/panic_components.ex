@@ -86,7 +86,7 @@ defmodule PanicWeb.PanicComponents do
     case model[key] do
       :text -> "bg-purple-500"
       :image -> "bg-green-500"
-      :audio -> "bg-purple-500"
+      :audio -> "bg-rose-500"
     end
   end
 
