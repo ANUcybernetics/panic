@@ -11,7 +11,8 @@
 - write model descriptions (perhaps in md and use
   [MDEx](https://github.com/leandrocp/mdex))
 - add a non-logged in network view (to share with attendees)
-- test Panic button, find keyboard, set up Mac Mini (inc. WT desktop folder)
+- test Panic button, find keyboard, set up Mac Mini (inc. WT desktop folder),
+  grab PA speaker from c/c/c lab
 - add/modify an "admin" panel which I can access on mobile (with e.g. stop all,
   maybe even logs?)
 - check what happens in prod if someone goes to an empty/non-existent network
@@ -26,6 +27,8 @@
 
 ## ideas (not necessarily TODO, but y'know...)
 
+- a "waiting" timer on all pending invocations (better still, with feedback for
+  e.g. replicate on what the actual status was)
 - replace the "split into `<p>`s based on double newline with proper md parsing
 - store the metadata
 - refactor user/network liveviews to use streams for the lists
@@ -38,6 +41,7 @@
   per-model transformation stuff should all be in the :invoke key of the model,
   and the platform invoker function should just take "plain" args for path,
   version, input etc. or maybe them knowing about the model is ok.
+- add a "restart from invocation" UI option
 - add cost/credit balance lookup stuff to the user UI
 - use [this](https://departuremono.com) for the font and
   [this](https://ryanmulligan.dev/blog/css-property-new-style/) for the fancy
