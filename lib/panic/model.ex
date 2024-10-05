@@ -285,7 +285,6 @@ defmodule Panic.Model do
       },
 
       ## Vestaboards
-
       %__MODULE__{
         id: "vestaboard-panic-1",
         platform: Vestaboard,
