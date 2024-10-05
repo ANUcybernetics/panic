@@ -86,7 +86,7 @@ defmodule PanicWeb.PanicComponents do
     case model[key] do
       :text -> "bg-purple-500"
       :image -> "bg-green-500"
-      :audio -> "bg-rose-500"
+      :audio -> "bg-teal-600"
     end
   end
 
@@ -194,7 +194,7 @@ defmodule PanicWeb.PanicComponents do
 
   def invocation_slot(%{type: :audio} = assigns) do
     ~H"""
-    <div class="relative w-full">
+    <div class="relative size-full bg-teal-600">
       <audio autoplay controls={false} src={@value} />
     </div>
     """

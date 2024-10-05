@@ -1,7 +1,6 @@
 # Panic TODO
 
-- Vestaboard invocations probably don't need to hit the DB
-- add audio models and invocation component (perhaps with
+- jazz up audio component (perhaps with
   [this](https://audiomotion.dev/demo/multi.html)?)
 - add "slow down over time" (and scheduling) logic to runs
 - sort out the root layout
