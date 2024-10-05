@@ -102,10 +102,10 @@ defmodule Panic.NetworkTest do
       user = Panic.Fixtures.user()
       network = user |> Panic.Generators.network() |> pick()
 
-      valid_model_ids = ["sdxl", "blip-2"]
+      valid_model_ids = [["sdxl"], ["blip-2", "vestaboard-panic-1"]]
       assert {:ok, _} = Panic.Engine.update_models(network, valid_model_ids, actor: user)
 
-      invalid_model_ids = ["sdxl", "sdxl"]
+      invalid_model_ids = [["sdxl"], ["sdxl"]]
       assert {:error, _} = Panic.Engine.update_models(network, invalid_model_ids, actor: user)
     end
 

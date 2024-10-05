@@ -1,18 +1,21 @@
 # Panic TODO
 
 - Vestaboard invocations probably don't need to hit the DB
-- add audio (perhaps with [this](https://audiomotion.dev/demo/multi.html)?)
+- add audio models and invocation component (perhaps with
+  [this](https://audiomotion.dev/demo/multi.html)?)
+- add "slow down over time" (and scheduling) logic to runs
 - sort out the root layout
 - put all the identities/unique constraints in
 - test the new switch
 - add/update models
 - add embeddings for all outputs (another Oban worker)
-- add "slow down over time" (and scheduling) logic to runs
 - write model descriptions (perhaps in md and use
   [MDEx](https://github.com/leandrocp/mdex))
+- add a non-logged in network view (to share with attendees)
 - test Panic button, find keyboard, set up Mac Mini (inc. WT desktop folder)
 - add/modify an "admin" panel which I can access on mobile (with e.g. stop all,
   maybe even logs?)
+- check what happens in prod if someone goes to an empty/non-existent network
 
 ## for v2 proper, but not (necessarily) for SXSW
 
@@ -25,7 +28,6 @@
 ## ideas (not necessarily TODO, but y'know...)
 
 - replace the "split into `<p>`s based on double newline with proper md parsing
-- add <https://www.inference.net> platform
 - store the metadata
 - refactor user/network liveviews to use streams for the lists
 - add an indicator to the model select component to say a) if the network has
@@ -42,9 +44,7 @@
   [this](https://ryanmulligan.dev/blog/css-property-new-style/) for the fancy
   panic button (although the latter probs won't work on the silk browsers)
 - add "alias" links for a given network (or maybe just use the slugs in the URL
-  anyway), or even just have a `/links` page (still hosted on Panic) of links to
-  e.g. "TV screens", which would really help with entering the long URLs on TV
-  screens
+  anyway)
 - git cleanup: tidy up v2/v3 nomenclature (probably: v0 is prototype, v1 at
   AusCyber, v2 is Birch install)
 - add oblique strategies model (GPT-4 powered)
@@ -52,7 +52,12 @@
   maybe not worth getting bogged down on)
 - add presence to network views so that it'll say how many people are watching a
   particular network
-- clean up the old panic (v1) machines (1x app machine, 2x db machines)
+- see if there's a nicer way to handle the vestaboards - the current way is
+  better than before, but still a bit "edge-case-y" and hacky for my liking
+- add more platforms:
+  - claude
+  - gemini/vertex AI
+  - https://www.inference.net
 
 ## deployment notes
 

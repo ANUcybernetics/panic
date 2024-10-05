@@ -9,6 +9,7 @@ defmodule Panic.Generators do
 
   alias Panic.Accounts.User
   alias Panic.Engine.Network
+  alias Panic.Platforms.Vestaboard
 
   def ascii_sentence do
     :ascii
@@ -21,6 +22,7 @@ defmodule Panic.Generators do
     filters
     |> Panic.Model.all()
     |> member_of()
+    |> filter(fn model -> model.platform != Vestaboard end)
   end
 
   def password do
@@ -86,7 +88,7 @@ defmodule Panic.Generators do
             {[model], acc ++ [model]}
           end
         end)
-        |> Enum.map(fn %Panic.Model{id: id} -> id end)
+        |> Enum.map(fn %Panic.Model{id: id} -> [id] end)
 
       Panic.Engine.update_models!(network, model_ids, actor: user)
     end

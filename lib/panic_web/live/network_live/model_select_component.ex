@@ -4,6 +4,8 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
 
   import PanicWeb.PanicComponents
 
+  alias Panic.Model
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -34,7 +36,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
 
   @impl true
   def update(assigns, socket) do
-    models = Enum.map(assigns.network.models, &Panic.Model.by_id!/1)
+    models = Model.model_ids_to_model_list(assigns.network.models)
     next_input = get_next_input_type(models)
 
     {:ok,
@@ -47,7 +49,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   defp get_next_input_type([]), do: :text
 
   defp get_next_input_type(models) do
-    %Panic.Model{output_type: type} = List.last(models)
+    %Model{output_type: type} = List.last(models)
 
     type
   end
@@ -56,7 +58,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   def handle_event("live_select_change", %{"text" => model_name, "id" => live_select_id}, socket) do
     model_options =
       [input_type: socket.assigns.next_input]
-      |> Panic.Model.all()
+      |> Model.all()
       |> Enum.filter(fn model ->
         String.downcase(model.name) =~ String.downcase(model_name)
       end)
@@ -68,7 +70,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
 
   @impl true
   def handle_event("change", %{"network" => %{"model" => model_id}}, socket) do
-    model = Panic.Model.by_id!(model_id)
+    model = Model.by_id!(model_id)
     updated_models = socket.assigns.models ++ [model]
     next_input = model.output_type
 
@@ -78,8 +80,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   @impl true
   def handle_event("save", _params, socket) do
     # Convert model structs to IDs before submission
-    models = socket.assigns.models
-    model_ids = Enum.map(models, fn model -> model.id end)
+    model_ids = Model.model_list_to_model_ids(socket.assigns.models)
 
     case AshPhoenix.Form.submit(socket.assigns.form, params: %{models: model_ids}) do
       {:ok, updated_network} ->
@@ -88,7 +89,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
         {:noreply,
          socket
          |> put_flash(:info, "Models updated successfully")
-         |> assign(network: updated_network, models: models)
+         |> assign(network: updated_network)
          |> assign_form()}
 
       {:error, form} ->
@@ -117,7 +118,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
 
   defp get_model_options(search_term, input_type) do
     [input_type: input_type]
-    |> Panic.Model.all()
+    |> Model.all()
     |> Enum.filter(fn model ->
       String.downcase(model.name) =~ String.downcase(search_term)
     end)

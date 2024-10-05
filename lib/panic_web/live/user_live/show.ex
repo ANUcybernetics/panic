@@ -69,7 +69,7 @@ defmodule PanicWeb.UserLive.Show do
         action={@live_action}
         current_user={@current_user}
         user={@user}
-        patch={~p"/users/#{@user}"}
+        navigate={~p"/users/#{@user}"}
       />
     </.modal>
 
@@ -86,7 +86,7 @@ defmodule PanicWeb.UserLive.Show do
         action={@live_action}
         current_user={@current_user}
         network={nil}
-        patch={~p"/users/#{@user}"}
+        navigate={~p"/users/#{@user}"}
       />
     </.modal>
     """

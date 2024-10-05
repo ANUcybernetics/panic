@@ -366,4 +366,23 @@ defmodule Panic.Model do
   def model_url(%__MODULE__{platform: Replicate, path: path}) do
     "https://replicate.com/#{path}"
   end
+
+  # these are helper functions for dealing with the Network :models attribute,
+  # which (in the db) is an array of (nonempty) arrays of model id strings
+  # the first item of each subarray is always a "real" model
+  # any subsequent items are vestaboards which should be set to the first model's output
+  def model_ids_to_model_list(model_ids) do
+    model_ids
+    |> List.flatten()
+    |> Enum.map(&by_id!/1)
+  end
+
+  def model_list_to_model_ids(model_list) do
+    model_list
+    |> Enum.reduce([], fn
+      %__MODULE__{id: id, platform: Vestaboard}, [first | rest] -> [first ++ [id] | rest]
+      %__MODULE__{id: id}, acc -> [[id] | acc]
+    end)
+    |> Enum.reverse()
+  end
 end

@@ -35,7 +35,7 @@ defmodule Panic.Platforms.Vestaboard do
     |> Req.new()
   end
 
-  def token_for_model(%Model{path: board_name}) do
-    Application.fetch_env!(:panic, :"vestaboard_#{board_name}_token")
+  def token_for_model!(%Model{path: board_name}, user) do
+    Map.fetch!(user, :"vestaboard_#{board_name}_token")
   end
 end

@@ -72,7 +72,7 @@ defmodule PanicWeb.UserLive.FormComponent do
         socket =
           socket
           |> put_flash(:info, "User #{socket.assigns.form.source.type}d successfully")
-          |> push_patch(to: socket.assigns.patch)
+          |> push_navigate(to: socket.assigns.navigate)
 
         {:noreply, socket}
 

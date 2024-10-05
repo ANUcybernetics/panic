@@ -103,7 +103,7 @@ defmodule Panic.Workers.Invoker do
     with {:ok, invocation} <- Engine.about_to_invoke(invocation, actor: user),
          {:ok, invocation} <- Engine.invoke(invocation, actor: user),
          {:ok, next_invocation} <- Engine.prepare_next(invocation, actor: user) do
-      case Panic.Model.by_id!(invocation.model) do
+      case invocation.model |> List.first() |> Panic.Model.by_id!() do
         # for image/audio outputs, upload them to tigris
         %Panic.Model{output_type: type} when type in [:image, :audio] ->
           Panic.Workers.Tigrisizer.insert(invocation)

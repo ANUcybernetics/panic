@@ -12,6 +12,9 @@ defmodule Panic.Engine.Invocation do
     notifiers: [Ash.Notifier.PubSub]
 
   alias Panic.Engine.Network
+  alias Panic.Platforms.OpenAI
+  alias Panic.Platforms.Replicate
+  alias Panic.Platforms.Vestaboard
 
   sqlite do
     table "invocations"
@@ -33,7 +36,7 @@ defmodule Panic.Engine.Invocation do
       default :ready
     end
 
-    attribute :model, :string, allow_nil?: false
+    attribute :model, {:array, :string}, allow_nil?: false
     attribute :metadata, :map, allow_nil?: false, default: %{}
     attribute :output, :string
 
@@ -97,12 +100,14 @@ defmodule Panic.Engine.Invocation do
           {:ok, network} ->
             network_length = Enum.count(network.models)
 
-            if network_length == 0 do
-              Ash.Changeset.add_error(changeset, "No models in network")
-            else
-              changeset
-              |> Ash.Changeset.force_change_attribute(:model, List.first(network.models))
-              |> Ash.Changeset.manage_relationship(:network, network, type: :append_and_remove)
+            case network.models do
+              [] ->
+                Ash.Changeset.add_error(changeset, "No models in network")
+
+              [model | _] ->
+                changeset
+                |> Ash.Changeset.force_change_attribute(:model, model)
+                |> Ash.Changeset.manage_relationship(:network, network, type: :append_and_remove)
             end
 
           :error ->
@@ -170,20 +175,31 @@ defmodule Panic.Engine.Invocation do
                 "actor must be present (to obtain API token)"
               )
 
-            {%{data: %{model: model_id, input: input}}, %{actor: user}} ->
+            {%{data: %{model: [model_id | vestaboards], input: input}}, %{actor: user}} ->
               model = Panic.Model.by_id!(model_id)
               %Panic.Model{path: path, invoke: invoke_fn, platform: platform} = model
 
               token =
                 case platform do
-                  Panic.Platforms.OpenAI -> context.actor.openai_token
-                  Panic.Platforms.Replicate -> context.actor.replicate_token
-                  Panic.Platforms.Vestaboard -> Map.fetch!(context.actor, :"vestaboard_#{path}_token")
+                  OpenAI -> context.actor.openai_token
+                  Replicate -> context.actor.replicate_token
                 end
 
               if token do
                 case invoke_fn.(model, input, token) do
                   {:ok, output} ->
+                    # before returning, put the output on the vestaboards as a side effect
+                    if vestaboards != [] do
+                      Enum.each(vestaboards, fn vestaboard_id ->
+                        vestaboard_model = Panic.Model.by_id!(vestaboard_id)
+                        token = Vestaboard.token_for_model!(vestaboard_model, user)
+                        Vestaboard.send_text(vestaboard_model, output, token)
+                      end)
+
+                      # give the Vestaboards some time to display the text
+                      Process.sleep(5_000)
+                    end
+
                     changeset
                     |> Ash.Changeset.force_change_attribute(:output, output)
                     |> Ash.Changeset.force_change_attribute(:state, :completed)
