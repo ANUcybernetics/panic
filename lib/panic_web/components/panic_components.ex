@@ -170,10 +170,12 @@ defmodule PanicWeb.PanicComponents do
 
   def invocation_slot(%{type: :text} = assigns) do
     ~H"""
-    <div class="p-1 text-sm text-left">
-      <%= for line <- String.split(@value, "\n\n") do %>
-        <.shadowed_text :if={line != ""}><%= line %></.shadowed_text>
-      <% end %>
+    <div class="size-full grid place-items-center p-1 text-sm text-left">
+      <div>
+        <%= for line <- String.split(@value, "\n\n") do %>
+          <.shadowed_text :if={line != ""}><%= line %></.shadowed_text>
+        <% end %>
+      </div>
     </div>
     """
   end
