@@ -308,6 +308,27 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
+        id: "stable-audio",
+        platform: Replicate,
+        path: "stackadoc/stable-audio-open-1.0",
+        name: "Stable Audio Open",
+        input_type: :text,
+        output_type: :audio,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => audio_url}} <-
+                 Replicate.invoke(
+                   model,
+                   %{
+                     prompt: input,
+                     seconds_total: 8
+                   },
+                   token
+                 ) do
+            {:ok, audio_url}
+          end
+        end
+      },
+      %__MODULE__{
         id: "whisper",
         platform: Replicate,
         path: "openai/whisper",
