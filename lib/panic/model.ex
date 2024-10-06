@@ -336,7 +336,7 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :audio,
         invoke: fn model, input, token ->
-          with {:ok, %{"output" => audio_url}} <-
+          with {:ok, %{"output" => %{"audio" => audio_url}}} <-
                  Replicate.invoke(
                    model,
                    %{

@@ -188,8 +188,9 @@ defmodule PanicWeb.PanicComponents do
 
   def invocation_slot(%{type: :audio} = assigns) do
     ~H"""
-    <div class="relative size-full bg-teal-600">
-      <audio autoplay controls={false} src={@value} />
+    <div class="relative size-full bg-teal-600" id="audio-visualizer" phx-hook="AudioVisualizer">
+      <audio autoplay loop crossorigin controls={false} src={@value} />
+      <div class="visualizer-container absolute inset-0"></div>
     </div>
     """
   end
