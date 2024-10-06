@@ -7,7 +7,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
+    <div class={assigns[:class]}>
       <.simple_form
         for={@form}
         id={"#{@id}-form"}
