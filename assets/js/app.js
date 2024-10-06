@@ -30,6 +30,7 @@ let csrfToken = document
 const hooks = {
   TerminalLockoutTimer: {
     mounted() {
+      this.updateDisplay();
       this.timer = setInterval(() => {
         this.updateDisplay();
       }, 1000);
