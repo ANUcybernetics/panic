@@ -1,12 +1,16 @@
 # Panic TODO
 
-- add animated "panic button" function component (for landing, waiting, etc)
+- add animated "panic button" function component (for landing, waiting,
+  bottom-right branding etc.)
+- check that the feedback is good with the lockout button
 - jazz up audio component (perhaps with
   [this](https://audiomotion.dev/demo/multi.html)?)
 - add "slow down over time" (and scheduling) logic to runs
-- sort out the root layout
 - put all the identities/unique constraints in
 - test the new switch
+- add the old captioners back, and maybe blip1 - need to get a better story
+  there I think
+- test multiple simultaneous networks (e.g. for Thomas)
 - add embeddings for all outputs (another Oban worker)
 - write model descriptions (perhaps in md and use
   [MDEx](https://github.com/leandrocp/mdex))
