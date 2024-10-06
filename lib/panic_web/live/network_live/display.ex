@@ -12,16 +12,9 @@ defmodule PanicWeb.NetworkLive.Display do
   import PanicWeb.PanicComponents
 
   @impl true
-  def render(assigns) do
+  def render(%{live_action: :links} = assigns) do
     ~H"""
-    <p class="mb-8">
-      Display mode: <%= with {type, _, _} <- @display, do: type %> (<%= Enum.count(
-        @streams.invocations
-      ) %> invocations)
-    </p>
-    <.display invocations={@streams.invocations} display={@display} />
-
-    <div :if={@live_action == :links} id="display-links">
+    <div id="display-links">
       <ul class="flex flex-col space-y-8">
         <%= for i <- 0..7 do %>
           <.link navigate={~p"/networks/#{@network.id}/display/single/#{i}/8/"}>
@@ -30,6 +23,13 @@ defmodule PanicWeb.NetworkLive.Display do
         <% end %>
       </ul>
     </div>
+    """
+  end
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <.display invocations={@streams.invocations} display={@display} />
     """
   end
 

@@ -189,7 +189,7 @@ defmodule PanicWeb.PanicComponents do
 
   def invocation_slot(%{type: :image} = assigns) do
     ~H"""
-    <img class={["object-cover", @class]} src={@value} />
+    <img class={["object-cover w-full", @class]} src={@value} />
     """
   end
 
