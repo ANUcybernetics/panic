@@ -1,12 +1,12 @@
 # Panic TODO
 
+- add animated "panic button" function component (for landing, waiting, etc)
 - jazz up audio component (perhaps with
   [this](https://audiomotion.dev/demo/multi.html)?)
 - add "slow down over time" (and scheduling) logic to runs
 - sort out the root layout
 - put all the identities/unique constraints in
 - test the new switch
-- add/update models
 - add embeddings for all outputs (another Oban worker)
 - write model descriptions (perhaps in md and use
   [MDEx](https://github.com/leandrocp/mdex))
@@ -19,7 +19,6 @@
 
 ## for v2 proper, but not (necessarily) for SXSW
 
-- add animated "panic button" function component (maybe?)
 - add HUD or other vis for the embedding trajectories
 - TDA code
 - add [QR code function component](https://github.com/zhengkyl/qrframe) (with
@@ -31,6 +30,7 @@
   e.g. replicate on what the actual status was)
 - replace the "split into `<p>`s based on double newline with proper md parsing
 - store the metadata
+- instead of `use DisplayStreamer`, perhaps can just have an on_mount hook?
 - refactor user/network liveviews to use streams for the lists
 - add an indicator to the model select component to say a) if the network has
   been saved b) if it's runnable c) if it's currently running
