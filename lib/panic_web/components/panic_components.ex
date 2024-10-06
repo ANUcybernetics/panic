@@ -167,11 +167,10 @@ defmodule PanicWeb.PanicComponents do
 
   attr :type, :atom, required: true, doc: "the type (modality) of the invocation input or output"
   attr :value, :string, required: true, doc: "the value of the invocation input or output"
-  attr :class, :string, default: "", doc: "optional CSS class(es) to apply to the container"
 
   def invocation_slot(%{type: :text} = assigns) do
     ~H"""
-    <div class={["p-1 text-sm text-left", @class]}>
+    <div class="p-1 text-sm text-left">
       <%= for line <- String.split(@value, "\n\n") do %>
         <.shadowed_text :if={line != ""}><%= line %></.shadowed_text>
       <% end %>
@@ -181,13 +180,13 @@ defmodule PanicWeb.PanicComponents do
 
   def invocation_slot(%{type: :image} = assigns) do
     ~H"""
-    <img class={["object-cover w-full", @class]} src={@value} />
+    <img class="object-cover w-full" src={@value} />
     """
   end
 
   def invocation_slot(%{type: :audio} = assigns) do
     ~H"""
-    <div class={["relative size-full bg-teal-600", @class]}>
+    <div class="relative size-full bg-teal-600">
       <audio autoplay controls={false} src={@value} />
     </div>
     """
