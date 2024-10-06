@@ -138,14 +138,6 @@ defmodule PanicWeb.PanicComponents do
   attr :model, :any, required: true, doc: "Panic.Model struct"
   attr :id, :string, required: true
 
-  def invocation(%{invocation: nil} = assigns) do
-    ~H"""
-    <.invocation_container id={@id}>
-      <p class="bg-zinc-600">blank</p>
-    </.invocation_container>
-    """
-  end
-
   def invocation(%{invocation: %Invocation{state: :failed}} = assigns) do
     ~H"""
     <.invocation_container id={@id}>
