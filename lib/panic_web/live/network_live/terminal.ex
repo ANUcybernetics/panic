@@ -32,6 +32,6 @@ defmodule PanicWeb.NetworkLive.Terminal do
     {:noreply,
      socket
      |> assign(:page_title, "Network #{network_id} terminal")
-     |> configure_display_stream(network_id, {:single, 1, 0})}
+     |> configure_display_stream(network_id, {:single, 0, 1})}
   end
 end

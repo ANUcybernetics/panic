@@ -16,7 +16,7 @@ defmodule PanicWeb.DisplayStreamer do
   - `:network` (a `%Panic.Engine.Network`)
   - a `:display` assign, which is a 3-tuple that's either
     - `{:grid, row, col}` for a row x col "grid" (although rendering the invocations into a grid is up to you)
-    - `{:single, stride, offset}` for a single "screen", so that invocations stream is always length 1
+    - `{:single, offset, stride}` for a single "screen", so that invocations stream is always length 1
     - `:genesis_invocation` is the most-recent completed invocation with `:sequence_number == 0` (or `nil`)
   """
   alias Panic.Engine.Invocation
@@ -57,7 +57,7 @@ defmodule PanicWeb.DisplayStreamer do
               stream_insert(socket, :invocations, invocation)
 
             # single screen view, "hit"
-            {%Invocation{sequence_number: sequence_number}, {:single, stride, offset}}
+            {%Invocation{sequence_number: sequence_number}, {:single, offset, stride}}
             when rem(sequence_number, stride) == offset ->
               stream_insert(socket, :invocations, invocation, at: 0, limit: 1)
 
@@ -79,7 +79,7 @@ defmodule PanicWeb.DisplayStreamer do
       end
 
       # for screen, return slot-0 if this one "matches", and nil otherwise
-      defp dom_id(%Invocation{sequence_number: sequence_number}, {:single, stride, offset}) do
+      defp dom_id(%Invocation{sequence_number: sequence_number}, {:single, offset, stride}) do
         if rem(sequence_number, stride) == offset, do: "slot-0"
       end
     end

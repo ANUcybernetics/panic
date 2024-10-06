@@ -24,7 +24,7 @@ defmodule PanicWeb.NetworkLive.Display do
     <div :if={@live_action == :links} id="display-links">
       <ul class="flex flex-col space-y-8">
         <%= for i <- 0..7 do %>
-          <.link navigate={~p"/networks/#{@network.id}/display/single/8/#{i}/"}>
+          <.link navigate={~p"/networks/#{@network.id}/display/single/#{i}/8/"}>
             <li>Screen <%= i + 1 %></li>
           </.link>
         <% end %>

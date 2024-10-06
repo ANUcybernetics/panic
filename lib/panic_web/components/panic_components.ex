@@ -93,7 +93,7 @@ defmodule PanicWeb.PanicComponents do
   ## display grid/screens
 
   attr :invocations, :any, required: true, doc: "invocations stream"
-  attr :display, :any, required: true, doc: "the grid tuple: {:grid, row, col} or {:single, stride, offset}"
+  attr :display, :any, required: true, doc: "the grid tuple: {:grid, row, col} or {:single, offset, stride}"
 
   def display(assigns) do
     ~H"""
