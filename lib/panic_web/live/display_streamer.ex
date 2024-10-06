@@ -49,7 +49,7 @@ defmodule PanicWeb.DisplayStreamer do
             # grid view, new run
             {%Invocation{sequence_number: 0, state: :invoking}, {:grid, _row, _col}} ->
               socket
-              |> assign(genesis_invocation: invocation)
+              |> update_genesis(invocation)
               |> stream(:invocations, [invocation], reset: true)
 
             # grid view, existing run
@@ -59,11 +59,13 @@ defmodule PanicWeb.DisplayStreamer do
             # single screen view, "hit"
             {%Invocation{sequence_number: sequence_number}, {:single, offset, stride}}
             when rem(sequence_number, stride) == offset ->
-              stream_insert(socket, :invocations, invocation, at: 0, limit: 1)
+              socket
+              |> stream_insert(:invocations, invocation, at: 0, limit: 1)
+              |> update_genesis(invocation)
 
             # screen view, "miss"
             {_, {:single, _, _}} ->
-              socket
+              update_genesis(socket, invocation)
 
             # otherwise ignore
             _ ->
@@ -82,6 +84,12 @@ defmodule PanicWeb.DisplayStreamer do
       defp dom_id(%Invocation{sequence_number: sequence_number}, {:single, offset, stride}) do
         if rem(sequence_number, stride) == offset, do: "slot-0"
       end
+
+      defp update_genesis(socket, %Invocation{sequence_number: 0} = invocation) do
+        assign(socket, genesis_invocation: invocation)
+      end
+
+      defp update_genesis(socket, _), do: socket
     end
   end
 end

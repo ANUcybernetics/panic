@@ -7,16 +7,18 @@ defmodule PanicWeb.NetworkLive.Terminal do
   def render(assigns) do
     ~H"""
     <div class="h-dvh grid place-items-center">
-      <.live_component
-        class="w-1/2"
-        module={PanicWeb.NetworkLive.TerminalComponent}
-        network={@network}
-        genesis_invocation={@genesis_invocation}
-        current_user={@current_user}
-        id={@network.id}
-      />
+      <div class="w-1/2">
+        <.live_component
+          class="mb-16"
+          module={PanicWeb.NetworkLive.TerminalComponent}
+          network={@network}
+          genesis_invocation={@genesis_invocation}
+          current_user={@current_user}
+          id={@network.id}
+        />
 
-      <p :if={@genesis_invocation}>Current input: <%= @genesis_invocation.input %></p>
+        <p>Current input: <span :if={@genesis_invocation}><%= @genesis_invocation.input %></span></p>
+      </div>
     </div>
     """
   end
