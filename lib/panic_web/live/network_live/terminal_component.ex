@@ -22,9 +22,6 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
           data-ready-at={@ready_at}
           placeholder="Starting up..."
         />
-        <:actions>
-          <.button phx-disable-with="Let's go...">PANIC!</.button>
-        </:actions>
       </.simple_form>
     </div>
     """
