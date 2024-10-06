@@ -31,6 +31,9 @@ module.exports = {
       colors: {
         brand: "#FD4F00",
       },
+      fontFamily: {
+        "sometype-mono": ["Sometype Mono", "monospace"],
+      },
     },
   },
   plugins: [
