@@ -24,7 +24,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, socket, layout: {PanicWeb.Layouts, :display}}
   end
 
   @impl true

@@ -34,6 +34,11 @@ defmodule PanicWeb.NetworkLive.Display do
   end
 
   @impl true
+  def mount(_params, _session, socket) do
+    {:ok, socket, layout: {PanicWeb.Layouts, :display}}
+  end
+
+  @impl true
   def handle_params(%{"network_id" => network_id} = params, _session, socket) do
     display =
       case {params, socket.assigns.live_action} do
