@@ -68,7 +68,7 @@ defmodule Panic.Workers.Tigrisizer do
 
   defp upload_output_to_tigris(invocation) do
     extension = Path.extname(invocation.output)
-    temp_path = Path.join(System.tmp_dir!(), "#{invocation.id}-output#{extension}")
+    temp_path = Path.join(System.tmp_dir!(), "#{invocation.network_id}-#{invocation.id}-output#{extension}")
     filename = Path.basename(temp_path)
     tigris_url = "https://fly.storage.tigris.dev/#{@bucket}/#{filename}"
 
