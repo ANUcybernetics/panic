@@ -329,6 +329,41 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
+        id: "riffusion",
+        platform: Replicate,
+        path: "riffusion/riffusion",
+        name: "Riffusion",
+        input_type: :text,
+        output_type: :audio,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => audio_url}} <-
+                 Replicate.invoke(
+                   model,
+                   %{
+                     prompt_a: input,
+                     alpha: 0,
+                     seed_image_id:
+                       Enum.random([
+                         "agile",
+                         "marim",
+                         "mask_beat_lines_80",
+                         "mask_gradient_dark",
+                         "mask_gradient_top_70",
+                         "mask_graident_top_fifth_75",
+                         "mask_top_third_75",
+                         "mask_top_third_95",
+                         "motorway",
+                         "og_beat",
+                         "vibes"
+                       ])
+                   },
+                   token
+                 ) do
+            {:ok, audio_url}
+          end
+        end
+      },
+      %__MODULE__{
         id: "whisper",
         platform: Replicate,
         path: "openai/whisper",
