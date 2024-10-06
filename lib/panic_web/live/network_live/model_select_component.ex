@@ -104,7 +104,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   @impl true
   def handle_event("remove_model", %{"index" => index}, socket) do
     updated_models = List.delete_at(socket.assigns.models, String.to_integer(index))
-    next_input = updated_models |> List.last() |> Map.get(:output_type)
+    next_input = get_next_input_type(updated_models)
     {:noreply, assign(socket, models: updated_models, next_input: next_input)}
   end
 

@@ -175,7 +175,8 @@ defmodule Panic.Engine.Invocation do
                 "actor must be present (to obtain API token)"
               )
 
-            {%{data: %{model: [model_id | vestaboards], input: input}}, %{actor: user}} ->
+            {%{data: %{model: models_and_vestaboards, input: input}}, %{actor: user}} ->
+              [model_id | vestaboards] = Enum.reverse(models_and_vestaboards)
               model = Panic.Model.by_id!(model_id)
               %Panic.Model{path: path, invoke: invoke_fn, platform: platform} = model
 
@@ -186,20 +187,20 @@ defmodule Panic.Engine.Invocation do
                 end
 
               if token do
+                # invoking returning, put the output on the vestaboards as a side effect
+                if vestaboards != [] do
+                  Enum.each(vestaboards, fn vestaboard_id ->
+                    vestaboard_model = Panic.Model.by_id!(vestaboard_id)
+                    vestaboard_token = Vestaboard.token_for_model!(vestaboard_model, user)
+                    Vestaboard.send_text(vestaboard_model, input, vestaboard_token)
+                  end)
+
+                  # give the Vestaboards some time to display the text
+                  Process.sleep(5_000)
+                end
+
                 case invoke_fn.(model, input, token) do
                   {:ok, output} ->
-                    # before returning, put the output on the vestaboards as a side effect
-                    if vestaboards != [] do
-                      Enum.each(vestaboards, fn vestaboard_id ->
-                        vestaboard_model = Panic.Model.by_id!(vestaboard_id)
-                        token = Vestaboard.token_for_model!(vestaboard_model, user)
-                        Vestaboard.send_text(vestaboard_model, output, token)
-                      end)
-
-                      # give the Vestaboards some time to display the text
-                      Process.sleep(5_000)
-                    end
-
                     changeset
                     |> Ash.Changeset.force_change_attribute(:output, output)
                     |> Ash.Changeset.force_change_attribute(:state, :completed)

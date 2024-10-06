@@ -23,11 +23,10 @@ defmodule Panic.Validations.ModelIOConnections do
     end
   end
 
-  def network_runnable?([]), do: {:error, "empty network cannot be run"}
-
   def network_runnable?(models) do
     # validate that each "interface" matches
     models
+    |> Enum.map(&Enum.reverse/1)
     |> Enum.map(fn [model_id | vestaboards] ->
       %{name: name, input_type: input, output_type: output} = Panic.Model.by_id!(model_id)
       {name, input, output, vestaboards}
@@ -37,11 +36,11 @@ defmodule Panic.Validations.ModelIOConnections do
     |> List.insert_at(-1, {"Final (loopback) output", :text, nil, []})
     |> Enum.chunk_every(2, 1, :discard)
     # this is gross. need to break into smaller functions
-    |> Enum.reduce([], fn [{name_1, _, output_type, vestaboards}, {name_2, input_type, _, _}], errors ->
+    |> Enum.reduce([], fn [{name_1, _, output_type, _}, {name_2, input_type, _, vestaboards}], errors ->
       if output_type == input_type do
-        if vestaboards != [] and output_type != :text do
+        if vestaboards != [] and input_type != :text do
           [
-            "#{name_1} output (#{output_type}) cannot be put on a vestaboard"
+            "#{name_1} input (#{input_type}) cannot be put on a vestaboard"
             | errors
           ]
         else
