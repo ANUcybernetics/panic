@@ -89,7 +89,10 @@ defmodule PanicWeb.DisplayStreamer do
         assign(socket, genesis_invocation: invocation)
       end
 
-      defp update_genesis(socket, _), do: socket
+      defp update_genesis(socket, %Invocation{run_number: invocation_id}) do
+        # take advantage of the fact that the run_number is the id of the genesis invocation
+        assign_new(socket, :genesis_invocation, fn -> Ash.get!(Invocation, invocation_id, authorize?: false) end)
+      end
     end
   end
 end
