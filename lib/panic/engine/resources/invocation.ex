@@ -204,7 +204,7 @@ defmodule Panic.Engine.Invocation do
                   end)
 
                   # give the Vestaboards some time to display the text
-                  Process.sleep(5_000)
+                  Process.sleep(10_000)
                 end
 
                 case invoke_fn.(model, input, token) do
