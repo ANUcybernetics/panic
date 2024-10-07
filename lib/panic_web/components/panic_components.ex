@@ -200,9 +200,10 @@ defmodule PanicWeb.PanicComponents do
     """
   end
 
+  # #581c87 is purple-900
   def shadowed_text(assigns) do
     ~H"""
-    <p class="[text-shadow:2px_2px_0px_#FFF]">
+    <p class="[text-shadow:2px_2px_0px_#581c87]">
       <%= render_slot(@inner_block) %>
     </p>
     """
