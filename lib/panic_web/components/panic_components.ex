@@ -80,13 +80,15 @@ defmodule PanicWeb.PanicComponents do
   end
 
   # a hack to handle the "first model" case
-  defp io_colour_mapper(nil, :input_type), do: "bg-purple-500"
+  defp io_colour_mapper(nil, :input_type) do
+    io_colour_mapper(%{output_type: :text}, :output_type)
+  end
 
   defp io_colour_mapper(model, key) do
     case model[key] do
-      :text -> "bg-purple-500"
+      :text -> "bg-orange-500"
       :image -> "bg-green-500"
-      :audio -> "bg-teal-600"
+      :audio -> "bg-blue-400"
     end
   end
 
