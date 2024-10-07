@@ -25,13 +25,13 @@ defmodule PanicWeb.PanicComponents do
     <div class="size-16 rounded-md grid place-content-center text-center text-xs relative bg-zinc-600 shadow-sm">
       <div class={[
         "size-6 absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 -z-10",
-        io_colour_mapper(@model, :input_type)
+        io_colour_mapper(@model.input_type)
       ]}>
       </div>
       <%= @model.name %>
       <div class={[
         "size-6 absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 -z-10",
-        io_colour_mapper(@model, :output_type)
+        io_colour_mapper(@model.output_type)
       ]}>
       </div>
       <%= render_slot(@action) %>
@@ -57,7 +57,7 @@ defmodule PanicWeb.PanicComponents do
         T
         <div class={[
           "size-6 absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 -z-10",
-          io_colour_mapper(nil, :input_type)
+          io_colour_mapper(:text)
         ]}>
         </div>
       </div>
@@ -79,16 +79,11 @@ defmodule PanicWeb.PanicComponents do
     """
   end
 
-  # a hack to handle the "first model" case
-  defp io_colour_mapper(nil, :input_type) do
-    io_colour_mapper(%{output_type: :text}, :output_type)
-  end
-
-  defp io_colour_mapper(model, key) do
-    case model[key] do
+  defp io_colour_mapper(type) do
+    case type do
       :text -> "bg-orange-500"
-      :image -> "bg-green-500"
-      :audio -> "bg-blue-400"
+      :image -> "bg-blue-400"
+      :audio -> "bg-green-500"
     end
   end
 
@@ -143,7 +138,9 @@ defmodule PanicWeb.PanicComponents do
   def invocation(%{invocation: %Invocation{state: :failed}} = assigns) do
     ~H"""
     <.invocation_container id={@id}>
-      <p class="size-full grid place-items-center bg-rose-500">failed</p>
+      <div class="size-full grid place-items-center bg-rose-950">
+        <.shadowed_text>P!</.shadowed_text>
+      </div>
     </.invocation_container>
     """
   end
@@ -151,7 +148,9 @@ defmodule PanicWeb.PanicComponents do
   def invocation(%{invocation: %Invocation{state: :invoking}} = assigns) do
     ~H"""
     <.invocation_container id={@id}>
-      <p class="size-full grid place-items-center animate-pulse bg-yellow-300">PANIC!</p>
+      <div class="size-full grid place-items-center animate-pulse bg-rose-500">
+        <.shadowed_text>P!</.shadowed_text>
+      </div>
     </.invocation_container>
     """
   end
@@ -192,7 +191,7 @@ defmodule PanicWeb.PanicComponents do
   def invocation_slot(%{type: :audio} = assigns) do
     ~H"""
     <div
-      class="relative size-full bg-teal-600"
+      class={["relative size-full", io_colour_mapper(:audio)]}
       id={"#{@id}-audio-visualizer"}
       phx-hook="AudioVisualizer"
       data-audio-src={@value}
