@@ -43,7 +43,7 @@ const AudioVisualizer = {
       frequencyScale: "logarithmic",
       gradient: "prism",
       radial: true,
-      spinSpeed: 2,
+      spinSpeed: 10 * Math.random() + -5,
       mirror: 1,
       showScaleX: false,
       overlay: true,
