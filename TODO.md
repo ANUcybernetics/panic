@@ -2,15 +2,13 @@
 
 - add animated "panic button" function component (for landing, waiting,
   bottom-right branding etc.)
+- get audio visualiser working
 - check that the feedback is good with the lockout button
-- upon tigris upload, change input of child invocation as well as output of
-  parent (perhaps rename to archiver)
 - put all the identities/unique constraints in
 - test the new switch
 - add the old captioners back, and maybe blip1 - need to get a better story
   there I think
 - test multiple simultaneous networks (e.g. for Thomas)
-- add embeddings for all outputs (another Oban worker)
 - write model descriptions (perhaps in md and use
   [MDEx](https://github.com/leandrocp/mdex))
 - add a non-logged in network view (to share with attendees)
@@ -19,9 +17,11 @@
 - add/modify an "admin" panel which I can access on mobile (with e.g. stop all,
   maybe even logs?)
 - check what happens in prod if someone goes to an empty/non-existent network
+- unplug the network and see how gracefully it fails
 
 ## for v2 proper, but not (necessarily) for SXSW
 
+- add embeddings for all outputs (another Oban worker)
 - add HUD or other vis for the embedding trajectories
 - TDA code
 - add [QR code function component](https://github.com/zhengkyl/qrframe) (with
@@ -46,16 +46,16 @@
   version, input etc. or maybe them knowing about the model is ok.
 - add a "restart from invocation" UI option
 - add cost/credit balance lookup stuff to the user UI
-- use [this](https://departuremono.com) for the font and
-  [this](https://ryanmulligan.dev/blog/css-property-new-style/) for the fancy
-  panic button (although the latter probs won't work on the silk browsers)
+- get regular backups of the sqlite db file
+- use [this](https://ryanmulligan.dev/blog/css-property-new-style/) for the
+  fancy panic button (although the latter probs won't work on the silk browsers)
 - add "alias" links for a given network (or maybe just use the slugs in the URL
   anyway)
 - git cleanup: tidy up v2/v3 nomenclature (probably: v0 is prototype, v1 at
   AusCyber, v2 is Birch install)
 - add oblique strategies model (GPT-4 powered)
-- upgrade to liveview 1.0-rc (probably best to wait for ash_phoenix to do it) so
-  maybe not worth getting bogged down on)
+- upgrade to liveview 1.0 (but only when ash_phoenix does it?, so maybe not
+  worth getting bogged down on)
 - add presence to network views so that it'll say how many people are watching a
   particular network
 - see if there's a nicer way to handle the vestaboards - the current way is
@@ -65,7 +65,7 @@
   - gemini/vertex AI
   - https://www.inference.net
 
-## deployment notes
+## fly.io deployment notes
 
 - first, destroyed the old panic (app & machines)
 - did a clean(ish) fly deploy, to auto-detect Phoenix and provide the latest
