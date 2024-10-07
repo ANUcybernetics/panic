@@ -118,6 +118,38 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
+        id: "uform-gen",
+        platform: Replicate,
+        path: "zsxkib/uform-gen",
+        name: "UForm",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => text}} <-
+                 Replicate.invoke(model, %{image: input, prompt: "Describe the image in great detail"}, token) do
+            {:ok, text}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "molmo-7b",
+        platform: Replicate,
+        path: "zsxkib/molmo-7b",
+        name: "Molmo 7B-D",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => text}} <-
+                 Replicate.invoke(
+                   model,
+                   %{image: input, text: "What do you see? Give me a detailed answer", max_new_tokens: 100},
+                   token
+                 ) do
+            {:ok, text}
+          end
+        end
+      },
+      %__MODULE__{
         id: "joy-caption",
         platform: Replicate,
         path: "pipi32167/joy-caption",
