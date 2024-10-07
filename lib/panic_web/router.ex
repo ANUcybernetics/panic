@@ -56,6 +56,7 @@ defmodule PanicWeb.Router do
         live "/:network_id/display/single/:a/:b", NetworkLive.Display, :single
         live "/:network_id/display/grid/:a/:b", NetworkLive.Display, :grid
         live "/:network_id/display/links", NetworkLive.Display, :links
+        live "/:network_id/display/static/:invocation_id", NetworkLive.StaticDisplay, :single
       end
     end
   end

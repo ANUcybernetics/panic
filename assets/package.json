@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "audiomotion-analyzer": "^4.5.0"
+    "audiomotion-analyzer": "^4.5.0",
+    "howler": "^2.2.4"
   }
 }

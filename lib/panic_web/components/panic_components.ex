@@ -157,7 +157,7 @@ defmodule PanicWeb.PanicComponents do
   def invocation(assigns) do
     ~H"""
     <.invocation_container id={@id}>
-      <.invocation_slot type={@model.output_type} value={@invocation.output} />
+      <.invocation_slot id={@id} type={@model.output_type} value={@invocation.output} />
       <:input>
         <.invocation_slot type={@model.input_type} value={@invocation.input} />
       </:input>
@@ -167,6 +167,7 @@ defmodule PanicWeb.PanicComponents do
 
   attr :type, :atom, required: true, doc: "the type (modality) of the invocation input or output"
   attr :value, :string, required: true, doc: "the value of the invocation input or output"
+  attr :id, :string
 
   def invocation_slot(%{type: :text} = assigns) do
     ~H"""
@@ -188,8 +189,12 @@ defmodule PanicWeb.PanicComponents do
 
   def invocation_slot(%{type: :audio} = assigns) do
     ~H"""
-    <div class="relative size-full bg-teal-600" id="audio-visualizer" phx-hook="AudioVisualizer">
-      <audio autoplay loop crossorigin controls={false} src={@value} />
+    <div
+      class="relative size-full bg-teal-600"
+      id={"#{@id}-audio-visualizer"}
+      phx-hook="AudioVisualizer"
+      data-audio-src={@value}
+    >
       <div class="visualizer-container absolute inset-0"></div>
     </div>
     """

@@ -1,32 +1,43 @@
-// AudioVisualizer hook
+import { Howl } from "howler";
 import AudioMotionAnalyzer from "audiomotion-analyzer";
 
 const AudioVisualizer = {
   mounted() {
-    this.audioElement = this.el.querySelector("audio");
     this.containerElement = this.el.querySelector(".visualizer-container");
+    const audioSrc = this.el.dataset.audioSrc;
 
-    if (this.audioElement && this.containerElement) {
+    if (this.containerElement && audioSrc) {
+      this.sound = new Howl({
+        src: [audioSrc],
+        autoplay: true,
+        loop: true,
+      });
+
       this.initializeVisualizer();
     }
   },
-
   destroyed() {
     if (this.analyzer) {
       this.analyzer.destroy();
     }
+    if (this.sound) {
+      this.sound.stop();
+      this.sound.unload();
+    }
   },
-
   initializeVisualizer() {
     this.analyzer = new AudioMotionAnalyzer(this.containerElement, {
-      source: this.audioElement,
-      height: 200,
-      width: 400,
-      mode: 2,
-      smoothing: 0.7,
+      source: this.sound._sounds[0]._node,
+      mode: 6,
       frequencyScale: "logarithmic",
-      fillAlpha: 0.7,
       gradient: "prism",
+      radial: true,
+      radialInvert: true,
+      spinSpeed: 2,
+      mirror: 1,
+      showScaleX: false,
+      reflexRatio: 0.1,
+      reflexAlpha: 0.25,
     });
   },
 };
