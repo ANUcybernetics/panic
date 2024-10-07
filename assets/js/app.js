@@ -24,11 +24,8 @@ import topbar from "../vendor/topbar";
 import live_select from "live_select";
 
 // LiveView hooks
-import { Howler } from "howler";
 import TerminalLockoutTimer from "./hooks/terminal_lockout_timer";
 import AudioVisualizer from "./hooks/audio_visualizer";
-
-Howler.volume(0.5);
 
 const hooks = {
   TerminalLockoutTimer,
