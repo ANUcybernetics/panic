@@ -9,6 +9,8 @@ defmodule Panic.Workers.Archiver do
 
   use Oban.Worker, queue: :default
 
+  alias Panic.Engine.Invocation
+
   @bucket "panic-invocation-outputs"
 
   @doc """
@@ -23,11 +25,12 @@ defmodule Panic.Workers.Archiver do
     - {:error, reason} if there's an error during the download or upload process
   """
   @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"invocation_id" => invocation_id}}) do
-    with {:ok, invocation} <- Ash.get(Panic.Engine.Invocation, invocation_id, authorize?: false) do
+  def perform(%Oban.Job{args: %{"invocation_id" => invocation_id, "next_invocation_id" => next_invocation_id}}) do
+    with {:ok, invocation} <- Ash.get(Invocation, invocation_id, authorize?: false),
+         {:ok, next_invocation} <- Ash.get(Invocation, next_invocation_id, authorize?: false) do
       case invocation.state do
         :completed ->
-          archive_invocation(invocation)
+          archive_invocation(invocation, next_invocation)
 
         _ ->
           {:ok, :skipped}
@@ -74,17 +77,18 @@ defmodule Panic.Workers.Archiver do
     end
   end
 
-  def insert(invocation) do
-    %{"invocation_id" => invocation.id}
+  def insert(invocation, next_invocation) do
+    %{"invocation_id" => invocation.id, "next_invocation_id" => next_invocation.id}
     |> __MODULE__.new()
     |> Oban.insert()
   end
 
-  defp archive_invocation(invocation) do
+  defp archive_invocation(invocation, next_invocation) do
     with {:ok, temp_file_path} <- download_file(invocation.output),
          {:ok, converted_file_path} <- convert(temp_file_path, "#{invocation.network_id}-#{invocation.id}-output"),
          {:ok, url} <- upload_to_s3_and_rm(converted_file_path),
-         {:ok, _invocation} <- Panic.Engine.update_output(invocation, url, authorize?: false) do
+         {:ok, _invocation} <- Panic.Engine.update_output(invocation, url, authorize?: false),
+         {:ok, _invocation} <- Panic.Engine.update_input(next_invocation, url, authorize?: false) do
       {:ok, :uploaded}
     else
       {:error, reason} ->

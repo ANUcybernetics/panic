@@ -157,6 +157,10 @@ defmodule Panic.Engine.Invocation do
       accept [:run_number]
     end
 
+    update :update_input do
+      accept [:input]
+    end
+
     update :update_output do
       accept [:output]
     end

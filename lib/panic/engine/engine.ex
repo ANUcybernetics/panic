@@ -16,6 +16,7 @@ defmodule Panic.Engine do
       define :invoke, args: []
       define :about_to_invoke, args: []
       define :cancel, args: []
+      define :update_input, args: [:input]
       define :update_output, args: [:output]
       define :list_run, args: [:network_id, :run_number]
       define :current_run, args: [:network_id, {:optional, :limit}]
