@@ -65,14 +65,14 @@ defmodule Panic.Workers.Invoker do
     end
   end
 
-  def insert(invocation, user) do
+  def insert(invocation, user, opts \\ []) do
     %{
       "user_id" => user.id,
       "invocation_id" => invocation.id,
       "network_id" => invocation.network_id,
       "run_number" => invocation.run_number
     }
-    |> __MODULE__.new()
+    |> __MODULE__.new(opts)
     |> Oban.insert()
   end
 
@@ -112,9 +112,17 @@ defmodule Panic.Workers.Invoker do
           {:ok, :text}
       end
 
-      insert(next_invocation, user)
+      insert(next_invocation, user, insert_opts(next_invocation))
     end
   end
+
+  # as the runs go on, add some delays (because *probably* no-one is watching now)
+  # first 50 invocations as fast as possible
+  defp insert_opts(%Invocation{sequence_number: sequence_number}) when sequence_number < 50, do: []
+  # next 150 have a 30s delay added
+  defp insert_opts(%Invocation{sequence_number: sequence_number}) when sequence_number < 200, do: [schedule_in: 30]
+  # after that, every 10 mins
+  defp insert_opts(%Invocation{sequence_number: sequence_number}) when sequence_number < 200, do: [schedule_in: 600]
 
   @doc """
   Cancels all running jobs for a specific network.

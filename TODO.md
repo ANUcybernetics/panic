@@ -3,9 +3,8 @@
 - add animated "panic button" function component (for landing, waiting,
   bottom-right branding etc.)
 - check that the feedback is good with the lockout button
-- jazz up audio component (perhaps with
-  [this](https://audiomotion.dev/demo/multi.html)?)
-- add "slow down over time" (and scheduling) logic to runs
+- upon tigris upload, change input of child invocation as well as output of
+  parent (perhaps rename to archiver)
 - put all the identities/unique constraints in
 - test the new switch
 - add the old captioners back, and maybe blip1 - need to get a better story
