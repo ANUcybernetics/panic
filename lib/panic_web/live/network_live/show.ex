@@ -23,7 +23,7 @@ defmodule PanicWeb.NetworkLive.Show do
     </section>
 
     <section class="mt-16">
-      <h2 class="font-semibold">Models</h2>
+      <h2 class="font-semibold mb-8">Models</h2>
 
       <.live_component
         module={PanicWeb.NetworkLive.ModelSelectComponent}

@@ -26,6 +26,11 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
           placeholder="Search for a model to append"
           phx-target={@myself}
           phx-focus="populate_options"
+          text_input_extra_class="bg-zinc-800 text-purple-300 focus:border-purple-500"
+          dropdown_extra_class="bg-zinc-800"
+          container_extra_class="text-purple-400"
+          active_option_class="bg-purple-800"
+          available_option_class="hover:bg-zinc-700"
         />
 
         <.button class="mt-4" phx-disable-with="Updating models...">Update models</.button>

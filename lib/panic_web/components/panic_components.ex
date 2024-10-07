@@ -22,7 +22,7 @@ defmodule PanicWeb.PanicComponents do
 
   def model_box(assigns) do
     ~H"""
-    <div class="size-16 rounded-md grid place-content-center text-center text-xs relative bg-gray-200 shadow-sm">
+    <div class="size-16 rounded-md grid place-content-center text-center text-xs relative bg-zinc-600 shadow-sm">
       <div class={[
         "size-6 absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 -z-10",
         io_colour_mapper(@model, :input_type)
@@ -52,8 +52,8 @@ defmodule PanicWeb.PanicComponents do
 
   def model_list(assigns) do
     ~H"""
-    <div class="flex flex-wrap gap-6 border-2 p-2 rounded-md">
-      <div class="size-16 rounded-md grid place-content-center text-center text-xs relative bg-gray-100 shadow-sm">
+    <div class="flex items-center flex-wrap gap-6">
+      <div class="size-8 rounded-md grid place-content-center text-center text-xs relative bg-zinc-600 shadow-sm">
         T
         <div class={[
           "size-6 absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 -z-10",
