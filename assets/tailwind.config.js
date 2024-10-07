@@ -34,6 +34,15 @@ module.exports = {
       fontFamily: {
         "sometype-mono": ["Sometype Mono", "monospace"],
       },
+      keyframes: {
+        breathe: {
+          "0%, 100%": { opacity: "0.3", fontWeight: "900" },
+          "50%": { opacity: "1", fontWeight: "100" },
+        },
+      },
+      animation: {
+        breathe: "breathe 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+      },
     },
   },
   plugins: [
