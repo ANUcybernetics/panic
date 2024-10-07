@@ -53,6 +53,10 @@ defmodule Panic.Engine.Invocation do
     update_timestamp :updated_at
   end
 
+  identities do
+    identity :unique_in_run, [:network_id, :run_number, :sequence_number]
+  end
+
   actions do
     defaults [:read, :destroy]
 

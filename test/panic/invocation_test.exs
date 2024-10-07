@@ -2,6 +2,7 @@ defmodule Panic.InvocationTest do
   use Panic.DataCase
   use ExUnitProperties
 
+  alias Ash.Error.Invalid
   alias Panic.Engine.Invocation
 
   describe "Invocation CRUD operations" do
@@ -17,6 +18,36 @@ defmodule Panic.InvocationTest do
                    network,
                    input
                  )
+      end
+    end
+
+    property "enforces unique combination of network_id, run_number, and sequence_number" do
+      user = Panic.Fixtures.user()
+
+      check all(
+              network <- Panic.Generators.network_with_models(user),
+              input <- Panic.Generators.ascii_sentence()
+            ) do
+        # Create the first invocation
+        first_invocation =
+          Invocation
+          |> Ash.Changeset.for_create(:prepare_first, %{network: network, input: input}, actor: user)
+          |> Ash.create!()
+
+        # Fetch the invocation using the unique_in_run identity
+        fetched_invocation =
+          Ash.get!(
+            Invocation,
+            %{
+              network_id: first_invocation.network_id,
+              run_number: first_invocation.run_number,
+              sequence_number: first_invocation.sequence_number
+            },
+            actor: user
+          )
+
+        # Check for equality
+        assert fetched_invocation.id == first_invocation.id
       end
     end
 
@@ -111,7 +142,7 @@ defmodule Panic.InvocationTest do
     property "raises the correct error for non-existent or forbidden invocations" do
       user = Panic.Fixtures.user()
 
-      assert_raise Ash.Error.Invalid, fn ->
+      assert_raise Invalid, fn ->
         Ash.get!(Panic.Engine.Invocation, -1, actor: user)
       end
 
