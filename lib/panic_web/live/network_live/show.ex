@@ -42,7 +42,7 @@ defmodule PanicWeb.NetworkLive.Show do
         id={@network.id}
       />
 
-      <.button phx-click="stop" class="bg-red-500 mt-2">
+      <.button phx-click="stop" class="mt-4">
         Stop
       </.button>
     </section>
