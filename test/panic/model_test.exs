@@ -87,7 +87,8 @@ defmodule Panic.ModelTest do
         input =
           case model do
             %Model{input_type: :text} -> "describe a nice scene"
-            %Model{input_type: :image} -> "https://picsum.photos/400/225/"
+            %Model{input_type: :image} -> "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-sign.png"
+            %Model{input_type: :audio} -> "https://fly.storage.tigris.dev/panic-invocation-outputs/2-3528-output.webm"
           end
 
         assert {:ok, output} = invoke_fn.(model, input, user.replicate_token)
