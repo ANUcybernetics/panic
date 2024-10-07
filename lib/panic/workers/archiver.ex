@@ -123,7 +123,17 @@ defmodule Panic.Workers.Archiver do
       ext when ext in [".mp3", ".wav", ".ogg", ".flac"] ->
         output_filename = "#{Path.dirname(filename)}/#{dest_rootname}.webm"
 
-        case System.cmd("ffmpeg", ["-i", filename, "-c:a", "libopus", "-b:a", "64k", output_filename]) do
+        case System.cmd("ffmpeg", [
+               "-i",
+               filename,
+               "-c:a",
+               "libopus",
+               "-b:a",
+               "64k",
+               "-loglevel",
+               "error",
+               output_filename
+             ]) do
           {_, 0} -> {:ok, output_filename}
           {error, _} -> {:error, "Audio conversion failed: #{error}"}
         end
