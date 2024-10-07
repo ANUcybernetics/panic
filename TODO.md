@@ -1,10 +1,9 @@
 # Panic TODO
 
+- screen/display layout should be h/w full?
 - add animated "panic button" function component (for landing, waiting,
   bottom-right branding etc.)
-- get audio visualiser working
 - check that the feedback is good with the lockout button
-- put all the identities/unique constraints in
 - test the new switch
 - add the old captioners back, and maybe blip1 - need to get a better story
   there I think

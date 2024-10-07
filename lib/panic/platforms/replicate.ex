@@ -78,6 +78,9 @@ defmodule Panic.Platforms.Replicate do
       |> case do
         {:ok, %Req.Response{body: %{"id" => id}, status: 201}} ->
           get(id, token)
+
+        {:ok, %Req.Response{status: status}} ->
+          {:error, "Replicate platform unexpected returned code #{status}"}
       end
     end
   end

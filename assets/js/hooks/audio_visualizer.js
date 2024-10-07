@@ -5,15 +5,12 @@ const AudioVisualizer = {
   mounted() {
     this.containerElement = this.el.querySelector(".visualizer-container");
     const audioSrc = this.el.dataset.audioSrc;
-
-    if (this.containerElement && audioSrc) {
-      this.sound = new Howl({
-        src: [audioSrc],
-        autoplay: true,
-        loop: true,
-      });
-
-      this.initializeVisualizer();
+    this.playSound(audioSrc);
+  },
+  updated() {
+    const newAudioSrc = this.el.dataset.audioSrc;
+    if (newAudioSrc.startsWith("https://fly.storage.tigris.dev")) {
+      this.playSound(newAudioSrc);
     }
   },
   destroyed() {
@@ -23,6 +20,20 @@ const AudioVisualizer = {
     if (this.sound) {
       this.sound.stop();
       this.sound.unload();
+    }
+  },
+  playSound(audioSrc) {
+    if (audioSrc.startsWith("https://fly.storage.tigris.dev")) {
+      if (this.sound) {
+        this.sound.stop();
+        this.sound.unload();
+      }
+      this.sound = new Howl({
+        src: [audioSrc],
+        autoplay: true,
+        loop: true,
+      });
+      this.initializeVisualizer();
     }
   },
   initializeVisualizer() {
@@ -35,8 +46,6 @@ const AudioVisualizer = {
       spinSpeed: 2,
       mirror: 1,
       showScaleX: false,
-      reflexRatio: 0.1,
-      reflexAlpha: 0.25,
       overlay: true,
       showBgColor: true,
       reflexRatio: 0.5,
