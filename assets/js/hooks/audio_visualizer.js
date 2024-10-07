@@ -32,12 +32,16 @@ const AudioVisualizer = {
       frequencyScale: "logarithmic",
       gradient: "prism",
       radial: true,
-      radialInvert: true,
       spinSpeed: 2,
       mirror: 1,
       showScaleX: false,
       reflexRatio: 0.1,
       reflexAlpha: 0.25,
+      overlay: true,
+      showBgColor: true,
+      reflexRatio: 0.5,
+      reflexAlpha: 1,
+      reflexBright: 1,
     });
   },
 };
