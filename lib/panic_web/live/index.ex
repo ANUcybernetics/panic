@@ -2,10 +2,16 @@ defmodule PanicWeb.IndexLive do
   @moduledoc false
   use PanicWeb, :live_view
 
+  import PanicWeb.PanicComponents
+
   @impl true
   def render(assigns) do
     ~H"""
-    <p>Panic is having a coat of paint before SXSW. Stay tuned.</p>
+    <.link navigate={(@current_user && ~p"/users/#{@current_user}") || ~p"/sign-in"}>
+      <div class="mt-64 text-center animate-breathe text-[300%] bg-rose-500">
+        <.shadowed_text>PANIC!</.shadowed_text>
+      </div>
+    </.link>
     """
   end
 
