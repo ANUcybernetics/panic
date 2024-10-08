@@ -1,20 +1,12 @@
 alias Panic.Accounts
 alias Panic.Accounts.User
-alias Panic.Accounts.UserNotifier
-alias Panic.Accounts.UserQuery
-alias Panic.Accounts.UserSeeder
-alias Panic.Logs
-alias Panic.Logs.Log
-alias Panic.MailBluster
-alias Panic.Models
-alias Panic.Orgs
-alias Panic.Orgs.Invitation
-alias Panic.Orgs.Membership
+alias Panic.Engine.Invocation
+alias Panic.Engine.Network
+alias Panic.Model
 alias Panic.Platforms.OpenAI
 alias Panic.Platforms.Replicate
 alias Panic.Platforms.Vestaboard
 alias Panic.Repo
-alias Panic.Slack
 
 # Don't cut off inspects with "..."
 IEx.configure(inspect: [limit: :infinity])
