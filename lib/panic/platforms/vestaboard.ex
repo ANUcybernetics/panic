@@ -18,6 +18,9 @@ defmodule Panic.Platforms.Vestaboard do
 
       {:ok, %Req.Response{status: 503}} ->
         {:error, :too_many_requests}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
