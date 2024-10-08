@@ -1,15 +1,15 @@
 # Panic TODO
 
-- screen/display layout should be h/w full?
-- check that the feedback is good with the lockout button
-- make unauthenticated login not forget which page you were going to
-- test the new switch
 - test multiple simultaneous networks (e.g. for Thomas)
+- test Panic button, find keyboard, set up Mac Mini (inc. WT desktop folder),
+  grab PA speaker from c/c/c lab
+- screen/display layout should be h/w full?
+- settle on final "terminal" display
+- add initial input to :grid displays, and even terminal input (if logged in)
+- test the new switch
 - write model descriptions (perhaps in md and use
   [MDEx](https://github.com/leandrocp/mdex))
 - add a non-logged in network view (to share with attendees)
-- test Panic button, find keyboard, set up Mac Mini (inc. WT desktop folder),
-  grab PA speaker from c/c/c lab
 - add/modify an "admin" panel which I can access on mobile (with e.g. stop all,
   maybe even logs?)
 - check what happens in prod if someone goes to an empty/non-existent network
@@ -18,6 +18,8 @@
 
 ## for v2 proper, but not (necessarily) for SXSW
 
+- store invocation metadata
+- make unauthenticated login not forget which page you were going to
 - add embeddings for all outputs (another Oban worker)
 - add HUD or other vis for the embedding trajectories
 - TDA code
