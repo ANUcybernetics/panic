@@ -119,7 +119,7 @@ defmodule Panic.Workers.Invoker do
   # as the runs go on, add some delays (because *probably* no-one is watching now)
   defp insert_opts(%Invocation{sequence_number: sequence_number}) when sequence_number < 100, do: []
   defp insert_opts(%Invocation{sequence_number: sequence_number}) when sequence_number < 200, do: [schedule_in: 30]
-  defp insert_opts(%Invocation{sequence_number: sequence_number}) when sequence_number < 200, do: [schedule_in: 600]
+  defp insert_opts(%Invocation{sequence_number: _sequence_number}), do: [schedule_in: 600]
 
   @doc """
   Cancels all running jobs for a specific network.
