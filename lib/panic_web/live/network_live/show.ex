@@ -55,7 +55,7 @@ defmodule PanicWeb.NetworkLive.Show do
       <.display invocations={@streams.invocations} display={@display} />
     </section>
 
-    <.back navigate={~p"/"}>Back to networks</.back>
+    <.back navigate={~p"/users/#{@current_user}/"}>Back to networks</.back>
 
     <.modal
       :if={@live_action == :edit}
