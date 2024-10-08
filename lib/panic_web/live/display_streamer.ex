@@ -54,7 +54,9 @@ defmodule PanicWeb.DisplayStreamer do
 
             # grid view, existing run
             {_, {:grid, _row, _col}} ->
-              stream_insert(socket, :invocations, invocation)
+              socket
+              |> update_genesis(invocation)
+              |> stream_insert(:invocations, invocation)
 
             # single screen view, "hit"
             {%Invocation{sequence_number: sequence_number}, {:single, offset, stride}}
@@ -91,7 +93,8 @@ defmodule PanicWeb.DisplayStreamer do
 
       defp update_genesis(socket, %Invocation{run_number: invocation_id}) do
         # take advantage of the fact that the run_number is the id of the genesis invocation
-        assign_new(socket, :genesis_invocation, fn -> Ash.get!(Invocation, invocation_id, authorize?: false) end)
+        genesis_invocation = socket.assigns.genesis_invocation || Ash.get!(Invocation, invocation_id, authorize?: false)
+        assign(socket, :genesis_invocation, genesis_invocation)
       end
     end
   end
