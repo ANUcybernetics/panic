@@ -1,12 +1,9 @@
 # Panic TODO
 
 - screen/display layout should be h/w full?
-- add animated "panic button" function component (for landing, waiting,
-  bottom-right branding etc.)
 - check that the feedback is good with the lockout button
+- make unauthenticated login not forget which page you were going to
 - test the new switch
-- add the old captioners back, and maybe blip1 - need to get a better story
-  there I think
 - test multiple simultaneous networks (e.g. for Thomas)
 - write model descriptions (perhaps in md and use
   [MDEx](https://github.com/leandrocp/mdex))
