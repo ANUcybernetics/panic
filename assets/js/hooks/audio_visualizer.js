@@ -48,7 +48,7 @@ const AudioVisualizer = {
       showScaleX: false,
       overlay: true,
       showBgColor: true,
-      bgAlpha: 0,
+      bgAlpha: 0.7,
       reflexRatio: 0.5,
       reflexAlpha: 1,
       reflexBright: 1,
