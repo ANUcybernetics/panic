@@ -14,6 +14,7 @@
   maybe even logs?)
 - check what happens in prod if someone goes to an empty/non-existent network
 - unplug the network and see how gracefully it fails
+- make screen recording for backup purposes
 
 ## for v2 proper, but not (necessarily) for SXSW
 
