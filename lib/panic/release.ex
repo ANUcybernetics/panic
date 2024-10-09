@@ -11,8 +11,6 @@ defmodule Panic.Release do
     for repo <- repos() do
       {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
     end
-
-    create_user_from_env()
   end
 
   def rollback(repo, version) do
@@ -20,15 +18,7 @@ defmodule Panic.Release do
     {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :down, to: version))
   end
 
-  defp repos do
-    Application.fetch_env!(@app, :ecto_repos)
-  end
-
-  defp load_app do
-    Application.load(@app)
-  end
-
-  defp create_user_from_env do
+  def create_user_from_env do
     case System.get_env("PANIC_CREATE_USER") do
       nil ->
         :ok
@@ -50,5 +40,13 @@ defmodule Panic.Release do
             IO.puts("Invalid PANIC_CREATE_USER format. Expected 'email:password'")
         end
     end
+  end
+
+  defp repos do
+    Application.fetch_env!(@app, :ecto_repos)
+  end
+
+  defp load_app do
+    Application.load(@app)
   end
 end
