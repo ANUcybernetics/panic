@@ -17,9 +17,8 @@ defmodule PanicWeb.NetworkLive.Show do
         </.link>
       </:actions>
     </.header>
-
-    <section class="mt-16">
-      <p><%= @network.description %></p>
+    <section :if={@network.description} class="mt-16">
+      <%= @network.description |> MDEx.to_html() |> raw %>
     </section>
 
     <section class="mt-16">

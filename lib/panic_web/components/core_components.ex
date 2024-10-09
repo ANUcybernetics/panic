@@ -359,7 +359,7 @@ defmodule PanicWeb.CoreComponents do
         id={@id}
         name={@name}
         class={[
-          "mt-2 block w-full rounded-lg text-purple-300 focus:ring-0 sm:text-sm sm:leading-6",
+          "mt-2 block w-full rounded-lg text-purple-300 bg-zinc-800 focus:ring-0 sm:text-sm sm:leading-6",
           "min-h-[6rem] phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400",
           @errors == [] && "border-zinc-300 focus:border-zinc-400",
           @errors != [] && "border-rose-400 focus:border-rose-400"

@@ -1,15 +1,18 @@
 # Panic TODO
 
+- test on the wall in Birch
 - test multiple simultaneous networks (e.g. for Thomas)
-- test Panic button, find keyboard, set up Mac Mini (inc. WT desktop folder),
-  grab PA speaker from c/c/c lab
+- come up with some cool networks (at least one per day)
+- set up Mac Mini w/keyboard (inc. WT desktop folder)
+- get iPad for QR codes?
+- grab PA speaker from c/c/c lab
 - screen/display layout should be h/w full?
 - settle on final "terminal" display
 - add terminal input to :grid view (if logged in)
 - test the new switch
-- write model descriptions (perhaps in md and use
-  [MDEx](https://github.com/leandrocp/mdex))
-- add a non-logged in network view (to share with attendees)
+- write network & model descriptions
+- add a non-logged in network view (to share with attendees) inc. QR code (can
+  be manual)
 - add/modify an "admin" panel which I can access on mobile (with e.g. stop all,
   maybe even logs?)
 - check what happens in prod if someone goes to an empty/non-existent network
@@ -18,6 +21,7 @@
 
 ## for v2 proper, but not (necessarily) for SXSW
 
+- model view
 - store invocation metadata
 - make unauthenticated login not forget which page you were going to
 - add embeddings for all outputs (another Oban worker)
@@ -31,7 +35,6 @@
 - a "waiting" timer on all pending invocations (better still, with feedback for
   e.g. replicate on what the actual status was)
 - replace the "split into `<p>`s based on double newline with proper md parsing
-- store the metadata
 - instead of `use DisplayStreamer`, perhaps can just have an on_mount hook?
 - refactor user/network liveviews to use streams for the lists
 - add an indicator to the model select component to say a) if the network has

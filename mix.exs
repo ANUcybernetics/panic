@@ -66,7 +66,8 @@ defmodule Panic.MixProject do
       {:picosat_elixir, "~> 0.2"},
       {:recon, "~> 2.5"},
       {:styler, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:live_select, "~> 1.0"}
+      {:live_select, "~> 1.0"},
+      {:mdex, "~> 0.1"}
     ]
   end
 
