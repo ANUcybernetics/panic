@@ -209,24 +209,4 @@ defmodule PanicWeb.PanicComponents do
     </p>
     """
   end
-
-  def run(assigns) do
-    ~H"""
-    <div class="aspect-w-16 aspect-h-9 overflow-hidden relative block w-full text-center text-gray-200 bg-gray-900 shadow-lg">
-      <div class="absolute inset-0 grid place-items-center">
-        <%= case @run.status do %>
-          <% :created -> %>
-            <%!-- minus_circle --%>
-          <% :succeeded -> %>
-            text run
-          <% :failed -> %>
-            <%!-- x_circle --%>
-        <% end %>
-        <div class="absolute left-2 -bottom-6">
-          <%= @run.model |> String.split(~r/[:\/]/) |> List.last() %>
-        </div>
-      </div>
-    </div>
-    """
-  end
 end
