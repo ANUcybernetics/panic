@@ -29,7 +29,7 @@ defmodule PanicWeb.NetworkLive.Display do
   @impl true
   def render(assigns) do
     ~H"""
-    <p :if={@live_action == :grid} class="px-6 py-8">
+    <p :if={@live_action == :grid} class="px-4 pt-2 pb-4">
       <span class="text-purple-300/50">Last input:</span>
       <span :if={@genesis_invocation}><%= @genesis_invocation.input %></span>
     </p>
