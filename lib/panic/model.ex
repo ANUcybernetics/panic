@@ -118,6 +118,20 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
+        id: "florence-2-large",
+        platform: Replicate,
+        path: "lucataco/florence-2-large",
+        name: "Florence 2",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => text}} <-
+                 Replicate.invoke(model, %{image: input, task_input: "Detailed Caption"}, token) do
+            {:ok, text}
+          end
+        end
+      },
+      %__MODULE__{
         id: "uform-gen",
         platform: Replicate,
         path: "zsxkib/uform-gen",
