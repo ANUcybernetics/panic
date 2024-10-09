@@ -10,15 +10,26 @@ defmodule PanicWeb.NetworkLive.Show do
     ~H"""
     <.header>
       <%= @network.name %>
-
-      <:actions>
-        <.link navigate={~p"/networks/#{@network}/edit"} phx-click={JS.push_focus()}>
-          <.button>Edit network</.button>
-        </.link>
-      </:actions>
     </.header>
     <section :if={@network.description} class="mt-16">
       <%= @network.description |> MDEx.to_html() |> raw %>
+    </section>
+
+    <section class="mt-16">
+      <h2 class="font-semibold mb-8">
+        Control panel
+      </h2>
+      <div class="flex space-x-4">
+        <.link navigate={~p"/networks/#{@network}/edit"} phx-click={JS.push_focus()}>
+          <.button>Edit network</.button>
+        </.link>
+        <.button phx-click={show_modal("qr-modal")} type="button" aria-label="show modal">
+          QR Code
+        </.button>
+        <.button phx-click="stop">
+          Stop
+        </.button>
+      </div>
     </section>
 
     <section class="mt-16">
@@ -32,7 +43,8 @@ defmodule PanicWeb.NetworkLive.Show do
       />
     </section>
 
-    <section>
+    <section class="mt-16">
+      <h2 class="font-semibold mb-8">Terminal</h2>
       <.live_component
         module={PanicWeb.NetworkLive.TerminalComponent}
         network={@network}
@@ -40,10 +52,6 @@ defmodule PanicWeb.NetworkLive.Show do
         current_user={@current_user}
         id={@network.id}
       />
-
-      <.button phx-click="stop" class="mt-4">
-        Stop
-      </.button>
     </section>
 
     <section class="mt-16">
@@ -53,10 +61,6 @@ defmodule PanicWeb.NetworkLive.Show do
 
       <.display invocations={@streams.invocations} display={@display} />
     </section>
-
-    <.button phx-click={show_modal("qr-modal")} type="button" aria-label="show modal">
-      QR Code
-    </.button>
 
     <.back navigate={~p"/users/#{@current_user}/"}>Back to networks</.back>
     <.modal
