@@ -6,7 +6,7 @@ defmodule PanicWeb.UserLive.Show do
   def render(assigns) do
     ~H"""
     <.header>
-      User <%= @user.id %>: <%= @user.email %>
+      User email: <%= @user.email %>
     </.header>
 
     <section>
