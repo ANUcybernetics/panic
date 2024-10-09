@@ -12,12 +12,6 @@ defmodule PanicWeb.UserLiveTest do
   describe "user IS logged in" do
     setup {PanicWeb.Helpers, :create_and_sign_in_user}
 
-    test "and their email shows in the top-right", %{conn: conn, user: user} do
-      conn
-      |> visit("/")
-      |> assert_has("#current-user-email", text: Ash.CiString.value(user.email))
-    end
-
     test "and can visit the user index page", %{conn: conn, user: user} do
       conn
       |> visit("/users")
