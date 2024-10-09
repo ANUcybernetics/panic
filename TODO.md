@@ -3,15 +3,13 @@
 - test on the wall in Birch
 - test multiple simultaneous networks (e.g. for Thomas)
 - come up with some cool networks (at least one per day)
-- get iPad for QR codes?
 - grab PA speaker from c/c/c lab
 - screen/display layout should be h/w full?
 - settle on final "terminal" display
 - add terminal input to :grid view (if logged in)
 - test the new switch
 - write network & model descriptions
-- add a non-logged in network view (to share with attendees) inc. QR code (can
-  be manual)
+- add a non-logged in network view (to share with attendees)
 - add/modify an "admin" panel which I can access on mobile (with e.g. stop all,
   maybe even logs?)
 - check what happens in prod if someone goes to an empty/non-existent network
@@ -24,6 +22,7 @@
 - set up desktop bg (launch panic script, WT folder)
 - test with speaker
 - make sure we've got QR cable and extra ethernet for mac mini
+- get iPad (for demo, QR code purposes)
 
 ## for v2 proper, but not (necessarily) for SXSW
 
@@ -33,8 +32,6 @@
 - add embeddings for all outputs (another Oban worker)
 - add HUD or other vis for the embedding trajectories
 - TDA code
-- add [QR code function component](https://github.com/zhengkyl/qrframe) (with
-  rolling cookie/URL param)
 
 ## ideas (not necessarily TODO, but y'know...)
 
