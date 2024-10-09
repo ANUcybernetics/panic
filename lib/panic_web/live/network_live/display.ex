@@ -15,10 +15,10 @@ defmodule PanicWeb.NetworkLive.Display do
   def render(%{live_action: :links} = assigns) do
     ~H"""
     <div>
-      <ul class="flex flex-col space-y-8 m-32">
+      <ul class="flex flex-col gap-12 m-16">
         <%= for i <- 0..7 do %>
           <.link navigate={~p"/networks/#{@network.id}/display/single/#{i}/8/"}>
-            <li>Screen <%= i + 1 %></li>
+          <li class="h-16 bg-purple-900 flex items-center justify-center">Screen <%= i + 1 %></li>
           </.link>
         <% end %>
       </ul>
