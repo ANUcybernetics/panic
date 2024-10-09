@@ -7,17 +7,19 @@ defmodule PanicWeb.IndexLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <.link navigate={(@current_user && ~p"/users/#{@current_user}") || ~p"/sign-in"}>
-      <div class="mt-64 text-center animate-breathe text-[300%] bg-rose-500">
-        <.shadowed_text>PANIC!</.shadowed_text>
-      </div>
-    </.link>
+    <div class="w-dvw h-dvh grid place-items-center">
+      <.link navigate={(@current_user && ~p"/users/#{@current_user}") || ~p"/sign-in"}>
+        <div class="size-[60vmin] text-[12vmin] rounded-full grid place-items-center animate-breathe bg-rose-500">
+          <.shadowed_text>PANIC!</.shadowed_text>
+        </div>
+      </.link>
+    </div>
     """
   end
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, socket, layout: {PanicWeb.Layouts, :display}}
   end
 
   @impl true
