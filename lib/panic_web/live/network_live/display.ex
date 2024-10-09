@@ -18,7 +18,7 @@ defmodule PanicWeb.NetworkLive.Display do
       <ul class="flex flex-col gap-12 m-16">
         <%= for i <- 0..7 do %>
           <.link navigate={~p"/networks/#{@network.id}/display/single/#{i}/8/"}>
-          <li class="h-16 bg-purple-900 flex items-center justify-center">Screen <%= i + 1 %></li>
+            <li class="h-16 bg-purple-900 flex items-center justify-center">Screen <%= i + 1 %></li>
           </.link>
         <% end %>
       </ul>
@@ -29,6 +29,10 @@ defmodule PanicWeb.NetworkLive.Display do
   @impl true
   def render(assigns) do
     ~H"""
+    <p :if={@live_action == :grid} class="px-6 py-8">
+      <span class="text-purple-300/50">Last input:</span>
+      <span :if={@genesis_invocation}><%= @genesis_invocation.input %></span>
+    </p>
     <.display invocations={@streams.invocations} display={@display} />
     """
   end
