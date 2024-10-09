@@ -21,7 +21,7 @@ ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 FROM ${BUILDER_IMAGE} AS builder
 
 # install build dependencies
-RUN apt-get update -y && apt-get install -y build-essential git \
+RUN apt-get update -y && apt-get install -y build-essential git wget \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # prepare build dir
@@ -49,9 +49,10 @@ COPY priv priv
 
 COPY lib lib
 
-# install npm packages
-RUN cd assets && npm install
+# install npm packages with pnpm
+RUN wget -qO- https://get.pnpm.io/install.sh | ENV="$HOME/.bashrc" SHELL="$(which bash)" bash -
 COPY assets assets
+RUN . /root/.bashrc && cd assets && pnpm install
 
 # compile assets
 RUN mix assets.deploy
