@@ -17,7 +17,7 @@ const TerminalLockoutTimer = {
     const now = new Date();
     const timeLeft = Math.max(0, Math.ceil((readyAt - now) / 1000));
     if (timeLeft > 0) {
-      this.el.placeholder = `Starting up... ready for new input in ${timeLeft} second${timeLeft !== 1 ? "s" : ""}`;
+      this.el.placeholder = `${timeLeft} second${timeLeft !== 1 ? "s" : ""} until ready for new input`;
       this.el.disabled = true;
       this.el.value = "";
     } else {
