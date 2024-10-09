@@ -54,8 +54,11 @@ defmodule PanicWeb.NetworkLive.Show do
       <.display invocations={@streams.invocations} display={@display} />
     </section>
 
-    <.back navigate={~p"/users/#{@current_user}/"}>Back to networks</.back>
+    <.button phx-click={show_modal("qr-modal")} type="button" aria-label="show modal">
+      QR Code
+    </.button>
 
+    <.back navigate={~p"/users/#{@current_user}/"}>Back to networks</.back>
     <.modal
       :if={@live_action == :edit}
       id="network-modal"
@@ -72,6 +75,8 @@ defmodule PanicWeb.NetworkLive.Show do
         navigate={~p"/networks/#{@network}"}
       />
     </.modal>
+
+    <.qr_modal id="qr-modal" show={false} text="https://example.com" />
     """
   end
 
