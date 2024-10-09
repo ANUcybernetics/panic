@@ -26,6 +26,9 @@ defmodule PanicWeb.NetworkLive.Show do
         <.button phx-click={show_modal("qr-modal")} type="button" aria-label="show modal">
           QR Code
         </.button>
+        <.link navigate={~p"/networks/#{@network}/terminal"} type="button">
+          <.button>Terminal</.button>
+        </.link>
         <.button phx-click="stop">
           Stop
         </.button>
