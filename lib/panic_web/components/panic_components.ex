@@ -139,7 +139,6 @@ defmodule PanicWeb.PanicComponents do
     ~H"""
     <.invocation_container id={@id}>
       <div class="size-full grid place-items-center bg-rose-950">
-        <.shadowed_text>P!</.shadowed_text>
       </div>
     </.invocation_container>
     """
