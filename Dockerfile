@@ -49,6 +49,8 @@ COPY priv priv
 
 COPY lib lib
 
+# install npm packages
+RUN cd assets && npm install
 COPY assets assets
 
 # compile assets
