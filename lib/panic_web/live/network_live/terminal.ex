@@ -17,7 +17,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
           id={@network.id}
         />
 
-        <p>Current input: <span :if={@genesis_invocation}><%= @genesis_invocation.input %></span></p>
+        <p><span class="text-purple-300/50">Last input:</span> <span :if={@genesis_invocation}><%= @genesis_invocation.input %></span></p>
       </div>
     </div>
     """
