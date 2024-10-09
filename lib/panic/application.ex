@@ -11,11 +11,7 @@ defmodule Panic.Application do
       PanicWeb.Telemetry,
       Panic.Repo,
       {Ecto.Migrator, repos: Application.fetch_env!(:panic, :ecto_repos), skip: skip_migrations?()},
-      {Oban,
-       AshOban.config(
-         Application.fetch_env!(:panic, :ash_domains),
-         Application.fetch_env!(:panic, Oban)
-       )},
+      {Oban, Application.fetch_env!(:panic, Oban)},
       {AshAuthentication.Supervisor, otp_app: :panic},
       {DNSCluster, query: Application.get_env(:panic, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Panic.PubSub},
