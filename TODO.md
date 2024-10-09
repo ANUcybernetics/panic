@@ -3,7 +3,6 @@
 - test on the wall in Birch
 - test multiple simultaneous networks (e.g. for Thomas)
 - come up with some cool networks (at least one per day)
-- set up Mac Mini w/keyboard (inc. WT desktop folder)
 - get iPad for QR codes?
 - grab PA speaker from c/c/c lab
 - screen/display layout should be h/w full?
@@ -18,6 +17,13 @@
 - check what happens in prod if someone goes to an empty/non-existent network
 - unplug the network and see how gracefully it fails
 - make screen recording for backup purposes
+
+## mac mini
+
+- paint Enter key on keyboard?
+- set up desktop bg (launch panic script, WT folder)
+- test with speaker
+- make sure we've got QR cable and extra ethernet for mac mini
 
 ## for v2 proper, but not (necessarily) for SXSW
 
