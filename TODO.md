@@ -3,6 +3,7 @@
 - test multiple simultaneous networks (e.g. for Thomas)
 - test Panic button, find keyboard, set up Mac Mini (inc. WT desktop folder),
   grab PA speaker from c/c/c lab
+- add [this captioning model](https://replicate.com/lucataco/florence-2-large)
 - screen/display layout should be h/w full?
 - settle on final "terminal" display
 - add initial input to :grid displays, and even terminal input (if logged in)
