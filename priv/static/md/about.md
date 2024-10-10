@@ -23,29 +23,31 @@ installation, and we invite you to give it a try:
 
 ## Techy stuff
 
-Panic is the work of [Dr. Ben Swift](https://benswift.me) from the ANU School of
-Cybernetics. The core "engine" is an ([Ash](https://hexdocs.pm/ash/) +
+Panic is the work of [Dr. Ben Swift](https://benswift.me) as part of his job at
+the [ANU School of Cybernetics](https://cybernetics.anu.edu.au). The core
+"engine" is an ([Ash](https://hexdocs.pm/ash/) +
 [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view/))
 [Elixir](https://elixir-lang.org) app, and it talks to various different hosted
 genAI platforms to run genAI models created by OpenAI, Anthropic, Meta, Amazon,
 Google, Microsoft and more. The outputs of these models (text, images and audio)
 are displayed live, in real-time, for viewers on screens anywhere in the world.
 
-## About the [ANU School of Cybernetics](https://cybernetics.anu.edu.au)
+## PANIC! Research Questions
 
 At the School of Cybernetics we love thinking about the way that feedback loops
 (and the the connections between things) define the behaviour of the systems in
 which we live, work and create. That interest sits behind the design of PANIC!
 as a tool for making (and breaking!) networks of hosted generative AI models.
 
-## PANIC! Research Questions
-
-Anyone who's played with PANIC! (or watched others play with PANIC!) has
-probably had one of these questions cross their mind at some point.
+Anyone who's played with (or watched others play with) PANIC! has probably had
+one of these questions cross their mind at some point.
 
 One goal in building PANIC is to provide answers to these questions which are
 both quantifiable and satisfying (i.e. it feels like they represent deeper
 truths about the process).
+
+**Maybe you've got some ideas**? Chat to the friendly folks at the PANIC! booth
+and let us know.
 
 ### how did it get _here_ from _that_ initial prompt?
 
