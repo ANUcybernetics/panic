@@ -18,6 +18,7 @@ defmodule PanicWeb.PanicComponents do
   component.
   """
   attr :model, :any, required: true, doc: "Panic.Model struct"
+  attr :actual_index, :integer, required: true, doc: "index of this model in the model list"
   slot :action, doc: "the slot for showing user actions in the model box"
 
   def model_box(assigns) do
@@ -35,6 +36,9 @@ defmodule PanicWeb.PanicComponents do
       ]}>
       </div>
       <%= render_slot(@action) %>
+      <div class="absolute left-1/2 -translate-x-1/2 top-full mt-1 text-sm text-zinc-700">
+        <%= @actual_index %>
+      </div>
     </div>
     """
   end
@@ -61,12 +65,12 @@ defmodule PanicWeb.PanicComponents do
         ]}>
         </div>
       </div>
-      <%= for {model, idx} <- Enum.with_index(@models) do %>
-        <.model_box model={model}>
+      <%= for {index, actual_index, model} <- models_with_indices(@models) do %>
+        <.model_box model={model} actual_index={actual_index}>
           <:action>
             <button
               phx-click="remove_model"
-              phx-value-index={idx}
+              phx-value-index={index}
               phx-target={@phx_target}
               class="absolute size-4 top-0 right-0 text-xs text-gray-500 hover:text-gray-700"
             >
@@ -77,6 +81,21 @@ defmodule PanicWeb.PanicComponents do
       <% end %>
     </div>
     """
+  end
+
+  defp models_with_indices(models) do
+    models
+    |> Enum.with_index()
+    |> Enum.reduce({[], 0}, fn {model, index}, {acc, actual_index} ->
+      case model.platform do
+        Panic.Platforms.Vestaboard ->
+          {[{index, nil, model} | acc], actual_index}
+        _ ->
+          {[{index, actual_index, model} | acc], actual_index + 1}
+      end
+    end)
+    |> elem(0)
+    |> Enum.reverse()
   end
 
   defp io_colour_mapper(type) do
