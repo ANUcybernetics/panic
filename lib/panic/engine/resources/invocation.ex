@@ -170,6 +170,29 @@ defmodule Panic.Engine.Invocation do
     end
 
     update :about_to_invoke do
+      # if there's a Vestaboard attached to this invocation, hit that API and then
+      # give it a bit to display the text (so the other TVs don't gallop away)
+      change before_action(fn changeset, context ->
+               %{data: %{model: models_and_vestaboards, input: input}} = changeset
+
+               case Enum.reverse(models_and_vestaboards) do
+                 [_model_id] ->
+                   :no_vestaboards
+
+                 [_model_id | vestaboards] ->
+                   Enum.each(vestaboards, fn vestaboard_id ->
+                     vestaboard_model = Panic.Model.by_id!(vestaboard_id)
+                     vestaboard_token = Vestaboard.token_for_model!(vestaboard_model, context.actor)
+                     Vestaboard.send_text(vestaboard_model, input, vestaboard_token)
+                   end)
+
+                   # give the Vestaboards some time to display the text
+                   Process.sleep(10_000)
+               end
+
+               changeset
+             end)
+
       change set_attribute(:state, :invoking)
     end
 
@@ -184,7 +207,7 @@ defmodule Panic.Engine.Invocation do
               )
 
             {%{data: %{model: models_and_vestaboards, input: input}}, %{actor: user}} ->
-              [model_id | vestaboards] = Enum.reverse(models_and_vestaboards)
+              [model_id | _vestaboards] = Enum.reverse(models_and_vestaboards)
               model = Panic.Model.by_id!(model_id)
               %Panic.Model{path: path, invoke: invoke_fn, platform: platform} = model
 
@@ -195,18 +218,6 @@ defmodule Panic.Engine.Invocation do
                 end
 
               if token do
-                # invoking returning, put the output on the vestaboards as a side effect
-                if vestaboards != [] do
-                  Enum.each(vestaboards, fn vestaboard_id ->
-                    vestaboard_model = Panic.Model.by_id!(vestaboard_id)
-                    vestaboard_token = Vestaboard.token_for_model!(vestaboard_model, user)
-                    Vestaboard.send_text(vestaboard_model, input, vestaboard_token)
-                  end)
-
-                  # give the Vestaboards some time to display the text
-                  Process.sleep(10_000)
-                end
-
                 case invoke_fn.(model, input, token) do
                   {:ok, output} ->
                     changeset
