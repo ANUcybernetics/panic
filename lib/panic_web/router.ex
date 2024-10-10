@@ -61,9 +61,13 @@ defmodule PanicWeb.Router do
         live "/:network_id/display/static/:invocation_id", NetworkLive.StaticDisplay, :single
       end
     end
+
+    # Catch-all route for 404 errors
+    live "/*path", ErrorLive.NotFound, :not_found
   end
 
   # Other scopes may use custom stacks.
+
   # scope "/api", PanicWeb do
   #   pipe_through :api
   # end
