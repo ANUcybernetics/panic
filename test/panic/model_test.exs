@@ -84,17 +84,21 @@ defmodule Panic.ModelTest do
       for %Model{id: id, invoke: invoke_fn} = model <- models do
         IO.puts("invoking #{id}")
 
-        input =
-          case model do
-            %Model{input_type: :text} -> "describe a nice scene"
-            %Model{input_type: :image} -> "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-sign.png"
-            %Model{input_type: :audio} -> "https://fly.storage.tigris.dev/panic-invocation-outputs/2-3528-output.webm"
-          end
+        input = test_input(model)
 
         assert {:ok, output} = invoke_fn.(model, input, user.replicate_token)
         # assert output is not blank
         assert String.match?(output, ~r/\S/)
       end
+    end
+
+    test "can successfully invoke a specific model" do
+      user = Panic.Fixtures.user_with_tokens()
+      %Model{invoke: invoke_fn} = model = Model.by_id!("florence-2-large")
+      input = test_input(model)
+
+      assert {:ok, output} = invoke_fn.(model, input, user.replicate_token)
+      assert String.match?(output, ~r/\S/)
     end
   end
 
@@ -120,4 +124,8 @@ defmodule Panic.ModelTest do
       end
     end
   end
+
+  defp test_input(%Model{input_type: :text}), do: "describe a nice scene"
+  defp test_input(%Model{input_type: :image}), do: "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-sign.png"
+  defp test_input(%Model{input_type: :audio}), do: "https://fly.storage.tigris.dev/panic-invocation-outputs/2-3528-output.webm"
 end

@@ -125,9 +125,10 @@ defmodule Panic.Model do
         input_type: :image,
         output_type: :text,
         invoke: fn model, input, token ->
-          with {:ok, %{"output" => text}} <-
-                 Replicate.invoke(model, %{image: input, task_input: "Detailed Caption"}, token) do
-            {:ok, text}
+          with {:ok, %{"output" => %{"text" => text}}} <-
+                 Replicate.invoke(model, %{image: input, task_input: "Detailed Caption"}, token),
+               {:ok, %{"DETAILED_CAPTION" => caption}} <- JsonFixer.parse_incorrect_json(text) do
+            {:ok, caption}
           end
         end
       },
@@ -532,6 +533,46 @@ defmodule Panic.Model do
     |> Enum.reduce([], fn
       %__MODULE__{id: id, platform: Vestaboard}, [first | rest] -> [[id | first] | rest]
       %__MODULE__{id: id}, acc -> [[id] | acc]
+    end)
+  end
+end
+
+# TODO maybe this should go in it's own file? Hopefully they fix the cog return stuff
+# and it can just be deleted
+defmodule JsonFixer do
+  @moduledoc """
+  Provides functionality to parse and fix incorrectly formatted JSON strings.
+
+  This module offers methods to handle JSON-like strings that use single quotes
+  instead of double quotes, and may contain escaped characters within the values.
+  It's particularly useful for parsing JSON that has been incorrectly formatted
+  but still maintains a valid structure.
+
+  Currently, this is necessary because [florence-2-large](https://replicate.com/lucataco/florence-2-large)
+  returns poorly formed responses.
+  """
+  def parse_incorrect_json(input) do
+    fixed_json =
+      input
+      |> replace_outer_quotes()
+      |> String.replace("<DETAILED_CAPTION>", "DETAILED_CAPTION")
+
+    case Jason.decode(fixed_json) do
+      {:ok, parsed} -> {:ok, parsed}
+      {:error, _} -> {:error, "Failed to parse JSON"}
+    end
+  end
+
+  defp replace_outer_quotes(input) do
+    regex = ~r/\{'(.+?)': '((?:[^'\\]|\\.)*)'}/
+
+    Regex.replace(regex, input, fn _, key, value ->
+      escaped_value =
+        value
+        |> String.replace("\\", "\\\\")
+        |> String.replace("\"", "\\\"")
+
+      ~s({"#{key}": "#{escaped_value}"})
     end)
   end
 end
