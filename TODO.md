@@ -5,7 +5,6 @@
 - come up with some cool networks (at least one per day)
 - grab PA speaker from c/c/c lab
 - screen/display layout should be h/w full?
-- settle on final "terminal" display
 - add terminal input to :grid view (if logged in)
 - test the new switch
 - write network & model descriptions
