@@ -116,10 +116,11 @@ defmodule Panic.Workers.Invoker do
     end
   end
 
-  # as the runs go on, add some delays (because *probably* no-one is watching now)
-  defp insert_opts(%Invocation{sequence_number: sequence_number}) when sequence_number < 100, do: []
-  # defp insert_opts(%Invocation{sequence_number: sequence_number}) when sequence_number < 200, do: [schedule_in: 30]
-  defp insert_opts(%Invocation{sequence_number: _sequence_number}), do: [schedule_in: 30]
+  # for SXSW, go as fast as we can
+  defp insert_opts(_), do: []
+
+  # defp insert_opts(%Invocation{sequence_number: sequence_number}) when sequence_number < 200, do: []
+  # defp insert_opts(%Invocation{sequence_number: _sequence_number}), do: [schedule_in: 30]
   # defp insert_opts(%Invocation{sequence_number: _sequence_number}), do: [schedule_in: 600]
 
   @doc """
