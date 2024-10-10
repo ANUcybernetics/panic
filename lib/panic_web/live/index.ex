@@ -7,11 +7,17 @@ defmodule PanicWeb.IndexLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="w-dvw h-dvh grid place-items-center">
+    <div class="relative w-dvw h-dvh grid place-items-center">
       <.link navigate={(@current_user && ~p"/users/#{@current_user}") || ~p"/sign-in"}>
         <div class="size-[60vmin] text-[12vmin] rounded-full grid place-items-center animate-breathe bg-rose-500">
           <.shadowed_text>PANIC!</.shadowed_text>
         </div>
+      </.link>
+      <.link
+        navigate={~p"/about"}
+        class="absolute bottom-4 right-4 text-zinc-600 hover:text-purple-300"
+      >
+        About
       </.link>
     </div>
     """
