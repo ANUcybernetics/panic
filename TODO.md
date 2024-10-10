@@ -1,6 +1,7 @@
 # Panic TODO
 
-- test on the wall in Birch
+- trigger a "disable and change placeholder" thing for the terminal component
+  (because that's now delayed because Vestaboards)
 - test multiple simultaneous networks (e.g. for Thomas)
 - come up with some cool networks (at least one per day)
 - grab PA speaker from c/c/c lab
