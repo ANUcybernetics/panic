@@ -52,10 +52,12 @@ defmodule PanicWeb.Router do
       on_mount: {PanicWeb.LiveUserAuth, :live_user_optional} do
       live "/", IndexLive, :index
 
+      # a helper for when you have to type URLs using a TV remote :/
+      live "/r/:redirect", NetworkLive.Display, :redirect
+
       scope "/networks" do
         live "/:network_id/display/single/:a/:b", NetworkLive.Display, :single
         live "/:network_id/display/grid/:a/:b", NetworkLive.Display, :grid
-        live "/:network_id/display/links", NetworkLive.Display, :links
         live "/:network_id/display/static/:invocation_id", NetworkLive.StaticDisplay, :single
       end
     end

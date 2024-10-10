@@ -12,7 +12,7 @@ defmodule PanicWeb.NetworkLive.Display do
   import PanicWeb.PanicComponents
 
   @impl true
-  def render(%{live_action: :links} = assigns) do
+  def render(%{live_action: :redirect} = assigns) do
     ~H"""
     <div>
       <ul class="flex flex-col gap-12 m-16">
@@ -40,6 +40,12 @@ defmodule PanicWeb.NetworkLive.Display do
   @impl true
   def mount(_params, _session, socket) do
     {:ok, socket, layout: {PanicWeb.Layouts, :display}}
+  end
+
+  # @impl true
+  def handle_params(%{"redirect" => redirect}, _session, socket) do
+    [network_id, offset, stride] = String.graphemes(redirect)
+    {:noreply, push_patch(socket, to: ~p"/networks/#{network_id}/display/single/#{offset}/#{stride}/")}
   end
 
   @impl true
