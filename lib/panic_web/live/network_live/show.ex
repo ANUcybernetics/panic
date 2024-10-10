@@ -29,7 +29,7 @@ defmodule PanicWeb.NetworkLive.Show do
         <.link navigate={~p"/networks/#{@network}/terminal"} type="button">
           <.button>Terminal</.button>
         </.link>
-        <.button phx-click="stop">
+        <.button class="bg-purple-400 text-purple-800" phx-click="stop">
           Stop
         </.button>
       </div>
