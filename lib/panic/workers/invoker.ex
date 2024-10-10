@@ -100,6 +100,11 @@ defmodule Panic.Workers.Invoker do
   end
 
   defp invoke_and_insert_next(invocation, user) do
+    # necessary to re-set things as early as possible for a new run
+    if invocation.sequence_number == 0 do
+      Panic.Engine.update_state!(invocation, :invoking, actor: user)
+    end
+
     with {:ok, invocation} <- Engine.about_to_invoke(invocation, actor: user),
          {:ok, invocation} <- Engine.invoke(invocation, actor: user),
          {:ok, next_invocation} <- Engine.prepare_next(invocation, actor: user) do
