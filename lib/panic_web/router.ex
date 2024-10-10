@@ -62,6 +62,9 @@ defmodule PanicWeb.Router do
       end
     end
 
+    # "static" pages (still liveviews, though)
+    live "/about", AboutLive, :index
+
     # Catch-all route for 404 errors
     live "/*path", ErrorLive.NotFound, :not_found
   end
