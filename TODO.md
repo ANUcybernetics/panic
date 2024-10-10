@@ -1,20 +1,18 @@
 # Panic TODO
 
-- trigger a "disable and change placeholder" thing for the terminal component
-  (because that's now delayed because Vestaboards)
-- test multiple simultaneous networks (e.g. for Thomas)
-- come up with some cool networks (at least one per day)
+- test audio on TVs
+- add a non-logged in network view (to share with attendees)
+- test multiple simultaneous networks (from different users)
 - grab PA speaker from c/c/c lab
-- screen/display layout should be h/w full?
 - add terminal input to :grid view (if logged in)
 - test the new switch
 - write network & model descriptions
-- add a non-logged in network view (to share with attendees)
-- add/modify an "admin" panel which I can access on mobile (with e.g. stop all,
-  maybe even logs?)
-- check what happens in prod if someone goes to an empty/non-existent network
+- come up with some cool networks (at least one per day), write descriptions
 - unplug the network and see how gracefully it fails
 - make screen recording for backup purposes
+- add/modify an "admin" panel which I can access on mobile (with e.g. stop all,
+  maybe even logs?)
+- screen/display layout should be h/w full?
 
 ## mac mini
 
