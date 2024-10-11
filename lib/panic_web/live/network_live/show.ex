@@ -24,9 +24,9 @@ defmodule PanicWeb.NetworkLive.Show do
         <.link navigate={~p"/networks/#{@network}/edit"} phx-click={JS.push_focus()}>
           <.button>Edit network</.button>
         </.link>
-        <.button phx-click={show_modal("qr-modal")} type="button" aria-label="show modal">
-          QR code
-        </.button>
+        <.link patch={~p"/networks/#{@network}/info/qr"} type="button">
+          <.button>QR code</.button>
+        </.link>
         <.link navigate={~p"/networks/#{@network}/terminal"} type="button">
           <.button>Terminal</.button>
         </.link>
