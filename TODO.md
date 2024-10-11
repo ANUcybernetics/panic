@@ -1,12 +1,8 @@
 # Panic TODO
 
 - colour of Stop button
-- sort out display of audio things (waveform for TVs, but audio for playback?)
 - add a non-logged in network view (to share with attendees)
-- delete old files from tigris
 - QR code for above, plus an index of all QR links for a user's network
-- add access control the the user/network pages
-- test multiple simultaneous networks (from different users)
 - add terminal input to :grid view (if logged in)
 - refocus the model select component on selection
 - write network & model descriptions
