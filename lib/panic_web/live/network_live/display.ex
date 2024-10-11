@@ -12,21 +12,6 @@ defmodule PanicWeb.NetworkLive.Display do
   import PanicWeb.PanicComponents
 
   @impl true
-  def render(%{live_action: :redirect} = assigns) do
-    ~H"""
-    <div>
-      <ul class="flex flex-col gap-12 m-16">
-        <%= for i <- 0..7 do %>
-          <.link navigate={~p"/networks/#{@network.id}/display/single/#{i}/8/"}>
-            <li class="h-16 bg-purple-900 flex items-center justify-center">Screen <%= i + 1 %></li>
-          </.link>
-        <% end %>
-      </ul>
-    </div>
-    """
-  end
-
-  @impl true
   def render(assigns) do
     ~H"""
     <p :if={@live_action == :grid} class="px-4 pt-2 pb-4">
