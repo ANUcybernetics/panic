@@ -47,7 +47,7 @@ defmodule PanicWeb.NetworkLive.Info do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, DisplayStreamer.configure_invocation_stream(socket, {:single, 0, 2})}
+    {:ok, DisplayStreamer.configure_invocation_stream(socket, {:single, 0, 1})}
   end
 
   @impl true
@@ -67,7 +67,13 @@ defmodule PanicWeb.NetworkLive.Info do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
-    DisplayStreamer.handle_invocation_message(message, socket)
+    # for this view, only show completed ones
+    # no need to show the panic loading screen
+    if message.payload.data.state == :completed do
+      DisplayStreamer.handle_invocation_message(message, socket)
+    else
+      {:noreply, socket}
+    end
   end
 
   defp non_vestaboard_models(network) do
