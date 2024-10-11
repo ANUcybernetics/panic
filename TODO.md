@@ -1,6 +1,5 @@
 # Panic TODO
 
-- colour of Stop button
 - add a non-logged in network view (to share with attendees)
 - QR code for above, plus an index of all QR links for a user's network
 - add terminal input to :grid view (if logged in)

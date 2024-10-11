@@ -33,7 +33,7 @@ defmodule PanicWeb.NetworkLive.Show do
         <.link navigate={~p"/sign-out"} type="button">
           <.button>Sign out</.button>
         </.link>
-        <.button class="bg-purple-400 text-purple-800" phx-click="stop">
+        <.button class="ring-purple-300 ring-2" phx-click="stop">
           Stop
         </.button>
       </div>
