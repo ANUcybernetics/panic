@@ -65,7 +65,7 @@ defmodule PanicWeb.PanicComponents do
         ]}>
         </div>
       </div>
-      <%= for {index, actual_index, model} <- models_with_indices(@models) do %>
+      <%= for {index, actual_index, model} <- Model.models_with_indices(@models) do %>
         <.model_box model={model} actual_index={actual_index}>
           <:action>
             <button
@@ -81,22 +81,6 @@ defmodule PanicWeb.PanicComponents do
       <% end %>
     </div>
     """
-  end
-
-  defp models_with_indices(models) do
-    models
-    |> Enum.with_index()
-    |> Enum.reduce({[], 0}, fn {model, index}, {acc, actual_index} ->
-      case model.platform do
-        Panic.Platforms.Vestaboard ->
-          {[{index, nil, model} | acc], actual_index}
-
-        _ ->
-          {[{index, actual_index, model} | acc], actual_index + 1}
-      end
-    end)
-    |> elem(0)
-    |> Enum.reverse()
   end
 
   defp io_colour_mapper(type) do

@@ -535,6 +535,50 @@ defmodule Panic.Model do
       %__MODULE__{id: id}, acc -> [[id] | acc]
     end)
   end
+
+  @doc """
+  Transforms a list of models into a list of tuples containing model information with indices.
+
+  This function takes a list of models and returns a list of tuples. Each tuple contains:
+  - The original index of the model in the input list
+  - An "actual index" that increments only for non-Vestaboard models
+  - The model itself
+
+  Vestaboard models are assigned `nil` as their actual index (because they're not
+  really models).
+
+  ## Parameters
+
+  - `models`: A list of `Panic.Model` structs
+
+  ## Returns
+
+  A list of tuples in the format `{original_index, actual_index, model}`, where:
+  - `original_index` is the index of the model in the input list
+  - `actual_index` is the index excluding Vestaboard models, or `nil` for Vestaboard models
+  - `model` is the original model struct
+
+  ## Example
+
+      iex> models = [%Panic.Model{platform: Vestaboard}, %Panic.Model{}, %Panic.Model{}]
+      iex> Panic.Model.models_with_indices(models)
+      [{0, nil, %Panic.Model{platform: Vestaboard}}, {1, 0, %Panic.Model{}}, {2, 1, %Panic.Model{}}]
+  """
+  def models_with_indices(models) do
+    models
+    |> Enum.with_index()
+    |> Enum.reduce({[], 0}, fn {model, index}, {acc, actual_index} ->
+      case model.platform do
+        Panic.Platforms.Vestaboard ->
+          {[{index, nil, model} | acc], actual_index}
+
+        _ ->
+          {[{index, actual_index, model} | acc], actual_index + 1}
+      end
+    end)
+    |> elem(0)
+    |> Enum.reverse()
+  end
 end
 
 # TODO maybe this should go in it's own file? Hopefully they fix the cog return stuff
