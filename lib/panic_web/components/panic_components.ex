@@ -221,6 +221,7 @@ defmodule PanicWeb.PanicComponents do
 
   def invocation_slot(%{type: :audio} = assigns) do
     ~H"""
+    <audio autoplay loop controls={true} src={@value} />
     <img
       class="object-cover w-full"
       src="https://fly.storage.tigris.dev/panic-invocation-outputs/audio-waveform-image.webp"
