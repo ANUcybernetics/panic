@@ -109,11 +109,11 @@ defmodule Panic.Workers.Archiver do
         case System.cmd("convert", [
                filename,
                "-quality",
-               "90",
+               "75",
                "-define",
-               "webp:lossless=true",
+               "webp:lossless=false",
                "-define",
-               "webp:method=6",
+               "webp:method=4",
                output_filename
              ]) do
           {_, 0} -> {:ok, output_filename}
