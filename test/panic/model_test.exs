@@ -126,6 +126,10 @@ defmodule Panic.ModelTest do
   end
 
   defp test_input(%Model{input_type: :text}), do: "describe a nice scene"
-  defp test_input(%Model{input_type: :image}), do: "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-sign.png"
-  defp test_input(%Model{input_type: :audio}), do: "https://fly.storage.tigris.dev/panic-invocation-outputs/2-3528-output.webm"
+
+  defp test_input(%Model{input_type: :image}),
+    do: "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-placeholder.webp"
+
+  defp test_input(%Model{input_type: :audio}),
+    do: "https://fly.storage.tigris.dev/panic-invocation-outputs/2-3528-output.webm"
 end

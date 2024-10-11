@@ -237,7 +237,7 @@ defmodule Panic.Engine.Invocation do
                     changeset
                     |> Ash.Changeset.force_change_attribute(
                       :output,
-                      "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-sign.png"
+                      "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-placeholder.webp"
                     )
                     |> Ash.Changeset.force_change_attribute(:state, :completed)
 
