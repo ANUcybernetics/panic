@@ -1,5 +1,6 @@
 # Panic TODO
 
+- colour of Stop button
 - sort out display of audio things (waveform for TVs, but audio for playback?)
 - add a non-logged in network view (to share with attendees)
 - delete old files from tigris
@@ -40,6 +41,8 @@
   serve them from priv/static/images (the files are already in there)
 - a "waiting" timer on all pending invocations (better still, with feedback for
   e.g. replicate on what the actual status was)
+- each model could have a "pre/post wait" time, to account for things like
+  vestaboards
 - replace the "split into `<p>`s based on double newline with proper md parsing
 - instead of `use DisplayStreamer`, perhaps can just have an on_mount hook?
 - refactor user/network liveviews to use streams for the lists
