@@ -1,7 +1,5 @@
 # Panic TODO
 
-- add a non-logged in network view (to share with attendees)
-- QR code for above, plus an index of all QR links for a user's network
 - add terminal input to :grid view (if logged in)
 - refocus the model select component on selection
 - write network & model descriptions

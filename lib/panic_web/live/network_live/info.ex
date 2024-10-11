@@ -7,6 +7,24 @@ defmodule PanicWeb.NetworkLive.Info do
   alias PanicWeb.DisplayStreamer
 
   @impl true
+  def render(%{live_action: :all} = assigns) do
+    ~H"""
+    <div class="prose prose-purple">
+      <h2>QR codes</h2>
+      <%= for network <- Ash.read!(Panic.Engine.Network, actor: @current_user) do %>
+        <ol>
+          <li>
+            <.link patch={~p"/networks/#{network.id}/info/qr"}>
+              <%= network.name %>
+            </.link>
+          </li>
+        </ol>
+      <% end %>
+    </div>
+    """
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
     <div class="prose prose-purple">
