@@ -7,6 +7,7 @@
 - add access control the the user/network pages
 - test multiple simultaneous networks (from different users)
 - add terminal input to :grid view (if logged in)
+- refocus the model select component on selection
 - write network & model descriptions
 - come up with some cool networks (at least one per day), write descriptions
 - unplug the network and see how gracefully it fails
@@ -33,6 +34,7 @@
 
 ## ideas (not necessarily TODO, but y'know...)
 
+- download sqlite file as backup
 - screen/display layout should be h/w full?
 - instead of hosting the nsfw placeholder and audio waveform pictures on tigris,
   serve them from priv/static/images (the files are already in there)
