@@ -1,7 +1,7 @@
 <header class="px-4 sm:px-6 lg:px-8">
   <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
     <.link navigate={~p"/"}>
-      PANIC!
+      <.panic_button class="size-[60px] text-[12px]" />
     </.link>
     <p :if={assigns[:current_user]} id="current-user-email"><%= @current_user.email %></p>
   </div>

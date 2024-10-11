@@ -10,5 +10,7 @@ defmodule PanicWeb.Layouts do
   """
   use PanicWeb, :html
 
+  import PanicWeb.PanicComponents
+
   embed_templates "layouts/*"
 end
