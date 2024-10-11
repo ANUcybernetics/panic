@@ -13,7 +13,7 @@ defmodule PanicWeb.AboutLive do
 
   def render(assigns) do
     ~H"""
-    <div class="prose prose-invert text-purple-300">
+    <div class="prose prose-purple">
       <%= raw(@content) %>
     </div>
     """
