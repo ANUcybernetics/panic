@@ -45,6 +45,8 @@ defmodule PanicWeb.Router do
         live "/:network_id", NetworkLive.Show, :show
         live "/:network_id/edit", NetworkLive.Show, :edit
         live "/:network_id/terminal", NetworkLive.Terminal, :terminal
+        live "/:network_id/info", NetworkLive.Info, :info
+        live "/:network_id/info/qr", NetworkLive.Info, :qr
       end
     end
 

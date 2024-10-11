@@ -86,8 +86,6 @@ defmodule PanicWeb.NetworkLive.Show do
         navigate={~p"/networks/#{@network}"}
       />
     </.modal>
-
-    <.qr_modal id="qr-modal" show={false} text="https://example.com" />
     """
   end
 

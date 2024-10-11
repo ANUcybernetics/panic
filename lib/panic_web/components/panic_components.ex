@@ -227,16 +227,13 @@ defmodule PanicWeb.PanicComponents do
   @doc """
   Renders a modal containing a QR code.
   """
-  attr :id, :string, required: true
-  attr :show, :boolean, required: true
   attr :text, :string, required: true, doc: "the text data to encode in the QR code"
 
-  def qr_modal(assigns) do
-    assigns = assign_new(assigns, :title, fn -> [] end)
-
+  def qr_code(assigns) do
     ~H"""
-    <PanicWeb.CoreComponents.modal id={@id} show={@show}>
-      <div class="flex justify-center">
+    <div class="flex flex-col items-center">
+      <h2 class="text-4xl font-semibold mb-8">wtf is this?</h2>
+      <div>
         <%= @text
         |> QRCode.create(:high)
         |> QRCode.render(:svg, %QRCode.Render.SvgSettings{
@@ -247,7 +244,7 @@ defmodule PanicWeb.PanicComponents do
         |> elem(1)
         |> Phoenix.HTML.raw() %>
       </div>
-    </PanicWeb.CoreComponents.modal>
+    </div>
     """
   end
 
