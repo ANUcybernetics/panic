@@ -90,6 +90,7 @@ defmodule PanicWeb.PanicComponents do
       case model.platform do
         Panic.Platforms.Vestaboard ->
           {[{index, nil, model} | acc], actual_index}
+
         _ ->
           {[{index, actual_index, model} | acc], actual_index + 1}
       end
@@ -157,8 +158,7 @@ defmodule PanicWeb.PanicComponents do
   def invocation(%{invocation: %Invocation{state: :failed}} = assigns) do
     ~H"""
     <.invocation_container id={@id}>
-      <div class="size-full grid place-items-center bg-rose-950">
-      </div>
+      <div class="size-full grid place-items-center bg-rose-950"></div>
     </.invocation_container>
     """
   end
@@ -252,6 +252,17 @@ defmodule PanicWeb.PanicComponents do
         |> Phoenix.HTML.raw() %>
       </div>
     </PanicWeb.CoreComponents.modal>
+    """
+  end
+
+  def panic_button(assigns) do
+    ~H"""
+    <div class={[
+      "rounded-full grid place-items-center animate-breathe bg-rose-500",
+      @class
+    ]}>
+      <.shadowed_text>PANIC!</.shadowed_text>
+    </div>
     """
   end
 end

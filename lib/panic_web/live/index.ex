@@ -9,9 +9,7 @@ defmodule PanicWeb.IndexLive do
     ~H"""
     <div class="relative w-dvw h-dvh grid place-items-center">
       <.link navigate={(@current_user && ~p"/users/#{@current_user}") || ~p"/sign-in"}>
-        <div class="size-[60vmin] text-[12vmin] rounded-full grid place-items-center animate-breathe bg-rose-500">
-          <.shadowed_text>PANIC!</.shadowed_text>
-        </div>
+        <.panic_button class="size-[60vmin] text-[12vmin]" />
       </.link>
       <.link
         navigate={~p"/about"}
