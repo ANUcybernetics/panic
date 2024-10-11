@@ -29,8 +29,13 @@ defmodule PanicWeb.NetworkLive.Display do
 
   # @impl true
   def handle_params(%{"redirect" => redirect}, _session, socket) do
-    [network_id, offset, stride] = String.graphemes(redirect)
-    {:noreply, push_patch(socket, to: ~p"/networks/#{network_id}/display/single/#{offset}/#{stride}/")}
+    path =
+      case String.graphemes(redirect) do
+        ["s" | invocation_graphemes] -> ~p"/display/static/#{Enum.join(invocation_graphemes)}/"
+        [network_id, offset, stride] -> ~p"/networks/#{network_id}/display/single/#{offset}/#{stride}/"
+      end
+
+    {:noreply, push_patch(socket, to: path)}
   end
 
   @impl true

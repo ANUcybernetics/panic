@@ -26,7 +26,7 @@ defmodule PanicWeb.NetworkLive.StaticDisplay do
   end
 
   @impl true
-  def handle_params(%{"network_id" => network_id, "invocation_id" => invocation_id}, _session, socket) do
+  def handle_params(%{"invocation_id" => invocation_id}, _session, socket) do
     # no auth required, because this is in a "login optional" route
     invocation = Ash.get!(Panic.Engine.Invocation, invocation_id, authorize?: false)
     # TODO use the live action and params (and add a :grid router path) to make this work for grids too
@@ -34,7 +34,7 @@ defmodule PanicWeb.NetworkLive.StaticDisplay do
 
     {:noreply,
      assign(socket,
-       page_title: "Panic invocation (network #{network_id})",
+       page_title: "Panic invocation (network #{invocation.network_id})",
        invocation: invocation,
        display: display
      )}

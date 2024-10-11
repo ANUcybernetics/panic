@@ -58,15 +58,14 @@ defmodule PanicWeb.Router do
       scope "/networks" do
         live "/:network_id/display/single/:a/:b", NetworkLive.Display, :single
         live "/:network_id/display/grid/:a/:b", NetworkLive.Display, :grid
-        live "/:network_id/display/static/:invocation_id", NetworkLive.StaticDisplay, :single
       end
+
+      # static invocation display doesn't need a network ID
+      live "/display/static/:invocation_id", NetworkLive.StaticDisplay, :single
     end
 
     # "static" pages (still liveviews, though)
     live "/about", AboutLive, :index
-
-    # Catch-all route for 404 errors
-    live "/*path", ErrorLive.NotFound, :not_found
   end
 
   # Other scopes may use custom stacks.
@@ -90,5 +89,11 @@ defmodule PanicWeb.Router do
       live_dashboard "/dashboard", metrics: PanicWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
+  end
+
+  # Catch-all route for 404 errors
+  scope "/", PanicWeb do
+    pipe_through :browser
+    live "/*path", ErrorLive.NotFound, :not_found
   end
 end
