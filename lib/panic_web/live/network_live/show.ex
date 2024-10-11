@@ -1,9 +1,10 @@
 defmodule PanicWeb.NetworkLive.Show do
   @moduledoc false
   use PanicWeb, :live_view
-  use PanicWeb.DisplayStreamer
 
   import PanicWeb.PanicComponents
+
+  alias PanicWeb.DisplayStreamer
 
   @impl true
   def render(assigns) do
@@ -91,11 +92,23 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   @impl true
+  def mount(_params, _session, socket) do
+    {:ok, DisplayStreamer.configure_invocation_stream(socket, {:grid, 2, 3})}
+  end
+
+  @impl true
   def handle_params(%{"network_id" => network_id}, _session, socket) do
-    {:noreply,
-     socket
-     |> assign(:page_title, page_title(socket.assigns[:live_action]))
-     |> configure_display_stream(network_id, {:grid, 2, 3})}
+    case Ash.get(Panic.Engine.Network, network_id, actor: socket.assigns.current_user) do
+      {:ok, network} ->
+        {:noreply,
+         socket
+         |> assign(:page_title, page_title(socket.assigns[:live_action]))
+         |> assign(:network, network)
+         |> DisplayStreamer.subscribe_to_invocation_stream(network)}
+
+      {:error, _error} ->
+        {:noreply, push_navigate(socket, to: ~p"/404")}
+    end
   end
 
   @impl true
@@ -106,6 +119,11 @@ defmodule PanicWeb.NetworkLive.Show do
   @impl true
   def handle_info({PanicWeb.NetworkLive.ModelSelectComponent, {:models_updated, network}}, socket) do
     {:noreply, assign(socket, network: network)}
+  end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
+    DisplayStreamer.handle_invocation_message(message, socket)
   end
 
   @impl true

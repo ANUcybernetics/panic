@@ -1,7 +1,8 @@
 defmodule PanicWeb.NetworkLive.Terminal do
   @moduledoc false
   use PanicWeb, :live_view
-  use PanicWeb.DisplayStreamer
+
+  alias PanicWeb.DisplayStreamer
 
   @impl true
   def render(assigns) do
@@ -17,7 +18,10 @@ defmodule PanicWeb.NetworkLive.Terminal do
           id={@network.id}
         />
 
-        <p><span class="text-purple-300/50">Last input:</span> <span :if={@genesis_invocation}><%= @genesis_invocation.input %></span></p>
+        <p>
+          <span class="text-purple-300/50">Last input:</span>
+          <span :if={@genesis_invocation}><%= @genesis_invocation.input %></span>
+        </p>
       </div>
     </div>
     """
@@ -25,14 +29,25 @@ defmodule PanicWeb.NetworkLive.Terminal do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket, layout: {PanicWeb.Layouts, :display}}
+    {:ok, DisplayStreamer.configure_invocation_stream(socket, {:single, 0, 1}), layout: {PanicWeb.Layouts, :display}}
   end
 
   @impl true
   def handle_params(%{"network_id" => network_id}, _, socket) do
-    {:noreply,
-     socket
-     |> assign(:page_title, "Network #{network_id} terminal")
-     |> configure_display_stream(network_id, {:single, 0, 1})}
+    case Ash.get(Panic.Engine.Network, network_id, actor: socket.assigns.current_user) do
+      {:ok, network} ->
+        {:noreply,
+         socket
+         |> assign(:page_title, "Network #{network_id} terminal")
+         |> DisplayStreamer.subscribe_to_invocation_stream(network)}
+
+      {:error, _error} ->
+        {:noreply, push_navigate(socket, to: ~p"/404")}
+    end
+  end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
+    DisplayStreamer.handle_invocation_message(message, socket)
   end
 end

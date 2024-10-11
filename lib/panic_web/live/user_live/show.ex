@@ -99,15 +99,18 @@ defmodule PanicWeb.UserLive.Show do
 
   @impl true
   def handle_params(%{"user_id" => id}, _, socket) do
-    user =
-      Ash.get!(Panic.Accounts.User, id, actor: socket.assigns.current_user)
+    case Ash.get(Panic.Accounts.User, id, actor: socket.assigns.current_user) do
+      {:ok, user} ->
+        networks = Ash.read!(Panic.Engine.Network, actor: socket.assigns.current_user)
 
-    networks = Ash.read!(Panic.Engine.Network, actor: socket.assigns.current_user)
+        {:noreply,
+         socket
+         |> assign(:page_title, page_title(socket.assigns.live_action))
+         |> assign(user: user, networks: networks)}
 
-    {:noreply,
-     socket
-     |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(user: user, networks: networks)}
+      {:error, _error} ->
+        {:noreply, push_navigate(socket, to: ~p"/404")}
+    end
   end
 
   @impl true

@@ -7,9 +7,10 @@ defmodule PanicWeb.NetworkLive.Display do
   the network's activity without requiring authentication.
   """
   use PanicWeb, :live_view
-  use PanicWeb.DisplayStreamer
 
   import PanicWeb.PanicComponents
+
+  alias PanicWeb.DisplayStreamer
 
   @impl true
   def render(assigns) do
@@ -24,7 +25,7 @@ defmodule PanicWeb.NetworkLive.Display do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket, layout: {PanicWeb.Layouts, :display}}
+    {:ok, DisplayStreamer.configure_invocation_stream(socket, {:grid, 2, 3}), layout: {PanicWeb.Layouts, :display}}
   end
 
   # @impl true
@@ -47,9 +48,21 @@ defmodule PanicWeb.NetworkLive.Display do
         {_, :links} -> {:grid, 2, 3}
       end
 
-    {:noreply,
-     socket
-     |> assign(:page_title, "Panic display (network #{network_id})")
-     |> configure_display_stream(network_id, display)}
+    case Ash.get(Panic.Engine.Network, network_id, actor: socket.assigns.current_user) do
+      {:ok, network} ->
+        {:noreply,
+         socket
+         |> assign(:page_title, "Panic display (network #{network_id})")
+         |> assign(:display, display)
+         |> DisplayStreamer.subscribe_to_invocation_stream(network)}
+
+      {:error, _error} ->
+        {:noreply, push_navigate(socket, to: ~p"/404")}
+    end
+  end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
+    DisplayStreamer.handle_invocation_message(message, socket)
   end
 end
