@@ -1,18 +1,18 @@
 # Panic TODO
 
-- test audio on TVs
+- sort out display of audio things (waveform for TVs, but audio for playback?)
 - add a non-logged in network view (to share with attendees)
+- delete old files from tigris
+- QR code for above, plus an index of all QR links for a user's network
+- add access control the the user/network pages
 - test multiple simultaneous networks (from different users)
-- grab PA speaker from c/c/c lab
 - add terminal input to :grid view (if logged in)
-- test the new switch
 - write network & model descriptions
 - come up with some cool networks (at least one per day), write descriptions
 - unplug the network and see how gracefully it fails
 - make screen recording for backup purposes
 - add/modify an "admin" panel which I can access on mobile (with e.g. stop all,
   maybe even logs?)
-- screen/display layout should be h/w full?
 
 ## mac mini
 
@@ -33,6 +33,9 @@
 
 ## ideas (not necessarily TODO, but y'know...)
 
+- screen/display layout should be h/w full?
+- instead of hosting the nsfw placeholder and audio waveform pictures on tigris,
+  serve them from priv/static/images (the files are already in there)
 - a "waiting" timer on all pending invocations (better still, with feedback for
   e.g. replicate on what the actual status was)
 - replace the "split into `<p>`s based on double newline with proper md parsing
