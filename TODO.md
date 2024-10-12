@@ -1,20 +1,20 @@
 # Panic TODO
 
-- add terminal input to :grid view (if logged in)
-- refocus the model select component on selection
 - write network & model descriptions
 - come up with some cool networks (at least one per day), write descriptions
 - unplug the network and see how gracefully it fails
 - make screen recording for backup purposes
+- refocus and clear the model select component on selection (to allow for
+  rapid-fire adding of models)
 - add/modify an "admin" panel which I can access on mobile (with e.g. stop all,
-  maybe even logs?)
+  all current invocations, maybe Oban logs?)
 
 ## mac mini
 
 - paint Enter key on keyboard?
 - set up desktop bg (launch panic script, WT folder)
 - test with speaker
-- make sure we've got QR cable and extra ethernet for mac mini
+- make sure we've got HDMI cable and extra ethernet for mac mini
 - get iPad (for demo, QR code purposes)
 
 ## for v2 proper, but not (necessarily) for SXSW

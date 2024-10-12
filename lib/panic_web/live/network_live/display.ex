@@ -15,10 +15,21 @@ defmodule PanicWeb.NetworkLive.Display do
   @impl true
   def render(assigns) do
     ~H"""
-    <p :if={@live_action == :grid} class="px-4 pt-2 pb-4">
-      <span class="text-purple-300/50">Last input:</span>
-      <span :if={@genesis_invocation}><%= @genesis_invocation.input %></span>
-    </p>
+    <div :if={@live_action == :grid} class="px-4 pt-2 pb-4">
+      <.live_component
+        :if={@current_user}
+        class="-mt-4 mb-4"
+        module={PanicWeb.NetworkLive.TerminalComponent}
+        network={@network}
+        genesis_invocation={@genesis_invocation}
+        current_user={@current_user}
+        id={@network.id}
+      />
+      <p>
+        <span class="text-purple-300/50">Last input:</span>
+        <span :if={@genesis_invocation}><%= @genesis_invocation.input %></span>
+      </p>
+    </div>
     <.display invocations={@streams.invocations} display={@display} />
     """
   end
