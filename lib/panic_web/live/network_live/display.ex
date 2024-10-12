@@ -10,6 +10,7 @@ defmodule PanicWeb.NetworkLive.Display do
 
   import PanicWeb.PanicComponents
 
+  alias Panic.Engine.Network
   alias PanicWeb.DisplayStreamer
 
   @impl true
@@ -59,7 +60,7 @@ defmodule PanicWeb.NetworkLive.Display do
         {_, :links} -> {:grid, 2, 3}
       end
 
-    case Ash.get(Panic.Engine.Network, network_id, actor: socket.assigns.current_user) do
+    case get_network(network_id, socket.assigns) do
       {:ok, network} ->
         {:noreply,
          socket
@@ -75,5 +76,16 @@ defmodule PanicWeb.NetworkLive.Display do
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
     DisplayStreamer.handle_invocation_message(message, socket)
+  end
+
+  # this is a hack - because these live actions indicate routes that are auth-optional
+  # a nicer way to do that would be to have the policy checks know which on_mount
+  # hooks had been run, and then to check the policy based on that
+  defp get_network(network_id, %{live_action: live_action}) when live_action in [:grid, :single] do
+    Ash.get(Network, network_id, authorize?: false)
+  end
+
+  defp get_network(network_id, assigns) do
+    Ash.get(Network, network_id, actor: assigns.current_user)
   end
 end

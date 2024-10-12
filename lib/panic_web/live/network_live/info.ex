@@ -70,7 +70,7 @@ defmodule PanicWeb.NetworkLive.Info do
 
   @impl true
   def handle_params(%{"network_id" => network_id}, _, socket) do
-    case Ash.get(Panic.Engine.Network, network_id, actor: socket.assigns.current_user) do
+    case get_network(network_id, socket.assigns) do
       {:ok, network} ->
         {:noreply,
          socket
@@ -98,5 +98,16 @@ defmodule PanicWeb.NetworkLive.Info do
     network.models
     |> Panic.Model.model_ids_to_model_list()
     |> Enum.reject(fn m -> m.platform == Panic.Platforms.Vestaboard end)
+  end
+
+  # this is a hack - because these live actions indicate routes that are auth-optional
+  # a nicer way to do that would be to have the policy checks know which on_mount
+  # hooks had been run, and then to check the policy based on that
+  defp get_network(network_id, %{live_action: live_action}) when live_action in [:grid, :single] do
+    Ash.get(Network, network_id, authorize?: false)
+  end
+
+  defp get_network(network_id, assigns) do
+    Ash.get(Network, network_id, actor: assigns.current_user)
   end
 end
