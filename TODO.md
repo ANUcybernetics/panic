@@ -1,6 +1,7 @@
 # Panic TODO
 
-- write network & model descriptions
+- test all the new networks (can I Enum.map new test cases?)
+- find out why git commit messages are borked
 - come up with some cool networks (at least one per day), write descriptions
 - unplug the network and see how gracefully it fails
 - make screen recording for backup purposes
