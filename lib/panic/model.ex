@@ -376,6 +376,31 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
+        id: "bark",
+        platform: Replicate,
+        path: "suno-ai/bark",
+        name: "Bark",
+        input_type: :text,
+        output_type: :audio,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => %{"audio_out" => audio_url}}} <-
+                 Replicate.invoke(
+                   model,
+                   %{
+                     prompt: input,
+                     text_temp: 0.9,
+                     waveform_temp: 0.9,
+                     history_prompt:
+                       Enum.random(["de", "en", "es", "fr", "hi", "it", "ja", "ko", "pl", "pt", "ru", "tr", "zh"]) <>
+                         "_speaker_#{Enum.random(0..9)}"
+                   },
+                   token
+                 ) do
+            {:ok, audio_url}
+          end
+        end
+      },
+      %__MODULE__{
         id: "riffusion",
         platform: Replicate,
         path: "riffusion/riffusion",
