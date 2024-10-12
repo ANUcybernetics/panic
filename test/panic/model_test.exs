@@ -41,7 +41,7 @@ defmodule Panic.ModelTest do
   describe "Replicate platform" do
     alias Panic.Platforms.Replicate
 
-    # @describetag skip: "requires API keys"
+    @describetag skip: "requires API keys"
     @describetag timeout: :timer.minutes(10)
 
     test "can list latest model version for all models" do
