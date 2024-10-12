@@ -9,6 +9,14 @@
 - add/modify an "admin" panel which I can access on mobile (with e.g. stop all,
   all current invocations, maybe Oban logs?)
 
+## SXSW network plan
+
+1. Images and Words: text-to-image and back (vanilla-ish, but multiple models,
+   though)
+2. The Cocktail Party: multilingual speech
+3. Finetune Friday: all the flux loras
+4. The Big Dog: stable audio, whisper, images, with some LLM help
+
 ## mac mini
 
 - paint Enter key on keyboard?

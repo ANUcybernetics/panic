@@ -118,6 +118,28 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
+        id: "clip_prefix_caption",
+        platform: Replicate,
+        path: "rmokady/clip_prefix_caption",
+        name: "CLIP prefix caption",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => text}} <-
+                 Replicate.invoke(
+                   model,
+                   %{
+                     image: input,
+                     model: "conceptual-captions",
+                     use_beam_search: true
+                   },
+                   token
+                 ) do
+            {:ok, text}
+          end
+        end
+      },
+      %__MODULE__{
         id: "florence-2-large",
         platform: Replicate,
         path: "lucataco/florence-2-large",
@@ -190,7 +212,7 @@ defmodule Panic.Model do
         id: "blip-2",
         platform: Replicate,
         path: "salesforce/blip-2",
-        name: "BLIP2",
+        name: "BLIP 2",
         input_type: :image,
         output_type: :text,
         invoke: fn model, input, token ->
@@ -201,6 +223,27 @@ defmodule Panic.Model do
                      image: input,
                      question:
                        "Describe this picture in detail, using lots of descriptive adjectives. Include information about both foreground and background elements."
+                   },
+                   token
+                 ) do
+            {:ok, text}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "blip-3",
+        platform: Replicate,
+        path: "zsxkib/blip-3",
+        name: "BLIP 3",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => text}} <-
+                 Replicate.invoke(
+                   model,
+                   %{
+                     image: input,
+                     question: "What is shown in the image?"
                    },
                    token
                  ) do
@@ -321,6 +364,20 @@ defmodule Panic.Model do
         platform: Replicate,
         path: "meta/meta-llama-3-8b-instruct",
         name: "LLaMa 8B Instruct",
+        input_type: :text,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => output_list}} <-
+                 Replicate.invoke(model, %{prompt: input}, token) do
+            {:ok, Enum.join(output_list)}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "meta-llama-3-70b-instruct",
+        platform: Replicate,
+        path: "meta/meta-llama-3-70b-instruct",
+        name: "LLaMa 70B Instruct",
         input_type: :text,
         output_type: :text,
         invoke: fn model, input, token ->
