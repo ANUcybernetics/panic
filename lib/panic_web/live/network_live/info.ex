@@ -46,9 +46,9 @@ defmodule PanicWeb.NetworkLive.Info do
         </ol>
       </section>
 
-      <.link patch={~p"/about"}>
-        For more information about how PANIC works, see the about page
-      </.link>
+      <p>
+        For more information about how PANIC! works, see the <.link patch={~p"/about"}>about page</.link>.
+      </p>
 
       <section>
         <h2>Last input</h2>
