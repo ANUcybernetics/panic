@@ -131,5 +131,5 @@ defmodule Panic.ModelTest do
     do: "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-placeholder.webp"
 
   defp test_input(%Model{input_type: :audio}),
-    do: "https://fly.storage.tigris.dev/panic-invocation-outputs/2-3528-output.webm"
+    do: "https://fly.storage.tigris.dev/panic-invocation-outputs/invocation-5501-output.webm"
 end
