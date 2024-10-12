@@ -2,7 +2,7 @@
 
 - test all the new networks (can I Enum.map new test cases?)
 - find out why git commit messages are borked
-- come up with some cool networks (at least one per day), write descriptions
+- come up with some cool networks, write descriptions, _test them_
 - unplug the network and see how gracefully it fails
 - make screen recording for backup purposes
 - refocus and clear the model select component on selection (to allow for
@@ -12,11 +12,11 @@
 
 ## SXSW network plan
 
-1. Images and Words: text-to-image and back (vanilla-ish, but multiple models,
-   though)
-2. The Cocktail Party: multilingual speech
+1. Rapid-fire Images and Words: text-to-image and back (vanilla-ish, but
+   multiple models, though)
+2. Cocktail Party Problem: multilingual speech
 3. Finetune Friday: all the flux loras
-4. The Big Dog: stable audio, whisper, images, with some LLM help
+4. Rube Goldberg Machine: stable audio, whisper, images, with some LLM help
 
 ## mac mini
 
