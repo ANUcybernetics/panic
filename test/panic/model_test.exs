@@ -77,7 +77,7 @@ defmodule Panic.ModelTest do
       assert String.length(caption) > 10
     end
 
-    test "can successfully invoke all models" do
+    test "can successfully invoke all Replicate models" do
       user = Panic.Fixtures.user_with_tokens()
       models = Model.all(platform: Replicate)
 
