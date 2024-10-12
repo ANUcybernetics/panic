@@ -4,6 +4,7 @@ defmodule PanicWeb.NetworkLive.Info do
 
   import PanicWeb.PanicComponents
 
+  alias Panic.Engine.Network
   alias PanicWeb.DisplayStreamer
 
   @impl true
@@ -44,6 +45,10 @@ defmodule PanicWeb.NetworkLive.Info do
           <% end %>
         </ol>
       </section>
+
+      <.link patch={~p"/about"}>
+        For more information about how PANIC works, see the about page
+      </.link>
 
       <section>
         <h2>Last input</h2>
@@ -103,7 +108,7 @@ defmodule PanicWeb.NetworkLive.Info do
   # this is a hack - because these live actions indicate routes that are auth-optional
   # a nicer way to do that would be to have the policy checks know which on_mount
   # hooks had been run, and then to check the policy based on that
-  defp get_network(network_id, %{live_action: live_action}) when live_action in [:grid, :single] do
+  defp get_network(network_id, %{live_action: :info}) do
     Ash.get(Network, network_id, authorize?: false)
   end
 
