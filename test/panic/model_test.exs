@@ -4,6 +4,14 @@ defmodule Panic.ModelTest do
 
   alias Panic.Model
 
+  # some of the real API calls are slow (due to cold starts), so we need to increase the timeout
+  setup do
+    config = Application.get_env(:panic, Panic.Repo)
+    config = Keyword.put(config, :ownership_timeout, :timer.minutes(10))
+    Application.put_env(:panic, Panic.Repo, config)
+    :ok
+  end
+
   describe "model generators" do
     property "generate models with correct attributes" do
       check all(
@@ -42,7 +50,7 @@ defmodule Panic.ModelTest do
     alias Panic.Platforms.Replicate
 
     @describetag skip: "requires API keys"
-    @describetag timeout: 300_000
+    @describetag timeout: :timer.minutes(10)
 
     test "can list latest model version for all models" do
       user = Panic.Fixtures.user_with_tokens()
@@ -81,14 +89,40 @@ defmodule Panic.ModelTest do
       user = Panic.Fixtures.user_with_tokens()
       models = Model.all(platform: Replicate)
 
-      for %Model{id: id, invoke: invoke_fn} = model <- models do
-        IO.puts("invoking #{id}")
+      tasks =
+        for %Model{id: id, invoke: invoke_fn} = model <- models do
+          Task.async(fn ->
+            IO.puts("invoking #{id}")
+            input = test_input(model)
+            result = invoke_fn.(model, input, user.replicate_token)
+            {id, result}
+          end)
+        end
 
-        input = test_input(model)
+      results = Task.await_many(tasks, :infinity)
 
-        assert {:ok, output} = invoke_fn.(model, input, user.replicate_token)
-        # assert output is not blank
-        assert String.match?(output, ~r/\S/)
+      failed_models =
+        results
+        |> Enum.filter(fn {_, result} ->
+          case result do
+            {:error, _} -> true
+            _ -> false
+          end
+        end)
+        |> Enum.map(fn {id, _} -> id end)
+
+      if length(failed_models) > 0 do
+        IO.puts("Failed models: #{Enum.join(failed_models, ", ")}")
+      end
+
+      for {_, result} <- results do
+        case result do
+          {:ok, output} ->
+            assert String.match?(output, ~r/\S/)
+
+          {:error, _} ->
+            flunk("Some models failed to invoke")
+        end
       end
     end
 
@@ -125,7 +159,7 @@ defmodule Panic.ModelTest do
     end
   end
 
-  defp test_input(%Model{input_type: :text}), do: "describe a nice scene"
+  defp test_input(%Model{input_type: :text}), do: "two roads diverged in a yellow wood"
 
   defp test_input(%Model{input_type: :image}),
     do: "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-placeholder.webp"
