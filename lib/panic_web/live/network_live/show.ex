@@ -120,6 +120,11 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   @impl true
+  def handle_info({PanicWeb.NetworkLive.TerminalComponent, {:genesis_invocation, genesis_invocation}}, socket) do
+    {:noreply, assign(socket, :genesis_invocation, genesis_invocation)}
+  end
+
+  @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
     DisplayStreamer.handle_invocation_message(message, socket)
   end

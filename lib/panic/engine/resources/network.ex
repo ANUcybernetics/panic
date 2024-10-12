@@ -59,17 +59,6 @@ defmodule Panic.Engine.Network do
       validate Panic.Validations.ModelIOConnections
     end
 
-    action :start_run do
-      argument :first_invocation, :struct do
-        constraints instance_of: Invocation
-        allow_nil? false
-      end
-
-      run fn input, context ->
-        Panic.Workers.Invoker.insert(input.arguments.first_invocation, context.actor)
-      end
-    end
-
     action :stop_run do
       argument :network_id, :integer, allow_nil?: false
 
@@ -85,12 +74,6 @@ defmodule Panic.Engine.Network do
   end
 
   policies do
-    # this is for the :start_run action for now
-    # perhaps find a better way to authorize
-    policy action_type(:action) do
-      authorize_if always()
-    end
-
     policy action_type(:create) do
       authorize_if relating_to_actor(:user)
     end

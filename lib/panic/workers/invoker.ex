@@ -32,7 +32,7 @@ defmodule Panic.Workers.Invoker do
   invoking the AI model or handling conflicts as necessary.
 
   ## Returns
-    - {:ok, :lockout} if a recent genesis invocation exists and the job is dropped.
+    - `{:lockout, genesis_invocation}` if a too-recent genesis invocation exists (and the job is not queued)
     - The result of invoke_and_insert_next/2 if the invocation proceeds.
     - Any error returned by the underlying operations.
   """
@@ -53,7 +53,7 @@ defmodule Panic.Workers.Invoker do
         :no_running_jobs ->
           invoke_and_insert_next(invocation, user)
 
-        :lockout ->
+        {:lockout, _genesis_invocation} ->
           Logger.info("Recent genesis invocation for network #{invocation.network_id}. Dropping job.")
           {:ok, :lockout}
 
@@ -76,7 +76,7 @@ defmodule Panic.Workers.Invoker do
     |> Oban.insert()
   end
 
-  defp check_running_jobs(invocation) do
+  def check_running_jobs(invocation) do
     from(job in Oban.Job,
       where: job.worker == "Panic.Workers.Invoker",
       where: job.args["invocation_id"] != ^invocation.id,
@@ -84,6 +84,8 @@ defmodule Panic.Workers.Invoker do
       where: job.state in ["scheduled", "available", "executing", "retryable"]
     )
     |> Panic.Repo.all()
+    # there's deliberately no match for the "more than one running jobs" case because that shouldn't happen
+    # although there's a case to be made that it's more antifragile to just handle it here anyway and cancel them all
     |> case do
       [] ->
         :no_running_jobs
@@ -92,7 +94,7 @@ defmodule Panic.Workers.Invoker do
         genesis = Ash.get!(Invocation, running_job.args["run_number"], authorize?: false)
 
         if DateTime.diff(DateTime.utc_now(), genesis.inserted_at, :second) < 30 do
-          :lockout
+          {:lockout, genesis}
         else
           {:running_job, running_job}
         end

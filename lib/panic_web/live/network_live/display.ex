@@ -78,6 +78,11 @@ defmodule PanicWeb.NetworkLive.Display do
     DisplayStreamer.handle_invocation_message(message, socket)
   end
 
+  @impl true
+  def handle_info({PanicWeb.NetworkLive.TerminalComponent, {:genesis_invocation, genesis_invocation}}, socket) do
+    {:noreply, assign(socket, :genesis_invocation, genesis_invocation)}
+  end
+
   # this is a hack - because these live actions indicate routes that are auth-optional
   # a nicer way to do that would be to have the policy checks know which on_mount
   # hooks had been run, and then to check the policy based on that

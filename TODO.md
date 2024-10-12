@@ -1,6 +1,5 @@
 # Panic TODO
 
-- test all the new networks (can I Enum.map new test cases?)
 - find out why git commit messages are borked
 - come up with some cool networks, write descriptions, _test them_
 - unplug the network and see how gracefully it fails
@@ -38,7 +37,9 @@
 ## ideas (not necessarily TODO, but y'know...)
 
 - download sqlite file as backup
-- screen/display layout should be h/w full?
+- go back into the Invoker and sort out the insert vs insert_and_queue_next
+  (basically if the entry point to the invoker module could return ok, lockout
+  or error that'd make the :start_run action simpler as well)
 - instead of hosting the nsfw placeholder and audio waveform pictures on tigris,
   serve them from priv/static/images (the files are already in there)
 - a "waiting" timer on all pending invocations (better still, with feedback for

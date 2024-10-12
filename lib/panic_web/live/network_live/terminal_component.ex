@@ -52,14 +52,12 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
       {:ok, invocation} ->
         socket =
           case Panic.Engine.start_run(invocation, actor: socket.assigns.current_user) do
-            :ok ->
-              put_flash(socket, :info, "Invocation #{invocation.id} prepared... about to run")
+            {:ok, genesis_invocation} ->
+              notify_parent({:genesis_invocation, genesis_invocation})
+              assign(socket, :genesis_invocation, genesis_invocation)
 
-            # TODO it'd be nice tohandle the {:ok, :lockout} return here, but
-            # I'm not quite sure how it gets passed through the :start_run
-            # action, so this generic error catch will do for now
             {:error, _reason} ->
-              put_flash(socket, :error, "Error: couldn't start run because reasons.")
+              socket
           end
 
         {:noreply, socket}
@@ -86,4 +84,6 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
 
     assign(socket, form: to_form(form))
   end
+
+  defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 end
