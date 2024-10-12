@@ -10,7 +10,7 @@ knowledge) means that more and more of us are using them. But just because we
 _can_ put our text/images/audio into these models and have them provide new
 text/images/audio in return, does it mean that we _should_?
 
-### SXSW 2024 instructions
+## SXSW 2024 instructions
 
 If you've visited us at the SXSW Sydney Expo, welcome :) Panic is an interactive
 installation, and we invite you to give it a try:
