@@ -52,9 +52,20 @@ defmodule PanicWeb.NetworkLive.Info do
 
       <section>
         <h2>Last input</h2>
-        <div><%= (@genesis_invocation && @genesis_invocation.input) || "unknown" %></div>
-        <h2>Current status</h2>
-        <.display invocations={@streams.invocations} display={@display} />
+        <div>
+          <%= if @genesis_invocation do %>
+            <%= @genesis_invocation.input %>
+          <% else %>
+            <em>loading...</em>
+          <% end %>
+        </div>
+        <h2>Current output</h2>
+        <%= if @genesis_invocation do %>
+          <.display invocations={@streams.invocations} display={@display} />
+          <%= @genesis_invocation.input %>
+        <% else %>
+          <em>loading...</em>
+        <% end %>
       </section>
     </div>
 
