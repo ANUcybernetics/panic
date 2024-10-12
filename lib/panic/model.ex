@@ -118,10 +118,10 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
-        id: "clip_prefix_caption",
+        id: "clip-caption-reward",
         platform: Replicate,
-        path: "rmokady/clip_prefix_caption",
-        name: "CLIP prefix caption",
+        path: "j-min/clip-caption-reward",
+        name: "CLIP caption reward",
         input_type: :image,
         output_type: :text,
         invoke: fn model, input, token ->
@@ -130,8 +130,7 @@ defmodule Panic.Model do
                    model,
                    %{
                      image: input,
-                     model: "conceptual-captions",
-                     use_beam_search: true
+                     reward: Enum.random(["mle", "cider", "clips", "cider_clips", "clips_grammar"])
                    },
                    token
                  ) do
@@ -248,29 +247,6 @@ defmodule Panic.Model do
                    token
                  ) do
             {:ok, text}
-          end
-        end
-      },
-      %__MODULE__{
-        id: "stable-diffusion-test",
-        description: "SD, but really small/cheap/fast - useful for testing",
-        platform: Replicate,
-        path: "stability-ai/stable-diffusion",
-        name: "Stable Diffusion Test",
-        input_type: :text,
-        output_type: :image,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
-            num_inference_steps: 1,
-            guidance_scale: 5.0,
-            width: 128,
-            height: 128
-          }
-
-          with {:ok, %{"output" => [image_url]}} <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
           end
         end
       },

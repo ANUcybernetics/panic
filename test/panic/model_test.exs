@@ -4,14 +4,6 @@ defmodule Panic.ModelTest do
 
   alias Panic.Model
 
-  # some of the real API calls are slow (due to cold starts), so we need to increase the timeout
-  setup do
-    config = Application.get_env(:panic, Panic.Repo)
-    config = Keyword.put(config, :ownership_timeout, :timer.minutes(10))
-    Application.put_env(:panic, Panic.Repo, config)
-    :ok
-  end
-
   describe "model generators" do
     property "generate models with correct attributes" do
       check all(
@@ -49,7 +41,7 @@ defmodule Panic.ModelTest do
   describe "Replicate platform" do
     alias Panic.Platforms.Replicate
 
-    @describetag skip: "requires API keys"
+    # @describetag skip: "requires API keys"
     @describetag timeout: :timer.minutes(10)
 
     test "can list latest model version for all models" do
@@ -159,7 +151,7 @@ defmodule Panic.ModelTest do
     end
   end
 
-  defp test_input(%Model{input_type: :text}), do: "two roads diverged in a yellow wood"
+  defp test_input(%Model{input_type: :text}), do: "a shiny red apple"
 
   defp test_input(%Model{input_type: :image}),
     do: "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-placeholder.webp"
