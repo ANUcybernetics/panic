@@ -26,7 +26,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
           placeholder="Search for a model to append"
           phx-target={@myself}
           phx-focus="populate_options"
-          text_input_extra_class="bg-zinc-800 text-purple-300 focus:border-purple-500"
+          text_input_extra_class="sm:text-sm bg-zinc-800 text-purple-300 focus:border-purple-500"
           dropdown_extra_class="bg-zinc-800"
           container_extra_class="text-purple-400"
           active_option_class="bg-purple-800"
