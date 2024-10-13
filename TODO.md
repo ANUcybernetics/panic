@@ -1,6 +1,8 @@
 # Panic TODO
 
-- find out why git commit messages are borked
+- find out why grid display is only showing 6 invocations
+- see why links to replicate-hosted webps get downloaded (target blank or
+  something?)
 - come up with some cool networks, write descriptions, _test them_
 - unplug the network and see how gracefully it fails
 - make screen recording for backup purposes
@@ -49,8 +51,6 @@
 - paint Enter key on keyboard?
 - set up desktop bg (launch panic script, WT folder)
 - test with speaker
-- make sure we've got HDMI cable and extra ethernet for mac mini
-- get iPad (for demo, QR code purposes)
 
 ## for v2 proper, but not (necessarily) for SXSW
 
