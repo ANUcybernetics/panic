@@ -17,6 +17,26 @@
 3. Finetune Friday: all the flux loras
 4. Rube Goldberg Machine: stable audio, whisper, images, with some LLM help
 
+### model notes
+
+#### img2txt
+
+- blips good, usually warm (3 takes slightly longer than 2, but still
+  reasonable)
+- florence prety good as well
+- uform much slower than other captioning models
+- bunny, joy caption & molmo good if you can keep them warm
+
+### txt2txt
+
+- meta llamas both usually warm, both quick
+
+### txt2audio
+
+- riffusion warm & pretty quick
+- stable audio open not so warm, but quick
+- musicgen takes ages
+
 ## mac mini
 
 - paint Enter key on keyboard?
