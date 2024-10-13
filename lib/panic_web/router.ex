@@ -48,6 +48,8 @@ defmodule PanicWeb.Router do
         live "/:network_id/info/qr", NetworkLive.Info, :qr
         live "/:network_id/info/all", NetworkLive.Info, :all
       end
+
+      live "/admin", AdminLive, :index
     end
 
     ash_authentication_live_session :authentication_optional,
