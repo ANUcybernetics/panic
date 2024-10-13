@@ -91,7 +91,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, DisplayStreamer.configure_invocation_stream(socket, {:grid, 2, 3})}
+    {:ok, socket}
   end
 
   @impl true
@@ -102,7 +102,7 @@ defmodule PanicWeb.NetworkLive.Show do
          socket
          |> assign(:page_title, page_title(socket.assigns[:live_action]))
          |> assign(:network, network)
-         |> DisplayStreamer.subscribe_to_invocation_stream(network)}
+         |> DisplayStreamer.configure_invocation_stream(network, {:grid, 2, 3})}
 
       {:error, _error} ->
         {:noreply, push_navigate(socket, to: ~p"/404")}

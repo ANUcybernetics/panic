@@ -37,7 +37,7 @@ defmodule PanicWeb.NetworkLive.Display do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, DisplayStreamer.configure_invocation_stream(socket, {:grid, 2, 3}), layout: {PanicWeb.Layouts, :display}}
+    {:ok, socket, layout: {PanicWeb.Layouts, :display}}
   end
 
   # @impl true
@@ -65,8 +65,7 @@ defmodule PanicWeb.NetworkLive.Display do
         {:noreply,
          socket
          |> assign(:page_title, "Panic display (network #{network_id})")
-         |> assign(:display, display)
-         |> DisplayStreamer.subscribe_to_invocation_stream(network)}
+         |> DisplayStreamer.configure_invocation_stream(network, display)}
 
       {:error, _error} ->
         {:noreply, push_navigate(socket, to: ~p"/404")}

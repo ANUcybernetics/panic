@@ -9,19 +9,22 @@ defmodule PanicWeb.DisplayStreamer do
   alias Panic.Engine.Invocation
   alias Phoenix.LiveView
 
-  def configure_invocation_stream(socket, display) do
-    socket
-    |> Phoenix.Component.assign(display: display, genesis_invocation: nil)
-    |> LiveView.stream_configure(:invocations, dom_id: fn invocation -> dom_id(invocation, display) end)
-    |> LiveView.stream(:invocations, [])
-  end
-
-  def subscribe_to_invocation_stream(socket, network) do
+  def configure_invocation_stream(socket, network, display) do
     if LiveView.connected?(socket) do
       PanicWeb.Endpoint.subscribe("invocation:#{network.id}")
     end
 
-    Phoenix.Component.assign(socket, :network, network)
+    # not sure if there is a better way to check if the stream is already configured, but :shrug:
+    socket =
+      if Map.has_key?(socket.assigns, :streams) && Map.has_key?(socket.assigns.streams, :invocations) do
+        socket
+      else
+        socket
+        |> LiveView.stream_configure(:invocations, dom_id: &dom_id(&1, display))
+        |> LiveView.stream(:invocations, [])
+      end
+
+    Phoenix.Component.assign(socket, network: network, display: display, genesis_invocation: nil)
   end
 
   def handle_invocation_message(message, socket) do
