@@ -335,6 +335,48 @@ defmodule Panic.Model do
           end
         end
       },
+      %__MODULE__{
+        id: "kandinsky-2.2",
+        platform: Replicate,
+        path: "ai-forever/kandinsky-2.2",
+        name: "Kandinsky 2.2",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input,
+            width: 1024,
+            height: 576
+          }
+
+          with {:ok, %{"output" => [image_url]}} <-
+                 Replicate.invoke(model, input_params, token) do
+            {:ok, image_url}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "proteus-v0.2",
+        platform: Replicate,
+        path: "datacte/proteus-v0.2",
+        name: "Proteus v0.2",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input,
+            width: 1024,
+            height: 576,
+            apply_watermark: false,
+            disable_safety_checker: true
+          }
+
+          with {:ok, %{"output" => [image_url]}} <-
+                 Replicate.invoke(model, input_params, token) do
+            {:ok, image_url}
+          end
+        end
+      },
       # %__MODULE__{
       #   id: "llava-v1.6-34b",
       #   platform: Replicate,
