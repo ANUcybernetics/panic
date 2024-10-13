@@ -6,8 +6,7 @@
 - make screen recording for backup purposes
 - refocus and clear the model select component on selection (to allow for
   rapid-fire adding of models)
-- add/modify an "admin" panel which I can access on mobile (with e.g. stop all,
-  all current invocations, maybe Oban logs?)
+- add stop all button to admin view
 
 ## SXSW network plan
 
@@ -17,7 +16,8 @@
 3. Finetune Friday: all the flux loras
 4. Rube Goldberg Machine: stable audio, whisper, images, with some LLM help
 
-- maybe one which adds the specifics back in
+- maybe one which adds the specifics back in (e.g. instead of just "people",
+  describe specific people or things)
 
 ### model notes
 
