@@ -79,7 +79,6 @@ defmodule PanicWeb.AdminLive do
     if connected?(socket) do
       # admin view subscribes to _all_ invocations
       Enum.each(networks, fn network ->
-        IO.puts("Subscribing to invocations for network #{network.id}")
         PanicWeb.Endpoint.subscribe("invocation:#{network.id}")
       end)
 
