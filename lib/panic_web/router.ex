@@ -57,7 +57,7 @@ defmodule PanicWeb.Router do
       live "/", IndexLive, :index
 
       # a helper for when you have to type URLs using a TV remote :/
-      live "/r/:redirect", NetworkLive.Display, :redirect
+      live "/r/:redirect", RedirectLive, :index
 
       scope "/networks" do
         live "/:network_id/info", NetworkLive.Info, :info
