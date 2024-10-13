@@ -36,6 +36,7 @@ defmodule PanicWeb.NetworkLive.Info do
       </section>
       <section>
         <h2>Models</h2>
+        <p>The GenAI models in this network are:</p>
         <ol>
           <%= for model <- non_vestaboard_models(@network) do %>
             <li>
@@ -47,7 +48,9 @@ defmodule PanicWeb.NetworkLive.Info do
       </section>
 
       <p>
-        For more information about how PANIC! works, see the <.link patch={~p"/about"}>about page</.link>.
+        Click the model name for details, or for information about how PANIC! works, see the <.link patch={
+          ~p"/about"
+        }>about page</.link>.
       </p>
 
       <section>
