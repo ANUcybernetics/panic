@@ -62,7 +62,6 @@ defmodule PanicWeb.NetworkLive.Info do
         <h2>Current output</h2>
         <%= if @genesis_invocation do %>
           <.display invocations={@streams.invocations} display={@display} />
-          <%= @genesis_invocation.input %>
         <% else %>
           <em>loading...</em>
         <% end %>
