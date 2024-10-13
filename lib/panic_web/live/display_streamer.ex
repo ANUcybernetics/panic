@@ -65,7 +65,7 @@ defmodule PanicWeb.DisplayStreamer do
   end
 
   defp dom_id(%Invocation{sequence_number: sequence_number}, {:single, offset, stride}) do
-    if rem(sequence_number, stride) == offset, do: "slot-0"
+    if rem(sequence_number, stride) == offset, do: "slot-#{offset}"
   end
 
   defp update_genesis(socket, %Invocation{sequence_number: 0} = invocation) do
