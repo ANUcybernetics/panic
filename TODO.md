@@ -1,6 +1,5 @@
 # Panic TODO
 
-- find out why grid display is only showing 6 invocations
 - see why links to replicate-hosted webps get downloaded (target blank or
   something?)
 - come up with some cool networks, write descriptions, _test them_
