@@ -8,7 +8,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
   def render(assigns) do
     ~H"""
     <div class="h-dvh grid place-items-center">
-      <div class="w-1/2">
+      <div class="lg:w-1/2">
         <.live_component
           class="mb-16"
           module={PanicWeb.NetworkLive.TerminalComponent}
@@ -19,7 +19,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
         />
 
         <p>
-          <span class="text-purple-300/50">Last input:</span>
+          <span class="max-w-full text-purple-300/50">Last input:</span>
           <span :if={@genesis_invocation}><%= @genesis_invocation.input %></span>
         </p>
       </div>
