@@ -377,26 +377,6 @@ defmodule Panic.Model do
           end
         end
       },
-      # %__MODULE__{
-      #   id: "llava-v1.6-34b",
-      #   platform: Replicate,
-      #   path: "yorickvp/llava-v1.6-34b",
-      #   name: "LLaVA 34B text-to-image",
-      #   input_type: :image,
-      #   output_type: :text,
-      #   invoke: fn model, input, token ->
-      #     input_params = %{
-      #       image: input,
-      #       prompt:
-      #         "Provide a detailed description of this image for captioning purposes, including descriptions both the foreground and background."
-      #     }
-
-      #     with {:ok, %{"output" => description_list}} <-
-      #            Replicate.invoke(model, input_params, token) do
-      #       {:ok, Enum.join(description_list)}
-      #     end
-      #   end
-      # },
       %__MODULE__{
         id: "meta-llama-3-8b-instruct",
         platform: Replicate,
