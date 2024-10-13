@@ -315,6 +315,26 @@ defmodule Panic.Model do
           end
         end
       },
+      %__MODULE__{
+        id: "sdxl-lightning-4step",
+        platform: Replicate,
+        path: "bytedance/sdxl-lightning-4step",
+        name: "SDXL Lightning",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input,
+            width: 1024,
+            height: 576
+          }
+
+          with {:ok, %{"output" => [image_url]}} <-
+                 Replicate.invoke(model, input_params, token) do
+            {:ok, image_url}
+          end
+        end
+      },
       # %__MODULE__{
       #   id: "llava-v1.6-34b",
       #   platform: Replicate,
