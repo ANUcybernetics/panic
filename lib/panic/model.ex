@@ -493,12 +493,6 @@ defmodule Panic.Model do
                        Enum.random([
                          "agile",
                          "marim",
-                         "mask_beat_lines_80",
-                         "mask_gradient_dark",
-                         "mask_gradient_top_70",
-                         "mask_graident_top_fifth_75",
-                         "mask_top_third_75",
-                         "mask_top_third_95",
                          "motorway",
                          "og_beat",
                          "vibes"
