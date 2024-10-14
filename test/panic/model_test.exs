@@ -84,9 +84,17 @@ defmodule Panic.ModelTest do
       tasks =
         for %Model{id: id, invoke: invoke_fn} = model <- models do
           Task.async(fn ->
-            IO.puts("invoking #{id}")
             input = test_input(model)
             result = invoke_fn.(model, input, user.replicate_token)
+
+            case result do
+              {:ok, output} ->
+                IO.puts("#{id}: Input: #{inspect(input)}, Output: #{inspect(output)}")
+
+              _ ->
+                :pass
+            end
+
             {id, result}
           end)
         end
