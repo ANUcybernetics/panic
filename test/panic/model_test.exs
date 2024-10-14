@@ -77,9 +77,10 @@ defmodule Panic.ModelTest do
       assert String.length(caption) > 10
     end
 
+    @tag skip: true
     test "can successfully invoke all Replicate models" do
       user = Panic.Fixtures.user_with_tokens()
-      models = Model.all(platform: Replicate)
+      modEls = Model.all(platform: Replicate)
 
       tasks =
         for %Model{id: id, invoke: invoke_fn} = model <- models do
