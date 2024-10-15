@@ -109,5 +109,5 @@ happy to fit with whatever will make the most kickarse symposium for everyone.
 1. Type something (anything!) on the keyboard
 2. Hit the red button & get ready to PANIC!
 3. Keep watching to see the initial output, then the subsequent outputs
-4. What questions does this raise about feedback loops in genAI-augmented
+4. What questions does this raise about feedback loops in GenAI-augmented
    systems?

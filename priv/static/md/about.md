@@ -1,11 +1,11 @@
 # PANIC!: **P**layground **A**i **N**etwork for **I**nteractive **C**reativity
 
 _PANIC!_ is an interactive installation where **you** can play with feedback
-loops of generative AI models hooked end-to-end. As well as generating
-intriguing text, images and audio, PANIC! explores how different ways of
-connecting these models up can give rise to different patterns of outputs,
+loops of generative AI (GenAI) models hooked up end-to-end. As well as
+generating intriguing text, images and audio, PANIC! explores how different ways
+of connecting these models up can give rise to different patterns of outputs,
 emergent behaviours, recurring patterns, and degenerate cases. Today, the low
-barrier to entry in generative AI model platforms (in terms of cost, time, and
+barrier to entry in GenAI model platforms (in terms of cost, time, and
 knowledge) means that more and more of us are using them. But just because we
 _can_ put our text/images/audio into these models and have them provide new
 text/images/audio in return, does it mean that we _should_?
@@ -16,9 +16,9 @@ If you've visited us at the SXSW Sydney Expo, welcome :) Panic is an interactive
 installation, and we invite you to give it a try:
 
 1. type something (anything!) on the keyboard
-2. hit the red button & get ready to PANIC!
+2. hit `Enter` & get ready to PANIC!
 3. keep watching to see the initial output, then the subsequent outputs
-4. what questions does this raise about feedback loops in genAI-augmented
+4. what questions does this raise about feedback loops in GenAI-augmented
    systems?
 
 ## Techy stuff
@@ -28,9 +28,10 @@ the [ANU School of Cybernetics](https://cybernetics.anu.edu.au). The core
 "engine" is an ([Ash](https://hexdocs.pm/ash/) +
 [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view/))
 [Elixir](https://elixir-lang.org) app, and it talks to various different hosted
-genAI platforms to run genAI models created by OpenAI, Anthropic, Meta, Amazon,
-Google, Microsoft and more. The outputs of these models (text, images and audio)
-are displayed live, in real-time, for viewers on screens anywhere in the world.
+GenAI platforms (e.g. [Replicate](https://replicate.com)) to run GenAI models
+created by OpenAI, Anthropic, Meta, Amazon, Google, Microsoft and more. The
+outputs of these models (text, images and audio) are displayed live, in
+real-time, for viewers on screens anywhere in the world.
 
 ## PANIC! Research Questions
 
@@ -46,8 +47,8 @@ One goal in building PANIC is to provide answers to these questions which are
 both quantifiable and satisfying (i.e. it feels like they represent deeper
 truths about the process).
 
-**Maybe you've got some ideas**? Chat to the friendly folks at the PANIC! booth
-and let us know.
+**Maybe you've got some ideas about answers**? Chat to the friendly folks at the
+PANIC! booth and let us know.
 
 ### how did it get _here_ from _that_ initial prompt?
 
@@ -60,7 +61,7 @@ and let us know.
 
 - the text/images it's generating now seem to be "semantically stable"; will it
   ever move on to a different thing?
-- is it predictable which initial prompts lead to a "stuck" trajectory?
+- can we predict in advance which initial prompts lead to a "stuck" trajectory?
 
 ### has it done this before?
 
@@ -70,8 +71,8 @@ and let us know.
 
 ### which models have the biggest impact on what happens?
 
-- do certain gen AI models dominate the trajectory? or is it an emergent
-  property of the interactions between all models in the network?
+- do certain GenAI models dominate the trajectory? or is it an emergent property
+  of the interactions between all models in the network?
 
 ## Contact
 

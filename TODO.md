@@ -1,7 +1,6 @@
 # Panic TODO
 
-- see why links to replicate-hosted webps get downloaded (target blank or
-  something?)
+- show multiple invocations in info view
 - why aren't <p>s geting margins in prose blocks in info view?
 - come up with some cool networks, write descriptions, _test them_
 - unplug the network and see how gracefully it fails
