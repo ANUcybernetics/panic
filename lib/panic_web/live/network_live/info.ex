@@ -30,45 +30,40 @@ defmodule PanicWeb.NetworkLive.Info do
     ~H"""
     <div class="prose prose-purple">
       <h2>Network name: <%= @network.name %></h2>
-      <section :if={@network.description}>
-        <h2>Description</h2>
+      <%= if @network.description do %>
         <%= @network.description |> MDEx.to_html!() |> raw %>
-      </section>
-      <section>
-        <h2>Models</h2>
-        <p>The GenAI models in this network are:</p>
-        <ol>
-          <%= for model <- non_vestaboard_models(@network) do %>
-            <li>
-              <.link href={Panic.Model.model_url(model)} target="_blank"><%= model.name %></.link>
-              (<%= model.input_type %> -> <%= model.output_type %>)
-            </li>
-          <% end %>
-        </ol>
-      </section>
+      <% end %>
+      <h2>Models</h2>
+      <p>The GenAI models in this network are:</p>
+      <ol>
+        <%= for model <- non_vestaboard_models(@network) do %>
+          <li>
+            <.link href={Panic.Model.model_url(model)} target="_blank"><%= model.name %></.link>
+            (<%= model.input_type %> -> <%= model.output_type %>)
+          </li>
+        <% end %>
+      </ol>
 
       <p>
-        Click the model name for details, or for information about how PANIC! works, see the <.link patch={
-          ~p"/about"
-        }>about page</.link>.
+        Click the model name in the list above for more about that particular GenAI model, or head to the
+        <.link patch={~p"/about"}>about page</.link>
+        for information about how PANIC! works.
       </p>
 
-      <section>
-        <h2>Last input</h2>
-        <div>
-          <%= if @genesis_invocation do %>
-            <%= @genesis_invocation.input %>
-          <% else %>
-            <em>loading...</em>
-          <% end %>
-        </div>
-        <h2>Current output</h2>
+      <h2>Last input</h2>
+      <div>
         <%= if @genesis_invocation do %>
-          <.display invocations={@streams.invocations} display={@display} />
+          <%= @genesis_invocation.input %>
         <% else %>
           <em>loading...</em>
         <% end %>
-      </section>
+      </div>
+      <h2>Current output</h2>
+      <%= if @genesis_invocation do %>
+        <.display invocations={@streams.invocations} display={@display} />
+      <% else %>
+        <em>loading...</em>
+      <% end %>
     </div>
 
     <.modal
