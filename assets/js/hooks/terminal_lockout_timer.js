@@ -21,11 +21,13 @@ const TerminalLockoutTimer = {
       this.el.disabled = true;
       this.el.value = "";
     } else {
-      if (this.el.disabled) {
-        this.el.focus();
-      }
       this.el.placeholder = "Ready for new input";
-      this.el.disabled = false;
+      if (this.el.disabled) {
+        this.el.disabled = false;
+        this.el.focus();
+      } else {
+        this.el.disabled = false;
+      }
     }
   },
 };
