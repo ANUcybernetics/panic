@@ -465,9 +465,7 @@ defmodule Panic.Model do
                      prompt: input,
                      text_temp: 0.9,
                      waveform_temp: 0.9,
-                     history_prompt:
-                       Enum.random(["de", "en", "es", "fr", "hi", "it", "ja", "ko", "pl", "pt", "ru", "tr", "zh"]) <>
-                         "_speaker_#{Enum.random(0..9)}"
+                     history_prompt: "en_speaker_#{Enum.random(0..9)}"
                    },
                    token
                  ) do
