@@ -26,6 +26,8 @@ defmodule Panic.Model do
   alias Panic.Platforms.Replicate
   alias Panic.Platforms.Vestaboard
 
+  require Logger
+
   @vestaboard_sleep :timer.seconds(5)
 
   @enforce_keys [:id, :path, :name, :platform, :input_type, :output_type, :invoke]
@@ -562,8 +564,11 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :text,
         invoke: fn model, input, token ->
-          Vestaboard.send_text(model, input, token)
-          Process.sleep(@vestaboard_sleep)
+          case Vestaboard.send_text(model, input, token) do
+            {:ok, _} -> Process.sleep(@vestaboard_sleep)
+            {:error, reason} -> Logger.warning("Vestaboard error: #{inspect(reason)}")
+          end
+
           {:ok, input}
         end
       },
