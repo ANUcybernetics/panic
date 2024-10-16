@@ -126,8 +126,8 @@ defmodule Panic.Workers.Archiver do
         case System.cmd("ffmpeg", [
                "-i",
                filename,
-               "-t",
-               "8",
+               # "-t",
+               # "8",
                "-c:a",
                "libopus",
                "-b:a",
