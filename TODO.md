@@ -1,5 +1,7 @@
 # Panic TODO
 
+- make sure vestaboards crashing doesn't bring down the whole thing
+- add SAO passthrough model?
 - show multiple invocations in info view
 - why aren't <p>s geting margins in prose blocks in info view?
 - come up with some cool networks, write descriptions, _test them_
