@@ -64,6 +64,7 @@
 
 ## ideas (not necessarily TODO, but y'know...)
 
+- have a "pre-warm the models", based on average startup time (from metadata)
 - download sqlite file as backup
 - go back into the Invoker and sort out the insert vs insert_and_queue_next
   (basically if the entry point to the invoker module could return ok, lockout
