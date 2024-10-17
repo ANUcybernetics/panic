@@ -245,7 +245,7 @@ defmodule Panic.Model do
                    model,
                    %{
                      image: input,
-                     question: "What is shown in the image?"
+                     question: "What is shown in the image, and what (artistic) style does the image represent?"
                    },
                    token
                  ) do
