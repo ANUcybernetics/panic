@@ -224,7 +224,7 @@ defmodule Panic.Model do
                    %{
                      image: input,
                      question:
-                       "Describe this picture in detail, using lots of descriptive adjectives. Include information about both foreground and background elements."
+                       "Describe this picture in detail, including both foreground and background elements, and the (artistic) style of the image."
                    },
                    token
                  ) do
@@ -285,7 +285,28 @@ defmodule Panic.Model do
         invoke: fn model, input, token ->
           input_params = %{
             prompt: input,
-            output_format: "jpg",
+            output_format: "png",
+            aspect_ratio: "16:9",
+            disable_safety_checker: true
+          }
+
+          with {:ok, %{"output" => [image_url]}} <-
+                 Replicate.invoke(model, input_params, token) do
+            {:ok, image_url}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "flux-texture-abstract-painting",
+        platform: Replicate,
+        path: "brunnolou/flux-texture-abstract-painting",
+        name: "FLUX Abstract Painting",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input <> " The image is in the style of TXTUR.",
+            output_format: "png",
             aspect_ratio: "16:9",
             disable_safety_checker: true
           }
@@ -308,6 +329,69 @@ defmodule Panic.Model do
             prompt: input,
             num_inference_steps: 50,
             guidance_scale: 7.5,
+            width: 1024,
+            height: 576
+          }
+
+          with {:ok, %{"output" => [image_url]}} <-
+                 Replicate.invoke(model, input_params, token) do
+            {:ok, image_url}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "zine-style",
+        platform: Replicate,
+        path: "roblester/zine-style",
+        name: "SDXL Zine",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input,
+            guidance_scale: 7.5,
+            width: 1024,
+            height: 576
+          }
+
+          with {:ok, %{"output" => [image_url]}} <-
+                 Replicate.invoke(model, input_params, token) do
+            {:ok, image_url}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "icons",
+        platform: Replicate,
+        path: "galleri5/icons",
+        name: "SDXL Icons",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input,
+            guidance_scale: 7.5,
+            width: 1024,
+            height: 576
+          }
+
+          with {:ok, %{"output" => [image_url]}} <-
+                 Replicate.invoke(model, input_params, token) do
+            {:ok, image_url}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "sticker-maker",
+        platform: Replicate,
+        path: "fofr/sticker-maker",
+        name: "Sticker Maker",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input,
+            output_format: "png",
             width: 1024,
             height: 576
           }
