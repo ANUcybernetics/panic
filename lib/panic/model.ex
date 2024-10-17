@@ -70,6 +70,7 @@ defmodule Panic.Model do
   end
 
   def all do
+    ## Vestaboards
     [
       ## OpenAI
       %__MODULE__{
@@ -527,65 +528,34 @@ defmodule Panic.Model do
             {:ok, text}
           end
         end
-      },
-
-      ## Vestaboards
-      %__MODULE__{
-        id: "vestaboard-panic-1",
-        platform: Vestaboard,
-        path: "panic_1",
-        name: "Vestaboard Panic 1",
-        input_type: :text,
-        output_type: :text,
-        invoke: fn model, input, token ->
-          Vestaboard.send_text(model, input, token)
-          Process.sleep(@vestaboard_sleep)
-          {:ok, input}
-        end
-      },
-      %__MODULE__{
-        id: "vestaboard-panic-2",
-        platform: Vestaboard,
-        path: "panic_2",
-        name: "Vestaboard Panic 2",
-        input_type: :text,
-        output_type: :text,
-        invoke: fn model, input, token ->
-          Vestaboard.send_text(model, input, token)
-          Process.sleep(@vestaboard_sleep)
-          {:ok, input}
-        end
-      },
-      %__MODULE__{
-        id: "vestaboard-panic-3",
-        platform: Vestaboard,
-        path: "panic_3",
-        name: "Vestaboard Panic 3",
-        input_type: :text,
-        output_type: :text,
-        invoke: fn model, input, token ->
-          case Vestaboard.send_text(model, input, token) do
-            {:ok, _} -> Process.sleep(@vestaboard_sleep)
-            {:error, reason} -> Logger.warning("Vestaboard error: #{inspect(reason)}")
-          end
-
-          {:ok, input}
-        end
-      },
-      %__MODULE__{
-        id: "vestaboard-panic-4",
-        platform: Vestaboard,
-        path: "panic_4",
-        name: "Vestaboard Panic 4",
-        input_type: :text,
-        output_type: :text,
-        invoke: fn model, input, token ->
-          Vestaboard.send_text(model, input, token)
-          Process.sleep(@vestaboard_sleep)
-          {:ok, input}
-        end
       }
-    ]
+    ] ++
+      Enum.map(
+        [
+          {"vestaboard-panic-1", "panic_1", "Vestaboard Panic 1"},
+          {"vestaboard-panic-2", "panic_2", "Vestaboard Panic 2"},
+          {"vestaboard-panic-3", "panic_3", "Vestaboard Panic 3"},
+          {"vestaboard-panic-4", "panic_4", "Vestaboard Panic 4"}
+        ],
+        fn {id, path, name} ->
+          %__MODULE__{
+            id: id,
+            platform: Vestaboard,
+            path: path,
+            name: name,
+            input_type: :text,
+            output_type: :text,
+            invoke: fn model, input, token ->
+              case Vestaboard.send_text(model, input, token) do
+                {:ok, _} -> Process.sleep(@vestaboard_sleep)
+                {:error, reason} -> Logger.warning("Vestaboard error: #{inspect(reason)}")
+              end
+
+              {:ok, input}
+            end
+          }
+        end
+      )
   end
 
   def all(filters) do
