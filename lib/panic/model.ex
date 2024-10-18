@@ -348,8 +348,7 @@ defmodule Panic.Model do
         output_type: :image,
         invoke: fn model, input, token ->
           input_params = %{
-            prompt: input,
-            guidance_scale: 7.5,
+            prompt: input <> ", illustration in the style of TOK",
             width: 1024,
             height: 576
           }
