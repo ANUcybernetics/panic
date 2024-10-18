@@ -478,6 +478,29 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
+        id: "meta-llama-3-8b-songifier",
+        platform: Replicate,
+        path: "meta/meta-llama-3-8b-instruct",
+        name: "LLaMa Songifier",
+        input_type: :text,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          input = """
+          You are an expert audio producer working in LA. Interpret the following text as the
+          design brief for a song, and reply with a one-sentence description of the song. You may
+          include details like bpm, instrumentation, genre/feel, but reply only with the one-sentence
+          description.
+
+          #{input}
+          """
+
+          with {:ok, %{"output" => output_list}} <-
+                 Replicate.invoke(model, %{prompt: input}, token) do
+            {:ok, Enum.join(output_list)}
+          end
+        end
+      },
+      %__MODULE__{
         id: "meta-llama-3-70b-instruct",
         platform: Replicate,
         path: "meta/meta-llama-3-70b-instruct",
@@ -523,7 +546,7 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :audio,
         invoke: fn model, input, token ->
-          with {:ok, %{"output" => audio_url}} <-
+          with {:ok, %{"output" => %{"output" => audio_url}}} <-
                  Replicate.invoke(
                    model,
                    %{
