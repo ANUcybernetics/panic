@@ -518,7 +518,7 @@ defmodule Panic.Model do
       %__MODULE__{
         id: "stable-audio",
         platform: Replicate,
-        path: "stackadoc/stable-audio-open-1.0",
+        path: "ardianfe/stable-audio-prod",
         name: "Stable Audio Open",
         input_type: :text,
         output_type: :audio,
@@ -528,7 +528,9 @@ defmodule Panic.Model do
                    model,
                    %{
                      prompt: input,
-                     seconds_total: 8
+                     duration: 8,
+                     output_format: "mp3",
+                     song_id: :rand.uniform(1_000_000)
                    },
                    token
                  ) do
