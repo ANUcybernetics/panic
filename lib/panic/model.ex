@@ -486,10 +486,11 @@ defmodule Panic.Model do
         output_type: :text,
         invoke: fn model, input, token ->
           input = """
-          You are an expert audio producer working in LA. Interpret the following text as the
-          design brief for a song, and reply with a one-sentence description of the song. You may
-          include details like bpm, instrumentation, genre/feel, but reply only with the one-sentence
-          description.
+          You are an expert music producer with skills in an extremely wide range of musical genres and styles.
+          Interpret the following text as the design brief for a song, and reply with a one-sentence
+          description of the song. You may include details like bpm, instrumentation, genre/feel, but
+          reply only with the one-sentence description (do not say "Certainly", or "Here is the description"
+          or anything other than the song description itself).
 
           #{input}
           """
