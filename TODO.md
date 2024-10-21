@@ -1,71 +1,31 @@
 # Panic TODO
 
 - make sure vestaboards crashing doesn't bring down the whole thing
+- add the ability to specify multiple offsets for single screen view
+- add Gemini (vertex.ai) support, esp. for audio description
 - add SAO passthrough model?
 - show multiple invocations in info view
 - why aren't <p>s geting margins in prose blocks in info view?
-- come up with some cool networks, write descriptions, _test them_
-- unplug the network and see how gracefully it fails
-- make screen recording for backup purposes
 - refocus and clear the model select component on selection (to allow for
   rapid-fire adding of models)
-- add stop all button to admin view
-
-## SXSW network plan
-
-1. Rapid-fire Images and Words: text-to-image and back (vanilla-ish, but
-   multiple models, though)
-2. Cocktail Party Problem: multilingual speech
-3. Finetune Friday: all the flux loras
-4. Rube Goldberg Machine: stable audio, whisper, images, with some LLM help
-
-- maybe one which adds the specifics back in (e.g. instead of just "people",
-  describe specific people or things)
-
-### model notes
-
-#### img2txt
-
-- blips good, usually warm (3 takes slightly longer than 2, but still
-  reasonable)
-- florence prety good as well
-- uform much slower than other captioning models
-- bunny, joy caption & molmo good if you can keep them warm
-
-#### txt2img
-
-- sdxl warm, flux & sd warm
-- kandinsky & proteus not necessarily warm, but quick
-
-#### txt2txt
-
-- meta llamas both usually warm, both quick
-
-#### txt2audio
-
-- riffusion warm & pretty quick
-- stable audio open not so warm, but quick
-- musicgen takes ages
-
-## mac mini
-
-- paint Enter key on keyboard?
-- set up desktop bg (launch panic script, WT folder)
-- test with speaker
-
-## for v2 proper, but not (necessarily) for SXSW
-
-- model view
-- store invocation metadata
+- add "stop all" button to admin view
+- model view (w/hand-written description)
+- add "back off over time" based on time
+- store invocation metadata (also add burn rate for a given network)
 - make unauthenticated login not forget which page you were going to
 - add embeddings for all outputs (another Oban worker)
 - add HUD or other vis for the embedding trajectories
+- sqlite-vec
 - TDA code
+- add an option to redirect all watching TVs to a new view
+- add (subtle) network-stride(s)-offset indicator to blank :single display
+- now that models is an array, have them Enum.each through, but put an await so
+  they're all done (this will make the Vestaboard-wait period better; it won't
+  wait if the time has already elapsed)
 
 ## ideas (not necessarily TODO, but y'know...)
 
 - have a "pre-warm the models", based on average startup time (from metadata)
-- download sqlite file as backup
 - go back into the Invoker and sort out the insert vs insert_and_queue_next
   (basically if the entry point to the invoker module could return ok, lockout
   or error that'd make the :start_run action simpler as well)
@@ -76,12 +36,13 @@
 - each model could have a "pre/post wait" time, to account for things like
   vestaboards
 - replace the "split into `<p>`s based on double newline with proper md parsing
-- instead of `use DisplayStreamer`, perhaps can just have an on_mount hook?
+- put `DisplayStreamer` stuff into an on_mount hook?
 - refactor user/network liveviews to use streams for the lists
 - add an indicator to the model select component to say a) if the network has
   been saved b) if it's runnable c) if it's currently running
 - flesh out the tests to make sure the authorisation policies work properly
   (mostly adding "negative versions" of current positive tests)
+- get the pool drain Oban tests working
 - there's some messiness around whether the platform invoke fns should know
   about the Model structs... currently they do. the issue is that maybe the
   per-model transformation stuff should all be in the :invoke key of the model,
@@ -89,9 +50,7 @@
   version, input etc. or maybe them knowing about the model is ok.
 - add a "restart from invocation" UI option
 - add cost/credit balance lookup stuff to the user UI
-- get regular backups of the sqlite db file
-- use [this](https://ryanmulligan.dev/blog/css-property-new-style/) for the
-  fancy panic button (although the latter probs won't work on the silk browsers)
+- make regular backups of the sqlite db file
 - add "alias" links for a given network (or maybe just use the slugs in the URL
   anyway)
 - git cleanup: tidy up v2/v3 nomenclature (probably: v0 is prototype, v1 at
@@ -101,11 +60,8 @@
   worth getting bogged down on)
 - add presence to network views so that it'll say how many people are watching a
   particular network
-- see if there's a nicer way to handle the vestaboards - the current way is
-  better than before, but still a bit "edge-case-y" and hacky for my liking
 - add more platforms:
   - claude
-  - gemini/vertex AI
   - https://www.inference.net
 
 ## fly.io deployment notes
@@ -114,3 +70,28 @@
 - did a clean(ish) fly deploy, to auto-detect Phoenix and provide the latest
   suggested config
 - then got stuck in a boot loop, will investigate tomorrow
+
+## Replicate model notes
+
+### img2txt
+
+- blips good, usually warm (3 takes slightly longer than 2, but still
+  reasonable)
+- florence prety good as well
+- uform much slower than other captioning models
+- bunny, joy caption & molmo good if you can keep them warm
+
+### txt2img
+
+- sdxl warm, flux & sd warm
+- kandinsky & proteus not necessarily warm, but quick
+
+### txt2txt
+
+- meta llamas both usually warm, both quick
+
+### txt2audio
+
+- riffusion warm & pretty quick
+- stable audio open not so warm, but quick
+- musicgen takes ages
