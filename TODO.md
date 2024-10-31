@@ -1,5 +1,7 @@
 # Panic TODO
 
+- add subtle indicator for offset/stride for single display
+- check that terminal works on mobile (and revert SXSW-specific changes)
 - make sure vestaboards crashing doesn't bring down the whole thing
 - add the ability to specify multiple offsets for single screen view
 - add Gemini (vertex.ai) support, esp. for audio description
@@ -17,7 +19,10 @@
 - add HUD or other vis for the embedding trajectories
 - sqlite-vec
 - TDA code
-- add an option to redirect all watching TVs to a new view
+- add an option to redirect all watching TVs to a new view (perhaps an
+  `Installation` resource, which had a "waiting room" URL where you could go and
+  then the control panel would redirect all TVs to their respective views, or at
+  least would direct to a network-specific "screen" list)
 - add (subtle) network-stride(s)-offset indicator to blank :single display
 - now that models is an array, have them Enum.each through, but put an await so
   they're all done (this will make the Vestaboard-wait period better; it won't
