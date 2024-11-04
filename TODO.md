@@ -1,6 +1,5 @@
 # Panic TODO
 
-- add subtle indicator for offset/stride for single display
 - check that terminal works on mobile (and revert SXSW-specific changes)
 - make sure vestaboards crashing doesn't bring down the whole thing
 - add the ability to specify multiple offsets for single screen view
@@ -30,6 +29,8 @@
 
 ## ideas (not necessarily TODO, but y'know...)
 
+- make regular backups of the sqlite db file (inc. a way to restore from them,
+  for changing machines)
 - have a "pre-warm the models", based on average startup time (from metadata)
 - go back into the Invoker and sort out the insert vs insert_and_queue_next
   (basically if the entry point to the invoker module could return ok, lockout
@@ -55,7 +56,6 @@
   version, input etc. or maybe them knowing about the model is ok.
 - add a "restart from invocation" UI option
 - add cost/credit balance lookup stuff to the user UI
-- make regular backups of the sqlite db file
 - add "alias" links for a given network (or maybe just use the slugs in the URL
   anyway)
 - git cleanup: tidy up v2/v3 nomenclature (probably: v0 is prototype, v1 at
