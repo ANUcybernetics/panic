@@ -103,6 +103,9 @@ defmodule PanicWeb.PanicComponents do
       class={"grid gap-4 grid-cols-#{num_cols(@display)}"}
       phx-update="stream"
     >
+      <div class="p-4 text-2xl text-purple-300/50 only:block hidden">
+        <%= "#{elem(@display, 1)}/#{elem(@display, 2)}" %>
+      </div>
       <.invocation
         :for={{id, invocation} <- @invocations}
         id={id}
