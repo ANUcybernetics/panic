@@ -12,7 +12,7 @@ defmodule PanicWeb.NetworkLive.Show do
     <.header>
       <%= @network.name %>
     </.header>
-    <section :if={@network.description} class="mt-16">
+    <section :if={@network.description} class="mt-16 prose prose-purple">
       <%= @network.description |> MDEx.to_html!() |> raw %>
     </section>
 
