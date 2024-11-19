@@ -69,10 +69,11 @@ PANIC! booth and let us know.
 - what determines whether they'll be similar? the initial prompt, or something
   else?
 
-### which models have the biggest impact on what happens?
+### which parts of the system have the biggest impact on what happens?
 
-- do certain GenAI models dominate the trajectory? or is it an emergent property
-  of the interactions between all models in the network?
+- does a certain GenAI model "dominate" the behaviour of the network? or is the
+  prompt more important? or the random seed? or is it an emergent property of
+  the interactions between all models in the network?
 
 ## Contact
 
