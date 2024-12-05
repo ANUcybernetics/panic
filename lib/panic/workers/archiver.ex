@@ -121,7 +121,7 @@ defmodule Panic.Workers.Archiver do
         end
 
       ext when ext in [".mp3", ".wav", ".ogg", ".flac"] ->
-        output_filename = "#{Path.dirname(filename)}/#{dest_rootname}.webm"
+        output_filename = "#{Path.dirname(filename)}/#{dest_rootname}.ogg"
 
         case System.cmd("ffmpeg", [
                "-i",
