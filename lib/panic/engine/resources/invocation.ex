@@ -245,6 +245,8 @@ defmodule Panic.Engine.Invocation do
                 case platform do
                   OpenAI -> context.actor.openai_token
                   Replicate -> context.actor.replicate_token
+                  # TODO update this once the Gemini tokens are stored on the User resource
+                  Gemini -> System.get_env("GOOGLE_AI_STUDIO_TOKEN")
                 end
 
               if token do
