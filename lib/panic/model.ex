@@ -80,8 +80,15 @@ defmodule Panic.Model do
         input_type: :audio,
         output_type: :text,
         platform: Gemini,
-        invoke: fn model, input, token ->
-          Gemini.invoke(model, input, token)
+        invoke: fn model, audio_file, token ->
+          Gemini.invoke(
+            model,
+            %{
+              audio_file: audio_file,
+              prompt: "Describe this music in two sentences, including instrumentation, genre and mood."
+            },
+            token
+          )
         end
       },
       # Gemini (Google AI)
@@ -92,8 +99,15 @@ defmodule Panic.Model do
         input_type: :audio,
         output_type: :text,
         platform: Gemini,
-        invoke: fn model, input, token ->
-          Gemini.invoke(model, input, token)
+        invoke: fn model, audio_file, token ->
+          Gemini.invoke(
+            model,
+            %{
+              audio_file: audio_file,
+              prompt: "Describe this music in two sentences, including instrumentation, genre and mood."
+            },
+            token
+          )
         end
       },
       ## OpenAI

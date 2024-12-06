@@ -1,28 +1,16 @@
 defmodule Panic.Platforms.Gemini do
   @moduledoc false
 
-  def invoke(%Panic.Model{path: model_path}, input, api_key) do
-    with {:ok, audio_data} <- download_to_base64(input) do
+  def invoke(%Panic.Model{path: model_path}, %{audio_file: audio_file, prompt: prompt}, api_key) do
+    with {:ok, audio_part} <- create_audio_part(audio_file) do
       request_body = %{
         contents: %{
           role: "USER",
-          parts: [
-            %{
-              inline_data: %{
-                mime_type: "audio/ogg",
-                data: audio_data
-              }
-            },
-            %{
-              text:
-                "Describe the audio file in two sentences. If it contains speech, please transcribe and return only the transcription. If it is instrumental music or sfx, describe what you hear."
-            }
-          ]
+          parts: [audio_part, %{text: prompt}]
         }
       }
 
       [
-        method: :post,
         url: "https://generativelanguage.googleapis.com/v1beta/models/#{model_path}:generateContent",
         json: request_body,
         params: [key: api_key]
@@ -46,8 +34,21 @@ defmodule Panic.Platforms.Gemini do
     end
   end
 
+  defp create_audio_part(audio_file) do
+    with {:ok, audio_data} <- download_to_base64(audio_file) do
+      {:ok,
+       %{
+         inline_data: %{
+           mime_type: "audio/ogg",
+           data: audio_data
+         }
+       }}
+    end
+  end
+
   defp req_new(opts) do
     [
+      method: :post,
       receive_timeout: 10_000
     ]
     |> Keyword.merge(Application.get_env(:panic, :gemini_req_options, []))
