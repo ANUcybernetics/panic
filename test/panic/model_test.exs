@@ -160,6 +160,38 @@ defmodule Panic.ModelTest do
     end
   end
 
+  describe "Gemini platform" do
+    alias Panic.Platforms.Gemini
+
+    @describetag skip: "requires API keys"
+
+    test "can successfully invoke the audio description model" do
+      user = Panic.Fixtures.user_with_tokens()
+      %Model{invoke: invoke_fn} = model = Model.by_id!("florence-2-large")
+      input = test_input(model)
+
+      assert {:ok, output} = invoke_fn.(model, input, user.replicate_token)
+      assert String.match?(output, ~r/\S/)
+    end
+
+    test "generates the right* answer for all models" do
+      # models for which we have canned responses
+      user = Panic.Fixtures.user_with_tokens()
+      models = Model.all(platform: OpenAI)
+
+      for model <- models do
+        assert {:ok, output} =
+                 OpenAI.invoke(
+                   model,
+                   "Respond with just the word 'bananaphone'. Do not include any other content (even punctuation).",
+                   user.openai_token
+                 )
+
+        assert output == "bananaphone"
+      end
+    end
+  end
+
   defp test_input(%Model{input_type: :text}), do: "a shiny red apple"
 
   defp test_input(%Model{input_type: :image}),

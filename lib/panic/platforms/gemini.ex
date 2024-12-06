@@ -1,44 +1,22 @@
 defmodule Panic.Platforms.Gemini do
   @moduledoc false
 
-  # Default generation config values
-  @temperature 0.7
-  @max_tokens 50
-
-  def list_engines(_token) do
-    # Gemini doesn't have a list_engines equivalent, so we'll return a static list
-    # of the available models
-    [
-      %{
-        "id" => "gemini-1.5-pro",
-        "name" => "Gemini 1.5 Pro",
-        "description" => "Most capable Gemini model for text, code, and analysis"
-      },
-      %{
-        "id" => "gemini-1.5-pro-latest",
-        "name" => "Gemini 1.5 Pro Latest",
-        "description" => "Latest version of Gemini 1.5 Pro"
-      },
-      %{
-        "id" => "gemini-1.5-flash",
-        "name" => "Gemini 1.5 Flash",
-        "description" => "Optimized for faster responses"
-      }
-    ]
-  end
-
   def invoke(%Panic.Model{path: model_path}, input, api_key) do
     request_body = %{
-      contents: [
-        %{
-          parts: [
-            %{text: input}
-          ]
-        }
-      ],
-      generationConfig: %{
-        temperature: @temperature,
-        maxOutputTokens: @max_tokens
+      contents: %{
+        role: "USER",
+        parts: [
+          %{
+            file_data: %{
+              file_uri: input,
+              mime_type: "audio/ogg"
+            }
+          },
+          %{
+            text:
+              "Describe the audio file in two sentences. If it contains speech, please transcribe and return only the transcription. If it is instrumental music or sfx, describe what you hear."
+          }
+        ]
       }
     }
 

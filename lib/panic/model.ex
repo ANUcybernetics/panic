@@ -22,6 +22,7 @@ defmodule Panic.Model do
   """
   @behaviour Access
 
+  alias Panic.Platforms.Gemini
   alias Panic.Platforms.OpenAI
   alias Panic.Platforms.Replicate
   alias Panic.Platforms.Vestaboard
@@ -70,8 +71,31 @@ defmodule Panic.Model do
   end
 
   def all do
-    ## Vestaboards
     [
+      # Gemini (Google AI)
+      %__MODULE__{
+        id: "gemini-audio-description",
+        name: "Gemini Audio Description (1.5 Flash)",
+        path: "gemini-1.5-flash",
+        input_type: :audio,
+        output_type: :text,
+        platform: Gemini,
+        invoke: fn model, input, token ->
+          Gemini.invoke(model, input, token)
+        end
+      },
+      # Gemini (Google AI)
+      %__MODULE__{
+        id: "gemini-audio-description-pro",
+        name: "Gemini Audio Description (1.5 Pro)",
+        path: "gemini-1.5-pro",
+        input_type: :audio,
+        output_type: :text,
+        platform: Gemini,
+        invoke: fn model, input, token ->
+          Gemini.invoke(model, input, token)
+        end
+      },
       ## OpenAI
       %__MODULE__{
         id: "gpt-4o",
