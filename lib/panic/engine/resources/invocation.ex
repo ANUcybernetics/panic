@@ -12,6 +12,7 @@ defmodule Panic.Engine.Invocation do
     notifiers: [Ash.Notifier.PubSub]
 
   alias Panic.Engine.Network
+  alias Panic.Platforms.Gemini
   alias Panic.Platforms.OpenAI
   alias Panic.Platforms.Replicate
   alias Panic.Platforms.Vestaboard
