@@ -587,6 +587,28 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
+        id: "magnet",
+        platform: Replicate,
+        path: "lucataco/magnet",
+        name: "MAGNeT",
+        input_type: :text,
+        output_type: :audio,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => [audio_url]}} <-
+                 Replicate.invoke(
+                   model,
+                   %{
+                     prompt: input,
+                     model: "facebook/magnet-medium-10secs",
+                     variations: 1
+                   },
+                   token
+                 ) do
+            {:ok, audio_url}
+          end
+        end
+      },
+      %__MODULE__{
         id: "bark",
         platform: Replicate,
         path: "suno-ai/bark",
