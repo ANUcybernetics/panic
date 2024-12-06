@@ -2,7 +2,10 @@ defmodule Panic.ModelTest do
   use Panic.DataCase
   use ExUnitProperties
 
+  alias Panic.Engine.Invocation
   alias Panic.Model
+
+  @moduletag timeout: 300_000
 
   describe "model generators" do
     property "generate models with correct attributes" do
@@ -163,7 +166,7 @@ defmodule Panic.ModelTest do
   describe "Gemini platform" do
     # alias Panic.Platforms.Gemini
 
-    @describetag skip: "requires API keys"
+    # @describetag skip: "requires API keys"
 
     test "can successfully invoke the audio description model" do
       # user = Panic.Fixtures.user_with_tokens()
@@ -171,6 +174,30 @@ defmodule Panic.ModelTest do
       input = test_input(model)
 
       assert {:ok, output} = invoke_fn.(model, input, "TODO")
+      assert String.match?(output, ~r/\S/)
+    end
+
+    test "run a Gemini audio description model in a network" do
+      user = Panic.Fixtures.user_with_tokens()
+
+      network =
+        user
+        |> Panic.Fixtures.network()
+        |> Panic.Engine.update_models!([["magnet"], ["gemini-audio-description"]], actor: user)
+
+      input = "solo piano etude"
+
+      first =
+        network
+        |> Panic.Engine.prepare_first!(input, actor: user)
+        |> Panic.Engine.invoke!(actor: user)
+
+      next =
+        first
+        |> Panic.Engine.prepare_next!(actor: user)
+        |> Panic.Engine.invoke!(actor: user)
+
+      assert %Invocation{output: output} = next
       assert String.match?(output, ~r/\S/)
     end
   end
