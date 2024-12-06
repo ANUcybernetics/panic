@@ -161,34 +161,17 @@ defmodule Panic.ModelTest do
   end
 
   describe "Gemini platform" do
-    alias Panic.Platforms.Gemini
+    # alias Panic.Platforms.Gemini
 
     @describetag skip: "requires API keys"
 
     test "can successfully invoke the audio description model" do
-      user = Panic.Fixtures.user_with_tokens()
-      %Model{invoke: invoke_fn} = model = Model.by_id!("florence-2-large")
+      # user = Panic.Fixtures.user_with_tokens()
+      %Model{invoke: invoke_fn} = model = Model.by_id!("gemini-audio-description")
       input = test_input(model)
 
-      assert {:ok, output} = invoke_fn.(model, input, user.replicate_token)
+      assert {:ok, output} = invoke_fn.(model, input, "TODO")
       assert String.match?(output, ~r/\S/)
-    end
-
-    test "generates the right* answer for all models" do
-      # models for which we have canned responses
-      user = Panic.Fixtures.user_with_tokens()
-      models = Model.all(platform: OpenAI)
-
-      for model <- models do
-        assert {:ok, output} =
-                 OpenAI.invoke(
-                   model,
-                   "Respond with just the word 'bananaphone'. Do not include any other content (even punctuation).",
-                   user.openai_token
-                 )
-
-        assert output == "bananaphone"
-      end
     end
   end
 
@@ -198,5 +181,5 @@ defmodule Panic.ModelTest do
     do: "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-placeholder.webp"
 
   defp test_input(%Model{input_type: :audio}),
-    do: "https://fly.storage.tigris.dev/panic-invocation-outputs/invocation-5501-output.webm"
+    do: "https://fly.storage.tigris.dev/panic-invocation-outputs/test-audio.ogg"
 end
