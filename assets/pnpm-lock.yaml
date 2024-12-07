@@ -1,0 +1,38 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@types/howler':
+        specifier: ^2.2.12
+        version: 2.2.12
+      audiomotion-analyzer:
+        specifier: ^4.5.0
+        version: 4.5.0
+      howler:
+        specifier: ^2.2.4
+        version: 2.2.4
+
+packages:
+
+  '@types/howler@2.2.12':
+    resolution: {integrity: sha512-hy769UICzOSdK0Kn1FBk4gN+lswcj1EKRkmiDtMkUGvFfYJzgaDXmVXkSShS2m89ERAatGIPnTUlp2HhfkVo5g==}
+
+  audiomotion-analyzer@4.5.0:
+    resolution: {integrity: sha512-qnmB8TSbrxYkTbFgsQeeym0Z/suQx4c0jFg9Yh5+gaPw6J4AFLdfFpagdnDbtNEsj6K7BntgsC3bkdut5rxozg==}
+
+  howler@2.2.4:
+    resolution: {integrity: sha512-iARIBPgcQrwtEr+tALF+rapJ8qSc+Set2GJQl7xT1MQzWaVkFebdJhR3alVlSiUf5U7nAANKuj3aWpwerocD5w==}
+
+snapshots:
+
+  '@types/howler@2.2.12': {}
+
+  audiomotion-analyzer@4.5.0: {}
+
+  howler@2.2.4: {}
