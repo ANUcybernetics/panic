@@ -193,30 +193,30 @@ defmodule PanicWeb.PanicComponents do
     """
   end
 
-  # def invocation_slot(%{type: :audio} = assigns) do
-  #   ~H"""
-  #   <div
-  #     class={["relative size-full", io_colour_mapper(:audio)]}
-  #     id={"#{@id}-audio-visualizer"}
-  #     phx-hook="AudioVisualizer"
-  #     data-audio-src={@value}
-  #   >
-  #     <div class="visualizer-container absolute inset-0"></div>
-  #   </div>
-  #   """
-  # end
-
   def invocation_slot(%{type: :audio} = assigns) do
     ~H"""
-    <div class="relative">
-      <audio autoplay loop controls={true} src={@value} class="absolute top-0 left-0" />
-      <img
-        class="object-cover w-full"
-        src="https://fly.storage.tigris.dev/panic-invocation-outputs/audio-waveform-image.webp"
-      />
+    <div
+      class={["relative size-full", io_colour_mapper(:audio)]}
+      id={"#{@id}-audio-visualizer"}
+      phx-hook="AudioVisualizer"
+      data-audio-src={@value}
+    >
+      <div class="visualizer-container absolute inset-0"></div>
     </div>
     """
   end
+
+  # def invocation_slot(%{type: :audio} = assigns) do
+  #   ~H"""
+  #   <div class="relative">
+  #     <audio autoplay loop controls={true} src={@value} class="absolute top-0 left-0" />
+  #     <img
+  #       class="object-cover w-full"
+  #       src="https://fly.storage.tigris.dev/panic-invocation-outputs/audio-waveform-image.webp"
+  #     />
+  #   </div>
+  #   """
+  # end
 
   # #581c87 is purple-900
   def shadowed_text(assigns) do
