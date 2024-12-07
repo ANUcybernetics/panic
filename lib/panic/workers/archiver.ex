@@ -121,7 +121,7 @@ defmodule Panic.Workers.Archiver do
         end
 
       ext when ext in [".mp3", ".wav", ".ogg", ".flac"] ->
-        output_filename = "#{Path.dirname(filename)}/#{dest_rootname}.ogg"
+        output_filename = "#{Path.dirname(filename)}/#{dest_rootname}.mp3"
 
         case System.cmd("ffmpeg", [
                "-i",
@@ -129,7 +129,7 @@ defmodule Panic.Workers.Archiver do
                # "-t",
                # "8",
                "-c:a",
-               "libopus",
+               "libmp3lame",
                "-b:a",
                "64k",
                "-loglevel",
