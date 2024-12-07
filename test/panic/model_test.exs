@@ -173,7 +173,7 @@ defmodule Panic.ModelTest do
       %Model{invoke: invoke_fn} = model = Model.by_id!("gemini-audio-description")
       input = test_input(model)
 
-      assert {:ok, output} = invoke_fn.(model, input, "TODO")
+      assert {:ok, output} = invoke_fn.(model, input, System.get_env("GOOGLE_AI_STUDIO_TOKEN"))
       assert String.match?(output, ~r/\S/)
     end
 
