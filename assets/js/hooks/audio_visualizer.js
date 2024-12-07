@@ -4,13 +4,17 @@ import AudioMotionAnalyzer from "audiomotion-analyzer";
 const AudioVisualizer = {
   mounted() {
     this.containerElement = this.el.querySelector(".visualizer-container");
-    const audioSrc = this.el.dataset.audioSrc;
-    this.playSound(audioSrc);
+    this.audioSrc = this.el.dataset.audioSrc;
+    this.playSound();
   },
   updated() {
     const newAudioSrc = this.el.dataset.audioSrc;
-    if (newAudioSrc.startsWith("https://fly.storage.tigris.dev")) {
-      this.playSound(newAudioSrc);
+    if (
+      newAudioSrc.startsWith("https://fly.storage.tigris.dev") &&
+      newAudioSrc !== this.audioSrc
+    ) {
+      this.audioSrc = newAudioSrc;
+      this.playSound();
     }
   },
   destroyed() {
@@ -22,37 +26,39 @@ const AudioVisualizer = {
       this.sound.unload();
     }
   },
-  playSound(audioSrc) {
-    if (audioSrc.startsWith("https://fly.storage.tigris.dev")) {
-      if (this.sound) {
-        this.sound.stop();
-        this.sound.unload();
-      }
-      this.sound = new Howl({
-        src: [audioSrc],
-        autoplay: true,
-        loop: true,
-      });
-      this.initializeVisualizer();
+  playSound() {
+    if (this.sound) {
+      this.sound.stop();
+      this.sound.unload();
     }
+    this.sound = new Howl({
+      src: [this.audioSrc],
+      autoplay: true,
+      loop: true,
+      onload: () => {
+        this.initializeVisualizer();
+      },
+    });
   },
   initializeVisualizer() {
-    this.analyzer = new AudioMotionAnalyzer(this.containerElement, {
-      source: this.sound._sounds[0]._node,
-      mode: 6,
-      frequencyScale: "logarithmic",
-      gradient: "rainbow",
-      radial: true,
-      spinSpeed: 10 * Math.random() + -5,
-      mirror: 1,
-      showScaleX: false,
-      overlay: true,
-      showBgColor: true,
-      bgAlpha: 0.7,
-      reflexRatio: 0.5,
-      reflexAlpha: 1,
-      reflexBright: 1,
-    });
+    if (this.sound && this.sound._sounds[0] && this.sound._sounds[0]._node) {
+      this.analyzer = new AudioMotionAnalyzer(this.containerElement, {
+        source: this.sound._sounds[0]._node,
+        mode: 6,
+        frequencyScale: "logarithmic",
+        gradient: "rainbow",
+        radial: true,
+        spinSpeed: 10 * Math.random() + -5,
+        mirror: 1,
+        showScaleX: false,
+        overlay: true,
+        showBgColor: true,
+        bgAlpha: 0.7,
+        reflexRatio: 0.5,
+        reflexAlpha: 1,
+        reflexBright: 1,
+      });
+    }
   },
 };
 
