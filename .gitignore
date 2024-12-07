@@ -39,8 +39,8 @@ npm-debug.log
 *.db
 *.db-*
 
-# Env vars used by direnv
-.envrc
+# toml file contains env vars, so ignore it
+.mise.toml
 
 # Sobelow
 .sobelow
