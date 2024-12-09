@@ -1,6 +1,8 @@
 # Panic TODO
 
 - check that terminal works on mobile (and revert SXSW-specific changes)
+- add "installation" view (which might allow us to re-jig the way vestaboards
+  are handled)
 - make sure vestaboards crashing doesn't bring down the whole thing
 - add the ability to specify multiple offsets for single screen view
 - add Gemini (vertex.ai) support, esp. for audio description
@@ -29,6 +31,8 @@
 
 ## ideas (not necessarily TODO, but y'know...)
 
+- refactor models (and tokens) to just be boring has_many/belongs_to
+  relationships, rather than arrays
 - make regular backups of the sqlite db file (inc. a way to restore from them,
   for changing machines)
 - have a "pre-warm the models", based on average startup time (from metadata)
