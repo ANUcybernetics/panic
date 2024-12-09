@@ -1,0 +1,7 @@
+[tools]
+elixir = "latest"
+erlang = "latest"
+pnpm = "latest"
+sqlite = "latest"
+
+# local dev login: ben@benswift.me / cybernetics1

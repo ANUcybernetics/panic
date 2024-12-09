@@ -39,8 +39,8 @@ npm-debug.log
 *.db
 *.db-*
 
-# toml file contains env vars, so ignore it
-.mise.toml
+# local toml file contains env vars, so ignore it
+mise.local.toml
 
 # Sobelow
 .sobelow
