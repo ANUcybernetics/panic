@@ -31,6 +31,7 @@
 
 ## ideas (not necessarily TODO, but y'know...)
 
+- add Gemini v2.0 (once it's available)
 - refactor models (and tokens) to just be boring has_many/belongs_to
   relationships, rather than arrays
 - make regular backups of the sqlite db file (inc. a way to restore from them,
