@@ -316,7 +316,7 @@ defmodule Panic.Model do
       %__MODULE__{
         id: "stable-diffusion",
         platform: Replicate,
-        path: "stable-diffusion-3.5-large-turbo",
+        path: "stability-ai/stable-diffusion-3.5-large-turbo",
         name: "Stable Diffusion 3.5 Turbo",
         input_type: :text,
         output_type: :image,
