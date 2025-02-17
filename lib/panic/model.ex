@@ -262,7 +262,7 @@ defmodule Panic.Model do
                    %{
                      image: input,
                      question:
-                       "Provide a consice description of this picture, including both foreground and background elements, and the (artistic) style of the image."
+                       "Provide a very short description of this picture, including both foreground and background elements, and the (artistic) style of the image."
                    },
                    token
                  ) do
