@@ -249,6 +249,28 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
+        id: "moondream2",
+        platform: Replicate,
+        path: "lucataco/moondream2",
+        name: "Moondream 2",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => text_array}} <-
+                 Replicate.invoke(
+                   model,
+                   %{
+                     image: input,
+                     question:
+                       "Provide a consice description of this picture, including both foreground and background elements, and the (artistic) style of the image."
+                   },
+                   token
+                 ) do
+            {:ok, text_array |> Enum.join("") |> String.trim()}
+          end
+        end
+      },
+      %__MODULE__{
         id: "blip-2",
         platform: Replicate,
         path: "salesforce/blip-2",
@@ -294,17 +316,15 @@ defmodule Panic.Model do
       %__MODULE__{
         id: "stable-diffusion",
         platform: Replicate,
-        path: "stability-ai/stable-diffusion",
-        name: "Stable Diffusion",
+        path: "stable-diffusion-3.5-large-turbo",
+        name: "Stable Diffusion 3.5 Turbo",
         input_type: :text,
         output_type: :image,
         invoke: fn model, input, token ->
           input_params = %{
             prompt: input,
-            num_inference_steps: 50,
-            guidance_scale: 7.5,
-            width: 1024,
-            height: 576
+            aspect_ratio: "16:9",
+            output_format: "png"
           }
 
           with {:ok, %{"output" => [image_url]}} <-
@@ -496,6 +516,45 @@ defmodule Panic.Model do
           }
 
           with {:ok, %{"output" => [image_url]}} <-
+                 Replicate.invoke(model, input_params, token) do
+            {:ok, image_url}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "imagen-3-fast",
+        platform: Replicate,
+        path: "google/imagen-3-fast",
+        name: "Imagen 3 Fast",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input,
+            aspect_ratio: "16:9",
+            safety_filter_level: "block_only_high"
+          }
+
+          with {:ok, %{"output" => image_url}} <-
+                 Replicate.invoke(model, input_params, token) do
+            {:ok, image_url}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "photon-flash",
+        platform: Replicate,
+        path: "luma/photon-flash",
+        name: "Luma Photon Flash",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input,
+            aspect_ratio: "16:9"
+          }
+
+          with {:ok, %{"output" => image_url}} <-
                  Replicate.invoke(model, input_params, token) do
             {:ok, image_url}
           end
