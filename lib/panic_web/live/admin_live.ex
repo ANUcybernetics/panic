@@ -99,6 +99,7 @@ defmodule PanicWeb.AdminLive do
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
     invocation = message.payload.data
+
     {:noreply, stream_insert(socket, :invocations, invocation, at: 0, limit: @invocation_stream_limit)}
   end
 

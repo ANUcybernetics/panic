@@ -203,7 +203,11 @@ defmodule Panic.Model do
         output_type: :text,
         invoke: fn model, input, token ->
           with {:ok, %{"output" => text}} <-
-                 Replicate.invoke(model, %{image: input, prompt: "Describe the image in great detail"}, token) do
+                 Replicate.invoke(
+                   model,
+                   %{image: input, prompt: "Describe the image in great detail"},
+                   token
+                 ) do
             {:ok, text}
           end
         end
@@ -219,7 +223,11 @@ defmodule Panic.Model do
           with {:ok, %{"output" => text}} <-
                  Replicate.invoke(
                    model,
-                   %{image: input, text: "What do you see? Give me a detailed answer", max_new_tokens: 100},
+                   %{
+                     image: input,
+                     text: "What do you see? Give me a detailed answer",
+                     max_new_tokens: 100
+                   },
                    token
                  ) do
             {:ok, text}
@@ -788,7 +796,9 @@ defmodule Panic.Model do
 
   def all(filters) do
     Enum.filter(all(), fn model ->
-      filters |> Enum.map(fn {output, type} -> Map.fetch!(model, output) == type end) |> Enum.all?()
+      filters
+      |> Enum.map(fn {output, type} -> Map.fetch!(model, output) == type end)
+      |> Enum.all?()
     end)
   end
 

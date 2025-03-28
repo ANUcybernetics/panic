@@ -166,7 +166,7 @@ defmodule Panic.ModelTest do
   describe "Gemini platform" do
     # alias Panic.Platforms.Gemini
 
-    # @describetag skip: "requires API keys"
+    @describetag skip: "requires API keys"
 
     test "can successfully invoke the audio description model" do
       # user = Panic.Fixtures.user_with_tokens()

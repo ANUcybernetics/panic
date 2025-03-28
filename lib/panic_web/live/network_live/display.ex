@@ -44,9 +44,12 @@ defmodule PanicWeb.NetworkLive.Display do
   def handle_params(%{"network_id" => network_id} = params, _session, socket) do
     display =
       case {params, socket.assigns.live_action} do
-        {%{"a" => a, "b" => b}, live_action} -> {live_action, String.to_integer(a), String.to_integer(b)}
+        {%{"a" => a, "b" => b}, live_action} ->
+          {live_action, String.to_integer(a), String.to_integer(b)}
+
         # the default grid for the link view
-        {_, :links} -> {:grid, 2, 3}
+        {_, :links} ->
+          {:grid, 2, 3}
       end
 
     case get_network(network_id, socket.assigns) do

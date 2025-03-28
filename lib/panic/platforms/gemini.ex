@@ -19,7 +19,10 @@ defmodule Panic.Platforms.Gemini do
       |> Req.request()
       |> case do
         {:ok,
-         %Req.Response{status: 200, body: %{"candidates" => [%{"content" => %{"parts" => [%{"text" => text}]}} | _]}}} ->
+         %Req.Response{
+           status: 200,
+           body: %{"candidates" => [%{"content" => %{"parts" => [%{"text" => text}]}} | _]}
+         }} ->
           {:ok, text}
 
         {:ok, %Req.Response{body: %{"error" => %{"message" => message}}}} ->

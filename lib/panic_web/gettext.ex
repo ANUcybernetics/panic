@@ -20,5 +20,5 @@ defmodule PanicWeb.Gettext do
 
   See the [Gettext Docs](https://hexdocs.pm/gettext) for detailed usage.
   """
-  use Gettext, otp_app: :panic
+  use Gettext.Backend, otp_app: :panic
 end

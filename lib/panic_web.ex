@@ -43,7 +43,8 @@ defmodule PanicWeb do
         formats: [:html, :json],
         layouts: [html: PanicWeb.Layouts]
 
-      import PanicWeb.Gettext
+      use Gettext, backend: PanicWeb.Gettext
+
       import Plug.Conn
 
       unquote(verified_routes())
@@ -82,8 +83,9 @@ defmodule PanicWeb do
 
   defp html_helpers do
     quote do
+      use Gettext, backend: PanicWeb.Gettext
+
       import PanicWeb.CoreComponents
-      import PanicWeb.Gettext
       # HTML escaping functionality
       import Phoenix.HTML
       # Core UI components and translation

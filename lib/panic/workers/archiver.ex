@@ -85,7 +85,8 @@ defmodule Panic.Workers.Archiver do
 
   defp archive_invocation(invocation, next_invocation) do
     with {:ok, temp_file_path} <- download_file(invocation.output),
-         {:ok, converted_file_path} <- convert(temp_file_path, "invocation-#{invocation.id}-output"),
+         {:ok, converted_file_path} <-
+           convert(temp_file_path, "invocation-#{invocation.id}-output"),
          {:ok, url} <- upload_to_s3_and_rm(converted_file_path),
          {:ok, _} <- Panic.Engine.update_output(invocation, url, authorize?: false),
          {:ok, _} <- Panic.Engine.update_input(next_invocation, url, authorize?: false) do

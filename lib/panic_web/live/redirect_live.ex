@@ -11,8 +11,11 @@ defmodule PanicWeb.RedirectLive do
   def handle_params(%{"redirect" => redirect}, _session, socket) do
     path =
       case String.graphemes(redirect) do
-        ["s" | invocation_graphemes] -> ~p"/display/static/#{Enum.join(invocation_graphemes)}/"
-        [network_id, offset, stride] -> ~p"/networks/#{network_id}/display/single/#{offset}/#{stride}/"
+        ["s" | invocation_graphemes] ->
+          ~p"/display/static/#{Enum.join(invocation_graphemes)}/"
+
+        [network_id, offset, stride] ->
+          ~p"/networks/#{network_id}/display/single/#{offset}/#{stride}/"
       end
 
     {:noreply, push_navigate(socket, to: path)}

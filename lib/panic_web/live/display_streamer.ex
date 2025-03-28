@@ -16,7 +16,8 @@ defmodule PanicWeb.DisplayStreamer do
 
     # not sure if there is a better way to check if the stream is already configured, but :shrug:
     socket =
-      if Map.has_key?(socket.assigns, :streams) && Map.has_key?(socket.assigns.streams, :invocations) do
+      if Map.has_key?(socket.assigns, :streams) &&
+           Map.has_key?(socket.assigns.streams, :invocations) do
         socket
       else
         socket
@@ -76,7 +77,9 @@ defmodule PanicWeb.DisplayStreamer do
   end
 
   defp update_genesis(socket, %Invocation{run_number: invocation_id}) do
-    genesis_invocation = socket.assigns.genesis_invocation || Ash.get!(Invocation, invocation_id, authorize?: false)
+    genesis_invocation =
+      socket.assigns.genesis_invocation || Ash.get!(Invocation, invocation_id, authorize?: false)
+
     Phoenix.Component.assign(socket, :genesis_invocation, genesis_invocation)
   end
 end

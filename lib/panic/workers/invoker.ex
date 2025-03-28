@@ -55,10 +55,12 @@ defmodule Panic.Workers.Invoker do
 
         {:lockout, _genesis_invocation} ->
           Logger.info("Recent genesis invocation for network #{invocation.network_id}. Dropping job.")
+
           {:ok, :lockout}
 
         {:running_job, job} ->
           Logger.info("Cancelling currently running job for network #{invocation.network_id} and starting new run.")
+
           cancel_job(job)
           invoke_and_insert_next(invocation, user)
       end

@@ -85,7 +85,11 @@ defmodule Panic.Engine.Invocation do
       # FIXME make sure this is done with a db index (perhaps via an identity?) for performance reasons
       filter expr(
                network_id == ^arg(:network_id) and
-                 run_number == fragment("SELECT MAX(run_number) FROM invocations WHERE network_id = ?", ^arg(:network_id)) and
+                 run_number ==
+                   fragment(
+                     "SELECT MAX(run_number) FROM invocations WHERE network_id = ?",
+                     ^arg(:network_id)
+                   ) and
                  state == :completed
              )
     end
@@ -213,7 +217,10 @@ defmodule Panic.Engine.Invocation do
                  [_model_id | vestaboards] ->
                    Enum.each(vestaboards, fn vestaboard_id ->
                      vestaboard_model = Panic.Model.by_id!(vestaboard_id)
-                     vestaboard_token = Vestaboard.token_for_model!(vestaboard_model, context.actor)
+
+                     vestaboard_token =
+                       Vestaboard.token_for_model!(vestaboard_model, context.actor)
+
                      Vestaboard.send_text(vestaboard_model, input, vestaboard_token)
                    end)
 
