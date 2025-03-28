@@ -8,9 +8,6 @@ defmodule PanicWeb.NetworkLive.Terminal do
   def render(assigns) do
     ~H"""
     <style>
-      :root {
-        font-size: 64px;
-      }
       .terminal-container input {
         color: #d8b4fe;
         margin-top: 0;
