@@ -132,8 +132,8 @@ defmodule PanicWeb.PanicComponents do
     ~H"""
     <div id={@id} class="relative aspect-video overflow-hidden">
       <%= render_slot(@inner_block) %>
-      <%= if @input do %>
-        <div class="absolute bottom-0 left-0 w-full h-1/3">
+      <%= if @input && false do %>
+        <div class="absolute top-0 left-0 aspect-video h-1/3">
           <%= render_slot(@input) %>
         </div>
       <% end %>
@@ -180,7 +180,7 @@ defmodule PanicWeb.PanicComponents do
 
   def invocation_slot(%{type: :text} = assigns) do
     ~H"""
-    <div class="size-full grid place-items-center p-2 text-left font-semibold text-xl">
+    <div class="size-full grid place-items-center p-2 bg-zinc-800 text-left text-[14px]">
       <div>
         <%= for line <- String.split(@value, "\n\n") do %>
           <.shadowed_text :if={line != ""}><%= line %></.shadowed_text>
@@ -224,7 +224,7 @@ defmodule PanicWeb.PanicComponents do
   # #581c87 is purple-900
   def shadowed_text(assigns) do
     ~H"""
-    <p class="[text-shadow:-2px_-2px_0px_#581c87,2px_2px_0px_#581c87]">
+    <p class="[text-shadow:2px_2px_0px_#581c87]">
       <%= render_slot(@inner_block) %>
     </p>
     """
