@@ -17,6 +17,20 @@ defmodule PanicWeb.Router do
     plug :load_from_bearer
   end
 
+  pipeline :mcp do
+    plug :accepts, ["json", "sse"]
+  end
+
+  # MCP (Model Context Protocol) servers - must come before catch-all routes
+  scope "/ash_ai/mcp" do
+    pipe_through :mcp
+
+    forward "/", AshAi.Mcp.Router,
+      tools: [],
+      protocol_version_statement: "2024-11-05",
+      otp_app: :panic
+  end
+
   scope "/", PanicWeb do
     pipe_through :browser
 

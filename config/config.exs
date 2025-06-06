@@ -24,6 +24,11 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
+# Configure MIME types for MCP Server-Sent Events
+config :mime, :types, %{
+  "text/event-stream" => ["sse"]
+}
+
 config :panic, Oban,
   engine: Oban.Engines.Lite,
   queues: [default: 10],

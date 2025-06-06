@@ -8,6 +8,7 @@ defmodule Panic.MixProject do
       elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
+      consolidate_protocols: Mix.env() != :dev,
       aliases: aliases(),
       deps: deps()
     ]
@@ -32,6 +33,9 @@ defmodule Panic.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:ash_ai, "~> 0.1"},
+      {:tidewave, "~> 0.1", only: [:dev]},
+      {:igniter, "~> 0.5", only: [:dev, :test]},
       {:phoenix_test, "~> 0.3", only: :test},
       {:phoenix, "~> 1.7.12"},
       {:phoenix_ecto, "~> 4.4"},
