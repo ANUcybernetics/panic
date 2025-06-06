@@ -75,8 +75,8 @@ defmodule Panic.Model do
       # Gemini (Google AI)
       %__MODULE__{
         id: "gemini-audio-description",
-        name: "Gemini Audio Description (1.5 Flash)",
-        path: "gemini-1.5-flash-latest",
+        name: "Gemini Audio Description (Flash)",
+        path: "gemini-2.5-flash-preview-05-20",
         input_type: :audio,
         output_type: :text,
         platform: Gemini,
@@ -94,8 +94,8 @@ defmodule Panic.Model do
       # Gemini (Google AI)
       %__MODULE__{
         id: "gemini-audio-description-pro",
-        name: "Gemini Audio Description (1.5 Pro)",
-        path: "gemini-1.5-pro-latest",
+        name: "Gemini Audio Description (Pro)",
+        path: "gemini-2.5-pro-preview-06-05",
         input_type: :audio,
         output_type: :text,
         platform: Gemini,
