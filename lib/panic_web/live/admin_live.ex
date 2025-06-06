@@ -11,6 +11,14 @@ defmodule PanicWeb.AdminLive do
     ~H"""
     <.header>
       Admin panel
+      <:actions>
+        <.button
+          phx-click="cancel_all_jobs"
+          data-confirm="Are you sure you want to cancel all running jobs?"
+        >
+          Cancel All Jobs
+        </.button>
+      </:actions>
     </.header>
 
     <section class="mt-16">
@@ -101,6 +109,16 @@ defmodule PanicWeb.AdminLive do
     invocation = message.payload.data
 
     {:noreply, stream_insert(socket, :invocations, invocation, at: 0, limit: @invocation_stream_limit)}
+  end
+
+  @impl true
+  def handle_event("cancel_all_jobs", _params, socket) do
+    cancelled_count = Panic.Workers.Invoker.cancel_running_jobs()
+
+    {:noreply,
+     socket
+     |> put_flash(:info, "Cancelled #{cancelled_count} jobs")
+     |> assign(oban_jobs: get_oban_jobs_with_errors())}
   end
 
   defp invocation_io_link(%{type: :input} = assigns) do
