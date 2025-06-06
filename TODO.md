@@ -1,7 +1,5 @@
 # Panic TODO
 
-- add tidewave and ash_ai
-- add "stop all" button to admin view
 - add latest text description model (via Google AI studio)
 - add new replicate models (maybe archive old ones?)
 - check that terminal works on mobile (and revert SXSW-specific changes)
