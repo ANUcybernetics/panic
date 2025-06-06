@@ -1,37 +1,44 @@
 # Panic TODO
 
+- add tidewave and ash_ai
+- add "stop all" button to admin view
+- add latest text description model (via Google AI studio)
+- add new replicate models (maybe archive old ones?)
 - check that terminal works on mobile (and revert SXSW-specific changes)
+- add video support (maybe... need to figure out how to handle video inputs as
+  well)
+- move the rpi chromium launch script into this repo
+- double check that all the updates (esp. ash_auth_phoenix) went through ok
+
+- replace Oban/Engine with a GenServer (or at least root out the "multiple
+  simultaneous jobs" bug)
+
+- update to tailwind 4.0, and use the text shadow stuff
 - add "installation" view (which might allow us to re-jig the way vestaboards
   are handled)
 - make sure vestaboards crashing doesn't bring down the whole thing
 - add the ability to specify multiple offsets for single screen view
-- add Gemini (vertex.ai) support, esp. for audio description
 - add SAO passthrough model?
 - show multiple invocations in info view
 - why aren't <p>s geting margins in prose blocks in info view?
 - refocus and clear the model select component on selection (to allow for
   rapid-fire adding of models)
-- add "stop all" button to admin view
 - model view (w/hand-written description)
 - add "back off over time" based on time
 - store invocation metadata (also add burn rate for a given network)
 - make unauthenticated login not forget which page you were going to
-- add embeddings for all outputs (another Oban worker)
-- add HUD or other vis for the embedding trajectories
-- sqlite-vec
-- TDA code
 - add an option to redirect all watching TVs to a new view (perhaps an
   `Installation` resource, which had a "waiting room" URL where you could go and
   then the control panel would redirect all TVs to their respective views, or at
   least would direct to a network-specific "screen" list)
-- add (subtle) network-stride(s)-offset indicator to blank :single display
 - now that models is an array, have them Enum.each through, but put an await so
   they're all done (this will make the Vestaboard-wait period better; it won't
   wait if the time has already elapsed)
 
 ## ideas (not necessarily TODO, but y'know...)
 
-- add Gemini v2.0 (once it's available)
+(many of these are out-of-date)
+
 - refactor models (and tokens) to just be boring has_many/belongs_to
   relationships, rather than arrays
 - make regular backups of the sqlite db file (inc. a way to restore from them,
