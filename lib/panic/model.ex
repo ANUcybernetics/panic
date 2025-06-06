@@ -85,7 +85,7 @@ defmodule Panic.Model do
             model,
             %{
               audio_file: audio_file,
-              prompt: "Provide a succinct description of this music, including instrumentation and genre."
+              prompt: "In simple language, describe this music and the feeling or vibe it evokes"
             },
             token
           )
@@ -104,7 +104,7 @@ defmodule Panic.Model do
             model,
             %{
               audio_file: audio_file,
-              prompt: "Provide a succinct description of this music, including instrumentation and genre."
+              prompt: "In simple language, describe this music and the feeling or vibe it evokes"
             },
             token
           )
