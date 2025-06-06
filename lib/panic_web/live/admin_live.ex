@@ -19,11 +19,11 @@ defmodule PanicWeb.AdminLive do
       <.table id="all-invocation-table" rows={@streams.invocations}>
         <:col :let={{_id, invocation}} label="ID">
           <.link patch={~p"/display/static/#{invocation.id}"} phx-click={JS.push_focus()}>
-            <%= invocation.id %>
+            {invocation.id}
           </.link>
         </:col>
         <:col :let={{_id, invocation}} label="Numbers">
-          <%= "#{invocation.network_id}-#{invocation.run_number}-#{invocation.sequence_number}" %>
+          {"#{invocation.network_id}-#{invocation.run_number}-#{invocation.sequence_number}"}
         </:col>
         <:col :let={{_id, invocation}} label="Input">
           <.invocation_io_link invocation={invocation} type={:input} />
@@ -39,11 +39,11 @@ defmodule PanicWeb.AdminLive do
 
       <%= if @oban_jobs != [] do %>
         <.table id="oban-job-table" rows={@oban_jobs}>
-          <:col :let={job} label="ID"><%= job.id %></:col>
-          <:col :let={job} label="Worker"><%= job.worker %></:col>
-          <:col :let={job} label="State"><%= job.state %></:col>
+          <:col :let={job} label="ID">{job.id}</:col>
+          <:col :let={job} label="Worker">{job.worker}</:col>
+          <:col :let={job} label="State">{job.state}</:col>
           <:col :let={job} label="Last error">
-            <%= job.errors |> List.last() |> Map.get(:error) %>
+            {job.errors |> List.last() |> Map.get(:error)}
           </:col>
         </.table>
       <% else %>
@@ -58,11 +58,11 @@ defmodule PanicWeb.AdminLive do
         <.table id="network-table" rows={@networks}>
           <:col :let={network} label="Name">
             <.link patch={~p"/networks/#{network}/"} phx-click={JS.push_focus()}>
-              <%= network.name %>
+              {network.name}
             </.link>
           </:col>
-          <:col :let={network} label="User ID"><%= network.user_id %></:col>
-          <:col :let={network} label="Description"><%= network.description %></:col>
+          <:col :let={network} label="User ID">{network.user_id}</:col>
+          <:col :let={network} label="Description">{network.description}</:col>
         </.table>
       <% else %>
         <p class="mt-8">No networks found.</p>
@@ -82,7 +82,7 @@ defmodule PanicWeb.AdminLive do
         PanicWeb.Endpoint.subscribe("invocation:#{network.id}")
       end)
 
-      :timer.send_interval(:timer.seconds(30), :update_oban_jobs)
+      :timer.send_interval(to_timeout(second: 30), :update_oban_jobs)
     end
 
     {:ok,
@@ -107,7 +107,7 @@ defmodule PanicWeb.AdminLive do
     ~H"""
     <%= case @invocation.model |> List.last |> Panic.Model.by_id!() |> Map.fetch!(:input_type) do %>
       <% :text -> %>
-        <%= @invocation.input %>
+        {@invocation.input}
       <% _ -> %>
         <.link href={@invocation.input}>external link</.link>
     <% end %>
@@ -118,7 +118,7 @@ defmodule PanicWeb.AdminLive do
     ~H"""
     <%= case @invocation.model |> List.last |> Panic.Model.by_id!() |> Map.fetch!(:output_type) do %>
       <% :text -> %>
-        <%= @invocation.output %>
+        {@invocation.output}
       <% _ -> %>
         <.link href={@invocation.output}>external link</.link>
     <% end %>

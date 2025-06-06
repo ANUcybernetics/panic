@@ -21,9 +21,9 @@ defmodule PanicWeb.UserLive.Index do
       rows={@streams.users}
       row_click={fn {_id, user} -> JS.navigate(~p"/users/#{user}") end}
     >
-      <:col :let={{_id, user}} label="ID"><%= user.id %></:col>
+      <:col :let={{_id, user}} label="ID">{user.id}</:col>
 
-      <:col :let={{_id, user}} label="Email"><%= user.email %></:col>
+      <:col :let={{_id, user}} label="Email">{user.email}</:col>
 
       <:action :let={{_id, user}}>
         <div class="sr-only">

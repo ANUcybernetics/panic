@@ -29,15 +29,15 @@ defmodule PanicWeb.PanicComponents do
         io_colour_mapper(@model.input_type)
       ]}>
       </div>
-      <%= @model.name %>
+      {@model.name}
       <div class={[
         "size-6 absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 -z-10",
         io_colour_mapper(@model.output_type)
       ]}>
       </div>
-      <%= render_slot(@action) %>
+      {render_slot(@action)}
       <div class="absolute left-1/2 -translate-x-1/2 top-full mt-1 text-sm text-zinc-700">
-        <%= @actual_index %>
+        {@actual_index}
       </div>
     </div>
     """
@@ -107,7 +107,7 @@ defmodule PanicWeb.PanicComponents do
       phx-update="stream"
     >
       <div class="p-4 text-2xl text-purple-300/50 only:block hidden">
-        <%= "#{elem(@display, 1)}/#{elem(@display, 2)}" %>
+        {"#{elem(@display, 1)}/#{elem(@display, 2)}"}
       </div>
       <.invocation
         :for={{id, invocation} <- @invocations}
@@ -131,10 +131,10 @@ defmodule PanicWeb.PanicComponents do
   def invocation_container(assigns) do
     ~H"""
     <div id={@id} class="relative aspect-video overflow-hidden">
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
       <%= if @input && false do %>
         <div class="absolute top-0 left-0 aspect-video h-1/3">
-          <%= render_slot(@input) %>
+          {render_slot(@input)}
         </div>
       <% end %>
     </div>
@@ -183,7 +183,7 @@ defmodule PanicWeb.PanicComponents do
     <div class="size-full grid place-items-center p-2 bg-zinc-800 text-left text-[14px]">
       <div>
         <%= for line <- String.split(@value, "\n\n") do %>
-          <.shadowed_text :if={line != ""}><%= line %></.shadowed_text>
+          <.shadowed_text :if={line != ""}>{line}</.shadowed_text>
         <% end %>
       </div>
     </div>
@@ -225,7 +225,7 @@ defmodule PanicWeb.PanicComponents do
   def shadowed_text(assigns) do
     ~H"""
     <p class="[text-shadow:2px_2px_0px_#581c87]">
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </p>
     """
   end
@@ -240,7 +240,7 @@ defmodule PanicWeb.PanicComponents do
     <div class="flex flex-col items-center">
       <h2 class="text-4xl font-semibold mb-8">wtf is this?</h2>
       <div>
-        <%= @text
+        {@text
         |> QRCode.create(:high)
         |> QRCode.render(:svg, %QRCode.Render.SvgSettings{
           qrcode_color: {216, 180, 254},
@@ -248,7 +248,7 @@ defmodule PanicWeb.PanicComponents do
         })
         # unwrap the tuple
         |> elem(1)
-        |> Phoenix.HTML.raw() %>
+        |> Phoenix.HTML.raw()}
       </div>
     </div>
     """

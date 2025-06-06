@@ -6,7 +6,7 @@ defmodule PanicWeb.UserLive.Show do
   def render(assigns) do
     ~H"""
     <.header>
-      User email: <%= @user.email %>
+      User email: {@user.email}
     </.header>
 
     <section>
@@ -21,11 +21,11 @@ defmodule PanicWeb.UserLive.Show do
         <.table id="network-list" rows={@networks}>
           <:col :let={network} label="Name">
             <.link patch={~p"/networks/#{network}/"} phx-click={JS.push_focus()}>
-              <%= network.name %>
+              {network.name}
             </.link>
           </:col>
-          <:col :let={network} label="Length"><%= length(network.models) %></:col>
-          <:col :let={network} label="Description"><%= network.description %></:col>
+          <:col :let={network} label="Length">{length(network.models)}</:col>
+          <:col :let={network} label="Description">{network.description}</:col>
         </.table>
       <% else %>
         <p class="mt-8">User has no networks.</p>
@@ -42,12 +42,12 @@ defmodule PanicWeb.UserLive.Show do
 
       <div id="token-list">
         <.list>
-          <:item title="Replicate"><%= @user.replicate_token %></:item>
-          <:item title="OpenAI"><%= @user.openai_token %></:item>
-          <:item title="Vestaboard 1"><%= @user.vestaboard_panic_1_token %></:item>
-          <:item title="Vestaboard 2"><%= @user.vestaboard_panic_2_token %></:item>
-          <:item title="Vestaboard 3"><%= @user.vestaboard_panic_3_token %></:item>
-          <:item title="Vestaboard 4"><%= @user.vestaboard_panic_4_token %></:item>
+          <:item title="Replicate">{@user.replicate_token}</:item>
+          <:item title="OpenAI">{@user.openai_token}</:item>
+          <:item title="Vestaboard 1">{@user.vestaboard_panic_1_token}</:item>
+          <:item title="Vestaboard 2">{@user.vestaboard_panic_2_token}</:item>
+          <:item title="Vestaboard 3">{@user.vestaboard_panic_3_token}</:item>
+          <:item title="Vestaboard 4">{@user.vestaboard_panic_4_token}</:item>
         </.list>
       </div>
     </section>

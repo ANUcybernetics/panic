@@ -21,7 +21,7 @@ config :panic, Panic.Repo,
   # you can enable the server option below.
   pool: Ecto.Adapters.SQL.Sandbox,
   # because some of the API tests are slow due to cold starts
-  ownership_timeout: :timer.minutes(10)
+  ownership_timeout: to_timeout(minute: 10)
 
 config :panic, PanicWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],

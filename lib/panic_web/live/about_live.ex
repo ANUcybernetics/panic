@@ -14,7 +14,7 @@ defmodule PanicWeb.AboutLive do
   def render(assigns) do
     ~H"""
     <div class="prose prose-purple">
-      <%= raw(@content) %>
+      {raw(@content)}
     </div>
     """
   end

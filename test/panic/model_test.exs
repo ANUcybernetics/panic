@@ -45,7 +45,7 @@ defmodule Panic.ModelTest do
     alias Panic.Platforms.Replicate
 
     @describetag skip: "requires API keys"
-    @describetag timeout: :timer.minutes(10)
+    @describetag timeout: to_timeout(minute: 10)
 
     test "can list latest model version for all models" do
       user = Panic.Fixtures.user_with_tokens()

@@ -28,7 +28,7 @@ defmodule PanicWeb.NetworkLive.Display do
       />
       <p>
         <span class="text-purple-300/50">Last input:</span>
-        <span :if={@genesis_invocation}><%= @genesis_invocation.input %></span>
+        <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
       </p>
     </div>
     <.display invocations={@streams.invocations} display={@display} />

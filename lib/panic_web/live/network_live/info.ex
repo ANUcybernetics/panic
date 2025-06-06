@@ -16,7 +16,7 @@ defmodule PanicWeb.NetworkLive.Info do
         <ol>
           <li>
             <.link patch={~p"/networks/#{network.id}/info/qr"}>
-              <%= network.name %>
+              {network.name}
             </.link>
           </li>
         </ol>
@@ -29,17 +29,17 @@ defmodule PanicWeb.NetworkLive.Info do
   def render(assigns) do
     ~H"""
     <div class="prose prose-purple">
-      <h2>Network name: <%= @network.name %></h2>
+      <h2>Network name: {@network.name}</h2>
       <%= if @network.description do %>
-        <%= @network.description |> MDEx.to_html!() |> raw %>
+        {@network.description |> MDEx.to_html!() |> raw}
       <% end %>
       <h2>Models</h2>
       <p>The GenAI models in this network are:</p>
       <ol>
         <%= for model <- non_vestaboard_models(@network) do %>
           <li>
-            <.link href={Panic.Model.model_url(model)} target="_blank"><%= model.name %></.link>
-            (<%= model.input_type %> -> <%= model.output_type %>)
+            <.link href={Panic.Model.model_url(model)} target="_blank">{model.name}</.link>
+            ({model.input_type} -> {model.output_type})
           </li>
         <% end %>
       </ol>
@@ -53,7 +53,7 @@ defmodule PanicWeb.NetworkLive.Info do
       <h2>Last input</h2>
       <div>
         <%= if @genesis_invocation do %>
-          <%= @genesis_invocation.input %>
+          {@genesis_invocation.input}
         <% else %>
           <em>loading...</em>
         <% end %>

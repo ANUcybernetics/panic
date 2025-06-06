@@ -143,11 +143,11 @@ defmodule Panic.InvocationTest do
       user = Panic.Fixtures.user()
 
       assert_raise Invalid, fn ->
-        Ash.get!(Panic.Engine.Invocation, -1, actor: user)
+        Ash.get!(Invocation, -1, actor: user)
       end
 
       assert_raise Ash.Error.Forbidden, fn ->
-        Ash.get!(Panic.Engine.Invocation, 1)
+        Ash.get!(Invocation, 1)
       end
     end
 

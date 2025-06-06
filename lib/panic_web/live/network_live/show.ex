@@ -10,10 +10,10 @@ defmodule PanicWeb.NetworkLive.Show do
   def render(assigns) do
     ~H"""
     <.header>
-      <%= @network.name %>
+      {@network.name}
     </.header>
     <section :if={@network.description} class="mt-16 prose prose-purple">
-      <%= @network.description |> MDEx.to_html!() |> raw %>
+      {@network.description |> MDEx.to_html!() |> raw}
     </section>
 
     <section class="mt-16">
@@ -63,7 +63,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
     <section class="mt-16">
       <h2 class="font-semibold mb-8">
-        Last input <span :if={@genesis_invocation}>: <%= @genesis_invocation.input %></span>
+        Last input <span :if={@genesis_invocation}>: {@genesis_invocation.input}</span>
       </h2>
 
       <.display invocations={@streams.invocations} display={@display} />

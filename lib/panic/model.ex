@@ -29,7 +29,7 @@ defmodule Panic.Model do
 
   require Logger
 
-  @vestaboard_sleep :timer.seconds(5)
+  @vestaboard_sleep to_timeout(second: 5)
 
   @enforce_keys [:id, :path, :name, :platform, :input_type, :output_type, :invoke]
   defstruct [
@@ -874,7 +874,7 @@ defmodule Panic.Model do
     |> Enum.with_index()
     |> Enum.reduce({[], 0}, fn {model, index}, {acc, actual_index} ->
       case model.platform do
-        Panic.Platforms.Vestaboard ->
+        Vestaboard ->
           {[{index, nil, model} | acc], actual_index}
 
         _ ->
