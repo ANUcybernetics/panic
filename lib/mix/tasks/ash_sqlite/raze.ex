@@ -30,8 +30,6 @@ defmodule Mix.Tasks.AshSqlite.Raze do
     (@migrations_path <> "//*.exs")
     |> Path.wildcard()
     |> Enum.filter(&String.match?(&1, ~r|/[0-9]{14}|))
-    # leave the initial oban migration, because we probably still want that
-    |> Enum.reject(&String.contains?(&1, "add_oban_jobs_table"))
     |> Enum.each(&File.rm!/1)
   end
 end

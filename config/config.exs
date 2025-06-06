@@ -29,11 +29,6 @@ config :mime, :types, %{
   "text/event-stream" => ["sse"]
 }
 
-config :panic, Oban,
-  engine: Oban.Engines.Lite,
-  queues: [default: 10],
-  repo: Panic.Repo
-
 # Configures the mailer
 #
 # By default it uses the "Local" adapter which stores the emails

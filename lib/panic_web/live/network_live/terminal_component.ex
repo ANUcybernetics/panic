@@ -3,6 +3,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   use PanicWeb, :live_component
 
   alias Panic.Engine.Invocation
+  alias Panic.Engine.NetworkProcessor
 
   @impl true
   def render(assigns) do
@@ -48,17 +49,19 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   end
 
   def handle_event("start-run", %{"invocation" => invocation_params}, socket) do
-    case AshPhoenix.Form.submit(socket.assigns.form, params: invocation_params) do
-      {:ok, invocation} ->
-        socket =
-          case Panic.Engine.start_run(invocation, actor: socket.assigns.current_user) do
-            {:ok, genesis_invocation} ->
-              notify_parent({:genesis_invocation, genesis_invocation})
-              assign(socket, :genesis_invocation, genesis_invocation)
+    prompt = invocation_params["input"] || ""
 
-            {:error, _reason} ->
-              socket
-          end
+    case NetworkProcessor.start_run(socket.assigns.network.id, prompt, socket.assigns.current_user) do
+      {:ok, genesis_invocation} ->
+        notify_parent({:genesis_invocation, genesis_invocation})
+        socket = assign(socket, :genesis_invocation, genesis_invocation)
+        {:noreply, assign_form(socket)}
+
+      {:lockout, genesis_invocation} ->
+        socket =
+          socket
+          |> put_flash(:error, "Please wait before starting a new run")
+          |> assign(:genesis_invocation, genesis_invocation)
 
         {:noreply, socket}
 

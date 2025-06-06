@@ -11,7 +11,6 @@ config :bcrypt_elixir, log_rounds: 1
 # Run `mix help test` for more information.
 config :logger, level: :warning
 
-config :panic, Oban, testing: :manual
 config :panic, Panic.Mailer, adapter: Swoosh.Adapters.Test
 
 config :panic, Panic.Repo,
@@ -29,6 +28,8 @@ config :panic, PanicWeb.Endpoint,
   secret_key_base: "6fMtFbo7K5GsdxuA9hk6X1hEn80aqXOJ37byZ//ba4YknWXTQDDJinMCdbXRj1aR",
   server: false
 
+# Use a shorter lockout period for tests
+config :panic, :lockout_seconds, 1
 config :panic, :token_signing_secret, "keep_out"
 
 # Initialize plugs at runtime for faster test compilation
