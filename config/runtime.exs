@@ -7,8 +7,6 @@ import Config
 # any compile-time configuration in here, as it won't be applied.
 # The block below contains prod specific runtime configuration.
 
-config :panic, Oban, plugins: [Oban.Plugins.Pruner]
-
 # ## Using releases
 #
 # If you use `mix release`, you need to explicitly enable the server

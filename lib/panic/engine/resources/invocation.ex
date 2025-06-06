@@ -16,7 +16,6 @@ defmodule Panic.Engine.Invocation do
   alias Panic.Platforms.OpenAI
   alias Panic.Platforms.Replicate
   alias Panic.Platforms.Vestaboard
-  alias Panic.Workers.Invoker
 
   sqlite do
     table "invocations"
@@ -169,17 +168,9 @@ defmodule Panic.Engine.Invocation do
         allow_nil? false
       end
 
-      run fn input, context ->
+      run fn input, _context ->
         invocation = input.arguments.first_invocation
-
-        case Panic.Workers.Invoker.check_running_jobs(invocation) do
-          {:lockout, genesis_invocation} ->
-            {:ok, genesis_invocation}
-
-          _ ->
-            Invoker.insert(invocation, context.actor)
-            {:ok, invocation}
-        end
+        {:ok, invocation}
       end
     end
 

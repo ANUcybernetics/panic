@@ -2,8 +2,6 @@ defmodule PanicWeb.AdminLive do
   @moduledoc false
   use PanicWeb, :live_view
 
-  import Ecto.Query
-
   @invocation_stream_limit 100
 
   @impl true
@@ -43,23 +41,6 @@ defmodule PanicWeb.AdminLive do
     </section>
 
     <section class="mt-16">
-      <h2 class="text-xl font-semibold">Oban Errors</h2>
-
-      <%= if @oban_jobs != [] do %>
-        <.table id="oban-job-table" rows={@oban_jobs}>
-          <:col :let={job} label="ID">{job.id}</:col>
-          <:col :let={job} label="Worker">{job.worker}</:col>
-          <:col :let={job} label="State">{job.state}</:col>
-          <:col :let={job} label="Last error">
-            {job.errors |> List.last() |> Map.get(:error)}
-          </:col>
-        </.table>
-      <% else %>
-        <p class="mt-8">No Oban jobs with errors.</p>
-      <% end %>
-    </section>
-
-    <section class="mt-16">
       <h2 class="text-xl font-semibold">Networks</h2>
 
       <%= if @networks != [] do %>
@@ -82,26 +63,18 @@ defmodule PanicWeb.AdminLive do
   @impl true
   def mount(_params, _session, socket) do
     networks = Ash.read!(Panic.Engine.Network, authorize?: false)
-    oban_jobs = get_oban_jobs_with_errors()
 
     if connected?(socket) do
       # admin view subscribes to _all_ invocations
       Enum.each(networks, fn network ->
         PanicWeb.Endpoint.subscribe("invocation:#{network.id}")
       end)
-
-      :timer.send_interval(to_timeout(second: 30), :update_oban_jobs)
     end
 
     {:ok,
      socket
-     |> assign(networks: networks, oban_jobs: oban_jobs)
+     |> assign(networks: networks)
      |> stream(:invocations, [])}
-  end
-
-  @impl true
-  def handle_info(:update_oban_jobs, socket) do
-    {:noreply, assign(socket, oban_jobs: get_oban_jobs_with_errors())}
   end
 
   @impl true
@@ -109,16 +82,6 @@ defmodule PanicWeb.AdminLive do
     invocation = message.payload.data
 
     {:noreply, stream_insert(socket, :invocations, invocation, at: 0, limit: @invocation_stream_limit)}
-  end
-
-  @impl true
-  def handle_event("cancel_all_jobs", _params, socket) do
-    cancelled_count = Panic.Workers.Invoker.cancel_running_jobs()
-
-    {:noreply,
-     socket
-     |> put_flash(:info, "Cancelled #{cancelled_count} jobs")
-     |> assign(oban_jobs: get_oban_jobs_with_errors())}
   end
 
   defp invocation_io_link(%{type: :input} = assigns) do
@@ -141,9 +104,5 @@ defmodule PanicWeb.AdminLive do
         <.link href={@invocation.output}>external link</.link>
     <% end %>
     """
-  end
-
-  defp get_oban_jobs_with_errors do
-    Panic.Repo.all(where(Oban.Job, [j], j.errors != []))
   end
 end
