@@ -4,6 +4,9 @@ set -u           # Exit on undefined variable
 set -o pipefail  # Exit on pipe failure
 set -x           # Enable debugging output
 
+# TODO maybe add an optional "install" arg to this script which (if present) installs
+# it in the correct place to run at startup on a Raspbian Bookworm RPi.
+
 # Configuration
 readonly URL="https://panic.fly.dev/"
 
