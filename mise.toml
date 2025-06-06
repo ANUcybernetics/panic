@@ -1,6 +1,6 @@
 [tools]
 elixir = "latest"
-erlang = "latest"
+erlang = "27"
 pnpm = "latest"
 sqlite = "latest"
 
