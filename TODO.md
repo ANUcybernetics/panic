@@ -5,9 +5,7 @@
 - add video support (maybe... need to figure out how to handle video inputs as
   well)
 - double check that all the updates (esp. ash_auth_phoenix) went through ok
-
-- replace Oban/Engine with a GenServer (or at least root out the "multiple
-  simultaneous jobs" bug)
+- update tests for have/don't have API token setup
 
 - update to tailwind 4.0, and use the text shadow stuff
 - add "installation" view (which might allow us to re-jig the way vestaboards
