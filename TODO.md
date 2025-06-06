@@ -1,11 +1,9 @@
 # Panic TODO
 
-- add latest text description model (via Google AI studio)
 - add new replicate models (maybe archive old ones?)
 - check that terminal works on mobile (and revert SXSW-specific changes)
 - add video support (maybe... need to figure out how to handle video inputs as
   well)
-- move the rpi chromium launch script into this repo
 - double check that all the updates (esp. ash_auth_phoenix) went through ok
 
 - replace Oban/Engine with a GenServer (or at least root out the "multiple
