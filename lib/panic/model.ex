@@ -22,6 +22,7 @@ defmodule Panic.Model do
   """
   @behaviour Access
 
+  alias Panic.Platforms.Dummy
   alias Panic.Platforms.Gemini
   alias Panic.Platforms.OpenAI
   alias Panic.Platforms.Replicate
@@ -71,6 +72,7 @@ defmodule Panic.Model do
   end
 
   def all do
+    # Dummy models for testing - all input/output combinations
     [
       # Gemini (Google AI)
       %__MODULE__{
@@ -791,7 +793,126 @@ defmodule Panic.Model do
             end
           }
         end
-      )
+      ) ++
+      [
+        # Text to Text
+        %__MODULE__{
+          id: "dummy-t2t",
+          platform: Dummy,
+          path: "dummy/text-to-text",
+          name: "Dummy Text-to-Text",
+          input_type: :text,
+          output_type: :text,
+          description: "Dummy model for testing text-to-text transformations",
+          invoke: fn model, input, token ->
+            Dummy.invoke(model, input, token)
+          end
+        },
+        # Text to Image
+        %__MODULE__{
+          id: "dummy-t2i",
+          platform: Dummy,
+          path: "dummy/text-to-image",
+          name: "Dummy Text-to-Image",
+          input_type: :text,
+          output_type: :image,
+          description: "Dummy model for testing text-to-image generation",
+          invoke: fn model, input, token ->
+            Dummy.invoke(model, input, token)
+          end
+        },
+        # Text to Audio
+        %__MODULE__{
+          id: "dummy-t2a",
+          platform: Dummy,
+          path: "dummy/text-to-audio",
+          name: "Dummy Text-to-Audio",
+          input_type: :text,
+          output_type: :audio,
+          description: "Dummy model for testing text-to-audio generation",
+          invoke: fn model, input, token ->
+            Dummy.invoke(model, input, token)
+          end
+        },
+        # Image to Text
+        %__MODULE__{
+          id: "dummy-i2t",
+          platform: Dummy,
+          path: "dummy/image-to-text",
+          name: "Dummy Image-to-Text",
+          input_type: :image,
+          output_type: :text,
+          description: "Dummy model for testing image captioning",
+          invoke: fn model, input, token ->
+            Dummy.invoke(model, input, token)
+          end
+        },
+        # Image to Image
+        %__MODULE__{
+          id: "dummy-i2i",
+          platform: Dummy,
+          path: "dummy/image-to-image",
+          name: "Dummy Image-to-Image",
+          input_type: :image,
+          output_type: :image,
+          description: "Dummy model for testing image transformation",
+          invoke: fn model, input, token ->
+            Dummy.invoke(model, input, token)
+          end
+        },
+        # Image to Audio
+        %__MODULE__{
+          id: "dummy-i2a",
+          platform: Dummy,
+          path: "dummy/image-to-audio",
+          name: "Dummy Image-to-Audio",
+          input_type: :image,
+          output_type: :audio,
+          description: "Dummy model for testing image-to-audio generation",
+          invoke: fn model, input, token ->
+            Dummy.invoke(model, input, token)
+          end
+        },
+        # Audio to Text
+        %__MODULE__{
+          id: "dummy-a2t",
+          platform: Dummy,
+          path: "dummy/audio-to-text",
+          name: "Dummy Audio-to-Text",
+          input_type: :audio,
+          output_type: :text,
+          description: "Dummy model for testing audio transcription",
+          invoke: fn model, input, token ->
+            Dummy.invoke(model, input, token)
+          end
+        },
+        # Audio to Image
+        %__MODULE__{
+          id: "dummy-a2i",
+          platform: Dummy,
+          path: "dummy/audio-to-image",
+          name: "Dummy Audio-to-Image",
+          input_type: :audio,
+          output_type: :image,
+          description: "Dummy model for testing audio-to-image generation",
+          invoke: fn model, input, token ->
+            Dummy.invoke(model, input, token)
+          end
+        },
+        # Audio to Audio
+        %__MODULE__{
+          id: "dummy-a2a",
+          platform: Dummy,
+          path: "dummy/audio-to-audio",
+          name: "Dummy Audio-to-Audio",
+          input_type: :audio,
+          output_type: :audio,
+          description: "Dummy model for testing audio transformation",
+          invoke: fn model, input, token ->
+            Dummy.invoke(model, input, token)
+          end
+        }
+      ]
   end
 
   def all(filters) do
@@ -820,6 +941,10 @@ defmodule Panic.Model do
 
   def model_url(%__MODULE__{platform: Replicate, path: path}) do
     "https://replicate.com/#{path}"
+  end
+
+  def model_url(%__MODULE__{platform: Dummy}) do
+    "#dummy-platform"
   end
 
   # these are helper functions for dealing with the Network :models attribute,

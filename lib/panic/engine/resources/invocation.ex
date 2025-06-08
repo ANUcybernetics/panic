@@ -12,6 +12,7 @@ defmodule Panic.Engine.Invocation do
     notifiers: [Ash.Notifier.PubSub]
 
   alias Panic.Engine.Network
+  alias Panic.Platforms.Dummy
   alias Panic.Platforms.Gemini
   alias Panic.Platforms.OpenAI
   alias Panic.Platforms.Replicate
@@ -246,6 +247,7 @@ defmodule Panic.Engine.Invocation do
                   Replicate -> context.actor.replicate_token
                   # TODO update this once the Gemini tokens are stored on the User resource
                   Gemini -> System.get_env("GOOGLE_AI_STUDIO_TOKEN")
+                  Dummy -> "dummy_token"
                 end
 
               if token do

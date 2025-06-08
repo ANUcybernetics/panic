@@ -12,7 +12,7 @@ defmodule Panic.ModelTest do
       check all(
               text_input_model <- Panic.Generators.model(input_type: :text),
               image_ouput_model <- Panic.Generators.model(output_type: :image),
-              replicate_model <- Panic.Generators.model(platform: Panic.Platforms.Replicate)
+              replicate_model <- Panic.Generators.real_model(platform: Panic.Platforms.Replicate)
             ) do
         assert %Panic.Model{input_type: :text} = text_input_model
         assert %Panic.Model{output_type: :image} = image_ouput_model
@@ -32,6 +32,7 @@ defmodule Panic.ModelTest do
 
   describe "all platforms" do
     test "have models with unique ids" do
+      # This includes all models: real platforms (OpenAI, Replicate, etc.) and dummy models
       model_ids =
         Enum.map(Model.all(), fn %Panic.Model{id: id} -> id end)
 
@@ -198,6 +199,81 @@ defmodule Panic.ModelTest do
 
       assert %Invocation{output: output} = next
       assert String.match?(output, ~r/\S/)
+    end
+  end
+
+  describe "Dummy platform" do
+    alias Panic.Platforms.Dummy
+
+    test "all dummy models have correct input/output type combinations" do
+      dummy_models = Model.all(platform: Dummy)
+
+      expected_combinations = [
+        {"dummy-t2t", :text, :text},
+        {"dummy-t2i", :text, :image},
+        {"dummy-t2a", :text, :audio},
+        {"dummy-i2t", :image, :text},
+        {"dummy-i2i", :image, :image},
+        {"dummy-i2a", :image, :audio},
+        {"dummy-a2t", :audio, :text},
+        {"dummy-a2i", :audio, :image},
+        {"dummy-a2a", :audio, :audio}
+      ]
+
+      for {id, input_type, output_type} <- expected_combinations do
+        model = Enum.find(dummy_models, &(&1.id == id))
+        assert model != nil, "Model #{id} should exist"
+        assert model.input_type == input_type, "Model #{id} should have input_type #{input_type}"
+        assert model.output_type == output_type, "Model #{id} should have output_type #{output_type}"
+      end
+    end
+
+    test "dummy models produce deterministic outputs" do
+      user = Panic.Fixtures.user_with_tokens()
+      dummy_models = Model.all(platform: Dummy)
+
+      for %Model{invoke: invoke_fn} = model <- dummy_models do
+        input = test_input(model)
+
+        # Invoke the model twice with the same input
+        {:ok, output1} = invoke_fn.(model, input, user.openai_token)
+        {:ok, output2} = invoke_fn.(model, input, user.openai_token)
+
+        # Outputs should be identical
+        assert output1 == output2, "Model #{model.id} should produce deterministic output"
+
+        # Outputs should contain expected markers
+        case model.output_type do
+          :text -> assert String.contains?(output1, "DUMMY_")
+          :image -> assert String.starts_with?(output1, "https://dummy-images.test/")
+          :audio -> assert String.starts_with?(output1, "https://dummy-audio.test/")
+        end
+      end
+    end
+
+    test "dummy models can be used in a network" do
+      user = Panic.Fixtures.user_with_tokens()
+
+      network =
+        user
+        |> Panic.Fixtures.network()
+        |> Panic.Engine.update_models!([["dummy-t2i"], ["dummy-i2t"]], actor: user)
+
+      input = "test prompt"
+
+      first =
+        network
+        |> Panic.Engine.prepare_first!(input, actor: user)
+        |> Panic.Engine.invoke!(actor: user)
+
+      assert String.starts_with?(first.output, "https://dummy-images.test/")
+
+      next =
+        first
+        |> Panic.Engine.prepare_next!(actor: user)
+        |> Panic.Engine.invoke!(actor: user)
+
+      assert String.starts_with?(next.output, "DUMMY_CAPTION:")
     end
   end
 

@@ -171,10 +171,11 @@ defmodule Panic.InvocationTest do
     # NOTE: these ones shouldn't be properties, because that'd be spendy. Just tests are fine.
     test "produce output" do
       user = Panic.Fixtures.user_with_real_tokens()
-      network = Panic.Fixtures.network(user)
       # a pretty simple network, should be fast & cheap
       network =
-        Panic.Engine.update_models!(network, ["stable-diffusion-test", "blip-2"], actor: user)
+        user
+        |> Panic.Fixtures.network()
+        |> Panic.Engine.update_models!(["stable-diffusion-test", "blip-2"], actor: user)
 
       input = "can you tell me a story?"
 
@@ -189,7 +190,7 @@ defmodule Panic.InvocationTest do
 
     test "creates a next invocation with the right run number and sequence" do
       user = Panic.Fixtures.user_with_real_tokens()
-      network = Panic.Fixtures.network_with_models(user)
+      network = Panic.Fixtures.network_with_real_models(user)
       input = "can you tell me a story?"
 
       first =
@@ -206,7 +207,7 @@ defmodule Panic.InvocationTest do
     test "can make a 'run' with invoke! and prepare_next! which maintains io consistency and ordering" do
       run_length = 4
       user = Panic.Fixtures.user_with_real_tokens()
-      network = Panic.Fixtures.network_with_models(user)
+      network = Panic.Fixtures.network_with_real_models(user)
       input = "can you tell me a story?"
 
       first =

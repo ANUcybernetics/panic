@@ -17,6 +17,7 @@ defmodule Panic.Generators do
 
   alias Panic.Accounts.User
   alias Panic.Engine.Network
+  alias Panic.Platforms.Dummy
   alias Panic.Platforms.Vestaboard
 
   def ascii_sentence do
@@ -27,10 +28,29 @@ defmodule Panic.Generators do
   end
 
   def model(filters \\ []) do
+    # Get all models matching the filters
+    all_matching = Panic.Model.all(filters)
+
+    # Get dummy models matching the filters
+    dummy_matching = Enum.filter(all_matching, &(&1.platform == Dummy))
+
+    # If we have at least 3 dummy models matching the filters, use only dummy models
+    # Otherwise, use all models (excluding Vestaboard) to avoid filter issues
+    models_to_use =
+      if length(dummy_matching) >= 3 do
+        dummy_matching
+      else
+        Enum.filter(all_matching, &(&1.platform != Vestaboard))
+      end
+
+    member_of(models_to_use)
+  end
+
+  def real_model(filters \\ []) do
     filters
     |> Panic.Model.all()
     |> member_of()
-    |> filter(fn model -> model.platform != Vestaboard end)
+    |> filter(fn model -> model.platform != Vestaboard and model.platform != Dummy end)
   end
 
   def password do
@@ -114,11 +134,27 @@ defmodule Panic.Generators do
   end
 
   def network_with_models(user) do
+    gen all(network <- network(user), length <- integer(1..5)) do
+      # Create a simple chain of dummy models
+      model_ids =
+        case length do
+          1 -> [["dummy-t2t"]]
+          2 -> [["dummy-t2i"], ["dummy-i2t"]]
+          3 -> [["dummy-t2i"], ["dummy-i2i"], ["dummy-i2t"]]
+          4 -> [["dummy-t2a"], ["dummy-a2i"], ["dummy-i2i"], ["dummy-i2t"]]
+          _ -> [["dummy-t2i"], ["dummy-i2a"], ["dummy-a2i"], ["dummy-i2i"], ["dummy-i2t"]]
+        end
+
+      Panic.Engine.update_models!(network, model_ids, actor: user)
+    end
+  end
+
+  def network_with_real_models(user) do
     gen all(network <- network(user), length <- integer(1..10)) do
       model_ids =
         :text
         |> Stream.unfold(fn input_type ->
-          next_model = [input_type: input_type] |> model() |> pick()
+          next_model = [input_type: input_type] |> real_model() |> pick()
           {next_model, Map.fetch!(next_model, :output_type)}
         end)
         |> Stream.transform([], fn model, acc ->
@@ -180,6 +216,12 @@ defmodule Panic.Fixtures do
   def network_with_models(user) do
     user
     |> Panic.Generators.network_with_models()
+    |> pick()
+  end
+
+  def network_with_real_models(user) do
+    user
+    |> Panic.Generators.network_with_real_models()
     |> pick()
   end
 end
