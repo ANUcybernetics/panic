@@ -71,7 +71,8 @@ defmodule Panic.MixProject do
       {:styler, "~> 1.0", only: [:dev, :test], runtime: false},
       {:live_select, "~> 1.0"},
       {:mdex, "~> 0.1"},
-      {:qr_code, "~> 3.1"}
+      {:qr_code, "~> 3.1"},
+      {:oban, "~> 2.13"}
     ]
   end
 
