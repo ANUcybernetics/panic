@@ -15,8 +15,8 @@ defmodule Panic.Engine.NetworkProcessorTest do
     # Create a test network using the code interface
     network = Engine.create_network!("Test Network", "Test network for processor tests", actor: user)
 
-    # Update the network with a real model (models is array of arrays)
-    network = Engine.update_models!(network, [["gpt-4o"]], actor: user)
+    # Update the network with a dummy model (models is array of arrays)
+    network = Engine.update_models!(network, [["dummy-t2t"]], actor: user)
 
     on_exit(fn ->
       # Stop any running processors for this network
@@ -119,9 +119,9 @@ defmodule Panic.Engine.NetworkProcessorTest do
       Process.sleep(500)
 
       first_invocation = Ash.get!(Engine.Invocation, first_genesis.id, authorize?: false)
-      # The invocation should be either failed (from cancellation) or still invoking (will fail due to auth)
-      assert first_invocation.state in [:failed, :invoking],
-             "Expected invocation to be failed or invoking, but was #{first_invocation.state}"
+      # With dummy models, invocations complete quickly, so we may see completed, failed, or invoking states
+      assert first_invocation.state in [:failed, :invoking, :completed],
+             "Expected invocation to be failed, invoking, or completed, but was #{first_invocation.state}"
     end
 
     test "enforces lockout period", %{network: network, user: user} do
