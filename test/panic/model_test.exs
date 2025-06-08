@@ -44,11 +44,11 @@ defmodule Panic.ModelTest do
   describe "Replicate platform" do
     alias Panic.Platforms.Replicate
 
-    @describetag skip: "requires API keys"
+    @describetag api_required: true
     @describetag timeout: to_timeout(minute: 10)
 
     test "can list latest model version for all models" do
-      user = Panic.Fixtures.user_with_tokens()
+      user = Panic.Fixtures.user_with_real_tokens()
       models = Model.all(platform: Replicate)
 
       for model <- models do
@@ -58,7 +58,7 @@ defmodule Panic.ModelTest do
     end
 
     test "can generate a stable diffusion image" do
-      user = Panic.Fixtures.user_with_tokens()
+      user = Panic.Fixtures.user_with_real_tokens()
       %Model{invoke: invoke_fn} = model = Model.by_id!("stable-diffusion-test")
 
       {:ok, img_url} =
@@ -68,7 +68,7 @@ defmodule Panic.ModelTest do
     end
 
     test "BLIP2 captioner is sufficiently expressive" do
-      user = Panic.Fixtures.user_with_tokens()
+      user = Panic.Fixtures.user_with_real_tokens()
       %Model{invoke: invoke_fn} = model = Model.by_id!("blip-2")
       # TODO the rate limit here is pretty low, so maybe switch to a static image somewhere?
       input_img = "https://picsum.photos/400/225/"
@@ -81,8 +81,9 @@ defmodule Panic.ModelTest do
     end
 
     @tag skip: true
+    @tag api_required: true
     test "can successfully invoke all Replicate models" do
-      user = Panic.Fixtures.user_with_tokens()
+      user = Panic.Fixtures.user_with_real_tokens()
       models = Model.all(platform: Replicate)
 
       tasks =
@@ -131,7 +132,7 @@ defmodule Panic.ModelTest do
     end
 
     test "can successfully invoke a specific model" do
-      user = Panic.Fixtures.user_with_tokens()
+      user = Panic.Fixtures.user_with_real_tokens()
       %Model{invoke: invoke_fn} = model = Model.by_id!("florence-2-large")
       input = test_input(model)
 
@@ -143,11 +144,11 @@ defmodule Panic.ModelTest do
   describe "OpenAI platform" do
     alias Panic.Platforms.OpenAI
 
-    @describetag skip: "requires API keys"
+    @describetag api_required: true
 
     test "generates the right* answer for all models" do
       # models for which we have canned responses
-      user = Panic.Fixtures.user_with_tokens()
+      user = Panic.Fixtures.user_with_real_tokens()
       models = Model.all(platform: OpenAI)
 
       for model <- models do
@@ -164,9 +165,7 @@ defmodule Panic.ModelTest do
   end
 
   describe "Gemini platform" do
-    # alias Panic.Platforms.Gemini
-
-    @describetag skip: "requires API keys"
+    @describetag api_required: true
 
     test "can successfully invoke the audio description model" do
       # user = Panic.Fixtures.user_with_tokens()
@@ -178,7 +177,7 @@ defmodule Panic.ModelTest do
     end
 
     test "run a Gemini audio description model in a network" do
-      user = Panic.Fixtures.user_with_tokens()
+      user = Panic.Fixtures.user_with_real_tokens()
 
       network =
         user

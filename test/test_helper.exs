@@ -1,4 +1,12 @@
-ExUnit.start()
+# Configure ExUnit to exclude API tests by default
+exclude_tags =
+  if System.get_env("OPENAI_API_KEY") && System.get_env("REPLICATE_API_KEY") do
+    []
+  else
+    [api_required: true]
+  end
+
+ExUnit.start(exclude: exclude_tags)
 Ecto.Adapters.SQL.Sandbox.mode(Panic.Repo, :manual)
 
 defmodule Panic.Generators do
@@ -50,17 +58,49 @@ defmodule Panic.Generators do
   end
 
   def set_all_tokens(user) do
+    # Read API keys from environment variables if available, otherwise use test tokens
+    openai_key = System.get_env("OPENAI_API_KEY") || Application.get_env(:panic, :api_tokens)[:openai_token]
+    replicate_key = System.get_env("REPLICATE_API_KEY") || Application.get_env(:panic, :api_tokens)[:replicate_token]
+
+    # Set available tokens
+    user = if openai_key, do: Panic.Accounts.set_token!(user, :openai_token, openai_key, actor: user), else: user
+    user = if replicate_key, do: Panic.Accounts.set_token!(user, :replicate_token, replicate_key, actor: user), else: user
+
+    # Set other test tokens from config
     :panic
     |> Application.get_env(:api_tokens)
-    |> Enum.map(fn {name, value} ->
-      Panic.Accounts.set_token!(user, name, value, actor: user)
+    |> Enum.filter(fn {name, _value} -> name not in [:openai_token, :replicate_token] end)
+    |> Enum.reduce(user, fn {name, value}, acc ->
+      Panic.Accounts.set_token!(acc, name, value, actor: acc)
     end)
-    |> List.last()
+  end
+
+  def set_real_api_tokens!(user) do
+    # Read API keys from environment variables
+    openai_key = System.get_env("OPENAI_API_KEY")
+    replicate_key = System.get_env("REPLICATE_API_KEY")
+
+    # For api_required tests, fail if keys are not present
+    if openai_key == nil || replicate_key == nil do
+      raise "API keys required for this test. Set OPENAI_API_KEY and REPLICATE_API_KEY environment variables."
+    end
+
+    # Set the tokens from environment variables
+    user
+    |> Panic.Accounts.set_token!(:openai_token, openai_key, actor: user)
+    |> Panic.Accounts.set_token!(:replicate_token, replicate_key, actor: user)
   end
 
   def user_with_tokens do
     gen all(user <- user()) do
       user = set_all_tokens(user)
+      Ash.get!(User, user.id, actor: user)
+    end
+  end
+
+  def user_with_real_tokens do
+    gen all(user <- user()) do
+      user = set_real_api_tokens!(user)
       Ash.get!(User, user.id, actor: user)
     end
   end
@@ -127,6 +167,10 @@ defmodule Panic.Fixtures do
     pick(Panic.Generators.user_with_tokens())
   end
 
+  def user_with_real_tokens do
+    pick(Panic.Generators.user_with_real_tokens())
+  end
+
   def network(user) do
     user
     |> Panic.Generators.network()
@@ -145,10 +189,15 @@ defmodule PanicWeb.Helpers do
   def create_and_sign_in_user(%{conn: conn}) do
     password = "abcd1234"
 
+    user = Panic.Fixtures.user(password)
+
+    # Use real API tokens if they're available (for api_required tests)
     user =
-      password
-      |> Panic.Fixtures.user()
-      |> Panic.Generators.set_all_tokens()
+      if System.get_env("OPENAI_API_KEY") && System.get_env("REPLICATE_API_KEY") do
+        Panic.Generators.set_real_api_tokens!(user)
+      else
+        Panic.Generators.set_all_tokens(user)
+      end
 
     strategy = AshAuthentication.Info.strategy!(Panic.Accounts.User, :password)
 

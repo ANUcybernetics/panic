@@ -4,7 +4,7 @@ defmodule PanicWeb.TerminalLiveTest do
   # import Phoenix.LiveViewTest
 
   describe "user IS logged in" do
-    @describetag skip: "requires API keys"
+    @describetag api_required: true
     setup {PanicWeb.Helpers, :create_and_sign_in_user}
 
     test "and can create a new invocation in the terminal", %{conn: conn, user: user} do

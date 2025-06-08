@@ -167,10 +167,10 @@ defmodule Panic.InvocationTest do
   end
 
   describe "Invocation with API calls" do
-    @describetag skip: "requires API keys"
+    @describetag api_required: true
     # NOTE: these ones shouldn't be properties, because that'd be spendy. Just tests are fine.
     test "produce output" do
-      user = Panic.Fixtures.user_with_tokens()
+      user = Panic.Fixtures.user_with_real_tokens()
       network = Panic.Fixtures.network(user)
       # a pretty simple network, should be fast & cheap
       network =
@@ -188,7 +188,7 @@ defmodule Panic.InvocationTest do
     end
 
     test "creates a next invocation with the right run number and sequence" do
-      user = Panic.Fixtures.user_with_tokens()
+      user = Panic.Fixtures.user_with_real_tokens()
       network = Panic.Fixtures.network_with_models(user)
       input = "can you tell me a story?"
 
@@ -205,7 +205,7 @@ defmodule Panic.InvocationTest do
 
     test "can make a 'run' with invoke! and prepare_next! which maintains io consistency and ordering" do
       run_length = 4
-      user = Panic.Fixtures.user_with_tokens()
+      user = Panic.Fixtures.user_with_real_tokens()
       network = Panic.Fixtures.network_with_models(user)
       input = "can you tell me a story?"
 
