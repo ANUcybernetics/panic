@@ -1,5 +1,3 @@
-# ABOUTME: Implements secret retrieval for AshAuthentication tokens
-# ABOUTME: Fetches the secret_key_base from the PanicWeb.Endpoint configuration
 defmodule Panic.Accounts.Secrets do
   @moduledoc false
   use AshAuthentication.Secret

@@ -1,7 +1,8 @@
 defmodule Panic.Engine.NetworkProcessor do
   @moduledoc """
-  ABOUTME: A GenServer that processes invocations for a specific network.
-  ABOUTME: Handles recursive invocation processing, lockout periods, and archiving.
+  A GenServer that processes invocations for a specific network.
+
+  Handles recursive invocation processing, lockout periods, and archiving.
 
   This GenServer replaces the previous Oban-based invocation processing system.
   Each network gets its own NetworkProcessor GenServer that is started on demand
