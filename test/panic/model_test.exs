@@ -229,15 +229,14 @@ defmodule Panic.ModelTest do
     end
 
     test "dummy models produce deterministic outputs" do
-      user = Panic.Fixtures.user_with_tokens()
       dummy_models = Model.all(platform: Dummy)
 
       for %Model{invoke: invoke_fn} = model <- dummy_models do
         input = test_input(model)
 
         # Invoke the model twice with the same input
-        {:ok, output1} = invoke_fn.(model, input, user.openai_token)
-        {:ok, output2} = invoke_fn.(model, input, user.openai_token)
+        {:ok, output1} = invoke_fn.(model, input, nil)
+        {:ok, output2} = invoke_fn.(model, input, nil)
 
         # Outputs should be identical
         assert output1 == output2, "Model #{model.id} should produce deterministic output"
@@ -252,7 +251,7 @@ defmodule Panic.ModelTest do
     end
 
     test "dummy models can be used in a network" do
-      user = Panic.Fixtures.user_with_tokens()
+      user = Panic.Fixtures.user()
 
       network =
         user

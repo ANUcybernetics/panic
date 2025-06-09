@@ -233,8 +233,6 @@ defmodule Panic.Platforms.DummyTest do
     end
 
     test "dummy models can be invoked through their invoke function" do
-      user = Panic.Fixtures.user_with_tokens()
-
       for model <- Model.all(platform: Dummy) do
         input =
           case model.input_type do
@@ -243,7 +241,7 @@ defmodule Panic.Platforms.DummyTest do
             :audio -> "https://example.com/test.ogg"
           end
 
-        assert {:ok, output} = model.invoke.(model, input, user.openai_token)
+        assert {:ok, output} = model.invoke.(model, input, nil)
 
         case model.output_type do
           :text -> assert is_binary(output) and String.contains?(output, "DUMMY_")

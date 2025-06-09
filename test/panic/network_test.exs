@@ -109,10 +109,10 @@ defmodule Panic.NetworkTest do
       assert {:error, _} = Panic.Engine.update_models(network, invalid_model_ids, actor: user)
     end
 
-    property "network_with_models generator creates network with valid models" do
+    property "network_with_dummy_models generator creates network with valid models" do
       user = Panic.Fixtures.user()
 
-      check all(network <- Panic.Generators.network_with_models(user)) do
+      check all(network <- Panic.Generators.network_with_dummy_models(user)) do
         assert :ok = network_runnable?(network.models)
       end
     end

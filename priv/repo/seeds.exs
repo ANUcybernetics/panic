@@ -22,11 +22,4 @@ case Ash.get(Panic.Accounts.User, %{email: "socy@anu.edu.au"}) do
         %{email: "socy@anu.edu.au", password: pass, password_confirmation: pass}
       )
       |> Ash.create!()
-
-    # add the tokens from the secrets file
-    :panic
-    |> Application.get_env(:api_tokens)
-    |> Enum.map(fn {name, value} ->
-      Panic.Accounts.set_token!(user, name, value, actor: user)
-    end)
 end
