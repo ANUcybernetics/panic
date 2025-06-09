@@ -1,8 +1,9 @@
-# ABOUTME: Dummy platform module for testing that returns deterministic outputs without making API calls
-# ABOUTME: Supports all input/output type combinations (text, image, audio) for comprehensive testing
-
 defmodule Panic.Platforms.Dummy do
-  @moduledoc false
+  @moduledoc """
+  Dummy platform module for testing that returns deterministic outputs without making API calls
+
+  Supports all input/output type combinations (text, image, audio) for comprehensive testing
+  """
 
   @doc """
   Invoke a dummy model with deterministic output for testing.

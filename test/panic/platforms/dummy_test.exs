@@ -1,7 +1,10 @@
-# ABOUTME: Tests for the Dummy platform module to ensure it works correctly for all input/output combinations
-# ABOUTME: Verifies deterministic behavior and proper integration with the rest of the system
-
 defmodule Panic.Platforms.DummyTest do
+  @moduledoc """
+  Tests for the Dummy platform module to ensure it works correctly for all input/output combinations
+
+  Verifies deterministic behavior and proper integration with the rest of the system
+  """
+
   use Panic.DataCase
 
   alias Panic.Model

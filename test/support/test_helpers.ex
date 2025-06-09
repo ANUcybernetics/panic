@@ -1,6 +1,3 @@
-# ABOUTME: Test helper functions for checking API key availability and other test utilities
-# ABOUTME: Used to conditionally skip tests that require real API credentials
-
 defmodule Panic.TestHelpers do
   @moduledoc """
   Helper functions for tests, including API key availability checks.

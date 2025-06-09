@@ -1,7 +1,8 @@
 defmodule Panic.Engine.NetworkSupervisor do
   @moduledoc """
-  ABOUTME: DynamicSupervisor for managing NetworkProcessor GenServers.
-  ABOUTME: Each network gets its own NetworkProcessor GenServer started on demand.
+  DynamicSupervisor for managing NetworkProcessor GenServers.
+
+  Each network gets its own NetworkProcessor GenServer started on demand.
   """
 
   use DynamicSupervisor
