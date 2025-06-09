@@ -1,11 +1,11 @@
-defmodule Panic.Engine.NetworkProcessor do
+defmodule Panic.Engine.NetworkRunner do
   @moduledoc """
   A GenServer that processes invocations for a specific network.
 
   Handles recursive invocation processing, lockout periods, and archiving.
 
   This GenServer replaces the previous Oban-based invocation processing system.
-  Each network gets its own NetworkProcessor GenServer that is started on demand
+  Each network gets its own NetworkRunner GenServer that is started on demand
   and registered via the NetworkRegistry.
 
   ## Key Features
@@ -35,9 +35,9 @@ defmodule Panic.Engine.NetworkProcessor do
   # Client API
 
   @doc """
-  Starts a NetworkProcessor for the given network.
+  Starts a NetworkRunner for the given network.
 
-  The processor is registered in the NetworkRegistry under the network_id.
+  The runner is registered in the NetworkRegistry under the network_id.
 
   ## Options
 
@@ -45,7 +45,7 @@ defmodule Panic.Engine.NetworkProcessor do
 
   ## Examples
 
-      iex> NetworkProcessor.start_link(network_id: 123)
+      iex> NetworkRunner.start_link(network_id: 123)
       {:ok, #PID<0.123.0>}
   """
   def start_link(opts) do
@@ -58,7 +58,7 @@ defmodule Panic.Engine.NetworkProcessor do
   Starts a new run for the network with the given prompt.
 
   This function will:
-  1. Start a NetworkProcessor if one isn't already running
+  1. Start a NetworkRunner if one isn't already running
   2. Cancel any existing run for the network
   3. Create a new genesis invocation with the given prompt
   4. Begin processing invocations recursively
@@ -77,11 +77,11 @@ defmodule Panic.Engine.NetworkProcessor do
 
   ## Examples
 
-      iex> NetworkProcessor.start_run(1, "Hello world", user)
+      iex> NetworkRunner.start_run(1, "Hello world", user)
       {:ok, %Invocation{...}}
 
       # Too soon after previous run
-      iex> NetworkProcessor.start_run(1, "Another prompt", user)
+      iex> NetworkRunner.start_run(1, "Another prompt", user)
       {:lockout, %Invocation{...}}
   """
   def start_run(network_id, prompt, user) do
@@ -90,7 +90,7 @@ defmodule Panic.Engine.NetworkProcessor do
         GenServer.call(pid, {:start_run, prompt, user})
 
       [] ->
-        # Start the processor if it doesn't exist
+        # Start the runner if it doesn't exist
         case DynamicSupervisor.start_child(
                Panic.Engine.NetworkSupervisor,
                {__MODULE__, network_id: network_id}
@@ -111,7 +111,7 @@ defmodule Panic.Engine.NetworkProcessor do
   Stops the current run for the network.
 
   Cancels any invocation currently being processed and stops the recursive
-  processing loop. The NetworkProcessor GenServer remains alive and can
+  processing loop. The NetworkRunner GenServer remains alive and can
   accept new runs.
 
   ## Parameters
@@ -121,11 +121,11 @@ defmodule Panic.Engine.NetworkProcessor do
   ## Returns
 
     * `{:ok, :stopped}` - Successfully stopped the run
-    * `{:ok, :not_running}` - No processor was running for this network
+    * `{:ok, :not_running}` - No runner was running for this network
 
   ## Examples
 
-      iex> NetworkProcessor.stop_run(1)
+      iex> NetworkRunner.stop_run(1)
       {:ok, :stopped}
   """
   def stop_run(network_id) do

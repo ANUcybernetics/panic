@@ -9,7 +9,7 @@ defmodule Panic.Engine.Network do
     authorizers: [Ash.Policy.Authorizer]
 
   alias Panic.Engine.Invocation
-  alias Panic.Engine.NetworkProcessor
+  alias Panic.Engine.NetworkRunner
 
   sqlite do
     table "networks"
@@ -63,7 +63,7 @@ defmodule Panic.Engine.Network do
       argument :network_id, :integer, allow_nil?: false
 
       run fn input, _context ->
-        NetworkProcessor.stop_run(input.arguments.network_id)
+        NetworkRunner.stop_run(input.arguments.network_id)
       end
     end
   end

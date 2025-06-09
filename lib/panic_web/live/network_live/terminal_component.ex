@@ -3,7 +3,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   use PanicWeb, :live_component
 
   alias Panic.Engine.Invocation
-  alias Panic.Engine.NetworkProcessor
+  alias Panic.Engine.NetworkRunner
 
   @impl true
   def render(assigns) do
@@ -51,7 +51,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   def handle_event("start-run", %{"invocation" => invocation_params}, socket) do
     prompt = invocation_params["input"] || ""
 
-    case NetworkProcessor.start_run(socket.assigns.network.id, prompt, socket.assigns.current_user) do
+    case NetworkRunner.start_run(socket.assigns.network.id, prompt, socket.assigns.current_user) do
       {:ok, genesis_invocation} ->
         notify_parent({:genesis_invocation, genesis_invocation})
         socket = assign(socket, :genesis_invocation, genesis_invocation)

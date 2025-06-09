@@ -131,7 +131,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_event("stop", _params, socket) do
-    Panic.Engine.NetworkProcessor.stop_run(socket.assigns.network.id)
+    Panic.Engine.NetworkRunner.stop_run(socket.assigns.network.id)
     {:noreply, socket}
   end
 
