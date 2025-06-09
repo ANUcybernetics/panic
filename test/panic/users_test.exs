@@ -32,24 +32,6 @@ defmodule Panic.UsersTest do
       end
     end
 
-    property "generates users with all valid tokens" do
-      token_names = [
-        :replicate_token,
-        :openai_token,
-        :vestaboard_panic_1_token,
-        :vestaboard_panic_2_token,
-        :vestaboard_panic_3_token,
-        :vestaboard_panic_4_token
-      ]
-
-      check all(
-              user <- Panic.Generators.user_with_tokens(),
-              token_name <- one_of(token_names)
-            ) do
-        assert Map.has_key?(user, token_name)
-      end
-    end
-
     test "raises error for unsupported API token" do
       user = Panic.Fixtures.user()
 

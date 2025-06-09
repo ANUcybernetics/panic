@@ -9,6 +9,24 @@ exclude_tags =
 ExUnit.start(exclude: exclude_tags)
 Ecto.Adapters.SQL.Sandbox.mode(Panic.Repo, :manual)
 
+defmodule Panic.TestHelpers do
+  @moduledoc """
+  Helper functions for tests, including API key availability checks.
+  """
+
+  @doc """
+  Checks if real API keys are available in the test environment.
+  Returns true only if both OpenAI and Replicate API keys are set via environment variables.
+  """
+  def real_api_keys_available? do
+    openai_key = System.get_env("OPENAI_API_KEY")
+    replicate_key = System.get_env("REPLICATE_API_KEY")
+
+    openai_key != nil && String.starts_with?(openai_key, "sk-") &&
+      replicate_key != nil && String.starts_with?(replicate_key, "r8_")
+  end
+end
+
 defmodule Panic.Generators do
   @moduledoc """
   StreamData generators for Panic resources.
@@ -77,51 +95,22 @@ defmodule Panic.Generators do
     end
   end
 
-  def set_all_tokens(user) do
-    # Read API keys from environment variables if available, otherwise use test tokens
-    openai_key = System.get_env("OPENAI_API_KEY") || Application.get_env(:panic, :api_tokens)[:openai_token]
-    replicate_key = System.get_env("REPLICATE_API_KEY") || Application.get_env(:panic, :api_tokens)[:replicate_token]
-
-    # Set available tokens
-    user = if openai_key, do: Panic.Accounts.set_token!(user, :openai_token, openai_key, actor: user), else: user
-    user = if replicate_key, do: Panic.Accounts.set_token!(user, :replicate_token, replicate_key, actor: user), else: user
-
-    # Set other test tokens from config
-    :panic
-    |> Application.get_env(:api_tokens)
-    |> Enum.filter(fn {name, _value} -> name not in [:openai_token, :replicate_token] end)
-    |> Enum.reduce(user, fn {name, value}, acc ->
-      Panic.Accounts.set_token!(acc, name, value, actor: acc)
-    end)
-  end
-
-  def set_real_api_tokens!(user) do
-    # Read API keys from environment variables
-    openai_key = System.get_env("OPENAI_API_KEY")
-    replicate_key = System.get_env("REPLICATE_API_KEY")
-
-    # For api_required tests, fail if keys are not present
-    if openai_key == nil || replicate_key == nil do
-      raise "API keys required for this test. Set OPENAI_API_KEY and REPLICATE_API_KEY environment variables."
-    end
-
-    # Set the tokens from environment variables
-    user
-    |> Panic.Accounts.set_token!(:openai_token, openai_key, actor: user)
-    |> Panic.Accounts.set_token!(:replicate_token, replicate_key, actor: user)
-  end
-
-  def user_with_tokens do
-    gen all(user <- user()) do
-      user = set_all_tokens(user)
-      Ash.get!(User, user.id, actor: user)
-    end
-  end
-
   def user_with_real_tokens do
     gen all(user <- user()) do
-      user = set_real_api_tokens!(user)
-      Ash.get!(User, user.id, actor: user)
+      # Read API keys from environment variables
+      openai_key = System.get_env("OPENAI_API_KEY")
+      replicate_key = System.get_env("REPLICATE_API_KEY")
+
+      # For api_required tests, fail if keys are not present
+      if openai_key == nil || replicate_key == nil do
+        raise "API keys required for this test. Set OPENAI_API_KEY and REPLICATE_API_KEY environment variables."
+      end
+
+      # Set the tokens from environment variables
+      user
+      |> Panic.Accounts.set_token!(:openai_token, openai_key, actor: user)
+      |> Panic.Accounts.set_token!(:replicate_token, replicate_key, actor: user)
+      |> then(fn user -> Ash.get!(User, user.id, actor: user) end)
     end
   end
 
@@ -133,7 +122,7 @@ defmodule Panic.Generators do
     end
   end
 
-  def network_with_models(user) do
+  def network_with_dummy_models(user) do
     gen all(network <- network(user), length <- integer(1..5)) do
       # Create a simple chain of dummy models
       model_ids =
@@ -181,7 +170,6 @@ defmodule Panic.Generators do
   end
 end
 
-# seed 768476
 defmodule Panic.Fixtures do
   @moduledoc """
   Test fixtures for Panic resources.
@@ -199,10 +187,6 @@ defmodule Panic.Fixtures do
     pick(Panic.Generators.user())
   end
 
-  def user_with_tokens do
-    pick(Panic.Generators.user_with_tokens())
-  end
-
   def user_with_real_tokens do
     pick(Panic.Generators.user_with_real_tokens())
   end
@@ -213,9 +197,9 @@ defmodule Panic.Fixtures do
     |> pick()
   end
 
-  def network_with_models(user) do
+  def network_with_dummy_models(user) do
     user
-    |> Panic.Generators.network_with_models()
+    |> Panic.Generators.network_with_dummy_models()
     |> pick()
   end
 
@@ -228,20 +212,14 @@ end
 
 defmodule PanicWeb.Helpers do
   @moduledoc false
+  alias AshAuthentication.Plug.Helpers
+  alias Panic.Accounts.User
+
   def create_and_sign_in_user(%{conn: conn}) do
     password = "abcd1234"
-
     user = Panic.Fixtures.user(password)
 
-    # Use real API tokens if they're available (for api_required tests)
-    user =
-      if System.get_env("OPENAI_API_KEY") && System.get_env("REPLICATE_API_KEY") do
-        Panic.Generators.set_real_api_tokens!(user)
-      else
-        Panic.Generators.set_all_tokens(user)
-      end
-
-    strategy = AshAuthentication.Info.strategy!(Panic.Accounts.User, :password)
+    strategy = AshAuthentication.Info.strategy!(User, :password)
 
     {:ok, user} =
       AshAuthentication.Strategy.action(strategy, :sign_in, %{
@@ -253,7 +231,30 @@ defmodule PanicWeb.Helpers do
       conn:
         conn
         |> Phoenix.ConnTest.init_test_session(%{})
-        |> AshAuthentication.Plug.Helpers.store_in_session(user),
+        |> Helpers.store_in_session(user),
+      user: user
+    }
+  end
+
+  def create_and_sign_in_user_with_real_tokens(%{conn: conn}) do
+    password = "abcd1234"
+
+    # Create user with real tokens for api_required tests
+    user = Panic.Fixtures.user_with_real_tokens()
+
+    strategy = AshAuthentication.Info.strategy!(User, :password)
+
+    {:ok, user} =
+      AshAuthentication.Strategy.action(strategy, :sign_in, %{
+        email: user.email,
+        password: password
+      })
+
+    %{
+      conn:
+        conn
+        |> Phoenix.ConnTest.init_test_session(%{})
+        |> Helpers.store_in_session(user),
       user: user
     }
   end

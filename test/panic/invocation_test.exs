@@ -10,7 +10,7 @@ defmodule Panic.InvocationTest do
       user = Panic.Fixtures.user()
 
       check all(
-              network <- Panic.Generators.network_with_models(user),
+              network <- Panic.Generators.network_with_dummy_models(user),
               input <- Panic.Generators.ascii_sentence()
             ) do
         assert %Ash.Changeset{valid?: true} =
@@ -25,7 +25,7 @@ defmodule Panic.InvocationTest do
       user = Panic.Fixtures.user()
 
       check all(
-              network <- Panic.Generators.network_with_models(user),
+              network <- Panic.Generators.network_with_dummy_models(user),
               input <- Panic.Generators.ascii_sentence()
             ) do
         # Create the first invocation
@@ -70,7 +70,7 @@ defmodule Panic.InvocationTest do
       user = Panic.Fixtures.user()
 
       check all(
-              network <- Panic.Generators.network_with_models(user),
+              network <- Panic.Generators.network_with_dummy_models(user),
               input <- integer()
             ) do
         assert %Ash.Changeset{valid?: false} =
@@ -86,7 +86,7 @@ defmodule Panic.InvocationTest do
       user = Panic.Fixtures.user()
 
       check all(
-              network <- Panic.Generators.network_with_models(user),
+              network <- Panic.Generators.network_with_dummy_models(user),
               input <- Panic.Generators.ascii_sentence()
             ) do
         invocation =
@@ -106,7 +106,7 @@ defmodule Panic.InvocationTest do
       user = Panic.Fixtures.user()
 
       check all(
-              network <- Panic.Generators.network_with_models(user),
+              network <- Panic.Generators.network_with_dummy_models(user),
               input <- Panic.Generators.ascii_sentence()
             ) do
         invocation =
@@ -126,7 +126,7 @@ defmodule Panic.InvocationTest do
       user = Panic.Fixtures.user()
 
       check all(
-              network <- Panic.Generators.network_with_models(user),
+              network <- Panic.Generators.network_with_dummy_models(user),
               input <- Panic.Generators.ascii_sentence()
             ) do
         Panic.Engine.prepare_first!(
@@ -155,7 +155,7 @@ defmodule Panic.InvocationTest do
       user = Panic.Fixtures.user()
 
       check all(
-              network <- Panic.Generators.network_with_models(user),
+              network <- Panic.Generators.network_with_dummy_models(user),
               input <- Panic.Generators.ascii_sentence()
             ) do
         invocation = Panic.Engine.prepare_first!(network, input, actor: user)
