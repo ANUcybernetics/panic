@@ -11,9 +11,9 @@ defmodule Panic.Application do
       PanicWeb.Telemetry,
       Panic.Repo,
       {Ecto.Migrator, repos: Application.fetch_env!(:panic, :ecto_repos), skip: skip_migrations?()},
-      # Registry for NetworkProcessor GenServers
+      # Registry for NetworkRunner GenServers
       {Registry, keys: :unique, name: Panic.Engine.NetworkRegistry},
-      # DynamicSupervisor for NetworkProcessor GenServers
+      # DynamicSupervisor for NetworkRunner GenServers
       Panic.Engine.NetworkSupervisor,
       {AshAuthentication.Supervisor, otp_app: :panic},
       {DNSCluster, query: Application.get_env(:panic, :dns_cluster_query) || :ignore},
