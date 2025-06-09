@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "@types/howler": "^2.2.12",
-    "audiomotion-analyzer": "^4.5.0",
+    "audiomotion-analyzer": "^4.5.1",
     "howler": "^2.2.4"
   }
 }
