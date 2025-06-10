@@ -241,12 +241,12 @@ defmodule Panic.Engine.Invocation do
               model = Panic.Model.by_id!(model_id)
               %Panic.Model{path: path, invoke: invoke_fn, platform: platform} = model
 
+              # AIDEV-NOTE: all platforms now use user tokens; Gemini integration complete
               token =
                 case platform do
                   OpenAI -> context.actor.openai_token
                   Replicate -> context.actor.replicate_token
-                  # TODO update this once the Gemini tokens are stored on the User resource
-                  Gemini -> System.get_env("GOOGLE_AI_STUDIO_TOKEN")
+                  Gemini -> context.actor.gemini_token
                   Dummy -> "dummy_token"
                 end
 

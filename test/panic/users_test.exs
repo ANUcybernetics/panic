@@ -12,10 +12,19 @@ defmodule Panic.UsersTest do
       assert user.replicate_token == token_value
     end
 
+    test "sets gemini token successfully" do
+      user = Panic.Fixtures.user()
+      token_name = :gemini_token
+      token_value = "test_gemini_token_123"
+      user = Panic.Accounts.set_token!(user, token_name, token_value, actor: user)
+      assert user.gemini_token == token_value
+    end
+
     property "sets all valid API tokens" do
       token_names = [
         :replicate_token,
         :openai_token,
+        :gemini_token,
         :vestaboard_panic_1_token,
         :vestaboard_panic_2_token,
         :vestaboard_panic_3_token,

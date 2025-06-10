@@ -252,4 +252,54 @@ defmodule Panic.InvocationTest do
       assert most_recent.sequence_number == Enum.max(sequence_numbers)
     end
   end
+
+  describe "Gemini token integration" do
+    test "user with gemini token can create invocation with gemini model" do
+      user = Panic.Fixtures.user()
+
+      # Set a gemini token for the user
+      user_with_token = Panic.Accounts.set_token!(user, :gemini_token, "test_gemini_token", actor: user)
+
+      # Create a network with a dummy text-to-audio model followed by gemini model
+      # This ensures compatible input/output types: text -> audio -> text
+      network =
+        user_with_token
+        |> Panic.Fixtures.network()
+        |> Panic.Engine.update_models!([["dummy-t2a"], ["gemini-audio-description"]], actor: user_with_token)
+
+      input = "generate some audio"
+
+      # Create and prepare the invocation
+      invocation = Panic.Engine.prepare_first!(network, input, actor: user_with_token)
+
+      # Verify the invocation was created successfully
+      assert invocation.network_id == network.id
+      assert invocation.input == input
+      assert invocation.model == ["dummy-t2a"]
+    end
+
+    test "user without gemini token gets error when invoking gemini model" do
+      user = Panic.Fixtures.user()
+
+      # Create a network with a dummy text-to-audio model followed by gemini model
+      network =
+        user
+        |> Panic.Fixtures.network()
+        |> Panic.Engine.update_models!([["dummy-t2a"], ["gemini-audio-description"]], actor: user)
+
+      input = "generate some audio"
+
+      # Create first invocation and invoke it (dummy model should work)
+      first_invocation = Panic.Engine.prepare_first!(network, input, actor: user)
+      first_invocation = Panic.Engine.invoke!(first_invocation, actor: user)
+
+      # Prepare next invocation (which will use gemini model)
+      second_invocation = Panic.Engine.prepare_next!(first_invocation, actor: user)
+
+      # Try to invoke gemini model without gemini token - should fail
+      assert_raise Invalid, fn ->
+        Panic.Engine.invoke!(second_invocation, actor: user)
+      end
+    end
+  end
 end
