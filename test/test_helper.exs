@@ -95,8 +95,8 @@ defmodule Panic.Generators do
     end
   end
 
-  def user_with_real_tokens do
-    gen all(user <- user()) do
+  def user_with_real_tokens(password_generator \\ password()) do
+    gen all(user <- user(password_generator)) do
       # Read API keys from environment variables
       openai_key = System.get_env("OPENAI_API_KEY")
       replicate_key = System.get_env("REPLICATE_API_KEY")
@@ -187,6 +187,13 @@ defmodule Panic.Fixtures do
     pick(Panic.Generators.user())
   end
 
+  def user_with_real_tokens(password) do
+    password
+    |> StreamData.constant()
+    |> Panic.Generators.user_with_real_tokens()
+    |> pick()
+  end
+
   def user_with_real_tokens do
     pick(Panic.Generators.user_with_real_tokens())
   end
@@ -240,7 +247,7 @@ defmodule PanicWeb.Helpers do
     password = "abcd1234"
 
     # Create user with real tokens for api_required tests
-    user = Panic.Fixtures.user_with_real_tokens()
+    user = Panic.Fixtures.user_with_real_tokens(password)
 
     strategy = AshAuthentication.Info.strategy!(User, :password)
 
