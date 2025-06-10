@@ -114,9 +114,9 @@ defmodule Panic.Model do
       },
       ## OpenAI
       %__MODULE__{
-        id: "gpt-4o",
-        path: "gpt-4o",
-        name: "GPT-4o",
+        id: "gpt-4.1",
+        path: "gpt-4.1",
+        name: "GPT-4.1",
         input_type: :text,
         output_type: :text,
         platform: OpenAI,
@@ -125,9 +125,9 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
-        id: "gpt-4o-mini",
-        path: "gpt-4o-mini",
-        name: "GPT-4o mini",
+        id: "gpt-4.1-nano",
+        path: "gpt-4.1-nano",
+        name: "GPT-4.1 nano",
         input_type: :text,
         output_type: :text,
         platform: OpenAI,
