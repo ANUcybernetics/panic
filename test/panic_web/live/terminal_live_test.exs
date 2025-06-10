@@ -1,5 +1,5 @@
 defmodule PanicWeb.TerminalLiveTest do
-  use PanicWeb.ConnCase, async: true
+  use PanicWeb.ConnCase, async: false
   use ExUnitProperties
   # import Phoenix.LiveViewTest
 
@@ -13,8 +13,10 @@ defmodule PanicWeb.TerminalLiveTest do
 
       conn
       |> visit("/networks/#{network.id}/terminal")
+      |> assert_has("span", text: "Current run:")
       |> fill_in("Prompt", with: "a sheep on the grass")
       |> submit()
+      |> assert_has("input[placeholder='Starting up...']")
     end
   end
 end
