@@ -21,6 +21,8 @@ defmodule Panic.Accounts.User do
     # API tokens... this could (should?) be a map? oh well, easy to change later
     attribute :replicate_token, :string, sensitive?: true
     attribute :openai_token, :string, sensitive?: true
+    # AIDEV-NOTE: gemini_token completes platform integration; now works like OpenAI/Replicate
+    attribute :gemini_token, :string, sensitive?: true
     attribute :vestaboard_panic_1_token, :string, sensitive?: true
     attribute :vestaboard_panic_2_token, :string, sensitive?: true
     attribute :vestaboard_panic_3_token, :string, sensitive?: true
@@ -38,6 +40,7 @@ defmodule Panic.Accounts.User do
       accept [
         :replicate_token,
         :openai_token,
+        :gemini_token,
         :vestaboard_panic_1_token,
         :vestaboard_panic_2_token,
         :vestaboard_panic_3_token,
@@ -50,6 +53,7 @@ defmodule Panic.Accounts.User do
         constraints one_of: [
                       :replicate_token,
                       :openai_token,
+                      :gemini_token,
                       :vestaboard_panic_1_token,
                       :vestaboard_panic_2_token,
                       :vestaboard_panic_3_token,

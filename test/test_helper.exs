@@ -100,16 +100,18 @@ defmodule Panic.Generators do
       # Read API keys from environment variables
       openai_key = System.get_env("OPENAI_API_KEY")
       replicate_key = System.get_env("REPLICATE_API_KEY")
+      gemini_key = System.get_env("GOOGLE_AI_STUDIO_TOKEN")
 
       # For api_required tests, fail if keys are not present
-      if openai_key == nil || replicate_key == nil do
-        raise "API keys required for this test. Set OPENAI_API_KEY and REPLICATE_API_KEY environment variables."
+      if openai_key == nil || replicate_key == nil || gemini_key == nil do
+        raise "API keys required for this test. Set OPENAI_API_KEY, REPLICATE_API_KEY, and GOOGLE_AI_STUDIO_TOKEN environment variables."
       end
 
       # Set the tokens from environment variables
       user
       |> Panic.Accounts.set_token!(:openai_token, openai_key, actor: user)
       |> Panic.Accounts.set_token!(:replicate_token, replicate_key, actor: user)
+      |> Panic.Accounts.set_token!(:gemini_token, gemini_key, actor: user)
       |> then(fn user -> Ash.get!(User, user.id, actor: user) end)
     end
   end
