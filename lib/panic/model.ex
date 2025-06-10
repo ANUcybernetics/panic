@@ -667,6 +667,24 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
+        id: "lyria-2",
+        platform: Replicate,
+        path: "google/lyria-2",
+        name: "Lyria 2",
+        description: "Lyria 2 is a music generation model that produces 48kHz stereo audio through text-based prompts",
+        input_type: :text,
+        output_type: :audio,
+        invoke: fn model, input, token ->
+          Replicate.invoke(
+            model,
+            %{
+              prompt: input
+            },
+            token
+          )
+        end
+      },
+      %__MODULE__{
         id: "whisper",
         platform: Replicate,
         path: "openai/whisper",
