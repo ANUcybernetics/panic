@@ -283,4 +283,143 @@ defmodule Panic.ModelTest do
 
   defp test_input(%Model{input_type: :audio}),
     do: "https://fly.storage.tigris.dev/panic-invocation-outputs/test-audio.ogg"
+
+  describe "Invocation integration with API calls" do
+    @describetag api_required: true
+
+    test "can produce output with real API models" do
+      user = Panic.Fixtures.user_with_real_tokens()
+      # a pretty simple network, should be fast & cheap
+      network =
+        user
+        |> Panic.Fixtures.network()
+        |> Panic.Engine.update_models!([["flux-schnell"], ["blip-2"]], actor: user)
+
+      input = "can you tell me a story?"
+
+      invocation =
+        network
+        |> Panic.Engine.prepare_first!(input, actor: user)
+        |> Panic.Engine.invoke!(actor: user)
+
+      refute invocation.output == nil
+      assert invocation.state == :completed
+    end
+
+    test "creates a next invocation with the right run number and sequence with real models" do
+      user = Panic.Fixtures.user_with_real_tokens()
+      network = Panic.Fixtures.network_with_real_models(user)
+      input = "can you tell me a story?"
+
+      first =
+        network
+        |> Panic.Engine.prepare_first!(input, actor: user)
+        |> Panic.Engine.invoke!(actor: user)
+
+      next = Panic.Engine.prepare_next!(first, actor: user)
+      assert first.run_number == next.run_number
+      assert first.output == next.input
+      assert first.sequence_number + 1 == next.sequence_number
+    end
+
+    test "can make a 'run' with invoke! and prepare_next! which maintains io consistency and ordering with real models" do
+      run_length = 4
+      user = Panic.Fixtures.user_with_real_tokens()
+      network = Panic.Fixtures.network_with_real_models(user)
+      input = "can you tell me a story?"
+
+      first =
+        network
+        |> Panic.Engine.prepare_first!(input, actor: user)
+        |> Panic.Engine.invoke!(actor: user)
+
+      first
+      |> Stream.iterate(fn inv ->
+        inv
+        |> Panic.Engine.invoke!(actor: user)
+        |> Panic.Engine.prepare_next!(actor: user)
+      end)
+      |> Stream.take(run_length)
+      |> Stream.run()
+
+      invocations =
+        Panic.Engine.list_run!(network.id, first.run_number, actor: user)
+
+      [second_last_in_current_run, last_in_current_run] =
+        Panic.Engine.current_run!(network.id, 2, actor: user)
+
+      assert second_last_in_current_run.sequence_number == last_in_current_run.sequence_number - 1
+      assert second_last_in_current_run.run_number == last_in_current_run.run_number
+
+      # check outputs match inputs
+      invocations
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.each(fn [a, b] ->
+        assert a.output == b.input
+      end)
+
+      # check the right number of invocations generated, and returned in the right order
+      assert Enum.count(invocations) == run_length
+      sequence_numbers = Enum.map(invocations, & &1.sequence_number)
+      assert sequence_numbers = Enum.sort(sequence_numbers, :asc)
+
+      # check the most recent invocation action works
+      most_recent = Panic.Engine.most_recent!(network.id, actor: user)
+      assert most_recent.sequence_number == Enum.max(sequence_numbers)
+    end
+  end
+
+  describe "Gemini token integration" do
+    @describetag api_required: true
+
+    test "user with gemini token can create invocation with gemini model" do
+      user = Panic.Fixtures.user()
+
+      # Set a gemini token for the user
+      user_with_token = Panic.Accounts.set_token!(user, :gemini_token, "test_gemini_token", actor: user)
+
+      # Create a network with a dummy text-to-audio model followed by gemini model
+      # This ensures compatible input/output types: text -> audio -> text
+      network =
+        user_with_token
+        |> Panic.Fixtures.network()
+        |> Panic.Engine.update_models!([["dummy-t2a"], ["gemini-audio-description"]], actor: user_with_token)
+
+      input = "generate some audio"
+
+      # Create and prepare the invocation
+      invocation = Panic.Engine.prepare_first!(network, input, actor: user_with_token)
+
+      # Verify the invocation was created successfully
+      assert invocation.network_id == network.id
+      assert invocation.input == input
+      assert invocation.model == ["dummy-t2a"]
+    end
+
+    test "user without gemini token gets error when invoking gemini model" do
+      alias Ash.Error.Invalid
+
+      user = Panic.Fixtures.user()
+
+      # Create a network with a dummy text-to-audio model followed by gemini model
+      network =
+        user
+        |> Panic.Fixtures.network()
+        |> Panic.Engine.update_models!([["dummy-t2a"], ["gemini-audio-description"]], actor: user)
+
+      input = "generate some audio"
+
+      # Create first invocation and invoke it (dummy model should work)
+      first_invocation = Panic.Engine.prepare_first!(network, input, actor: user)
+      first_invocation = Panic.Engine.invoke!(first_invocation, actor: user)
+
+      # Prepare next invocation (which will use gemini model)
+      second_invocation = Panic.Engine.prepare_next!(first_invocation, actor: user)
+
+      # Try to invoke gemini model without gemini token - should fail
+      assert_raise Invalid, fn ->
+        Panic.Engine.invoke!(second_invocation, actor: user)
+      end
+    end
+  end
 end
