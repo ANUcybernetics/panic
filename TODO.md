@@ -37,9 +37,6 @@
 - make regular backups of the sqlite db file (inc. a way to restore from them,
   for changing machines)
 - have a "pre-warm the models", based on average startup time (from metadata)
-- go back into the Invoker and sort out the insert vs insert_and_queue_next
-  (basically if the entry point to the invoker module could return ok, lockout
-  or error that'd make the :start_run action simpler as well)
 - instead of hosting the nsfw placeholder and audio waveform pictures on tigris,
   serve them from priv/static/images (the files are already in there)
 - a "waiting" timer on all pending invocations (better still, with feedback for
