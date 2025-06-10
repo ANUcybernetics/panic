@@ -237,28 +237,6 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
-        id: "joy-caption",
-        platform: Replicate,
-        path: "pipi32167/joy-caption",
-        name: "Joy Caption",
-        input_type: :image,
-        output_type: :text,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => text}} <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     image: input,
-                     prompt:
-                       "Provide an interesting, concise caption for this image. Describe foreground and background elements."
-                   },
-                   token
-                 ) do
-            {:ok, text}
-          end
-        end
-      },
-      %__MODULE__{
         id: "moondream2",
         platform: Replicate,
         path: "lucataco/moondream2",
@@ -365,27 +343,6 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
-        id: "flux-texture-abstract-painting",
-        platform: Replicate,
-        path: "brunnolou/flux-texture-abstract-painting",
-        name: "FLUX Abstract Painting",
-        input_type: :text,
-        output_type: :image,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input <> " The image is in the style of TXTUR.",
-            output_format: "png",
-            aspect_ratio: "16:9",
-            disable_safety_checker: true
-          }
-
-          with {:ok, %{"output" => [image_url]}} <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
-          end
-        end
-      },
-      %__MODULE__{
         id: "sdxl",
         platform: Replicate,
         path: "stability-ai/sdxl",
@@ -397,26 +354,6 @@ defmodule Panic.Model do
             prompt: input,
             num_inference_steps: 50,
             guidance_scale: 7.5,
-            width: 1024,
-            height: 576
-          }
-
-          with {:ok, %{"output" => [image_url]}} <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
-          end
-        end
-      },
-      %__MODULE__{
-        id: "zine-style",
-        platform: Replicate,
-        path: "roblester/zine-style",
-        name: "SDXL Zine",
-        input_type: :text,
-        output_type: :image,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input <> ", illustration in the style of TOK",
             width: 1024,
             height: 576
           }
@@ -602,20 +539,6 @@ defmodule Panic.Model do
           #{input}
           """
 
-          with {:ok, %{"output" => output_list}} <-
-                 Replicate.invoke(model, %{prompt: input}, token) do
-            {:ok, Enum.join(output_list)}
-          end
-        end
-      },
-      %__MODULE__{
-        id: "meta-llama-3-70b-instruct",
-        platform: Replicate,
-        path: "meta/meta-llama-3-70b-instruct",
-        name: "LLaMa 70B Instruct",
-        input_type: :text,
-        output_type: :text,
-        invoke: fn model, input, token ->
           with {:ok, %{"output" => output_list}} <-
                  Replicate.invoke(model, %{prompt: input}, token) do
             {:ok, Enum.join(output_list)}
