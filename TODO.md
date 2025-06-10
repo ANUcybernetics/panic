@@ -1,6 +1,8 @@
 # Panic TODO
 
-- make tests prisitine (inc api_required)
+- get the real api tests working
+- check which OpenAI models are now the best options
+- add claude via replicate
 - check that terminal works on mobile (and revert SXSW-specific changes)
 - add time-based expiry for terminal QR codes
 - add video support (maybe... need to figure out how to handle video inputs as
