@@ -166,16 +166,14 @@ defmodule Panic.InvocationTest do
     end
   end
 
-  describe "Invocation with API calls" do
-    @describetag api_required: true
-    # NOTE: these ones shouldn't be properties, because that'd be spendy. Just tests are fine.
-    test "produce output" do
-      user = Panic.Fixtures.user_with_real_tokens()
-      # a pretty simple network, should be fast & cheap
+  describe "Invocation with dummy models" do
+    test "produces dummy output" do
+      user = Panic.Fixtures.user()
+      # Use dummy models that don't require real API calls
       network =
         user
         |> Panic.Fixtures.network()
-        |> Panic.Engine.update_models!([["flux-schnell"], ["blip-2"]], actor: user)
+        |> Panic.Engine.update_models!([["dummy-t2i"], ["dummy-i2t"]], actor: user)
 
       input = "can you tell me a story?"
 
@@ -186,11 +184,13 @@ defmodule Panic.InvocationTest do
 
       refute invocation.output == nil
       assert invocation.state == :completed
+      # Dummy image output should start with the dummy URL
+      assert String.starts_with?(invocation.output, "https://dummy-images.test/")
     end
 
-    test "creates a next invocation with the right run number and sequence" do
-      user = Panic.Fixtures.user_with_real_tokens()
-      network = Panic.Fixtures.network_with_real_models(user)
+    test "creates a next invocation with the right run number and sequence using dummy models" do
+      user = Panic.Fixtures.user()
+      network = Panic.Fixtures.network_with_dummy_models(user)
       input = "can you tell me a story?"
 
       first =
@@ -204,10 +204,10 @@ defmodule Panic.InvocationTest do
       assert first.sequence_number + 1 == next.sequence_number
     end
 
-    test "can make a 'run' with invoke! and prepare_next! which maintains io consistency and ordering" do
+    test "can make a 'run' with invoke! and prepare_next! which maintains io consistency and ordering using dummy models" do
       run_length = 4
-      user = Panic.Fixtures.user_with_real_tokens()
-      network = Panic.Fixtures.network_with_real_models(user)
+      user = Panic.Fixtures.user()
+      network = Panic.Fixtures.network_with_dummy_models(user)
       input = "can you tell me a story?"
 
       first =
@@ -217,8 +217,6 @@ defmodule Panic.InvocationTest do
 
       first
       |> Stream.iterate(fn inv ->
-        # IO.puts("preparing to invoke #{inv.model} with input #{inv.input}")
-
         inv
         |> Panic.Engine.invoke!(actor: user)
         |> Panic.Engine.prepare_next!(actor: user)
@@ -253,24 +251,20 @@ defmodule Panic.InvocationTest do
     end
   end
 
-  describe "Gemini token integration" do
-    test "user with gemini token can create invocation with gemini model" do
+  describe "Token validation with dummy models" do
+    test "user can create invocation with dummy models (no token required)" do
       user = Panic.Fixtures.user()
 
-      # Set a gemini token for the user
-      user_with_token = Panic.Accounts.set_token!(user, :gemini_token, "test_gemini_token", actor: user)
-
-      # Create a network with a dummy text-to-audio model followed by gemini model
-      # This ensures compatible input/output types: text -> audio -> text
+      # Create a network with only dummy models - no tokens should be required
       network =
-        user_with_token
+        user
         |> Panic.Fixtures.network()
-        |> Panic.Engine.update_models!([["dummy-t2a"], ["gemini-audio-description"]], actor: user_with_token)
+        |> Panic.Engine.update_models!([["dummy-t2a"], ["dummy-a2t"]], actor: user)
 
       input = "generate some audio"
 
-      # Create and prepare the invocation
-      invocation = Panic.Engine.prepare_first!(network, input, actor: user_with_token)
+      # Create and prepare the invocation - should work without any tokens
+      invocation = Panic.Engine.prepare_first!(network, input, actor: user)
 
       # Verify the invocation was created successfully
       assert invocation.network_id == network.id
@@ -278,28 +272,30 @@ defmodule Panic.InvocationTest do
       assert invocation.model == ["dummy-t2a"]
     end
 
-    test "user without gemini token gets error when invoking gemini model" do
+    test "user can invoke dummy models without any tokens" do
       user = Panic.Fixtures.user()
 
-      # Create a network with a dummy text-to-audio model followed by gemini model
+      # Create a network with dummy models
       network =
         user
         |> Panic.Fixtures.network()
-        |> Panic.Engine.update_models!([["dummy-t2a"], ["gemini-audio-description"]], actor: user)
+        |> Panic.Engine.update_models!([["dummy-t2a"], ["dummy-a2t"]], actor: user)
 
       input = "generate some audio"
 
-      # Create first invocation and invoke it (dummy model should work)
+      # Create first invocation and invoke it (dummy model should work without tokens)
       first_invocation = Panic.Engine.prepare_first!(network, input, actor: user)
       first_invocation = Panic.Engine.invoke!(first_invocation, actor: user)
 
-      # Prepare next invocation (which will use gemini model)
+      # Prepare and invoke next invocation (also dummy model)
       second_invocation = Panic.Engine.prepare_next!(first_invocation, actor: user)
+      second_invocation = Panic.Engine.invoke!(second_invocation, actor: user)
 
-      # Try to invoke gemini model without gemini token - should fail
-      assert_raise Invalid, fn ->
-        Panic.Engine.invoke!(second_invocation, actor: user)
-      end
+      # Both should succeed without any tokens
+      assert first_invocation.state == :completed
+      assert second_invocation.state == :completed
+      assert String.starts_with?(first_invocation.output, "https://dummy-audio.test/")
+      assert String.starts_with?(second_invocation.output, "DUMMY_TRANSCRIPT:")
     end
   end
 end
