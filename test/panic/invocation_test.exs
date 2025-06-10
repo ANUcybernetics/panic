@@ -175,7 +175,7 @@ defmodule Panic.InvocationTest do
       network =
         user
         |> Panic.Fixtures.network()
-        |> Panic.Engine.update_models!(["flux-schnell", "blip-2"], actor: user)
+        |> Panic.Engine.update_models!([["flux-schnell"], ["blip-2"]], actor: user)
 
       input = "can you tell me a story?"
 

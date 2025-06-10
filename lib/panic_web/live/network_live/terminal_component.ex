@@ -19,6 +19,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
         <.input
           field={@form[:input]}
           type="text"
+          label="Prompt"
           phx-hook="TerminalLockoutTimer"
           data-ready-at={@ready_at}
           placeholder="Starting up..."

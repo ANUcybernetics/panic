@@ -13,7 +13,7 @@ defmodule PanicWeb.TerminalLiveTest do
 
       conn
       |> visit("/networks/#{network.id}/terminal")
-      |> fill_in("Prompt...", with: "a sheep on the grass")
+      |> fill_in("Prompt", with: "a sheep on the grass")
       |> submit()
     end
   end
