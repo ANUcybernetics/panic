@@ -227,8 +227,10 @@ defmodule Panic.Engine.Invocation do
     end
 
     update :invoke do
-      change fn
-        changeset, context ->
+      # AIDEV-NOTE: Model invocation happens in before_transaction to minimize DB contention
+      change fn changeset, context ->
+        changeset
+        |> Ash.Changeset.before_transaction(fn changeset ->
           case {changeset, context} do
             {_, %{actor: nil}} ->
               Ash.Changeset.add_error(
@@ -253,31 +255,42 @@ defmodule Panic.Engine.Invocation do
                 case invoke_fn.(model, input, token) do
                   {:ok, output} ->
                     changeset
-                    |> Ash.Changeset.force_change_attribute(:output, output)
-                    |> Ash.Changeset.force_change_attribute(:state, :completed)
+                    |> Ash.Changeset.put_context(:invocation_output, output)
+                    |> Ash.Changeset.put_context(:invocation_success, true)
 
                   {:error, :nsfw} ->
                     changeset
-                    |> Ash.Changeset.force_change_attribute(
-                      :output,
+                    |> Ash.Changeset.put_context(
+                      :invocation_output,
                       "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-placeholder.webp"
                     )
-                    |> Ash.Changeset.force_change_attribute(:state, :completed)
+                    |> Ash.Changeset.put_context(:invocation_success, true)
 
                   {:error, message} ->
                     changeset
                     |> Ash.Changeset.add_error(message)
-                    |> Ash.Changeset.force_change_attribute(:state, :failed)
+                    |> Ash.Changeset.put_context(:invocation_success, false)
                 end
               else
                 changeset
                 |> Ash.Changeset.add_error("user has no auth token for #{platform}")
-                |> Ash.Changeset.force_change_attribute(:state, :failed)
+                |> Ash.Changeset.put_context(:invocation_success, false)
               end
           end
-      end
+        end)
+        |> Ash.Changeset.before_action(fn changeset ->
+          # Apply the invocation results from context
+          if changeset.context[:invocation_success] do
+            output = changeset.context[:invocation_output]
 
-      change set_attribute(:state, :completed)
+            changeset
+            |> Ash.Changeset.force_change_attribute(:output, output)
+            |> Ash.Changeset.force_change_attribute(:state, :completed)
+          else
+            Ash.Changeset.force_change_attribute(changeset, :state, :failed)
+          end
+        end)
+      end
     end
 
     update :cancel do
