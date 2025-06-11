@@ -227,4 +227,72 @@ defmodule Panic.Engine.NetworkRunnerTest do
       assert Process.alive?(pid)
     end
   end
+
+  describe "recursive invocation runs" do
+    test "creates a next invocation with the right run number and sequence using dummy models", %{user: user} do
+      # Create a separate network for this test to avoid NetworkRunner interference
+      test_network = Engine.create_network!("Test Network for Recursion", "Test network", actor: user)
+      test_network = Engine.update_models!(test_network, [["dummy-t2t"], ["dummy-t2t"]], actor: user)
+
+      input = "Test prompt for recursion"
+
+      first =
+        test_network
+        |> Engine.prepare_first!(input, actor: user)
+        |> Engine.invoke!(actor: user)
+
+      next = Engine.prepare_next!(first, actor: user)
+      assert first.run_number == next.run_number
+      assert first.output == next.input
+      assert first.sequence_number + 1 == next.sequence_number
+    end
+
+    @tag timeout: 35_000
+    test "can make a 'run' with invoke! and prepare_next! which maintains io consistency and ordering using dummy models",
+         %{user: user} do
+      run_length = 4
+
+      # Create a separate network for this test to avoid NetworkRunner interference
+      test_network = Engine.create_network!("Test Network for Long Run", "Test network", actor: user)
+      test_network = Engine.update_models!(test_network, [["dummy-t2t"], ["dummy-t2t"]], actor: user)
+
+      input = "Test prompt for long run"
+
+      first =
+        test_network
+        |> Engine.prepare_first!(input, actor: user)
+        |> Engine.invoke!(actor: user)
+
+      Enum.reduce(1..(run_length - 1), first, fn _, prev_inv ->
+        prev_inv
+        |> Engine.prepare_next!(actor: user)
+        |> Engine.invoke!(actor: user)
+      end)
+
+      invocations =
+        Engine.list_run!(test_network.id, first.run_number, actor: user)
+
+      [second_last_in_current_run, last_in_current_run] =
+        Engine.current_run!(test_network.id, 2, actor: user)
+
+      assert second_last_in_current_run.sequence_number == last_in_current_run.sequence_number - 1
+      assert second_last_in_current_run.run_number == last_in_current_run.run_number
+
+      # check outputs match inputs
+      invocations
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.each(fn [a, b] ->
+        assert a.output == b.input
+      end)
+
+      # check the right number of invocations generated, and returned in the right order
+      assert Enum.count(invocations) == run_length
+      sequence_numbers = Enum.map(invocations, & &1.sequence_number)
+      assert sequence_numbers == Enum.sort(sequence_numbers, :asc)
+
+      # check the most recent invocation action works
+      most_recent = Engine.most_recent!(test_network.id, actor: user)
+      assert most_recent.sequence_number == Enum.max(sequence_numbers)
+    end
+  end
 end
