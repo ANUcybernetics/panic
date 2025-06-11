@@ -1,5 +1,5 @@
 defmodule PanicWeb.NetworkLiveTest do
-  use PanicWeb.ConnCase, async: true
+  use PanicWeb.ConnCase, async: false
   use ExUnitProperties
   # import Phoenix.LiveViewTest
 

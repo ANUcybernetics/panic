@@ -6,7 +6,7 @@ defmodule PanicWeb.UserLiveTest do
 
   Thanks @peterhartman and @brunoripa
   """
-  use PanicWeb.ConnCase, async: true
+  use PanicWeb.ConnCase, async: false
   # import Phoenix.LiveViewTest
 
   describe "user IS logged in" do
