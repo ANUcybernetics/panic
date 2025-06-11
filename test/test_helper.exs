@@ -1,31 +1,7 @@
 # Configure ExUnit to exclude API tests by default
-exclude_tags =
-  if System.get_env("OPENAI_API_KEY") && System.get_env("REPLICATE_API_KEY") do
-    []
-  else
-    [api_required: true]
-  end
+ExUnit.start(exclude: [api_required: true])
 
-ExUnit.start(exclude: exclude_tags)
 Ecto.Adapters.SQL.Sandbox.mode(Panic.Repo, :manual)
-
-defmodule Panic.TestHelpers do
-  @moduledoc """
-  Helper functions for tests, including API key availability checks.
-  """
-
-  @doc """
-  Checks if real API keys are available in the test environment.
-  Returns true only if both OpenAI and Replicate API keys are set via environment variables.
-  """
-  def real_api_keys_available? do
-    openai_key = System.get_env("OPENAI_API_KEY")
-    replicate_key = System.get_env("REPLICATE_API_KEY")
-
-    openai_key != nil && String.starts_with?(openai_key, "sk-") &&
-      replicate_key != nil && String.starts_with?(replicate_key, "r8_")
-  end
-end
 
 defmodule Panic.Generators do
   @moduledoc """
