@@ -584,22 +584,13 @@ defmodule Panic.Model do
       %__MODULE__{
         id: "stable-audio",
         platform: Replicate,
-        path: "ardianfe/stable-audio-prod",
+        path: "stackadoc/stable-audio-open-1.0",
         name: "Stable Audio Open",
         input_type: :text,
         output_type: :audio,
         invoke: fn model, input, token ->
-          with {:ok, %{"output" => %{"output" => audio_url}}} <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     prompt: input,
-                     duration: 8,
-                     output_format: "mp3",
-                     song_id: :rand.uniform(1_000_000)
-                   },
-                   token
-                 ) do
+          with {:ok, %{"output" => audio_url}} <-
+                 Replicate.invoke(model, %{prompt: input}, token) do
             {:ok, audio_url}
           end
         end
