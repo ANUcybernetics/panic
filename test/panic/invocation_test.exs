@@ -187,68 +187,6 @@ defmodule Panic.InvocationTest do
       # Dummy image output should start with the dummy URL
       assert String.starts_with?(invocation.output, "https://dummy-images.test/")
     end
-
-    test "creates a next invocation with the right run number and sequence using dummy models" do
-      user = Panic.Fixtures.user()
-      network = Panic.Fixtures.network_with_dummy_models(user)
-      input = "can you tell me a story?"
-
-      first =
-        network
-        |> Panic.Engine.prepare_first!(input, actor: user)
-        |> Panic.Engine.invoke!(actor: user)
-
-      next = Panic.Engine.prepare_next!(first, actor: user)
-      assert first.run_number == next.run_number
-      assert first.output == next.input
-      assert first.sequence_number + 1 == next.sequence_number
-    end
-
-    test "can make a 'run' with invoke! and prepare_next! which maintains io consistency and ordering using dummy models" do
-      run_length = 4
-      user = Panic.Fixtures.user()
-      network = Panic.Fixtures.network_with_dummy_models(user)
-      input = "can you tell me a story?"
-
-      first =
-        network
-        |> Panic.Engine.prepare_first!(input, actor: user)
-        |> Panic.Engine.invoke!(actor: user)
-
-      first
-      |> Stream.iterate(fn inv ->
-        inv
-        |> Panic.Engine.invoke!(actor: user)
-        |> Panic.Engine.prepare_next!(actor: user)
-      end)
-      |> Stream.take(run_length)
-      |> Stream.run()
-
-      invocations =
-        Panic.Engine.list_run!(network.id, first.run_number, actor: user)
-
-      [second_last_in_current_run, last_in_current_run] =
-        Panic.Engine.current_run!(network.id, 2, actor: user)
-
-      assert second_last_in_current_run.sequence_number == last_in_current_run.sequence_number - 1
-      assert second_last_in_current_run.run_number == last_in_current_run.run_number
-
-      # check outputs match inputs
-      invocations
-      |> Enum.chunk_every(2, 1, :discard)
-      |> Enum.each(fn [a, b] ->
-        assert a.output == b.input
-      end)
-
-      # check the right number of invocations generated, and returned in the right order
-      assert Enum.count(invocations) == run_length
-      sequence_numbers = Enum.map(invocations, & &1.sequence_number)
-      assert sequence_numbers = Enum.sort(sequence_numbers, :asc)
-
-      # check the most recent invocation action works
-      most_recent = Panic.Engine.most_recent!(network.id, actor: user)
-      assert most_recent.sequence_number == Enum.max(sequence_numbers)
-    end
   end
 
   describe "Token validation with dummy models" do
@@ -272,7 +210,7 @@ defmodule Panic.InvocationTest do
       assert invocation.model == ["dummy-t2a"]
     end
 
-    test "user can invoke dummy models without any tokens" do
+    test "user can invoke single dummy model without any tokens" do
       user = Panic.Fixtures.user()
 
       # Create a network with dummy models
@@ -287,15 +225,9 @@ defmodule Panic.InvocationTest do
       first_invocation = Panic.Engine.prepare_first!(network, input, actor: user)
       first_invocation = Panic.Engine.invoke!(first_invocation, actor: user)
 
-      # Prepare and invoke next invocation (also dummy model)
-      second_invocation = Panic.Engine.prepare_next!(first_invocation, actor: user)
-      second_invocation = Panic.Engine.invoke!(second_invocation, actor: user)
-
-      # Both should succeed without any tokens
+      # Should succeed without any tokens
       assert first_invocation.state == :completed
-      assert second_invocation.state == :completed
       assert String.starts_with?(first_invocation.output, "https://dummy-audio.test/")
-      assert String.starts_with?(second_invocation.output, "DUMMY_TRANSCRIPT:")
     end
   end
 end

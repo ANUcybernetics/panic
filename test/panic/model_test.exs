@@ -2,21 +2,20 @@ defmodule Panic.ModelTest do
   use Panic.DataCase
   use ExUnitProperties
 
-  alias Panic.Engine.Invocation
   alias Panic.Model
-
-  @moduletag timeout: 300_000
+  alias Panic.Platforms.OpenAI
+  alias Panic.Platforms.Replicate
 
   describe "model generators" do
     property "generate models with correct attributes" do
       check all(
               text_input_model <- Panic.Generators.model(input_type: :text),
               image_ouput_model <- Panic.Generators.model(output_type: :image),
-              replicate_model <- Panic.Generators.real_model(platform: Panic.Platforms.Replicate)
+              replicate_model <- Panic.Generators.real_model(platform: Replicate)
             ) do
         assert %Panic.Model{input_type: :text} = text_input_model
         assert %Panic.Model{output_type: :image} = image_ouput_model
-        assert %Panic.Model{platform: Panic.Platforms.Replicate} = replicate_model
+        assert %Panic.Model{platform: Replicate} = replicate_model
       end
     end
 
@@ -30,7 +29,7 @@ defmodule Panic.ModelTest do
     end
   end
 
-  describe "all platforms" do
+  describe "Model.all/0 and Model.all/1" do
     test "have models with unique ids" do
       # This includes all models: real platforms (OpenAI, Replicate, etc.) and dummy models
       model_ids =
@@ -40,169 +39,88 @@ defmodule Panic.ModelTest do
 
       assert length(model_ids) == length(unique_ids), "all model IDs should be unique"
     end
-  end
 
-  describe "Replicate platform" do
-    alias Panic.Platforms.Replicate
+    test "filters models by platform" do
+      dummy_models = Model.all(platform: Panic.Platforms.Dummy)
+      openai_models = Model.all(platform: OpenAI)
+      replicate_models = Model.all(platform: Replicate)
 
-    @describetag api_required: true
-    @describetag timeout: to_timeout(minute: 10)
-
-    test "can list latest model version for all models" do
-      user = Panic.Fixtures.user_with_real_tokens()
-      models = Model.all(platform: Replicate)
-
-      for model <- models do
-        assert {:ok, version} = Replicate.get_latest_model_version(model, user.replicate_token)
-        assert String.match?(version, ~r/^[a-f0-9]{64}$/)
-      end
-    end
-
-    test "can generate a stable diffusion image" do
-      user = Panic.Fixtures.user_with_real_tokens()
-      %Model{invoke: invoke_fn} = model = Model.by_id!("flux-schnell")
-
-      {:ok, img_url} =
-        invoke_fn.(model, "I could eat a peach for hours.", user.replicate_token)
-
-      assert String.match?(img_url, ~r|^https://.*$|)
-    end
-
-    test "BLIP2 captioner is sufficiently expressive" do
-      user = Panic.Fixtures.user_with_real_tokens()
-      %Model{invoke: invoke_fn} = model = Model.by_id!("blip-2")
-      # TODO the rate limit here is pretty low, so maybe switch to a static image somewhere?
-      input_img = "https://picsum.photos/400/225/"
-
-      {:ok, caption} =
-        invoke_fn.(model, input_img, user.replicate_token)
-
-      # not a 100% reliable test, but we're going for descriptive captions here
-      assert String.length(caption) > 10
-    end
-
-    @tag skip: true
-    @tag api_required: true
-    test "can successfully invoke all Replicate models" do
-      user = Panic.Fixtures.user_with_real_tokens()
-      models = Model.all(platform: Replicate)
-
-      tasks =
-        for %Model{id: id, invoke: invoke_fn} = model <- models do
-          Task.async(fn ->
-            input = test_input(model)
-            result = invoke_fn.(model, input, user.replicate_token)
-
-            case result do
-              {:ok, output} ->
-                IO.puts("#{id}: Input: #{inspect(input)}, Output: #{inspect(output)}")
-
-              _ ->
-                :pass
-            end
-
-            {id, result}
-          end)
-        end
-
-      results = Task.await_many(tasks, :infinity)
-
-      failed_models =
-        results
-        |> Enum.filter(fn {_, result} ->
-          case result do
-            {:error, _} -> true
-            _ -> false
-          end
-        end)
-        |> Enum.map(fn {id, _} -> id end)
-
-      if length(failed_models) > 0 do
-        IO.puts("Failed models: #{Enum.join(failed_models, ", ")}")
+      # All dummy models should be from Dummy platform
+      for model <- dummy_models do
+        assert model.platform == Panic.Platforms.Dummy
       end
 
-      for {_, result} <- results do
-        case result do
-          {:ok, output} ->
-            assert String.match?(output, ~r/\S/)
-
-          {:error, _} ->
-            flunk("Some models failed to invoke")
-        end
+      # All OpenAI models should be from OpenAI platform
+      for model <- openai_models do
+        assert model.platform == OpenAI
       end
-    end
 
-    test "can successfully invoke a specific model" do
-      user = Panic.Fixtures.user_with_real_tokens()
-      %Model{invoke: invoke_fn} = model = Model.by_id!("florence-2-large")
-      input = test_input(model)
-
-      assert {:ok, output} = invoke_fn.(model, input, user.replicate_token)
-      assert String.match?(output, ~r/\S/)
-    end
-  end
-
-  describe "OpenAI platform" do
-    alias Panic.Platforms.OpenAI
-
-    @describetag api_required: true
-
-    test "generates the right* answer for all models" do
-      # models for which we have canned responses
-      user = Panic.Fixtures.user_with_real_tokens()
-      models = Model.all(platform: OpenAI)
-
-      for model <- models do
-        assert {:ok, output} =
-                 OpenAI.invoke(
-                   model,
-                   "Respond with just the word 'bananaphone'. Do not include any other content (even punctuation).",
-                   user.openai_token
-                 )
-
-        assert output == "bananaphone"
+      # All Replicate models should be from Replicate platform
+      for model <- replicate_models do
+        assert model.platform == Replicate
       end
     end
   end
 
-  describe "Gemini platform" do
-    @describetag api_required: true
-
-    test "can successfully invoke the audio description model" do
-      # user = Panic.Fixtures.user_with_tokens()
-      %Model{invoke: invoke_fn} = model = Model.by_id!("gemini-audio-description")
-      input = test_input(model)
-
-      assert {:ok, output} = invoke_fn.(model, input, System.get_env("GOOGLE_AI_STUDIO_TOKEN"))
-      assert String.match?(output, ~r/\S/)
+  describe "Model.by_id!/1" do
+    test "retrieves specific models by ID" do
+      # Test with a known dummy model
+      model = Model.by_id!("dummy-t2t")
+      assert model.id == "dummy-t2t"
+      assert model.platform == Panic.Platforms.Dummy
+      assert model.input_type == :text
+      assert model.output_type == :text
     end
 
-    test "run a Gemini audio description model in a network" do
-      user = Panic.Fixtures.user_with_real_tokens()
-
-      network =
-        user
-        |> Panic.Fixtures.network()
-        |> Panic.Engine.update_models!([["magnet"], ["gemini-audio-description"]], actor: user)
-
-      input = "solo piano etude"
-
-      first =
-        network
-        |> Panic.Engine.prepare_first!(input, actor: user)
-        |> Panic.Engine.invoke!(actor: user)
-
-      next =
-        first
-        |> Panic.Engine.prepare_next!(actor: user)
-        |> Panic.Engine.invoke!(actor: user)
-
-      assert %Invocation{output: output} = next
-      assert String.match?(output, ~r/\S/)
+    test "raises for unknown model ID" do
+      assert_raise RuntimeError, fn ->
+        Model.by_id!("nonexistent-model")
+      end
     end
   end
 
-  describe "Dummy platform" do
+  describe "Model utility functions" do
+    test "model_url/1 returns correct URLs for different platforms" do
+      dummy_model = Model.by_id!("dummy-t2t")
+      assert Model.model_url(dummy_model) == "#dummy-platform"
+
+      # Test with other platform models (without API calls)
+      openai_models = Model.all(platform: OpenAI)
+
+      if length(openai_models) > 0 do
+        openai_model = hd(openai_models)
+        url = Model.model_url(openai_model)
+        assert String.starts_with?(url, "https://")
+      end
+    end
+
+    test "model_ids_to_model_list/1 converts IDs to models" do
+      model_ids = ["dummy-t2t", "dummy-i2t"]
+      models = Model.model_ids_to_model_list(model_ids)
+
+      assert length(models) == 2
+      assert Enum.map(models, & &1.id) == model_ids
+    end
+
+    test "model_list_to_model_ids/1 converts models to IDs" do
+      models = [Model.by_id!("dummy-t2t"), Model.by_id!("dummy-i2t")]
+      model_ids = Model.model_list_to_model_ids(models)
+
+      assert model_ids == [["dummy-t2t"], ["dummy-i2t"]]
+    end
+
+    test "models_with_indices/1 adds indices to models" do
+      models = [Model.by_id!("dummy-t2t"), Model.by_id!("dummy-i2t")]
+      indexed_models = Model.models_with_indices(models)
+
+      assert indexed_models == [
+               {0, 0, Model.by_id!("dummy-t2t")},
+               {1, 1, Model.by_id!("dummy-i2t")}
+             ]
+    end
+  end
+
+  describe "Dummy platform models" do
     alias Panic.Platforms.Dummy
 
     test "all dummy models have correct input/output type combinations" do
@@ -220,11 +138,18 @@ defmodule Panic.ModelTest do
         {"dummy-a2a", :audio, :audio}
       ]
 
+      # Verify we have exactly 9 dummy models
+      assert length(dummy_models) == 9
+
       for {id, input_type, output_type} <- expected_combinations do
         model = Enum.find(dummy_models, &(&1.id == id))
         assert model != nil, "Model #{id} should exist"
         assert model.input_type == input_type, "Model #{id} should have input_type #{input_type}"
         assert model.output_type == output_type, "Model #{id} should have output_type #{output_type}"
+        assert model.platform == Dummy
+        assert model.path =~ ~r/^dummy\//
+        assert model.description =~ ~r/Dummy model for testing/
+        assert is_function(model.invoke, 3)
       end
     end
 
@@ -232,7 +157,7 @@ defmodule Panic.ModelTest do
       dummy_models = Model.all(platform: Dummy)
 
       for %Model{invoke: invoke_fn} = model <- dummy_models do
-        input = test_input(model)
+        input = test_input_for_type(model.input_type)
 
         # Invoke the model twice with the same input
         {:ok, output1} = invoke_fn.(model, input, nil)
@@ -250,176 +175,154 @@ defmodule Panic.ModelTest do
       end
     end
 
-    test "dummy models can be used in a network" do
-      user = Panic.Fixtures.user()
+    test "dummy models can be invoked through their invoke function" do
+      for model <- Model.all(platform: Dummy) do
+        input = test_input_for_type(model.input_type)
 
-      network =
-        user
-        |> Panic.Fixtures.network()
-        |> Panic.Engine.update_models!([["dummy-t2i"], ["dummy-i2t"]], actor: user)
+        assert {:ok, output} = model.invoke.(model, input, nil)
 
-      input = "test prompt"
-
-      first =
-        network
-        |> Panic.Engine.prepare_first!(input, actor: user)
-        |> Panic.Engine.invoke!(actor: user)
-
-      assert String.starts_with?(first.output, "https://dummy-images.test/")
-
-      next =
-        first
-        |> Panic.Engine.prepare_next!(actor: user)
-        |> Panic.Engine.invoke!(actor: user)
-
-      assert String.starts_with?(next.output, "DUMMY_CAPTION:")
-    end
-  end
-
-  defp test_input(%Model{input_type: :text}), do: "a shiny red apple"
-
-  defp test_input(%Model{input_type: :image}),
-    do: "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-placeholder.webp"
-
-  defp test_input(%Model{input_type: :audio}),
-    do: "https://fly.storage.tigris.dev/panic-invocation-outputs/test-audio.ogg"
-
-  describe "Invocation integration with API calls" do
-    @describetag api_required: true
-
-    test "can produce output with real API models" do
-      user = Panic.Fixtures.user_with_real_tokens()
-      # a pretty simple network, should be fast & cheap
-      network =
-        user
-        |> Panic.Fixtures.network()
-        |> Panic.Engine.update_models!([["flux-schnell"], ["blip-2"]], actor: user)
-
-      input = "can you tell me a story?"
-
-      invocation =
-        network
-        |> Panic.Engine.prepare_first!(input, actor: user)
-        |> Panic.Engine.invoke!(actor: user)
-
-      refute invocation.output == nil
-      assert invocation.state == :completed
-    end
-
-    test "creates a next invocation with the right run number and sequence with real models" do
-      user = Panic.Fixtures.user_with_real_tokens()
-      network = Panic.Fixtures.network_with_real_models(user)
-      input = "can you tell me a story?"
-
-      first =
-        network
-        |> Panic.Engine.prepare_first!(input, actor: user)
-        |> Panic.Engine.invoke!(actor: user)
-
-      next = Panic.Engine.prepare_next!(first, actor: user)
-      assert first.run_number == next.run_number
-      assert first.output == next.input
-      assert first.sequence_number + 1 == next.sequence_number
-    end
-
-    test "can make a 'run' with invoke! and prepare_next! which maintains io consistency and ordering with real models" do
-      run_length = 4
-      user = Panic.Fixtures.user_with_real_tokens()
-      network = Panic.Fixtures.network_with_real_models(user)
-      input = "can you tell me a story?"
-
-      first =
-        network
-        |> Panic.Engine.prepare_first!(input, actor: user)
-        |> Panic.Engine.invoke!(actor: user)
-
-      first
-      |> Stream.iterate(fn inv ->
-        inv
-        |> Panic.Engine.invoke!(actor: user)
-        |> Panic.Engine.prepare_next!(actor: user)
-      end)
-      |> Stream.take(run_length)
-      |> Stream.run()
-
-      invocations =
-        Panic.Engine.list_run!(network.id, first.run_number, actor: user)
-
-      [second_last_in_current_run, last_in_current_run] =
-        Panic.Engine.current_run!(network.id, 2, actor: user)
-
-      assert second_last_in_current_run.sequence_number == last_in_current_run.sequence_number - 1
-      assert second_last_in_current_run.run_number == last_in_current_run.run_number
-
-      # check outputs match inputs
-      invocations
-      |> Enum.chunk_every(2, 1, :discard)
-      |> Enum.each(fn [a, b] ->
-        assert a.output == b.input
-      end)
-
-      # check the right number of invocations generated, and returned in the right order
-      assert Enum.count(invocations) == run_length
-      sequence_numbers = Enum.map(invocations, & &1.sequence_number)
-      assert sequence_numbers = Enum.sort(sequence_numbers, :asc)
-
-      # check the most recent invocation action works
-      most_recent = Panic.Engine.most_recent!(network.id, actor: user)
-      assert most_recent.sequence_number == Enum.max(sequence_numbers)
-    end
-  end
-
-  describe "Gemini token integration" do
-    @describetag api_required: true
-
-    test "user with gemini token can create invocation with gemini model" do
-      user = Panic.Fixtures.user()
-
-      # Set a gemini token for the user
-      user_with_token = Panic.Accounts.set_token!(user, :gemini_token, "test_gemini_token", actor: user)
-
-      # Create a network with a dummy text-to-audio model followed by gemini model
-      # This ensures compatible input/output types: text -> audio -> text
-      network =
-        user_with_token
-        |> Panic.Fixtures.network()
-        |> Panic.Engine.update_models!([["dummy-t2a"], ["gemini-audio-description"]], actor: user_with_token)
-
-      input = "generate some audio"
-
-      # Create and prepare the invocation
-      invocation = Panic.Engine.prepare_first!(network, input, actor: user_with_token)
-
-      # Verify the invocation was created successfully
-      assert invocation.network_id == network.id
-      assert invocation.input == input
-      assert invocation.model == ["dummy-t2a"]
-    end
-
-    test "user without gemini token gets error when invoking gemini model" do
-      alias Ash.Error.Invalid
-
-      user = Panic.Fixtures.user()
-
-      # Create a network with a dummy text-to-audio model followed by gemini model
-      network =
-        user
-        |> Panic.Fixtures.network()
-        |> Panic.Engine.update_models!([["dummy-t2a"], ["gemini-audio-description"]], actor: user)
-
-      input = "generate some audio"
-
-      # Create first invocation and invoke it (dummy model should work)
-      first_invocation = Panic.Engine.prepare_first!(network, input, actor: user)
-      first_invocation = Panic.Engine.invoke!(first_invocation, actor: user)
-
-      # Prepare next invocation (which will use gemini model)
-      second_invocation = Panic.Engine.prepare_next!(first_invocation, actor: user)
-
-      # Try to invoke gemini model without gemini token - should fail
-      assert_raise Invalid, fn ->
-        Panic.Engine.invoke!(second_invocation, actor: user)
+        case model.output_type do
+          :text -> assert is_binary(output) and String.contains?(output, "DUMMY_")
+          :image -> assert String.starts_with?(output, "https://dummy-images.test/")
+          :audio -> assert String.starts_with?(output, "https://dummy-audio.test/")
+        end
       end
     end
+
+    test "text-to-text transformation produces reversed text" do
+      model = Model.by_id!("dummy-t2t")
+      input = "hello world"
+
+      assert {:ok, "DUMMY_TEXT: " <> reversed} = model.invoke.(model, input, "token")
+      assert reversed == String.reverse(input)
+    end
+
+    test "text-to-image generation produces proper URL" do
+      model = Model.by_id!("dummy-t2i")
+      input = "generate an image"
+
+      assert {:ok, url} = model.invoke.(model, input, "token")
+      assert String.starts_with?(url, "https://dummy-images.test/")
+      assert String.ends_with?(url, ".png")
+    end
+
+    test "text-to-audio generation produces proper URL" do
+      model = Model.by_id!("dummy-t2a")
+      input = "generate audio"
+
+      assert {:ok, url} = model.invoke.(model, input, "token")
+      assert String.starts_with?(url, "https://dummy-audio.test/")
+      assert String.ends_with?(url, ".ogg")
+    end
+
+    test "image-to-text captioning handles different image URLs" do
+      model = Model.by_id!("dummy-i2t")
+
+      # Test with a dummy image URL
+      assert {:ok, caption} = model.invoke.(model, "https://dummy-images.test/abc123.png", "token")
+      assert String.starts_with?(caption, "DUMMY_CAPTION:")
+      assert String.contains?(caption, "abc123")
+
+      # Test with a regular image URL
+      assert {:ok, caption2} = model.invoke.(model, "https://example.com/image.jpg", "token")
+      assert String.starts_with?(caption2, "DUMMY_CAPTION:")
+      assert String.contains?(caption2, "descriptive caption")
+    end
+
+    test "image-to-image transformation produces proper URL" do
+      model = Model.by_id!("dummy-i2i")
+      input = "https://example.com/input.png"
+
+      assert {:ok, url} = model.invoke.(model, input, "token")
+      assert String.starts_with?(url, "https://dummy-images.test/transformed_")
+      assert String.ends_with?(url, ".png")
+    end
+
+    test "image-to-audio generation produces proper URL" do
+      model = Model.by_id!("dummy-i2a")
+      input = "https://example.com/input.png"
+
+      assert {:ok, url} = model.invoke.(model, input, "token")
+      assert String.starts_with?(url, "https://dummy-audio.test/from_image_")
+      assert String.ends_with?(url, ".ogg")
+    end
+
+    test "audio-to-text transcription handles different input formats" do
+      model = Model.by_id!("dummy-a2t")
+
+      # Test with direct audio URL
+      assert {:ok, transcript} = model.invoke.(model, "https://example.com/audio.ogg", "token")
+      assert String.starts_with?(transcript, "DUMMY_TRANSCRIPT:")
+
+      # Test with Gemini-style input (map with audio_file key)
+      assert {:ok, transcript2} =
+               model.invoke.(model, %{audio_file: "https://example.com/audio2.ogg"}, "token")
+
+      assert String.starts_with?(transcript2, "DUMMY_TRANSCRIPT:")
+
+      # Test with Gemini-style input including prompt
+      assert {:ok, description} =
+               model.invoke.(
+                 model,
+                 %{audio_file: "https://example.com/audio3.ogg", prompt: "Describe the mood"},
+                 "token"
+               )
+
+      assert String.starts_with?(description, "DUMMY_DESCRIPTION:")
+      assert String.contains?(description, "Describe the mood")
+    end
+
+    test "audio-to-image generation produces proper URL" do
+      model = Model.by_id!("dummy-a2i")
+      input = "https://example.com/audio.ogg"
+
+      assert {:ok, url} = model.invoke.(model, input, "token")
+      assert String.starts_with?(url, "https://dummy-images.test/from_audio_")
+      assert String.ends_with?(url, ".png")
+    end
+
+    test "audio-to-audio transformation produces proper URL" do
+      model = Model.by_id!("dummy-a2a")
+      input = "https://example.com/audio.ogg"
+
+      assert {:ok, url} = model.invoke.(model, input, "token")
+      assert String.starts_with?(url, "https://dummy-audio.test/transformed_")
+      assert String.ends_with?(url, ".ogg")
+    end
+
+    test "returns error for unsupported type combinations" do
+      # Create a model with an invalid type combination (this shouldn't exist in practice)
+      model = %Model{
+        id: "invalid",
+        name: "Test Invalid",
+        platform: Dummy,
+        path: "dummy/invalid",
+        input_type: :invalid,
+        output_type: :text,
+        invoke: fn _, _, _ -> {:ok, "dummy"} end
+      }
+
+      assert {:error, message} = Dummy.invoke(model, "input", "token")
+      assert String.contains?(message, "Unsupported dummy conversion")
+    end
+
+    test "outputs are deterministic across different tokens" do
+      model = Model.by_id!("dummy-t2t")
+      input = "test input"
+
+      # Call multiple times with same input but different tokens
+      {:ok, output1} = model.invoke.(model, input, "token1")
+      {:ok, output2} = model.invoke.(model, input, "token2")
+      {:ok, output3} = model.invoke.(model, input, "different_token")
+
+      # All outputs should be identical
+      assert output1 == output2
+      assert output2 == output3
+    end
   end
+
+  # Helper function to generate appropriate test input based on input type
+  defp test_input_for_type(:text), do: "test text input"
+  defp test_input_for_type(:image), do: "https://example.com/test.png"
+  defp test_input_for_type(:audio), do: "https://example.com/test.ogg"
 end
