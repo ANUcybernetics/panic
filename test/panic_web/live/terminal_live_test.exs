@@ -5,6 +5,12 @@ defmodule PanicWeb.TerminalLiveTest do
 
   describe "user IS logged in" do
     @describetag api_required: true
+
+    setup do
+      PanicWeb.Helpers.stop_all_network_runners()
+      :ok
+    end
+
     setup {PanicWeb.Helpers, :create_and_sign_in_user_with_real_tokens}
 
     test "and can create a new invocation in the terminal", %{conn: conn, user: user} do

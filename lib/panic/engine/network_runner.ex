@@ -23,6 +23,13 @@ defmodule Panic.Engine.NetworkRunner do
   - `genesis_invocation`: The first invocation of the current run
   - `user`: The user who started the current run
   - `processing_ref`: Timer reference for the next processing cycle
+
+  ## Testing Considerations
+
+  # AIDEV-NOTE: NetworkRunner persists across tests; requires cleanup in test setup
+  NetworkRunner GenServers persist in the NetworkRegistry across test runs and maintain
+  user state. This can cause Ash.Error.Forbidden when stale processes run with wrong
+  actor context. Use PanicWeb.Helpers.stop_all_network_runners/0 in test setup.
   """
 
   use GenServer

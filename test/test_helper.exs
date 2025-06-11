@@ -243,4 +243,49 @@ defmodule PanicWeb.Helpers do
       user: user
     }
   end
+
+  @doc """
+  Stop all NetworkRunner processes for test cleanup.
+
+  ## Problem
+
+  NetworkRunner GenServers are started on-demand and registered in the NetworkRegistry.
+  These processes persist across test runs and maintain user state in their internal state.
+  When tests run together (even with `async: false`), NetworkRunner processes from
+  previous tests may still be running and processing invocations.
+
+  This causes Ash.Error.Forbidden errors when a NetworkRunner tries to call actions like
+  `about_to_invoke` with a stale user context that doesn't match the current test's user.
+  The error occurs because the authorization policy `relates_to_actor_via([:network, :user])`
+  fails when the actor doesn't match the network's owner.
+
+  ## Solution
+
+  This helper stops all NetworkRunner GenServers before each test runs, ensuring:
+  1. No stale processes continue running with old user contexts
+  2. Each test starts with a clean NetworkRunner state
+  3. Authorization policies work correctly with the proper actor
+
+  ## Usage
+
+  Call this in test setup blocks before creating users and networks:
+
+      setup do
+        PanicWeb.Helpers.stop_all_network_runners()
+        :ok
+      end
+  """
+  def stop_all_network_runners do
+    # Get all running NetworkRunner processes
+    registry_entries = Registry.select(Panic.Engine.NetworkRegistry, [{{:"$1", :"$2", :"$3"}, [], [{{:"$1", :"$2"}}]}])
+
+    # Stop each NetworkRunner
+    Enum.each(registry_entries, fn {_network_id, pid} ->
+      if Process.alive?(pid) do
+        DynamicSupervisor.terminate_child(Panic.Engine.NetworkSupervisor, pid)
+      end
+    end)
+
+    :ok
+  end
 end

@@ -10,6 +10,11 @@ defmodule PanicWeb.UserLiveTest do
   # import Phoenix.LiveViewTest
 
   describe "user IS logged in" do
+    setup do
+      PanicWeb.Helpers.stop_all_network_runners()
+      :ok
+    end
+
     setup {PanicWeb.Helpers, :create_and_sign_in_user}
 
     test "and can visit the user index page", %{conn: conn, user: user} do
