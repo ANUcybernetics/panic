@@ -556,30 +556,31 @@ defmodule Panic.Model do
           end
         end
       },
-      %__MODULE__{
-        id: "musicgen",
-        platform: Replicate,
-        path: "meta/musicgen",
-        name: "MusicGen",
-        input_type: :text,
-        output_type: :audio,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => audio_url}} <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     model_version: "melody-large",
-                     prompt: input,
-                     duration: 8,
-                     multi_band_diffusion: true,
-                     output_format: "mp3"
-                   },
-                   token
-                 ) do
-            {:ok, audio_url}
-          end
-        end
-      },
+      # this often times out...
+      # %__MODULE__{
+      #   id: "musicgen",
+      #   platform: Replicate,
+      #   path: "meta/musicgen",
+      #   name: "MusicGen",
+      #   input_type: :text,
+      #   output_type: :audio,
+      #   invoke: fn model, input, token ->
+      #     with {:ok, %{"output" => audio_url}} <-
+      #            Replicate.invoke(
+      #              model,
+      #              %{
+      #                model_version: "melody-large",
+      #                prompt: input,
+      #                duration: 8,
+      #                multi_band_diffusion: true,
+      #                output_format: "mp3"
+      #              },
+      #              token
+      #            ) do
+      #       {:ok, audio_url}
+      #     end
+      #   end
+      # },
       %__MODULE__{
         id: "stable-audio",
         platform: Replicate,
