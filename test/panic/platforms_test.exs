@@ -119,10 +119,6 @@ defmodule Panic.PlatformsTest do
               IO.puts("⚠ #{id}: deprecated version in #{duration}ms")
               {succ, accept + 1, fail}
 
-            {:error, "- input: key is required" <> _} ->
-              IO.puts("⚠ #{id}: requires specific input format in #{duration}ms")
-              {succ, accept + 1, fail}
-
             {:error, :timeout} ->
               IO.puts("⚠ #{id}: timed out after #{duration}ms")
               {succ, accept + 1, fail}
@@ -148,6 +144,13 @@ defmodule Panic.PlatformsTest do
 
       assert {:ok, img_url} = invoke_fn.(model, @test_text_input, api_key)
       assert String.match?(img_url, ~r|^https://.*$|), "Expected valid URL, got: #{img_url}"
+    end
+
+    test "stable-audio generates valid audio URLs", %{api_key: api_key} do
+      %Model{invoke: invoke_fn} = model = Model.by_id!("stable-audio")
+
+      assert {:ok, audio_url} = invoke_fn.(model, @test_text_input, api_key)
+      assert String.match?(audio_url, ~r|^https://.*$|), "Expected valid URL, got: #{audio_url}"
     end
 
     test "BLIP2 captioner produces descriptive output", %{api_key: api_key} do
