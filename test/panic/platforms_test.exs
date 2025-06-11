@@ -20,7 +20,7 @@ defmodule Panic.PlatformsTest do
   @test_audio_input "https://fly.storage.tigris.dev/panic-invocation-outputs/test-audio.ogg"
 
   describe "Replicate platform" do
-    @describetag api_required: true
+    @describetag apikeys: true
     @describetag timeout: to_timeout(minute: 15)
 
     setup do
@@ -147,7 +147,7 @@ defmodule Panic.PlatformsTest do
   end
 
   describe "OpenAI platform" do
-    @describetag api_required: true
+    @describetag apikeys: true
     @describetag timeout: to_timeout(minute: 5)
 
     setup do
@@ -203,7 +203,7 @@ defmodule Panic.PlatformsTest do
   end
 
   describe "Gemini platform" do
-    @describetag api_required: true
+    @describetag apikeys: true
     @describetag timeout: to_timeout(minute: 5)
 
     setup do

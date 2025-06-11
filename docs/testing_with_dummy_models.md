@@ -43,11 +43,11 @@ By default, tests use dummy models unless specifically configured otherwise:
 ## Using Real Models in Tests
 
 For tests that need to verify actual API integration, use the
-`@tag api_required: true` tag:
+`@tag apikeys: true` tag:
 
 ```elixir
 describe "API integration tests" do
-  @describetag api_required: true
+  @describetag apikeys: true
 
   test "real model produces output" do
     user = Panic.Fixtures.user_with_real_tokens()
@@ -57,8 +57,8 @@ describe "API integration tests" do
 end
 ```
 
-Tests with `api_required: true` are automatically excluded unless real API keys
-are available via environment variables:
+Tests with `apikeys: true` are automatically excluded unless real API keys are
+available via environment variables:
 
 - `OPENAI_API_KEY`
 - `REPLICATE_API_KEY`
@@ -113,11 +113,11 @@ end
 ## Running Tests
 
 ```bash
-# Run all tests (excludes api_required tests by default)
+# Run all tests (excludes apikeys tests by default)
 mix test
 
 # Run only tests that use dummy models
-mix test --exclude api_required
+mix test --exclude apkeysi
 
 # Run tests including real API tests (requires API keys)
 OPENAI_API_KEY=sk-... REPLICATE_API_KEY=r8_... mix test
@@ -126,8 +126,8 @@ OPENAI_API_KEY=sk-... REPLICATE_API_KEY=r8_... mix test
 ## Best Practices
 
 1. **Use dummy models by default**: They're faster and more reliable
-2. **Tag API tests appropriately**: Use `@tag api_required: true` for tests that
-   need real models
+2. **Tag API tests appropriately**: Use `@tag apikeys: true` for tests that need
+   real models
 3. **Test both paths**: Have some tests with dummy models and some with real
    models
 4. **Check output patterns**: Dummy outputs have predictable patterns you can
