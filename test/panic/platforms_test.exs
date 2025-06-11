@@ -106,7 +106,7 @@ defmodule Panic.PlatformsTest do
         |> Enum.reduce({0, 0, 0}, fn {id, result, duration}, {succ, accept, fail} ->
           case result do
             {:ok, output} ->
-              IO.puts("✓ #{id}: succeeded in #{duration}ms")
+              IO.puts("✓ #{id}: succeeded in #{:erlang.float_to_binary(duration / 1000, decimals: 1)}s")
               assert is_binary(output), "Expected string output for model #{id}"
               assert String.match?(output, ~r/\S/), "Expected non-empty output for model #{id}"
               {succ + 1, accept, fail}
