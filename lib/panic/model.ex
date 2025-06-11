@@ -161,27 +161,6 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
-        id: "clip-caption-reward",
-        platform: Replicate,
-        path: "j-min/clip-caption-reward",
-        name: "CLIP caption reward",
-        input_type: :image,
-        output_type: :text,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => text}} <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     image: input,
-                     reward: Enum.random(["mle", "cider", "clips", "cider_clips", "clips_grammar"])
-                   },
-                   token
-                 ) do
-            {:ok, text}
-          end
-        end
-      },
-      %__MODULE__{
         id: "florence-2-large",
         platform: Replicate,
         path: "lucataco/florence-2-large",
