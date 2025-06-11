@@ -1,5 +1,5 @@
 # Configure ExUnit to exclude API tests by default
-ExUnit.start(exclude: [api_required: true])
+ExUnit.start(exclude: [apikeys: true])
 
 Ecto.Adapters.SQL.Sandbox.mode(Panic.Repo, :manual)
 
@@ -78,7 +78,7 @@ defmodule Panic.Generators do
       replicate_key = System.get_env("REPLICATE_API_KEY")
       gemini_key = System.get_env("GOOGLE_AI_STUDIO_TOKEN")
 
-      # For api_required tests, fail if keys are not present
+      # For apikeys tests, fail if keys are not present
       if openai_key == nil || replicate_key == nil || gemini_key == nil do
         raise "API keys required for this test. Set OPENAI_API_KEY, REPLICATE_API_KEY, and GOOGLE_AI_STUDIO_TOKEN environment variables."
       end
@@ -224,7 +224,7 @@ defmodule PanicWeb.Helpers do
   def create_and_sign_in_user_with_real_tokens(%{conn: conn}) do
     password = "abcd1234"
 
-    # Create user with real tokens for api_required tests
+    # Create user with real tokens for apikeys tests
     user = Panic.Fixtures.user_with_real_tokens(password)
 
     strategy = AshAuthentication.Info.strategy!(User, :password)

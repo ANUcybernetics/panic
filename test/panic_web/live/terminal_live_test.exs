@@ -4,7 +4,7 @@ defmodule PanicWeb.TerminalLiveTest do
   # import Phoenix.LiveViewTest
 
   describe "user IS logged in" do
-    @describetag api_required: true
+    @describetag apikeys: true
 
     setup do
       PanicWeb.Helpers.stop_all_network_runners()
