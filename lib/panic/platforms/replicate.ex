@@ -78,6 +78,15 @@ defmodule Panic.Platforms.Replicate do
       |> case do
         {:ok, %Req.Response{body: %{"id" => id}, status: 201}} ->
           get(id, token)
+
+        {:ok, %Req.Response{body: %{"detail" => message}, status: 410}} ->
+          {:error, message}
+
+        {:ok, %Req.Response{body: %{"detail" => message}, status: status}} when status >= 400 ->
+          {:error, message}
+
+        {:error, reason} ->
+          {:error, reason}
       end
     end
   end

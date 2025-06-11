@@ -52,7 +52,7 @@ defmodule Panic.Platforms.Gemini do
   defp req_new(opts) do
     [
       method: :post,
-      receive_timeout: 10_000
+      receive_timeout: 60_000
     ]
     |> Keyword.merge(Application.get_env(:panic, :gemini_req_options, []))
     |> Keyword.merge(opts)
