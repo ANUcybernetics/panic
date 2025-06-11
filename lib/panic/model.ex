@@ -487,6 +487,38 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
+        id: "claude-4-sonnet",
+        platform: Replicate,
+        path: "anthropic/claude-4-sonnet",
+        name: "Claude 4 Sonnet",
+        input_type: :text,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => output_list}} <-
+                 Replicate.invoke(model, %{prompt: input}, token) do
+            {:ok, Enum.join(output_list)}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "claude-4-sonnet-caption",
+        platform: Replicate,
+        path: "anthropic/claude-4-sonnet",
+        name: "Claude 4 Sonnet Caption",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => output_list}} <-
+                 Replicate.invoke(
+                   model,
+                   %{prompt: "describe this image in one sentence", image: input, max_image_resolution: 0.5},
+                   token
+                 ) do
+            {:ok, Enum.join(output_list)}
+          end
+        end
+      },
+      %__MODULE__{
         id: "meta-llama-3-8b-instruct",
         platform: Replicate,
         path: "meta/meta-llama-3-8b-instruct",
