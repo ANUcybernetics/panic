@@ -6,6 +6,7 @@ defmodule PanicWeb.NetworkLive.Info do
 
   alias Panic.Engine.Network
   alias PanicWeb.DisplayStreamer
+  alias PanicWeb.TerminalAuth
 
   @impl true
   def render(%{live_action: :all} = assigns) do
@@ -78,6 +79,11 @@ defmodule PanicWeb.NetworkLive.Info do
 
   @impl true
   def mount(_params, _session, socket) do
+    # Schedule periodic QR code refresh every 5 minutes
+    if connected?(socket) do
+      :timer.send_interval(300_000, self(), :refresh_qr_code)
+    end
+
     {:ok, socket}
   end
 
@@ -85,10 +91,17 @@ defmodule PanicWeb.NetworkLive.Info do
   def handle_params(%{"network_id" => network_id}, _, socket) do
     case get_network(network_id, socket.assigns) do
       {:ok, network} ->
+        # Generate URL based on live action
+        qr_url =
+          case socket.assigns.live_action do
+            :qr -> TerminalAuth.generate_terminal_url(network.id)
+            _ -> url(socket, ~p"/networks/#{network.id}/info/")
+          end
+
         {:noreply,
          socket
          |> assign(:page_title, "Network #{network_id} terminal")
-         |> assign(:qr_text, url(socket, ~p"/networks/#{network.id}/info/"))
+         |> assign(:qr_text, qr_url)
          |> DisplayStreamer.configure_invocation_stream(network, {:single, 0, 1})}
 
       {:error, _error} ->
@@ -102,6 +115,18 @@ defmodule PanicWeb.NetworkLive.Info do
     # no need to show the panic loading screen
     if message.payload.data.state == :completed do
       DisplayStreamer.handle_invocation_message(message, socket)
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_info(:refresh_qr_code, socket) do
+    # Only refresh if we're showing the QR modal
+    if socket.assigns.live_action == :qr do
+      network_id = socket.assigns.network.id
+      new_qr_url = TerminalAuth.generate_terminal_url(network_id)
+      {:noreply, assign(socket, :qr_text, new_qr_url)}
     else
       {:noreply, socket}
     end

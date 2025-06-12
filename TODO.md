@@ -1,7 +1,8 @@
 # Panic TODO
 
-- add time-based expiry for terminal QR codes
 - add resizing "shrink to fit" text for the display grids
+- see if API requests are retried on failure (perhaps with backoff) e.g. for
+  "copyright refusal"
 - check that terminal works on mobile (and revert SXSW-specific changes)
 - add video support (maybe... need to figure out how to handle video inputs as
   well)
