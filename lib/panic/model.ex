@@ -72,9 +72,7 @@ defmodule Panic.Model do
   end
 
   def all do
-    # Dummy models for testing - all input/output combinations
     [
-      # Gemini (Google AI)
       %__MODULE__{
         id: "gemini-audio-description",
         name: "Gemini Audio Description (Flash)",
@@ -87,13 +85,18 @@ defmodule Panic.Model do
             model,
             %{
               audio_file: audio_file,
-              prompt: "In simple language, describe this music and the feeling or vibe it evokes"
+              prompt: """
+              Describe this audio. The description will be fed into a text-to-audio generative model,
+              and your aim is to have that model reproduce the original audio as closely as possible.
+              Never include any specific artist or song names in the description.
+
+              Be concise - less than 100 words in total.
+              """
             },
             token
           )
         end
       },
-      # Gemini (Google AI)
       %__MODULE__{
         id: "gemini-audio-description-pro",
         name: "Gemini Audio Description (Pro)",
@@ -106,7 +109,13 @@ defmodule Panic.Model do
             model,
             %{
               audio_file: audio_file,
-              prompt: "In simple language, describe this music and the feeling or vibe it evokes"
+              prompt: """
+              Describe this audio. The description will be fed into a text-to-audio generative model,
+              and your aim is to have that model reproduce the original audio as closely as possible.
+              Never include any specific artist or song names in the description.
+
+              Be concise - less than 100 words in total.
+              """
             },
             token
           )
