@@ -889,6 +889,10 @@ defmodule Panic.Model do
     "https://www.vestaboard.com"
   end
 
+  def model_url(%__MODULE__{platform: Gemini}) do
+    "https://ai.google.dev/gemini-api/docs"
+  end
+
   def model_url(%__MODULE__{platform: Replicate, path: path}) do
     "https://replicate.com/#{path}"
   end

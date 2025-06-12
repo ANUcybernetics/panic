@@ -3,6 +3,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
   use PanicWeb, :live_view
 
   alias PanicWeb.DisplayStreamer
+  alias PanicWeb.TerminalAuth
 
   @impl true
   def render(assigns) do
@@ -34,8 +35,21 @@ defmodule PanicWeb.NetworkLive.Terminal do
   end
 
   @impl true
-  def mount(_params, _session, socket) do
-    {:ok, socket, layout: {PanicWeb.Layouts, :display}}
+  def mount(params, _session, socket) do
+    # Authenticated users can bypass token requirement
+    if socket.assigns[:current_user] do
+      {:ok, socket, layout: {PanicWeb.Layouts, :display}}
+    else
+      # Unauthenticated users need a valid token
+      case TerminalAuth.validate_token_in_socket(params, socket) do
+        {:ok, socket} ->
+          {:ok, socket, layout: {PanicWeb.Layouts, :display}}
+
+        {:error, socket} ->
+          # Socket already has redirect set by validate_token_in_socket
+          {:ok, socket}
+      end
+    end
   end
 
   @impl true
