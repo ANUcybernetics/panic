@@ -9,6 +9,9 @@ defmodule Panic.Engine.NetworkRunnerTest do
   require Ash.Query
 
   setup do
+    # Stop all network runners to ensure clean state
+    PanicWeb.Helpers.stop_all_network_runners()
+
     # Create a test user
     user = Ash.Generator.seed!(User)
 
