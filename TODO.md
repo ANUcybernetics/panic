@@ -1,8 +1,8 @@
 # Panic TODO
 
-- add claude via replicate
-- check that terminal works on mobile (and revert SXSW-specific changes)
 - add time-based expiry for terminal QR codes
+- add resizing "shrink to fit" text for the display grids
+- check that terminal works on mobile (and revert SXSW-specific changes)
 - add video support (maybe... need to figure out how to handle video inputs as
   well)
 - double check that all the updates (esp. ash_auth_phoenix) went through ok
