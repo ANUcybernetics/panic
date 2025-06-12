@@ -4,14 +4,12 @@ defmodule PanicWeb.TerminalLiveTest do
   # import Phoenix.LiveViewTest
 
   describe "user IS logged in" do
-    @describetag apikeys: true
-
     setup do
       PanicWeb.Helpers.stop_all_network_runners()
       :ok
     end
 
-    setup {PanicWeb.Helpers, :create_and_sign_in_user_with_real_tokens}
+    setup {PanicWeb.Helpers, :create_and_sign_in_user}
 
     test "and can create a new invocation in the terminal", %{conn: conn, user: user} do
       # TODO currently I can't get PhoenixTest to fill out the LiveSelect yet, so fake it for now
