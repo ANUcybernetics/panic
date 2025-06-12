@@ -20,6 +20,7 @@ defmodule PanicWeb.UserLive.FormComponent do
         <.input type="email" label="Email" field={@form[:email]} />
         <.input type="text" label="Replicate API Token" field={@form[:replicate_token]} />
         <.input type="text" label="OpenAI API Token" field={@form[:openai_token]} />
+        <.input type="text" label="Gemini API Token" field={@form[:gemini_token]} />
         <.input
           type="text"
           label="Vestaboard Panic 1 API Token"

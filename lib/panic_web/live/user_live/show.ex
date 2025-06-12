@@ -44,6 +44,7 @@ defmodule PanicWeb.UserLive.Show do
         <.list>
           <:item title="Replicate">{@user.replicate_token}</:item>
           <:item title="OpenAI">{@user.openai_token}</:item>
+          <:item title="Gemini">{@user.gemini_token}</:item>
           <:item title="Vestaboard 1">{@user.vestaboard_panic_1_token}</:item>
           <:item title="Vestaboard 2">{@user.vestaboard_panic_2_token}</:item>
           <:item title="Vestaboard 3">{@user.vestaboard_panic_3_token}</:item>
