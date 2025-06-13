@@ -1,25 +1,31 @@
 # Panic TODO
 
+## NIME blockers
+
 - add resizing "shrink to fit" text for the display grids
+- get rid of the "glitch" when the re-uploaded to tigris version loads
 - see if API requests are retried on failure (perhaps with backoff) e.g. for
-  "copyright refusal"
-- check that terminal works on mobile (and revert SXSW-specific changes)
-- add video support (maybe... need to figure out how to handle video inputs as
-  well)
+  "copyright refusal" (perhaps retry with new prompt)
+- check that QR code -> terminal workflow works on random users
+
+## important
+
 - double check that all the updates (esp. ash_auth_phoenix) went through ok
+- make sure vestaboards crashing doesn't bring down the whole thing
+- add "back off over time logic" based on time
+
+## thought bubbles
 
 - update to tailwind 4.0, and use the text shadow stuff
 - add "installation" view (which might allow us to re-jig the way vestaboards
   are handled)
-- make sure vestaboards crashing doesn't bring down the whole thing
 - add the ability to specify multiple offsets for single screen view
-- add SAO passthrough model?
 - show multiple invocations in info view
 - why aren't <p>s geting margins in prose blocks in info view?
 - refocus and clear the model select component on selection (to allow for
-  rapid-fire adding of models)
+  rapid-fire adding of models) or perhaps even replace with
+  [this if it's better](https://hexdocs.pm/autocomplete_input/readme.html)
 - model view (w/hand-written description)
-- add "back off over time" based on time
 - store invocation metadata (also add burn rate for a given network)
 - make unauthenticated login not forget which page you were going to
 - add an option to redirect all watching TVs to a new view (perhaps an
@@ -29,35 +35,24 @@
 - now that models is an array, have them Enum.each through, but put an await so
   they're all done (this will make the Vestaboard-wait period better; it won't
   wait if the time has already elapsed)
-
-## ideas (not necessarily TODO, but y'know...)
-
-(many of these are out-of-date)
-
 - refactor models (and tokens) to just be boring has_many/belongs_to
   relationships, rather than arrays
 - make regular backups of the sqlite db file (inc. a way to restore from them,
   for changing machines)
-- have a "pre-warm the models", based on average startup time (from metadata)
-- instead of hosting the nsfw placeholder and audio waveform pictures on tigris,
-  serve them from priv/static/images (the files are already in there)
+- have a "pre-warm all network models" option, which would fire off one for all
+  models at startup
+- update instead of hosting the nsfw placeholder and audio waveform pictures on
+  tigris, serve them from priv/static/images (the files are already in there)
 - a "waiting" timer on all pending invocations (better still, with feedback for
   e.g. replicate on what the actual status was)
 - each model could have a "pre/post wait" time, to account for things like
   vestaboards
 - replace the "split into `<p>`s based on double newline with proper md parsing
 - put `DisplayStreamer` stuff into an on_mount hook?
-- refactor user/network liveviews to use streams for the lists
 - add an indicator to the model select component to say a) if the network has
   been saved b) if it's runnable c) if it's currently running
 - flesh out the tests to make sure the authorisation policies work properly
   (mostly adding "negative versions" of current positive tests)
-- get the pool drain Oban tests working
-- there's some messiness around whether the platform invoke fns should know
-  about the Model structs... currently they do. the issue is that maybe the
-  per-model transformation stuff should all be in the :invoke key of the model,
-  and the platform invoker function should just take "plain" args for path,
-  version, input etc. or maybe them knowing about the model is ok.
 - add a "restart from invocation" UI option
 - add cost/credit balance lookup stuff to the user UI
 - add "alias" links for a given network (or maybe just use the slugs in the URL
@@ -65,20 +60,17 @@
 - git cleanup: tidy up v2/v3 nomenclature (probably: v0 is prototype, v1 at
   AusCyber, v2 is Birch install)
 - add oblique strategies model (GPT-4 powered)
-- upgrade to liveview 1.0 (but only when ash_phoenix does it?, so maybe not
-  worth getting bogged down on)
 - add presence to network views so that it'll say how many people are watching a
   particular network
-- add more platforms:
-  - claude
-  - https://www.inference.net
+- add video support (maybe... need to figure out how to handle video inputs as
+  well)
 
-## fly.io deployment notes
+### Installation resource
 
-- first, destroyed the old panic (app & machines)
-- did a clean(ish) fly deploy, to auto-detect Phoenix and provide the latest
-  suggested config
-- then got stuck in a boot loop, will investigate tomorrow
+attributes:
+
+- vestaboards `[vestaboard_name: {stride, offset}, ...]`
+- belongs_to: network
 
 ## Replicate model notes
 
