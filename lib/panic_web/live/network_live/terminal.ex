@@ -2,7 +2,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
   @moduledoc false
   use PanicWeb, :live_view
 
-  alias PanicWeb.DisplayStreamer
+  alias PanicWeb.InvocationWatcher
   alias PanicWeb.TerminalAuth
 
   @impl true
@@ -59,7 +59,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
         {:noreply,
          socket
          |> assign(:page_title, "Network #{network_id} terminal")
-         |> DisplayStreamer.configure_invocation_stream(network, {:single, 0, 1})}
+         |> InvocationWatcher.configure_invocation_stream(network, {:single, 0, 1})}
 
       {:error, _error} ->
         {:noreply, push_navigate(socket, to: ~p"/404")}
@@ -68,7 +68,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
-    DisplayStreamer.handle_invocation_message(message, socket)
+    InvocationWatcher.handle_invocation_message(message, socket)
   end
 
   @impl true

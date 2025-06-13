@@ -5,7 +5,7 @@ defmodule PanicWeb.NetworkLive.Info do
   import PanicWeb.PanicComponents
 
   alias Panic.Engine.Network
-  alias PanicWeb.DisplayStreamer
+  alias PanicWeb.InvocationWatcher
   alias PanicWeb.TerminalAuth
 
   @impl true
@@ -102,7 +102,7 @@ defmodule PanicWeb.NetworkLive.Info do
          socket
          |> assign(:page_title, "Network #{network_id} terminal")
          |> assign(:qr_text, qr_url)
-         |> DisplayStreamer.configure_invocation_stream(network, {:single, 0, 1})}
+         |> InvocationWatcher.configure_invocation_stream(network, {:single, 0, 1})}
 
       {:error, _error} ->
         {:noreply, push_navigate(socket, to: ~p"/404")}
@@ -114,7 +114,7 @@ defmodule PanicWeb.NetworkLive.Info do
     # for this view, only show completed ones
     # no need to show the panic loading screen
     if message.payload.data.state == :completed do
-      DisplayStreamer.handle_invocation_message(message, socket)
+      InvocationWatcher.handle_invocation_message(message, socket)
     else
       {:noreply, socket}
     end
