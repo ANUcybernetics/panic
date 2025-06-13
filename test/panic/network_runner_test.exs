@@ -1,4 +1,4 @@
-defmodule Panic.Engine.NetworkRunnerTest do
+defmodule Panic.NetworkRunnerTest do
   use Panic.DataCase, async: false
   use ExUnitProperties
 
