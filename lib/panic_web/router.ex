@@ -62,6 +62,16 @@ defmodule PanicWeb.Router do
         live "/:network_id/info/all", NetworkLive.Info, :all
       end
 
+      scope "/installations" do
+        live "/", InstallationLive.Index, :index
+        live "/new", InstallationLive.Index, :new
+        live "/:id/edit", InstallationLive.Index, :edit
+
+        live "/:id", InstallationLive.Show, :show
+        live "/:id/show/edit", InstallationLive.Show, :edit
+        live "/:id/show/add_watcher", InstallationLive.Show, :add_watcher
+      end
+
       live "/admin", AdminLive, :index
     end
 
@@ -82,6 +92,9 @@ defmodule PanicWeb.Router do
 
       # static invocation display doesn't need a network ID
       live "/display/static/:invocation_id", NetworkLive.StaticDisplay, :single
+
+      # Installation watcher routes
+      live "/i/:id/:index", InstallationLive.WatcherDisplay, :display
     end
 
     # "static" pages (still liveviews, though)

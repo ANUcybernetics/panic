@@ -27,6 +27,9 @@ defmodule PanicWeb.InvocationWatcher do
 
   Pass an explicit display tuple (`{:grid, rows, cols}` or `{:single, off, stride}`)
   instead of `:auto` if you don't want automatic detection.
+
+  The display tuple format is also used by Installation watchers, where each watcher
+  struct is converted to the appropriate display tuple format.
   """
 
   alias Panic.Engine.Invocation
@@ -47,7 +50,7 @@ defmodule PanicWeb.InvocationWatcher do
   """
   @spec on_mount(term(), map(), map(), LiveView.Socket.t()) ::
           {:cont, LiveView.Socket.t()} | {:halt, LiveView.Socket.t()}
-  def on_mount(display_mode \\ :auto, params, _session, socket) do
+  def on_mount(_display_mode \\ :auto, params, _session, socket) do
     with %{"network_id" => id} <- params,
          {:ok, network} <- fetch_network(id, socket.assigns) do
       # Only subscribe and attach the watcher. We **do not** configure the
