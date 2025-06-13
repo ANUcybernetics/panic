@@ -280,11 +280,29 @@ defmodule PanicWeb.Helpers do
     registry_entries = Registry.select(Panic.Engine.NetworkRegistry, [{{:"$1", :"$2", :"$3"}, [], [{{:"$1", :"$2"}}]}])
 
     # Stop each NetworkRunner
-    Enum.each(registry_entries, fn {_network_id, pid} ->
-      if Process.alive?(pid) do
-        DynamicSupervisor.terminate_child(Panic.Engine.NetworkSupervisor, pid)
+    pids =
+      registry_entries
+      |> Enum.map(fn {_network_id, pid} ->
+        if Process.alive?(pid) do
+          DynamicSupervisor.terminate_child(Panic.Engine.NetworkSupervisor, pid)
+          pid
+        end
+      end)
+      |> Enum.filter(& &1)
+
+    # Wait for all processes to terminate
+    Enum.each(pids, fn pid ->
+      ref = Process.monitor(pid)
+
+      receive do
+        {:DOWN, ^ref, :process, ^pid, _reason} -> :ok
+      after
+        1000 -> :timeout
       end
     end)
+
+    # Small buffer to ensure cleanup is complete
+    Process.sleep(50)
 
     :ok
   end

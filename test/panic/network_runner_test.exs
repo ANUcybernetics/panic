@@ -2,6 +2,7 @@ defmodule Panic.NetworkRunnerTest do
   use Panic.DataCase, async: false
   use ExUnitProperties
 
+  alias Ecto.Adapters.SQL.Sandbox
   alias Panic.Accounts.User
   alias Panic.Engine
   alias Panic.Engine.NetworkRegistry
@@ -31,9 +32,20 @@ defmodule Panic.NetworkRunnerTest do
         [{pid, _}] -> Process.exit(pid, :kill)
         [] -> :ok
       end
+
+      # Wait for cleanup to complete
+      Process.sleep(200)
     end)
 
     {:ok, user: user, network: network}
+  end
+
+  # Helper function to allow NetworkRunner processes to access the test database
+  defp allow_network_runner_db_access(network_id) do
+    case Registry.lookup(NetworkRegistry, network_id) do
+      [{pid, _}] -> Sandbox.allow(Panic.Repo, self(), pid)
+      [] -> :ok
+    end
   end
 
   describe "start_link/1" do
@@ -49,6 +61,7 @@ defmodule Panic.NetworkRunnerTest do
           # No runner exists, start a new one
           {:ok, pid} = NetworkRunner.start_link(network_id: network.id)
           assert Process.alive?(pid)
+          allow_network_runner_db_access(network.id)
 
           # Should be registered in the registry
           assert [{^pid, _}] = Registry.lookup(NetworkRegistry, network.id)
@@ -72,6 +85,8 @@ defmodule Panic.NetworkRunnerTest do
             inv
         end
 
+      allow_network_runner_db_access(network.id)
+
       assert genesis_invocation.network_id == network.id
       assert genesis_invocation.sequence_number == 0
       assert genesis_invocation.run_number == genesis_invocation.id
@@ -84,7 +99,7 @@ defmodule Panic.NetworkRunnerTest do
         [] -> :ok
       end
 
-      Process.sleep(10)
+      Process.sleep(50)
 
       # Handle potential lockout
       result = NetworkRunner.start_run(network.id, "Test prompt", user)
@@ -100,6 +115,8 @@ defmodule Panic.NetworkRunnerTest do
             inv
         end
 
+      allow_network_runner_db_access(network.id)
+
       assert genesis_invocation.network_id == network.id
       assert [{_pid, _}] = Registry.lookup(NetworkRegistry, network.id)
     end
@@ -107,6 +124,7 @@ defmodule Panic.NetworkRunnerTest do
     @tag timeout: 35_000
     test "cancels existing run when starting a new one", %{network: network, user: user} do
       {:ok, first_genesis} = NetworkRunner.start_run(network.id, "First prompt", user)
+      allow_network_runner_db_access(network.id)
 
       # Wait a bit to ensure the first run is processing
       Process.sleep(100)
@@ -132,6 +150,8 @@ defmodule Panic.NetworkRunnerTest do
       # First start may be lockout from previous test, so handle both cases
       case NetworkRunner.start_run(network.id, "Test prompt", user) do
         {:ok, genesis_invocation} ->
+          allow_network_runner_db_access(network.id)
+
           # Try to start another run immediately
           {:lockout, lockout_genesis} = NetworkRunner.start_run(network.id, "Another prompt", user)
           assert lockout_genesis.id == genesis_invocation.id
@@ -140,6 +160,8 @@ defmodule Panic.NetworkRunnerTest do
           # Already in lockout from previous test, wait and retry
           Process.sleep(1_500)
           {:ok, genesis_invocation} = NetworkRunner.start_run(network.id, "Test prompt", user)
+          allow_network_runner_db_access(network.id)
+
           {:lockout, lockout_genesis} = NetworkRunner.start_run(network.id, "Another prompt", user)
           assert lockout_genesis.id == genesis_invocation.id
       end
@@ -160,6 +182,8 @@ defmodule Panic.NetworkRunnerTest do
           {:ok, _genesis} = NetworkRunner.start_run(network.id, "Test prompt", user)
       end
 
+      allow_network_runner_db_access(network.id)
+
       assert {:ok, :stopped} = NetworkRunner.stop_run(network.id)
     end
 
@@ -167,7 +191,7 @@ defmodule Panic.NetworkRunnerTest do
       # Stop any runner that might be running from other tests
       _ = NetworkRunner.stop_run(network.id)
       # Give it time to fully stop
-      Process.sleep(100)
+      Process.sleep(250)
 
       # Now it should return not_running or stopped (both are acceptable)
       result = NetworkRunner.stop_run(network.id)
@@ -190,6 +214,8 @@ defmodule Panic.NetworkRunnerTest do
             {:ok, inv} = NetworkRunner.start_run(network.id, "Test prompt", user)
             inv
         end
+
+      allow_network_runner_db_access(network.id)
 
       # Check that the first invocation was created
       invocations =
@@ -219,6 +245,8 @@ defmodule Panic.NetworkRunnerTest do
           Process.sleep(1_500)
           {:ok, _genesis} = NetworkRunner.start_run(network.id, "Test prompt", user)
       end
+
+      allow_network_runner_db_access(network.id)
 
       # The runner should be alive
       assert [{pid, _}] = Registry.lookup(NetworkRegistry, network.id)
@@ -314,6 +342,7 @@ defmodule Panic.NetworkRunnerTest do
     test "successful invocation processing without retries", %{retry_network: network, user: user} do
       # Start a new run
       {:ok, genesis} = NetworkRunner.start_run(network.id, "Test prompt", user)
+      allow_network_runner_db_access(network.id)
 
       # Wait for processing to complete
       Process.sleep(100)
@@ -330,6 +359,7 @@ defmodule Panic.NetworkRunnerTest do
 
       # Get the runner pid
       [{pid, _}] = Registry.lookup(NetworkRegistry, network.id)
+      allow_network_runner_db_access(network.id)
 
       # Wait for initial processing
       Process.sleep(100)
@@ -356,6 +386,7 @@ defmodule Panic.NetworkRunnerTest do
 
       # Get the runner pid
       [{pid, _}] = Registry.lookup(NetworkRegistry, network.id)
+      allow_network_runner_db_access(network.id)
 
       # Verify max_retries was set from config
       state = :sys.get_state(pid)
@@ -374,6 +405,7 @@ defmodule Panic.NetworkRunnerTest do
 
       # Get the runner pid
       [{pid, _}] = Registry.lookup(NetworkRegistry, network.id)
+      allow_network_runner_db_access(network.id)
 
       # Simulate a few retries by manually setting retry count
       :sys.replace_state(pid, fn state ->
@@ -400,6 +432,7 @@ defmodule Panic.NetworkRunnerTest do
 
       # Get the runner pid and force it into retry state
       [{pid, _}] = Registry.lookup(NetworkRegistry, network.id)
+      allow_network_runner_db_access(network.id)
 
       :sys.replace_state(pid, fn state ->
         # Schedule a retry
