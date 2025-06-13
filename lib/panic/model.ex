@@ -627,26 +627,25 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
-        id: "bark",
+        id: "chatterbox-tts",
         platform: Replicate,
-        path: "suno-ai/bark",
-        name: "Bark",
+        path: "thomcle/chatterbox-tts",
+        name: "Chatterbox TTS",
         input_type: :text,
         output_type: :audio,
         invoke: fn model, input, token ->
-          with {:ok, %{"output" => %{"audio_out" => audio_url}}} <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     prompt: input,
-                     text_temp: 0.9,
-                     waveform_temp: 0.9,
-                     history_prompt: "en_speaker_#{Enum.random(0..9)}"
-                   },
-                   token
-                 ) do
-            {:ok, audio_url}
-          end
+          Replicate.invoke(
+            model,
+            %{
+              text: input,
+              cfg_weight: 0.5,
+              temperature: 0.8,
+              exaggeration: 0.5,
+              # TODO find a more interesting audio prompt
+              audio_prompt_path: "https://maskgct.github.io/audios/celeb_samples/rick_0.wav"
+            },
+            token
+          )
         end
       },
       %__MODULE__{
