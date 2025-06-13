@@ -2,7 +2,7 @@ defmodule Panic.Engine.Installation.WatcherTest do
   @moduledoc """
   Tests for the Watcher embedded schema validations.
   """
-  use Panic.DataCase, async: true
+  use Panic.DataCase, async: false
 
   alias Panic.Engine.Installation
   alias Panic.Engine.Network

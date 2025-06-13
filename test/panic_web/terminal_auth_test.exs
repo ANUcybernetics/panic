@@ -1,5 +1,5 @@
 defmodule PanicWeb.TerminalAuthTest do
-  use PanicWeb.ConnCase, async: true
+  use PanicWeb.ConnCase, async: false
 
   alias PanicWeb.TerminalAuth
 
