@@ -86,16 +86,15 @@ defmodule PanicWeb.InvocationWatcher do
         streams -> Map.has_key?(streams, :invocations)
       end
 
-    socket =
-      if configured? do
-        # Stream already configured – nothing to (re)configure, just keep assigns fresh
-        Component.assign(socket, display: display)
-      else
-        socket
-        |> LiveView.stream_configure(:invocations, dom_id: &dom_id(&1, display))
-        |> LiveView.stream(:invocations, [])
-        |> Component.assign(network: network, display: display, genesis_invocation: nil)
-      end
+    if configured? do
+      # Stream already configured – nothing to (re)configure, just keep assigns fresh
+      Component.assign(socket, display: display)
+    else
+      socket
+      |> LiveView.stream_configure(:invocations, dom_id: &dom_id(&1, display))
+      |> LiveView.stream(:invocations, [])
+      |> Component.assign(network: network, display: display, genesis_invocation: nil)
+    end
   end
 
   @doc """
