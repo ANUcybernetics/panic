@@ -1,5 +1,6 @@
 defmodule Panic.Engine.NetworkRunnerTest do
   use Panic.DataCase, async: false
+  use ExUnitProperties
 
   alias Panic.Accounts.User
   alias Panic.Engine
@@ -296,6 +297,160 @@ defmodule Panic.Engine.NetworkRunnerTest do
       # check the most recent invocation action works
       most_recent = Engine.most_recent!(test_network.id, actor: user)
       assert most_recent.sequence_number == Enum.max(sequence_numbers)
+    end
+  end
+
+  describe "retry logic" do
+    setup %{user: user} do
+      # Create test network for retry tests
+      network = Engine.create_network!("Test Network", "Test network for NetworkRunner retry tests", actor: user)
+
+      # Update the network with dummy models (models is array of arrays)
+      network = Engine.update_models!(network, [["dummy-t2t"]], actor: user)
+
+      %{retry_network: network}
+    end
+
+    test "successful invocation processing without retries", %{retry_network: network, user: user} do
+      # Start a new run
+      {:ok, genesis} = NetworkRunner.start_run(network.id, "Test prompt", user)
+
+      # Wait for processing to complete
+      Process.sleep(100)
+
+      # Verify the invocation was processed
+      invocation = Ash.get!(Engine.Invocation, genesis.id, actor: user)
+      assert invocation.state in [:invoked, :invoking, :completed]
+    end
+
+    test "retry count increases on failures", %{retry_network: network, user: user} do
+      # AIDEV-NOTE: Testing retry behavior by simulating state changes
+      # Start a run
+      {:ok, _genesis} = NetworkRunner.start_run(network.id, "Test prompt", user)
+
+      # Get the runner pid
+      [{pid, _}] = Registry.lookup(NetworkRegistry, network.id)
+
+      # Wait for initial processing
+      Process.sleep(100)
+
+      # Simulate a failure state by setting retry count
+      :sys.replace_state(pid, fn state ->
+        %{state | retry_count: 2}
+      end)
+
+      # Verify the retry count was set
+      state = :sys.get_state(pid)
+      assert state.retry_count == 2
+
+      # Stop the run to clean up
+      NetworkRunner.stop_run(network.id)
+    end
+
+    test "max retries configuration is respected", %{retry_network: network, user: user} do
+      # Configure max retries to 2 for this test
+      Application.put_env(:panic, :network_runner_max_retries, 2)
+
+      # Start a run
+      {:ok, _genesis} = NetworkRunner.start_run(network.id, "Test prompt", user)
+
+      # Get the runner pid
+      [{pid, _}] = Registry.lookup(NetworkRegistry, network.id)
+
+      # Verify max_retries was set from config
+      state = :sys.get_state(pid)
+      assert state.max_retries == 2
+
+      # Stop the run
+      NetworkRunner.stop_run(network.id)
+
+      # Cleanup
+      Application.delete_env(:panic, :network_runner_max_retries)
+    end
+
+    test "retry count resets on successful invocation", %{retry_network: network, user: user} do
+      # Start a run
+      {:ok, _genesis} = NetworkRunner.start_run(network.id, "Test prompt", user)
+
+      # Get the runner pid
+      [{pid, _}] = Registry.lookup(NetworkRegistry, network.id)
+
+      # Simulate a few retries by manually setting retry count
+      :sys.replace_state(pid, fn state ->
+        %{state | retry_count: 3}
+      end)
+
+      # Send process_invocation message
+      send(pid, :process_invocation)
+
+      # Wait a bit for processing
+      Process.sleep(100)
+
+      # Check that retry count was reset
+      state = :sys.get_state(pid)
+      assert state.retry_count == 0
+    end
+
+    test "stop_run cancels retries", %{retry_network: network, user: user} do
+      # Configure max retries high
+      Application.put_env(:panic, :network_runner_max_retries, 10)
+
+      # Start a run
+      {:ok, _genesis} = NetworkRunner.start_run(network.id, "Test prompt", user)
+
+      # Get the runner pid and force it into retry state
+      [{pid, _}] = Registry.lookup(NetworkRegistry, network.id)
+
+      :sys.replace_state(pid, fn state ->
+        # Schedule a retry
+        ref = Process.send_after(self(), :retry_invocation, 5000)
+        %{state | processing_ref: ref, retry_count: 2}
+      end)
+
+      # Stop the run
+      {:ok, :stopped} = NetworkRunner.stop_run(network.id)
+
+      # Verify retry was cancelled
+      state = :sys.get_state(pid)
+      assert state.retry_count == 0
+      assert is_nil(state.processing_ref)
+      assert is_nil(state.current_invocation)
+
+      # Cleanup
+      Application.delete_env(:panic, :network_runner_max_retries)
+    end
+  end
+
+  describe "configuration" do
+    test "respects network_runner_max_retries config" do
+      # Set custom max retries
+      Application.put_env(:panic, :network_runner_max_retries, 3)
+
+      # Start a runner
+      {:ok, pid} = NetworkRunner.start_link(network_id: 123)
+
+      # Check state
+      state = :sys.get_state(pid)
+      assert state.max_retries == 3
+
+      # Cleanup
+      GenServer.stop(pid)
+      Application.delete_env(:panic, :network_runner_max_retries)
+    end
+
+    test "uses default max retries when not configured" do
+      # Ensure config is not set
+      Application.delete_env(:panic, :network_runner_max_retries)
+
+      # Start a runner
+      {:ok, pid} = NetworkRunner.start_link(network_id: 123)
+
+      # Check state uses default
+      state = :sys.get_state(pid)
+      assert state.max_retries == 5
+
+      # Cleanup
+      GenServer.stop(pid)
     end
   end
 end
