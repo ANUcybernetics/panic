@@ -23,5 +23,7 @@ defmodule Panic.Engine do
       define :current_run, args: [:network_id, {:optional, :limit}]
       define :most_recent, args: [:network_id], get?: true
     end
+
+    resource Panic.Engine.Installation
   end
 end

@@ -71,6 +71,7 @@ defmodule Panic.Engine.Network do
   relationships do
     belongs_to :user, Panic.Accounts.User, allow_nil?: false
     has_many :invocations, Invocation
+    has_many :installations, Panic.Engine.Installation
   end
 
   policies do
