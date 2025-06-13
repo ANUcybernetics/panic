@@ -1,5 +1,5 @@
 defmodule PanicWeb.NetworkLive.InfoTest do
-  use PanicWeb.ConnCase, async: true
+  use PanicWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
 
