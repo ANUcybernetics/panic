@@ -44,7 +44,7 @@ defmodule PanicWeb.Router do
     reset_route []
 
     ash_authentication_live_session :authentication_required,
-      on_mount: {PanicWeb.LiveUserAuth, :live_user_required} do
+      on_mount: [{PanicWeb.LiveUserAuth, :live_user_required}, {PanicWeb.InvocationWatcher, :auto}] do
       scope "/users" do
         live "/", UserLive.Index, :index
         live "/new", UserLive.Index, :new
@@ -66,7 +66,7 @@ defmodule PanicWeb.Router do
     end
 
     ash_authentication_live_session :authentication_optional,
-      on_mount: {PanicWeb.LiveUserAuth, :live_user_optional} do
+      on_mount: [{PanicWeb.LiveUserAuth, :live_user_optional}, {PanicWeb.InvocationWatcher, :auto}] do
       live "/", IndexLive, :index
 
       # a helper for when you have to type URLs using a TV remote :/

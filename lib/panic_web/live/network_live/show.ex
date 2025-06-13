@@ -4,7 +4,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   import PanicWeb.PanicComponents
 
-  alias PanicWeb.DisplayStreamer
+  alias PanicWeb.InvocationWatcher
 
   @impl true
   def render(assigns) do
@@ -102,7 +102,7 @@ defmodule PanicWeb.NetworkLive.Show do
          socket
          |> assign(:page_title, page_title(socket.assigns[:live_action]))
          |> assign(:network, network)
-         |> DisplayStreamer.configure_invocation_stream(network, {:grid, 2, 3})}
+         |> InvocationWatcher.configure_invocation_stream(network, {:grid, 2, 3})}
 
       {:error, _error} ->
         {:noreply, push_navigate(socket, to: ~p"/404")}
@@ -126,7 +126,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
-    DisplayStreamer.handle_invocation_message(message, socket)
+    InvocationWatcher.handle_invocation_message(message, socket)
   end
 
   @impl true
