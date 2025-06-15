@@ -173,7 +173,7 @@ defmodule Panic.InvocationTest do
       network =
         user
         |> Panic.Fixtures.network()
-        |> Panic.Engine.update_models!([["dummy-t2i"], ["dummy-i2t"]], actor: user)
+        |> Panic.Engine.update_models!(["dummy-t2i", "dummy-i2t"], actor: user)
 
       input = "can you tell me a story?"
 
@@ -197,7 +197,7 @@ defmodule Panic.InvocationTest do
       network =
         user
         |> Panic.Fixtures.network()
-        |> Panic.Engine.update_models!([["dummy-t2a"], ["dummy-a2t"]], actor: user)
+        |> Panic.Engine.update_models!(["dummy-t2a", "dummy-a2t"], actor: user)
 
       input = "generate some audio"
 
@@ -207,7 +207,7 @@ defmodule Panic.InvocationTest do
       # Verify the invocation was created successfully
       assert invocation.network_id == network.id
       assert invocation.input == input
-      assert invocation.model == ["dummy-t2a"]
+      assert invocation.model == "dummy-t2a"
     end
 
     test "user can invoke single dummy model without any tokens" do
@@ -217,7 +217,7 @@ defmodule Panic.InvocationTest do
       network =
         user
         |> Panic.Fixtures.network()
-        |> Panic.Engine.update_models!([["dummy-t2a"], ["dummy-a2t"]], actor: user)
+        |> Panic.Engine.update_models!(["dummy-t2a", "dummy-a2t"], actor: user)
 
       input = "generate some audio"
 

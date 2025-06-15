@@ -20,8 +20,8 @@ defmodule Panic.NetworkRunnerTest do
     # Create a test network using the code interface
     network = Engine.create_network!("Test Network", "Test network for NetworkRunner tests", actor: user)
 
-    # Update the network with a dummy model (models is array of arrays)
-    network = Engine.update_models!(network, [["dummy-t2t"]], actor: user)
+    # Update the network with a dummy model (models is flat array)
+    network = Engine.update_models!(network, ["dummy-t2t"], actor: user)
 
     on_exit(fn ->
       # Stop any running gen servers for this network
@@ -264,7 +264,7 @@ defmodule Panic.NetworkRunnerTest do
     test "creates a next invocation with the right run number and sequence using dummy models", %{user: user} do
       # Create a separate network for this test to avoid NetworkRunner interference
       test_network = Engine.create_network!("Test Network for Recursion", "Test network", actor: user)
-      test_network = Engine.update_models!(test_network, [["dummy-t2t"], ["dummy-t2t"]], actor: user)
+      test_network = Engine.update_models!(test_network, ["dummy-t2t", "dummy-t2t"], actor: user)
 
       input = "Test prompt for recursion"
 
@@ -286,7 +286,7 @@ defmodule Panic.NetworkRunnerTest do
 
       # Create a separate network for this test to avoid NetworkRunner interference
       test_network = Engine.create_network!("Test Network for Long Run", "Test network", actor: user)
-      test_network = Engine.update_models!(test_network, [["dummy-t2t"], ["dummy-t2t"]], actor: user)
+      test_network = Engine.update_models!(test_network, ["dummy-t2t", "dummy-t2t"], actor: user)
 
       input = "Test prompt for long run"
 
@@ -333,8 +333,8 @@ defmodule Panic.NetworkRunnerTest do
       # Create test network for retry tests
       network = Engine.create_network!("Test Network", "Test network for NetworkRunner retry tests", actor: user)
 
-      # Update the network with dummy models (models is array of arrays)
-      network = Engine.update_models!(network, [["dummy-t2t"]], actor: user)
+      # Update the network with dummy models (models is flat array)
+      network = Engine.update_models!(network, ["dummy-t2t"], actor: user)
 
       %{retry_network: network}
     end

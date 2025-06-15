@@ -3,11 +3,12 @@
 ## NIME blockers
 
 - add resizing "shrink to fit" text for the display grids
-- update Installation/watchers to do vestaboards (NetworkRunner will have to do
-  this, potentially with smart delays)
+- fix code quality of recently generated code (e.g. use real validations)
 - get rid of the "glitch" when the re-uploaded to tigris version loads
-- check that QR code -> terminal workflow works on random users
-- find one (or a few) good text audio networks
+- check that time-based QR code -> terminal workflow works on random users
+  (perhaps only required for installations)
+- find one (or a few) good text audio networks to use at NIME
+- load it on to some RPis
 
 ## important
 

@@ -23,42 +23,35 @@ defmodule Panic.Validations.ModelIOConnections do
     end
   end
 
-  def network_runnable?(models) do
-    # validate that each "interface" matches
-    models
-    |> Enum.map(&Enum.reverse/1)
-    |> Enum.map(fn [model_id | vestaboards] ->
-      %{name: name, input_type: input, output_type: output} = Panic.Model.by_id!(model_id)
-      {name, input, output, vestaboards}
-    end)
-    # hack to ensure first input is :text
-    |> List.insert_at(0, {"Initial input", nil, :text, []})
-    |> List.insert_at(-1, {"Final (loopback) output", :text, nil, []})
-    |> Enum.chunk_every(2, 1, :discard)
-    # this is gross. need to break into smaller functions
-    |> Enum.reduce([], fn [{name_1, _, output_type, _}, {name_2, input_type, _, vestaboards}], errors ->
-      if output_type == input_type do
-        if vestaboards != [] and input_type != :text do
-          [
-            "#{name_1} input (#{input_type}) cannot be put on a vestaboard"
-            | errors
-          ]
-        else
-          errors
-        end
-      else
-        [
-          "#{name_1} output (#{output_type}) does not match #{name_2} input (#{input_type})"
-          | errors
-        ]
-      end
-    end)
-    |> case do
-      [] ->
-        :ok
+  def network_runnable?(model_ids) do
+    # Convert model ids to {name, input_type, output_type} tuples
+    model_tuples =
+      Enum.map(model_ids, fn id ->
+        %{name: name, input_type: input, output_type: output} = Panic.Model.by_id!(id)
+        {name, input, output}
+      end)
 
-      error_string ->
-        {:error, error_string |> Enum.reverse() |> Enum.join(", ")}
+    if model_tuples == [] do
+      {:error, "network must contain at least one model"}
+    else
+      # Prepend the initial text input sentinel so the first model's input is checked
+      [{"Initial input", :text, :text} | model_tuples]
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.reduce([], fn
+        [{name_1, _input_1, output_type_1}, {name_2, input_type_2, _output_2}], errors ->
+          if output_type_1 == input_type_2 do
+            errors
+          else
+            [
+              "#{name_1} output (#{output_type_1}) does not match #{name_2} input (#{input_type_2})"
+              | errors
+            ]
+          end
+      end)
+      |> case do
+        [] -> :ok
+        errs -> {:error, errs |> Enum.reverse() |> Enum.join(", ")}
+      end
     end
   end
 end
