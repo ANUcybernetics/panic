@@ -49,7 +49,7 @@ defmodule Panic.Engine.Installation do
   end
 
   relationships do
-    belongs_to :network, Panic.Engine.Network do
+    belongs_to :network, Network do
       allow_nil? false
     end
   end
@@ -60,26 +60,6 @@ defmodule Panic.Engine.Installation do
     create :create do
       accept [:name, :watchers]
       argument :network_id, :integer, allow_nil?: false
-
-      validate fn changeset, _context ->
-        case changeset.arguments[:network_id] do
-          nil ->
-            :ok
-
-          network_id ->
-            case Ash.get(Network, network_id, actor: changeset.context[:private][:actor], authorize?: false) do
-              {:ok, network} ->
-                if network.user_id == changeset.context[:private][:actor].id do
-                  :ok
-                else
-                  {:error, field: :network_id, message: "does not belong to you"}
-                end
-
-              {:error, _} ->
-                {:error, field: :network_id, message: "not found"}
-            end
-        end
-      end
 
       change manage_relationship(:network_id, :network, type: :append_and_remove)
     end
@@ -116,8 +96,6 @@ defmodule Panic.Engine.Installation do
   end
 
   policies do
-    # For create, we bypass relationship-based policy check and use validation instead
-    # because policies can't check relationships that don't exist yet
     policy action_type(:create) do
       authorize_if actor_present()
     end
