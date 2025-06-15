@@ -102,14 +102,14 @@ defmodule Panic.Generators do
 
   def network_with_dummy_models(user) do
     gen all(network <- network(user), length <- integer(1..5)) do
-      # Create a simple chain of dummy models
+      # Create a simple chain of dummy models (flat list – vestaboards removed)
       model_ids =
         case length do
-          1 -> [["dummy-t2t"]]
-          2 -> [["dummy-t2i"], ["dummy-i2t"]]
-          3 -> [["dummy-t2i"], ["dummy-i2i"], ["dummy-i2t"]]
-          4 -> [["dummy-t2a"], ["dummy-a2i"], ["dummy-i2i"], ["dummy-i2t"]]
-          _ -> [["dummy-t2i"], ["dummy-i2a"], ["dummy-a2i"], ["dummy-i2i"], ["dummy-i2t"]]
+          1 -> ["dummy-t2t"]
+          2 -> ["dummy-t2i", "dummy-i2t"]
+          3 -> ["dummy-t2i", "dummy-i2i", "dummy-i2t"]
+          4 -> ["dummy-t2a", "dummy-a2i", "dummy-i2i", "dummy-i2t"]
+          _ -> ["dummy-t2i", "dummy-i2a", "dummy-a2i", "dummy-i2i", "dummy-i2t"]
         end
 
       Panic.Engine.update_models!(network, model_ids, actor: user)

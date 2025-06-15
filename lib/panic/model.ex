@@ -900,23 +900,14 @@ defmodule Panic.Model do
     "#dummy-platform"
   end
 
-  # these are helper functions for dealing with the Network :models attribute,
-  # which (in the db) is an array of (nonempty) arrays of model id strings
-  # the last item of each subarray is always a "real" model
-  # any preceeding items are vestaboards which should be set to the model's input
+  # Helper functions for dealing with the Network `:models` attribute, which is
+  # now a simple ordered list of model id strings.
   def model_ids_to_model_list(model_ids) do
-    model_ids
-    |> List.flatten()
-    |> Enum.map(&by_id!/1)
+    Enum.map(model_ids, &by_id!/1)
   end
 
   def model_list_to_model_ids(model_list) do
-    model_list
-    |> Enum.reverse()
-    |> Enum.reduce([], fn
-      %__MODULE__{id: id, platform: Vestaboard}, [first | rest] -> [[id | first] | rest]
-      %__MODULE__{id: id}, acc -> [[id] | acc]
-    end)
+    Enum.map(model_list, & &1.id)
   end
 
   @doc """
@@ -943,9 +934,9 @@ defmodule Panic.Model do
 
   ## Example
 
-      iex> models = [%Panic.Model{platform: Vestaboard}, %Panic.Model{}, %Panic.Model{}]
+      iex> models = [%Panic.Model{}, %Panic.Model{}]
       iex> Panic.Model.models_with_indices(models)
-      [{0, nil, %Panic.Model{platform: Vestaboard}}, {1, 0, %Panic.Model{}}, {2, 1, %Panic.Model{}}]
+      [{0, 0, %Panic.Model{}}, {1, 1, %Panic.Model{}}]
   """
   def models_with_indices(models) do
     models

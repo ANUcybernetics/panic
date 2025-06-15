@@ -86,7 +86,7 @@ defmodule PanicWeb.AdminLive do
 
   defp invocation_io_link(%{type: :input} = assigns) do
     ~H"""
-    <%= case @invocation.model |> List.last |> Panic.Model.by_id!() |> Map.fetch!(:input_type) do %>
+    <%= case Panic.Model.by_id!(@invocation.model) |> Map.fetch!(:input_type) do %>
       <% :text -> %>
         {@invocation.input}
       <% _ -> %>
@@ -97,7 +97,7 @@ defmodule PanicWeb.AdminLive do
 
   defp invocation_io_link(%{type: :output} = assigns) do
     ~H"""
-    <%= case @invocation.model |> List.last |> Panic.Model.by_id!() |> Map.fetch!(:output_type) do %>
+    <%= case Panic.Model.by_id!(@invocation.model) |> Map.fetch!(:output_type) do %>
       <% :text -> %>
         {@invocation.output}
       <% _ -> %>

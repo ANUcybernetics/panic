@@ -14,7 +14,7 @@ defmodule PanicWeb.NetworkLive.StaticDisplay do
     ~H"""
     <.invocation
       invocation={@invocation}
-      model={@invocation.model |> List.last() |> Panic.Model.by_id!()}
+      model={Panic.Model.by_id!(@invocation.model)}
       id={"invocation-#{@invocation.id}"}
     />
     """

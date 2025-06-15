@@ -52,6 +52,8 @@ defmodule Panic.Engine.NetworkRunner do
 
   alias Panic.Engine
   alias Panic.Engine.NetworkRegistry
+  alias Panic.Model
+  alias Panic.Platforms.Vestaboard
 
   require Logger
 
@@ -174,6 +176,7 @@ defmodule Panic.Engine.NetworkRunner do
       user: nil,
       processing_ref: nil,
       retry_count: 0,
+      watchers: [],
       max_retries: Application.get_env(:panic, :network_runner_max_retries, 5)
     }
 
@@ -189,8 +192,9 @@ defmodule Panic.Engine.NetworkRunner do
       # Cancel any existing run
       new_state = cancel_current_run(state)
 
-      # Get the network
+      # Get the network and vestaboard watchers
       network = Ash.get!(Engine.Network, state.network_id, actor: user)
+      watchers = vestaboard_watchers(network)
 
       # Create the first invocation
       case Engine.prepare_first(network, prompt, actor: user) do
@@ -207,7 +211,8 @@ defmodule Panic.Engine.NetworkRunner do
                   genesis_invocation: genesis_invocation,
                   user: user,
                   processing_ref: ref,
-                  retry_count: 0
+                  retry_count: 0,
+                  watchers: watchers
               }
 
               {:reply, {:ok, genesis_invocation}, new_state}
@@ -241,13 +246,16 @@ defmodule Panic.Engine.NetworkRunner do
            {:ok, invocation} <- Engine.invoke(invocation, actor: state.user),
            {:ok, next_invocation} <- Engine.prepare_next(invocation, actor: state.user) do
         # Handle archiving for image/audio outputs
-        model = invocation.model |> List.last() |> Panic.Model.by_id!()
+        model = Panic.Model.by_id!(invocation.model)
 
         if model.output_type in [:image, :audio] do
           Task.start(fn ->
             archive_invocation(invocation, next_invocation)
           end)
         end
+
+        # Dispatch any Vestaboard watchers that should fire for this invocation
+        maybe_dispatch_vestaboard(invocation, state.watchers, state.user)
 
         # Schedule next invocation
         ref = Process.send_after(self(), :process_invocation, 0)
@@ -317,9 +325,44 @@ defmodule Panic.Engine.NetworkRunner do
       state
       | current_invocation: nil,
         processing_ref: nil,
-        retry_count: 0
+        retry_count: 0,
+        watchers: []
     }
   end
+
+  # ---------------------------------------------------------------------------
+  # Vestaboard watcher support
+  # ---------------------------------------------------------------------------
+
+  defp vestaboard_watchers(network) do
+    # Ensure installations are loaded (skip auth checks – we already authorized the network)
+    network = Ash.load!(network, :installations, authorize?: false)
+
+    Enum.flat_map(network.installations || [], fn installation ->
+      Enum.filter(installation.watchers, &(&1.type == :vestaboard))
+    end)
+  end
+
+  defp maybe_dispatch_vestaboard(%{sequence_number: seq, output: output} = _inv, watchers, user)
+       when is_list(watchers) and is_binary(output) do
+    Enum.each(watchers, fn %{stride: stride, offset: offset, name: name} = _watcher ->
+      if rem(seq, stride) == offset do
+        board_id = "vestaboard-#{name |> Atom.to_string() |> String.replace("_", "-")}"
+        model = Model.by_id!(board_id)
+        token = Vestaboard.token_for_model!(model, user)
+
+        case Vestaboard.send_text(model, output, token) do
+          {:ok, _id} ->
+            :ok
+
+          {:error, reason} ->
+            Logger.warning("Vestaboard dispatch failed for #{name}: #{inspect(reason)}")
+        end
+      end
+    end)
+  end
+
+  defp maybe_dispatch_vestaboard(_inv, _watchers, _user), do: :ok
 
   defp archive_invocation(invocation, next_invocation) do
     case download_file(invocation.output) do

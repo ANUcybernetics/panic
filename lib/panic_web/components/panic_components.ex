@@ -113,7 +113,7 @@ defmodule PanicWeb.PanicComponents do
         :for={{id, invocation} <- @invocations}
         id={id}
         invocation={invocation}
-        model={invocation.model |> List.last() |> Model.by_id!()}
+        model={Model.by_id!(invocation.model)}
       />
     </div>
     """

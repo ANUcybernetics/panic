@@ -106,7 +106,7 @@ defmodule Panic.ModelTest do
       models = [Model.by_id!("dummy-t2t"), Model.by_id!("dummy-i2t")]
       model_ids = Model.model_list_to_model_ids(models)
 
-      assert model_ids == [["dummy-t2t"], ["dummy-i2t"]]
+      assert model_ids == ["dummy-t2t", "dummy-i2t"]
     end
 
     test "models_with_indices/1 adds indices to models" do

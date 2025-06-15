@@ -30,10 +30,8 @@ defmodule Panic.Engine.Network do
 
     attribute :description, :string
 
-    # :models is an array of (nonempty) arrays of model id strings
-    # the first item of each subarray is always a "real" model
-    # any subsequent items are vestaboards which should be set to the first model's output
-    attribute :models, {:array, {:array, :string}} do
+    # :models is an ordered array of model id strings
+    attribute :models, {:array, :string} do
       default []
       allow_nil? false
     end
