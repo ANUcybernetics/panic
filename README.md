@@ -28,6 +28,10 @@ going on:
   the input (prompt) an the output (prediction) along with some other metadata
 - **run**: a specific sequence of predictions starting from an initial prompt
   and following the models in a network
+- **watcher**: a display (either TV/computer or Vestaboard split-flap display)
+  which shows "live" updates of the stream of invocations coming out of the run
+- **installation** a specific configuration of watchers (probably representing a
+  physical install, but not necessarily)
 
 ## About the School of Cybernetics
 
