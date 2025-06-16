@@ -187,11 +187,6 @@ defmodule Panic.Engine.Invocation do
     # this is here because :about_to_invoke now pauses to run the vestaboards,
     # which is fine _except_ for the first invocation where we need the first one
     # to come trhoguh and set the genesis, start the lockout timer, etc.
-    # if I can find a better way (e.g. set up a pubsub on :start_run) then I'll
-    # do that instead
-    update :update_state do
-      accept [:state]
-    end
 
     update :about_to_invoke do
       change set_attribute(:state, :invoking)
