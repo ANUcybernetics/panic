@@ -2,7 +2,9 @@
 
 ## NIME blockers
 
-- add resizing "shrink to fit" text for the display grids
+- check that the watchers work on an "offset - 1" basis (including
+  special-casing for the initial prompt)
+- add a per-network lockout time attribute
 - fix code quality of recently generated code (e.g. use real validations)
 - get rid of the "glitch" when the re-uploaded to tigris version loads
 - check that time-based QR code -> terminal workflow works on random users
@@ -12,6 +14,8 @@
 
 ## important
 
+- properly fix flaky tests
+- add resizing "shrink to fit" text for the display grids
 - make sure vestaboards crashing doesn't bring down the whole thing
 - add "back off over time logic" based on time
 
