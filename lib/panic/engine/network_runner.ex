@@ -52,7 +52,6 @@ defmodule Panic.Engine.NetworkRunner do
 
   alias Panic.Engine
   alias Panic.Engine.NetworkRegistry
-  alias Panic.Model
   alias Panic.Platforms.Vestaboard
 
   require Logger
@@ -349,11 +348,10 @@ defmodule Panic.Engine.NetworkRunner do
        when is_list(watchers) and is_binary(output) do
     Enum.each(watchers, fn %{stride: stride, offset: offset, name: name} = _watcher ->
       if rem(seq, stride) == offset do
-        board_id = "vestaboard-#{name |> Atom.to_string() |> String.replace("_", "-")}"
-        model = Model.by_id!(board_id)
-        token = Vestaboard.token_for_model!(model, user)
+        board_name = Atom.to_string(name)
+        token = Vestaboard.token_for_board!(board_name, user)
 
-        case Vestaboard.send_text(model, output, token) do
+        case Vestaboard.send_text(output, token, board_name) do
           {:ok, _id} ->
             :ok
 

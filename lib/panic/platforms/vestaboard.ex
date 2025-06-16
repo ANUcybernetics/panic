@@ -1,10 +1,9 @@
 defmodule Panic.Platforms.Vestaboard do
   @moduledoc false
-  alias Panic.Model
 
   require Logger
 
-  def send_text(%Model{path: board_name}, text, token) do
+  def send_text(text, token, board_name \\ "unknown") do
     [method: :post, json: %{"text" => text}, headers: [{"X-Vestaboard-Read-Write-Key", token}]]
     |> req_new()
     |> Req.request()
@@ -30,9 +29,9 @@ defmodule Panic.Platforms.Vestaboard do
     end
   end
 
-  def clear(model, token) do
+  def clear(token, board_name \\ "unknown") do
     # this is a workaround, because the RW API doesn't allow blank messages
-    send_text(model, "P!", token)
+    send_text("P!", token, board_name)
   end
 
   defp req_new(opts) do
@@ -44,7 +43,7 @@ defmodule Panic.Platforms.Vestaboard do
     |> Req.new()
   end
 
-  def token_for_model!(%Model{path: board_name}, user) do
+  def token_for_board!(board_name, user) do
     Map.fetch!(user, :"vestaboard_#{board_name}_token")
   end
 end

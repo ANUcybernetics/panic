@@ -15,7 +15,6 @@ defmodule Panic.Generators do
   alias Panic.Accounts.User
   alias Panic.Engine.Network
   alias Panic.Platforms.Dummy
-  alias Panic.Platforms.Vestaboard
 
   def ascii_sentence do
     :ascii
@@ -32,12 +31,12 @@ defmodule Panic.Generators do
     dummy_matching = Enum.filter(all_matching, &(&1.platform == Dummy))
 
     # If we have at least 3 dummy models matching the filters, use only dummy models
-    # Otherwise, use all models (excluding Vestaboard) to avoid filter issues
+    # Otherwise, use all models to avoid filter issues
     models_to_use =
       if length(dummy_matching) >= 3 do
         dummy_matching
       else
-        Enum.filter(all_matching, &(&1.platform != Vestaboard))
+        all_matching
       end
 
     member_of(models_to_use)
@@ -47,7 +46,7 @@ defmodule Panic.Generators do
     filters
     |> Panic.Model.all()
     |> member_of()
-    |> filter(fn model -> model.platform != Vestaboard and model.platform != Dummy end)
+    |> filter(fn model -> model.platform != Dummy end)
   end
 
   def password do
