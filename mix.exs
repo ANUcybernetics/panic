@@ -33,6 +33,7 @@ defmodule Panic.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:repatch, "~> 1.0"},
       {:usage_rules, "~> 0.1", only: [:dev]},
       {:ash_ai, "~> 0.1"},
       {:tidewave, "~> 0.1", only: [:dev]},
