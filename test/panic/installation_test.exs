@@ -1,4 +1,4 @@
-defmodule Panic.Engine.InstallationTest do
+defmodule Panic.InstallationTest do
   @moduledoc """
   Tests for the Installation resource.
   """

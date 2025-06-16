@@ -1,4 +1,4 @@
-defmodule Panic.Engine.Installation.WatcherTest do
+defmodule Panic.WatcherTest do
   @moduledoc """
   Tests for the Watcher embedded schema validations.
   """
