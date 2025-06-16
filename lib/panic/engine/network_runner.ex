@@ -238,7 +238,7 @@ defmodule Panic.Engine.NetworkRunner do
     if state.current_invocation do
       # Update state for genesis invocation
       if state.current_invocation.sequence_number == 0 do
-        Engine.update_state!(state.current_invocation, :invoking, actor: state.user)
+        Engine.about_to_invoke!(state.current_invocation, actor: state.user)
       end
 
       # Process the invocation
