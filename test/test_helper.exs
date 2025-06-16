@@ -1,6 +1,9 @@
 # Configure ExUnit to exclude API tests by default
 ExUnit.start(exclude: [apikeys: true])
 
+# Setup Repatch for mocking in tests
+Repatch.setup(enable_global: true)
+
 Ecto.Adapters.SQL.Sandbox.mode(Panic.Repo, :manual)
 
 defmodule Panic.Generators do

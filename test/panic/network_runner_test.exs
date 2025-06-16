@@ -1,6 +1,7 @@
 defmodule Panic.NetworkRunnerTest do
   use Panic.DataCase, async: false
   use ExUnitProperties
+  use Repatch.ExUnit
 
   alias Ecto.Adapters.SQL.Sandbox
   alias Panic.Accounts.User
@@ -9,6 +10,8 @@ defmodule Panic.NetworkRunnerTest do
   alias Panic.Engine.NetworkRunner
 
   require Ash.Query
+
+  @moduletag :capture_log
 
   setup do
     # Stop all network runners to ensure clean state
@@ -49,6 +52,17 @@ defmodule Panic.NetworkRunnerTest do
       [{pid, _}] -> Sandbox.allow(Panic.Repo, self(), pid)
       [] -> :ok
     end
+  end
+
+  setup_all do
+    Repatch.patch(Panic.Engine.NetworkRunner, :archive_invocation, [mode: :global], fn _inv, _next -> :ok end)
+
+    Repatch.patch(Task, :start, [mode: :global], fn fun ->
+      fun.()
+      {:ok, self()}
+    end)
+
+    :ok
   end
 
   describe "start_link/1" do
