@@ -357,8 +357,9 @@ defmodule Panic.Engine.NetworkRunner do
           {:ok, _id} ->
             :ok
 
-          {:error, reason} ->
-            Logger.warning("Vestaboard dispatch failed for #{name}: #{inspect(reason)}")
+          {:error, _reason} ->
+            # error message has already been logged, so no need to re-log it
+            :ok
         end
       end
     end)
