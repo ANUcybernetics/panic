@@ -70,24 +70,16 @@ defmodule Panic.Engine.Installation do
 
     update :add_watcher do
       argument :watcher, Watcher, allow_nil?: false
+      require_atomic? false
 
-      change fn changeset, _context ->
-        current_watchers = Ash.Changeset.get_attribute(changeset, :watchers) || []
-        watcher = Ash.Changeset.get_argument(changeset, :watcher)
-        new_watchers = current_watchers ++ [watcher]
-        Ash.Changeset.change_attribute(changeset, :watchers, new_watchers)
-      end
+      change Panic.Engine.Changes.AddWatcher
     end
 
     update :remove_watcher do
       argument :index, :integer, allow_nil?: false
+      require_atomic? false
 
-      change fn changeset, _context ->
-        current_watchers = Ash.Changeset.get_attribute(changeset, :watchers) || []
-        index = Ash.Changeset.get_argument(changeset, :index)
-        new_watchers = List.delete_at(current_watchers, index)
-        Ash.Changeset.change_attribute(changeset, :watchers, new_watchers || [])
-      end
+      change Panic.Engine.Changes.RemoveWatcher
     end
 
     update :reorder_watchers do

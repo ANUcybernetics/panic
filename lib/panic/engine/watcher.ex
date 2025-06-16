@@ -91,19 +91,6 @@ defmodule Panic.Engine.Installation.Watcher do
       message: "rows and columns are not allowed for vestaboard type"
 
     # Ensure offset is less than stride for single and vestaboard types
-    validate fn changeset, _context ->
-      case {Ash.Changeset.get_attribute(changeset, :type), Ash.Changeset.get_attribute(changeset, :stride),
-            Ash.Changeset.get_attribute(changeset, :offset)} do
-        {type, stride, offset}
-        when type in [:single, :vestaboard] and
-               is_integer(stride) and
-               is_integer(offset) and
-               offset >= stride ->
-          {:error, field: :offset, message: "offset must be less than stride"}
-
-        _ ->
-          :ok
-      end
-    end
+    validate Panic.Engine.Validations.OffsetLessThanStride
   end
 end

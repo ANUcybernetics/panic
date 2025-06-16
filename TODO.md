@@ -2,26 +2,27 @@
 
 ## NIME blockers
 
-- check that the watchers work on an "offset - 1" basis (including
-  special-casing for the initial prompt)
-- add a per-network lockout time attribute
-- fix code quality of recently generated code (e.g. use real validations)
+- make watchers work on an "offset - 1" basis (including special-casing for the
+  initial prompt)
 - get rid of the "glitch" when the re-uploaded to tigris version loads
 - check that time-based QR code -> terminal workflow works on random users
   (perhaps only required for installations)
 - find one (or a few) good text audio networks to use at NIME
 - load it on to some RPis
 
-## important
+## important/quality-of-life
 
-- properly fix flaky tests
+- fix flaky tests!
+- comb through and fix code quality of recently generated code
+- simplify delay logic using the ones built-in to Req?
 - add resizing "shrink to fit" text for the display grids
 - make sure vestaboards crashing doesn't bring down the whole thing
 - add "back off over time logic" based on time
 
 ## thought bubbles
 
-- update to tailwind 4.0, and use the text shadow stuff
+- update to tailwind 4.0, and use the text shadow stuff (actually this might
+  happen with Phoenix 1.8)
 - add the ability to specify multiple offsets for single screen view
 - show multiple invocations in info view
 - why aren't <p>s geting margins in prose blocks in info view?

@@ -12,10 +12,6 @@ defmodule Panic.Engine.Invocation do
     notifiers: [Ash.Notifier.PubSub]
 
   alias Panic.Engine.Network
-  alias Panic.Platforms.Dummy
-  alias Panic.Platforms.Gemini
-  alias Panic.Platforms.OpenAI
-  alias Panic.Platforms.Replicate
 
   sqlite do
     table "invocations"
@@ -102,34 +98,7 @@ defmodule Panic.Engine.Invocation do
         allow_nil? false
       end
 
-      change set_attribute(:sequence_number, 0)
-
-      change fn changeset, _context ->
-        case Ash.Changeset.fetch_argument(changeset, :network) do
-          {:ok, network} ->
-            case network.models do
-              [] ->
-                Ash.Changeset.add_error(changeset, "No models in network")
-
-              [model_id | _] ->
-                changeset
-                |> Ash.Changeset.force_change_attribute(:model, model_id)
-                |> Ash.Changeset.manage_relationship(:network, network, type: :append_and_remove)
-            end
-
-          :error ->
-            Ash.Changeset.add_error(changeset, "missing :network argument")
-        end
-      end
-
-      # for "first runs", we need to wait until the invocation is created in the db (so it gets an id)
-      # and then set the :run_number field to that value (hence this "update record in after action hook" thing)
-      change after_action(fn changeset, invocation, _context ->
-               invocation
-               |> Ash.Changeset.for_update(:set_run_number, %{run_number: invocation.id})
-               |> Ash.update!(authorize?: false)
-               |> then(&{:ok, &1})
-             end)
+      change Panic.Engine.Changes.PrepareFirst
     end
 
     create :prepare_next do
@@ -138,26 +107,7 @@ defmodule Panic.Engine.Invocation do
         allow_nil? false
       end
 
-      change fn changeset, context ->
-        {:ok, previous_invocation} = Ash.Changeset.fetch_argument(changeset, :previous_invocation)
-
-        %{
-          network: %{models: models} = network,
-          run_number: run_number,
-          sequence_number: prev_sequence_number,
-          output: prev_output
-        } = Ash.load!(previous_invocation, :network, actor: context.actor)
-
-        model_index = Integer.mod(prev_sequence_number + 1, Enum.count(models))
-        model = Enum.at(models, model_index)
-
-        changeset
-        |> Ash.Changeset.force_change_attribute(:model, model)
-        |> Ash.Changeset.force_change_attribute(:run_number, run_number)
-        |> Ash.Changeset.force_change_attribute(:sequence_number, prev_sequence_number + 1)
-        |> Ash.Changeset.force_change_attribute(:input, prev_output)
-        |> Ash.Changeset.manage_relationship(:network, network, type: :append_and_remove)
-      end
+      change Panic.Engine.Changes.PrepareNext
     end
 
     action :start_run, :struct do
@@ -194,68 +144,8 @@ defmodule Panic.Engine.Invocation do
 
     update :invoke do
       # AIDEV-NOTE: Model invocation happens in before_transaction to minimize DB contention
-      change fn changeset, context ->
-        changeset
-        |> Ash.Changeset.before_transaction(fn changeset ->
-          case {changeset, context} do
-            {_, %{actor: nil}} ->
-              Ash.Changeset.add_error(
-                changeset,
-                "actor must be present (to obtain API token)"
-              )
-
-            {%{data: %{model: model_id, input: input}}, %{actor: user}} ->
-              model = Panic.Model.by_id!(model_id)
-              %Panic.Model{path: path, invoke: invoke_fn, platform: platform} = model
-
-              token =
-                case platform do
-                  OpenAI -> context.actor.openai_token
-                  Replicate -> context.actor.replicate_token
-                  Gemini -> context.actor.gemini_token
-                  Dummy -> "dummy_token"
-                end
-
-              if token do
-                case invoke_fn.(model, input, token) do
-                  {:ok, output} ->
-                    changeset
-                    |> Ash.Changeset.put_context(:invocation_output, output)
-                    |> Ash.Changeset.put_context(:invocation_success, true)
-
-                  {:error, :nsfw} ->
-                    changeset
-                    |> Ash.Changeset.put_context(
-                      :invocation_output,
-                      "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-placeholder.webp"
-                    )
-                    |> Ash.Changeset.put_context(:invocation_success, true)
-
-                  {:error, message} ->
-                    changeset
-                    |> Ash.Changeset.add_error(message)
-                    |> Ash.Changeset.put_context(:invocation_success, false)
-                end
-              else
-                changeset
-                |> Ash.Changeset.add_error("user has no auth token for #{platform}")
-                |> Ash.Changeset.put_context(:invocation_success, false)
-              end
-          end
-        end)
-        |> Ash.Changeset.before_action(fn changeset ->
-          # Apply the invocation results from context
-          if changeset.context[:invocation_success] do
-            output = changeset.context[:invocation_output]
-
-            changeset
-            |> Ash.Changeset.force_change_attribute(:output, output)
-            |> Ash.Changeset.force_change_attribute(:state, :completed)
-          else
-            Ash.Changeset.force_change_attribute(changeset, :state, :failed)
-          end
-        end)
-      end
+      require_atomic? false
+      change Panic.Engine.Changes.InvokeModel
     end
 
     update :cancel do
