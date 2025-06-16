@@ -2,8 +2,6 @@
 
 ## NIME blockers
 
-- make watchers work on an "offset - 1" basis (including special-casing for the
-  initial prompt)
 - get rid of the "glitch" when the re-uploaded to tigris version loads
 - check that time-based QR code -> terminal workflow works on random users
   (perhaps only required for installations)
@@ -12,7 +10,7 @@
 
 ## important/quality-of-life
 
-- comb through and fix code quality of recently generated code
+- test with the real birch installation
 - simplify delay logic using the ones built-in to Req?
 - add resizing "shrink to fit" text for the display grids
 - make sure vestaboards crashing doesn't bring down the whole thing
