@@ -4,9 +4,50 @@ defmodule Panic.NetworkTest do
 
   import Panic.Validations.ModelIOConnections
 
+  alias Panic.Accounts.User
   alias Panic.Engine.Network
 
   describe "Network CRUD operations" do
+    test "lockout_seconds defaults to 30" do
+      user = Ash.Generator.seed!(User)
+
+      network =
+        Network
+        |> Ash.Changeset.for_create(:create, %{name: "Test Network", description: "Test"}, actor: user)
+        |> Ash.create!()
+
+      assert network.lockout_seconds == 30
+    end
+
+    test "lockout_seconds can be set during creation" do
+      user = Ash.Generator.seed!(User)
+
+      network =
+        Network
+        |> Ash.Changeset.for_create(:create, %{name: "Test Network", description: "Test", lockout_seconds: 60},
+          actor: user
+        )
+        |> Ash.create!()
+
+      assert network.lockout_seconds == 60
+    end
+
+    test "lockout_seconds can be updated" do
+      user = Ash.Generator.seed!(User)
+
+      network =
+        Network
+        |> Ash.Changeset.for_create(:create, %{name: "Test Network", description: "Test"}, actor: user)
+        |> Ash.create!()
+
+      updated_network =
+        network
+        |> Ash.Changeset.for_update(:update, %{lockout_seconds: 120}, actor: user)
+        |> Ash.update!()
+
+      assert updated_network.lockout_seconds == 120
+    end
+
     # now if our action inputs are invalid when we think they should be valid, we will find out here
     property "create changeset accepts valid input without actor" do
       user = Panic.Fixtures.user()

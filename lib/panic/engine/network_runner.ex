@@ -29,16 +29,16 @@ defmodule Panic.Engine.NetworkRunner do
 
   ## Configuration
 
-  The following configuration options are available:
+  The NetworkRunner respects the following configuration options:
 
-  - `:lockout_seconds` - Time in seconds between genesis invocations (default: 30)
   - `:network_runner_max_retries` - Maximum number of retry attempts for failed invocations (default: 5)
 
-  Example configuration:
+  This can be set in your `config.exs`:
 
       config :panic,
-        lockout_seconds: 30,
         network_runner_max_retries: 5
+
+  Note: The lockout period between genesis invocations is now configured per-network via the `lockout_seconds` attribute on the Network resource (default: 30).
 
   ## Testing Considerations
 
@@ -185,15 +185,17 @@ defmodule Panic.Engine.NetworkRunner do
 
   @impl true
   def handle_call({:start_run, prompt, user}, _from, state) do
+    # Get the network first to check lockout
+    network = Ash.get!(Engine.Network, state.network_id, actor: user)
+
     # Check for lockout period
-    if under_lockout?(state) do
+    if under_lockout?(state, network) do
       {:reply, {:lockout, state.genesis_invocation}, state}
     else
       # Cancel any existing run
       new_state = cancel_current_run(state)
 
-      # Get the network and vestaboard watchers
-      network = Ash.get!(Engine.Network, state.network_id, actor: user)
+      # Get vestaboard watchers
       watchers = vestaboard_watchers(network)
 
       # Create the first invocation
@@ -303,10 +305,10 @@ defmodule Panic.Engine.NetworkRunner do
 
   # Private functions
 
-  defp under_lockout?(%{genesis_invocation: nil}), do: false
+  defp under_lockout?(%{genesis_invocation: nil}, _network), do: false
 
-  defp under_lockout?(%{genesis_invocation: genesis}) do
-    lockout_seconds = Application.get_env(:panic, :lockout_seconds, 30)
+  defp under_lockout?(%{genesis_invocation: genesis}, network) do
+    lockout_seconds = network.lockout_seconds
     DateTime.diff(DateTime.utc_now(), genesis.inserted_at, :second) < lockout_seconds
   end
 

@@ -37,6 +37,12 @@ defmodule Panic.Engine.Network do
     end
 
     attribute :slug, :string
+
+    attribute :lockout_seconds, :integer do
+      default 30
+      allow_nil? false
+    end
+
     create_timestamp :inserted_at
     update_timestamp :updated_at
     # attribute :schedule
@@ -44,10 +50,10 @@ defmodule Panic.Engine.Network do
   end
 
   actions do
-    defaults [:read, :destroy, update: [:name, :description]]
+    defaults [:read, :destroy, update: [:name, :description, :lockout_seconds]]
 
     create :create do
-      accept [:name, :description]
+      accept [:name, :description, :lockout_seconds]
       set_attribute(:models, [])
       change relate_actor(:user)
     end

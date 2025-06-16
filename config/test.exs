@@ -28,8 +28,7 @@ config :panic, PanicWeb.Endpoint,
   secret_key_base: "6fMtFbo7K5GsdxuA9hk6X1hEn80aqXOJ37byZ//ba4YknWXTQDDJinMCdbXRj1aR",
   server: false
 
-# Use a shorter lockout period for tests
-config :panic, :lockout_seconds, 1
+# Lockout period is now configured per-network via the lockout_seconds attribute
 config :panic, :token_signing_secret, "keep_out"
 
 # Initialize plugs at runtime for faster test compilation
