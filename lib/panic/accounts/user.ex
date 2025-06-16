@@ -67,15 +67,7 @@ defmodule Panic.Accounts.User do
 
       # just a convenience for the fact that there are several tokens, and
       # it's a pain to have an action for setting each one
-      change fn changeset, _context ->
-        if changeset.valid? do
-          {:ok, token_name} = Ash.Changeset.fetch_argument(changeset, :token_name)
-          {:ok, token_value} = Ash.Changeset.fetch_argument(changeset, :token_value)
-          Ash.Changeset.force_change_attribute(changeset, token_name, token_value)
-        else
-          changeset
-        end
-      end
+      change Panic.Accounts.Changes.SetToken
     end
   end
 
