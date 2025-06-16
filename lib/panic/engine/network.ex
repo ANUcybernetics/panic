@@ -61,6 +61,7 @@ defmodule Panic.Engine.Network do
     update :update_models do
       accept [:models]
       validate Panic.Validations.ModelIOConnections
+      require_atomic? false
     end
 
     action :stop_run do

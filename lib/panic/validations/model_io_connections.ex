@@ -6,6 +6,10 @@ defmodule Panic.Validations.ModelIOConnections do
   of the subsequent model, and that the network forms a valid cycle.
 
   The empty network (i.e. models == []) is considered invalid.
+
+  Note: This validation is not atomic because it requires complex business logic
+  involving static model data lookups and sequential validation of model chains.
+  Actions using this validation must set `require_atomic? false`.
   """
 
   use Ash.Resource.Validation
