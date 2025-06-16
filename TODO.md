@@ -12,12 +12,13 @@
 
 ## important/quality-of-life
 
-- fix flaky tests!
 - comb through and fix code quality of recently generated code
 - simplify delay logic using the ones built-in to Req?
 - add resizing "shrink to fit" text for the display grids
 - make sure vestaboards crashing doesn't bring down the whole thing
 - add "back off over time logic" based on time
+- create a new `Display` domain or similar (because Installations and Watchers
+  shouldn't really be in `Engine`)
 
 ## thought bubbles
 
