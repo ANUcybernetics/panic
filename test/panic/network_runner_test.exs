@@ -20,6 +20,9 @@ defmodule Panic.NetworkRunnerTest do
     # Create a test network using the code interface
     network = Engine.create_network!("Test Network", "Test network for NetworkRunner tests", actor: user)
 
+    # Set lockout_seconds to 1 for tests
+    network = network |> Ash.Changeset.for_update(:update, %{lockout_seconds: 1}, actor: user) |> Ash.update!()
+
     # Update the network with a dummy model (models is flat array)
     network = Engine.update_models!(network, ["dummy-t2t"], actor: user)
 
@@ -264,6 +267,10 @@ defmodule Panic.NetworkRunnerTest do
     test "creates a next invocation with the right run number and sequence using dummy models", %{user: user} do
       # Create a separate network for this test to avoid NetworkRunner interference
       test_network = Engine.create_network!("Test Network for Recursion", "Test network", actor: user)
+
+      test_network =
+        test_network |> Ash.Changeset.for_update(:update, %{lockout_seconds: 1}, actor: user) |> Ash.update!()
+
       test_network = Engine.update_models!(test_network, ["dummy-t2t", "dummy-t2t"], actor: user)
 
       input = "Test prompt for recursion"
@@ -286,6 +293,10 @@ defmodule Panic.NetworkRunnerTest do
 
       # Create a separate network for this test to avoid NetworkRunner interference
       test_network = Engine.create_network!("Test Network for Long Run", "Test network", actor: user)
+
+      test_network =
+        test_network |> Ash.Changeset.for_update(:update, %{lockout_seconds: 1}, actor: user) |> Ash.update!()
+
       test_network = Engine.update_models!(test_network, ["dummy-t2t", "dummy-t2t"], actor: user)
 
       input = "Test prompt for long run"
@@ -332,6 +343,9 @@ defmodule Panic.NetworkRunnerTest do
     setup %{user: user} do
       # Create test network for retry tests
       network = Engine.create_network!("Test Network", "Test network for NetworkRunner retry tests", actor: user)
+
+      # Set lockout_seconds to 1 for tests
+      network = network |> Ash.Changeset.for_update(:update, %{lockout_seconds: 1}, actor: user) |> Ash.update!()
 
       # Update the network with dummy models (models is flat array)
       network = Engine.update_models!(network, ["dummy-t2t"], actor: user)
@@ -484,6 +498,34 @@ defmodule Panic.NetworkRunnerTest do
 
       # Cleanup
       GenServer.stop(pid)
+    end
+
+    test "uses network's lockout_seconds setting", %{user: user} do
+      # Create a network with custom lockout_seconds
+      custom_network = Engine.create_network!("Custom Lockout Network", "Test network", actor: user)
+
+      custom_network =
+        custom_network |> Ash.Changeset.for_update(:update, %{lockout_seconds: 5}, actor: user) |> Ash.update!()
+
+      custom_network = Engine.update_models!(custom_network, ["dummy-t2t"], actor: user)
+
+      # Start first run
+      {:ok, genesis} = NetworkRunner.start_run(custom_network.id, "First prompt", user)
+      allow_network_runner_db_access(custom_network.id)
+
+      # Try to start second run immediately - should be in lockout
+      {:lockout, lockout_genesis} = NetworkRunner.start_run(custom_network.id, "Second prompt", user)
+      assert lockout_genesis.id == genesis.id
+
+      # Wait for the custom 5-second lockout period plus a small buffer
+      Process.sleep(5_500)
+
+      # Now should be able to start a new run
+      {:ok, new_genesis} = NetworkRunner.start_run(custom_network.id, "Third prompt", user)
+      assert new_genesis.id != genesis.id
+
+      # Cleanup
+      NetworkRunner.stop_run(custom_network.id)
     end
   end
 end

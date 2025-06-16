@@ -94,8 +94,11 @@ defmodule Panic.Generators do
 
   def network(user) do
     gen all(input <- Ash.Generator.action_input(Network, :create)) do
+      # Override lockout_seconds to 1 for tests
+      input_with_lockout = Map.put(input, :lockout_seconds, 1)
+
       Network
-      |> Ash.Changeset.for_create(:create, input, actor: user)
+      |> Ash.Changeset.for_create(:create, input_with_lockout, actor: user)
       |> Ash.create!()
     end
   end
