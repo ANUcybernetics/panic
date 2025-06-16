@@ -221,6 +221,61 @@ defmodule Panic.InstallationTest do
                |> Ash.update()
     end
 
+    test "handles invalid index when removing watcher", %{user: user, network: network} do
+      {:ok, installation} =
+        Installation
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            name: "Test Installation",
+            network_id: network.id,
+            watchers: [
+              %{type: :grid, rows: 2, columns: 3}
+            ]
+          },
+          actor: user
+        )
+        |> Ash.create()
+
+      # Test negative index
+      assert {:error, changeset} =
+               installation
+               |> Ash.Changeset.for_update(:remove_watcher, %{index: -1}, actor: user)
+               |> Ash.update()
+
+      assert %{index: ["index is out of bounds"]} = errors_on(changeset)
+
+      # Test index that's too high
+      assert {:error, changeset} =
+               installation
+               |> Ash.Changeset.for_update(:remove_watcher, %{index: 10}, actor: user)
+               |> Ash.update()
+
+      assert %{index: ["index is out of bounds"]} = errors_on(changeset)
+    end
+
+    test "handles empty watchers list when removing", %{user: user, network: network} do
+      {:ok, installation} =
+        Installation
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            name: "Test Installation",
+            network_id: network.id,
+            watchers: []
+          },
+          actor: user
+        )
+        |> Ash.create()
+
+      assert {:error, changeset} =
+               installation
+               |> Ash.Changeset.for_update(:remove_watcher, %{index: 0}, actor: user)
+               |> Ash.update()
+
+      assert %{index: ["index is out of bounds"]} = errors_on(changeset)
+    end
+
     test "validates watcher with invalid attributes", %{user: user, network: network} do
       # Test grid without rows/columns
       assert {:error, _changeset} =
