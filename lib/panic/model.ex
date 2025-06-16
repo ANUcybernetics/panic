@@ -26,11 +26,8 @@ defmodule Panic.Model do
   alias Panic.Platforms.Gemini
   alias Panic.Platforms.OpenAI
   alias Panic.Platforms.Replicate
-  alias Panic.Platforms.Vestaboard
 
   require Logger
-
-  @vestaboard_sleep to_timeout(second: 5)
 
   @enforce_keys [:id, :path, :name, :platform, :input_type, :output_type, :invoke]
   defstruct [
@@ -717,32 +714,6 @@ defmodule Panic.Model do
         end
       }
     ] ++
-      Enum.map(
-        [
-          {"vestaboard-panic-1", "panic_1", "Vestaboard Panic 1"},
-          {"vestaboard-panic-2", "panic_2", "Vestaboard Panic 2"},
-          {"vestaboard-panic-3", "panic_3", "Vestaboard Panic 3"},
-          {"vestaboard-panic-4", "panic_4", "Vestaboard Panic 4"}
-        ],
-        fn {id, path, name} ->
-          %__MODULE__{
-            id: id,
-            platform: Vestaboard,
-            path: path,
-            name: name,
-            input_type: :text,
-            output_type: :text,
-            invoke: fn model, input, token ->
-              case Vestaboard.send_text(model, input, token) do
-                {:ok, _} -> Process.sleep(@vestaboard_sleep)
-                {:error, reason} -> Logger.warning("Vestaboard error: #{inspect(reason)}")
-              end
-
-              {:ok, input}
-            end
-          }
-        end
-      ) ++
       [
         # Text to Text
         %__MODULE__{
@@ -884,10 +855,6 @@ defmodule Panic.Model do
     "https://platform.openai.com/docs/models/overview"
   end
 
-  def model_url(%__MODULE__{platform: Vestaboard}) do
-    "https://www.vestaboard.com"
-  end
-
   def model_url(%__MODULE__{platform: Gemini}) do
     "https://ai.google.dev/gemini-api/docs"
   end
@@ -915,11 +882,8 @@ defmodule Panic.Model do
 
   This function takes a list of models and returns a list of tuples. Each tuple contains:
   - The original index of the model in the input list
-  - An "actual index" that increments only for non-Vestaboard models
+  - An "actual index" that matches the original index
   - The model itself
-
-  Vestaboard models are assigned `nil` as their actual index (because they're not
-  really models).
 
   ## Parameters
 
@@ -929,7 +893,7 @@ defmodule Panic.Model do
 
   A list of tuples in the format `{original_index, actual_index, model}`, where:
   - `original_index` is the index of the model in the input list
-  - `actual_index` is the index excluding Vestaboard models, or `nil` for Vestaboard models
+  - `actual_index` is the same as the original index
   - `model` is the original model struct
 
   ## Example
@@ -941,17 +905,7 @@ defmodule Panic.Model do
   def models_with_indices(models) do
     models
     |> Enum.with_index()
-    |> Enum.reduce({[], 0}, fn {model, index}, {acc, actual_index} ->
-      case model.platform do
-        Vestaboard ->
-          {[{index, nil, model} | acc], actual_index}
-
-        _ ->
-          {[{index, actual_index, model} | acc], actual_index + 1}
-      end
-    end)
-    |> elem(0)
-    |> Enum.reverse()
+    |> Enum.map(fn {model, index} -> {index, index, model} end)
   end
 end
 

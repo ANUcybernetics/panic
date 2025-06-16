@@ -37,7 +37,7 @@ defmodule PanicWeb.NetworkLive.Info do
       <h2>Models</h2>
       <p>The GenAI models in this network are:</p>
       <ol>
-        <%= for model <- non_vestaboard_models(@network) do %>
+        <%= for model <- all_models(@network) do %>
           <li>
             <.link href={Panic.Model.model_url(model)} target="_blank">{model.name}</.link>
             ({model.input_type} -> {model.output_type})
@@ -132,10 +132,8 @@ defmodule PanicWeb.NetworkLive.Info do
     end
   end
 
-  defp non_vestaboard_models(network) do
-    network.models
-    |> Panic.Model.model_ids_to_model_list()
-    |> Enum.reject(fn m -> m.platform == Panic.Platforms.Vestaboard end)
+  defp all_models(network) do
+    Panic.Model.model_ids_to_model_list(network.models)
   end
 
   # this is a hack - because these live actions indicate routes that are auth-optional
