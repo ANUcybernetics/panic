@@ -2,6 +2,7 @@
 
 ## NIME blockers
 
+- see why stop button is crashing things
 - check that time-based QR code -> terminal workflow works on random users
   (perhaps only required for installations)
 - find one (or a few) good text audio networks to use at NIME
