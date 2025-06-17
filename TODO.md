@@ -2,8 +2,6 @@
 
 ## NIME blockers
 
-- check the seq no -> watcher mapping (should be based on inputs, so that the
-  initial prompt is captured)
 - get rid of the "glitch" when the re-uploaded to tigris version loads
 - check that time-based QR code -> terminal workflow works on random users
   (perhaps only required for installations)

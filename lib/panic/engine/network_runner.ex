@@ -243,27 +243,51 @@ defmodule Panic.Engine.NetworkRunner do
       end
 
       # Process the invocation
-      with {:ok, invocation} <- Engine.about_to_invoke(state.current_invocation, actor: state.user),
-           {:ok, invocation} <- Engine.invoke(invocation, actor: state.user),
-           {:ok, next_invocation} <- Engine.prepare_next(invocation, actor: state.user) do
-        # Handle archiving for image/audio outputs
-        model = Panic.Model.by_id!(invocation.model)
+      case Engine.about_to_invoke(state.current_invocation, actor: state.user) do
+        {:ok, invocation} ->
+          # Dispatch any watchers that should fire for this invocation based on input
+          maybe_dispatch_watchers(invocation, state.watchers, state.user)
 
-        if model.output_type in [:image, :audio] do
-          Task.start(fn ->
-            archive_invocation(invocation, next_invocation)
-          end)
-        end
+          # Continue with invocation processing
+          with {:ok, invocation} <- Engine.invoke(invocation, actor: state.user),
+               {:ok, next_invocation} <- Engine.prepare_next(invocation, actor: state.user) do
+            # Handle archiving for image/audio outputs
+            model = Panic.Model.by_id!(invocation.model)
 
-        # Dispatch any Vestaboard watchers that should fire for this invocation
-        maybe_dispatch_vestaboard(invocation, state.watchers, state.user)
+            if model.output_type in [:image, :audio] do
+              Task.start(fn ->
+                archive_invocation(invocation, next_invocation)
+              end)
+            end
 
-        # Schedule next invocation
-        ref = Process.send_after(self(), :process_invocation, 0)
+            # Schedule next invocation
+            ref = Process.send_after(self(), :process_invocation, 0)
 
-        new_state = %{state | current_invocation: next_invocation, processing_ref: ref, retry_count: 0}
-        {:noreply, new_state}
-      else
+            new_state = %{state | current_invocation: next_invocation, processing_ref: ref, retry_count: 0}
+            {:noreply, new_state}
+          else
+            {:error, reason} ->
+              if state.retry_count < state.max_retries do
+                # Calculate exponential backoff: 2^retry_count * 1000ms (1s, 2s, 4s, 8s, 16s)
+                delay = round(:math.pow(2, state.retry_count) * 1000)
+
+                Logger.warning(
+                  "Failed to process invocation (attempt #{state.retry_count + 1}/#{state.max_retries + 1}), " <>
+                    "retrying in #{delay}ms: #{inspect(reason)}"
+                )
+
+                # Schedule retry with exponential backoff
+                ref = Process.send_after(self(), :retry_invocation, delay)
+
+                new_state = %{state | processing_ref: ref, retry_count: state.retry_count + 1}
+                {:noreply, new_state}
+              else
+                Logger.error("Failed to process invocation after #{state.max_retries + 1} attempts: #{inspect(reason)}")
+                # Clear the current invocation after exhausting retries
+                {:noreply, %{state | current_invocation: nil, processing_ref: nil, retry_count: 0}}
+              end
+          end
+
         {:error, reason} ->
           if state.retry_count < state.max_retries do
             # Calculate exponential backoff: 2^retry_count * 1000ms (1s, 2s, 4s, 8s, 16s)
@@ -332,7 +356,7 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   # ---------------------------------------------------------------------------
-  # Vestaboard watcher support
+  # Watcher support
   # ---------------------------------------------------------------------------
 
   defp vestaboard_watchers(network) do
@@ -344,26 +368,46 @@ defmodule Panic.Engine.NetworkRunner do
     end)
   end
 
-  defp maybe_dispatch_vestaboard(%{sequence_number: seq, output: output} = _inv, watchers, user)
-       when is_list(watchers) and is_binary(output) do
-    Enum.each(watchers, fn %{stride: stride, offset: offset, name: name} = _watcher ->
-      if rem(seq, stride) == offset do
-        board_name = Atom.to_string(name)
-        token = Vestaboard.token_for_board!(board_name, user)
+  defp maybe_dispatch_watchers(%{sequence_number: seq, input: input} = _inv, watchers, user)
+       when is_list(watchers) and is_binary(input) do
+    Enum.each(watchers, fn watcher ->
+      case watcher.type do
+        :vestaboard ->
+          %{stride: stride, offset: offset, name: name} = watcher
 
-        case Vestaboard.send_text(output, token, board_name) do
-          {:ok, _id} ->
-            :ok
+          if rem(seq, stride) == offset do
+            board_name = Atom.to_string(name)
+            token = Vestaboard.token_for_board!(board_name, user)
 
-          {:error, _reason} ->
-            # error message has already been logged, so no need to re-log it
-            :ok
-        end
+            case Vestaboard.send_text(input, token, board_name) do
+              {:ok, _id} ->
+                :ok
+
+              {:error, _reason} ->
+                # error message has already been logged, so no need to re-log it
+                :ok
+            end
+          end
+
+        :single ->
+          # Single watchers could be handled here in the future
+          # %{stride: stride, offset: offset} = watcher
+          # Logic for single watcher dispatch would go here
+          :ok
+
+        :grid ->
+          # Grid watchers could be handled here in the future
+          # %{rows: rows, columns: columns} = watcher
+          # Logic for grid watcher dispatch would go here
+          :ok
+
+        _ ->
+          :ok
       end
     end)
   end
 
-  defp maybe_dispatch_vestaboard(_inv, _watchers, _user), do: :ok
+  defp maybe_dispatch_watchers(_inv, _watchers, _user), do: :ok
 
   defp archive_invocation(invocation, next_invocation) do
     case download_file(invocation.output) do
