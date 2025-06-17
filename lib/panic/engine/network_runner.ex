@@ -14,7 +14,7 @@ defmodule Panic.Engine.NetworkRunner do
   - **Lockout Period**: Enforces a 30-second lockout between genesis invocations
   - **Automatic Archiving**: Archives image/audio outputs to S3-compatible storage
   - **Graceful Cancellation**: Supports stopping runs in progress
-  - **Retry with Exponential Backoff**: Failed invocations are retried with exponential backoff (1s, 2s, 4s, 8s, 16s)
+  - **Restart on Failure**: Failed invocations trigger a restart of the entire run with the original prompt
 
   ## State Management
 
@@ -24,21 +24,11 @@ defmodule Panic.Engine.NetworkRunner do
   - `genesis_invocation`: The first invocation of the current run
   - `user`: The user who started the current run
   - `processing_ref`: Timer reference for the next processing cycle
-  - `retry_count`: Number of retry attempts for the current invocation
-  - `max_retries`: Maximum number of retries (default: 5)
+  - `watchers`: List of active watchers for this network
 
   ## Configuration
 
-  The NetworkRunner respects the following configuration options:
-
-  - `:network_runner_max_retries` - Maximum number of retry attempts for failed invocations (default: 5)
-
-  This can be set in your `config.exs`:
-
-      config :panic,
-        network_runner_max_retries: 5
-
-  Note: The lockout period between genesis invocations is now configured per-network via the `lockout_seconds` attribute on the Network resource (default: 30).
+  The lockout period between genesis invocations is configured per-network via the `lockout_seconds` attribute on the Network resource (default: 30).
 
   ## Testing Considerations
 
@@ -181,9 +171,7 @@ defmodule Panic.Engine.NetworkRunner do
       genesis_invocation: nil,
       user: nil,
       processing_ref: nil,
-      retry_count: 0,
-      watchers: [],
-      max_retries: Application.get_env(:panic, :network_runner_max_retries, 5)
+      watchers: []
     }
 
     {:ok, state}
@@ -219,7 +207,6 @@ defmodule Panic.Engine.NetworkRunner do
                   genesis_invocation: genesis_invocation,
                   user: user,
                   processing_ref: ref,
-                  retry_count: 0,
                   watchers: watchers
               }
 
@@ -270,51 +257,43 @@ defmodule Panic.Engine.NetworkRunner do
             # Schedule next invocation
             ref = Process.send_after(self(), :process_invocation, 0)
 
-            new_state = %{state | current_invocation: next_invocation, processing_ref: ref, retry_count: 0}
+            new_state = %{state | current_invocation: next_invocation, processing_ref: ref}
             {:noreply, new_state}
           else
             {:error, reason} ->
-              if state.retry_count < state.max_retries do
-                # Calculate exponential backoff: 2^retry_count * 1000ms (1s, 2s, 4s, 8s, 16s)
-                delay = round(:math.pow(2, state.retry_count) * 1000)
+              Logger.error("Failed to process invocation: #{inspect(reason)}")
 
-                Logger.warning(
-                  "Failed to process invocation (attempt #{state.retry_count + 1}/#{state.max_retries + 1}), " <>
-                    "retrying in #{delay}ms: #{inspect(reason)}"
-                )
+              # Instead of retrying, restart the entire run with the original prompt
+              genesis = state.genesis_invocation
+              original_prompt = genesis && genesis.input
 
-                # Schedule retry with exponential backoff
-                ref = Process.send_after(self(), :retry_invocation, delay)
+              # Clear current state
+              new_state = %{state | current_invocation: nil, processing_ref: nil, genesis_invocation: nil}
 
-                new_state = %{state | processing_ref: ref, retry_count: state.retry_count + 1}
-                {:noreply, new_state}
-              else
-                Logger.error("Failed to process invocation after #{state.max_retries + 1} attempts: #{inspect(reason)}")
-                # Clear the current invocation after exhausting retries
-                {:noreply, %{state | current_invocation: nil, processing_ref: nil, retry_count: 0}}
+              # Restart the run with the original prompt after a short delay
+              if original_prompt do
+                Process.send_after(self(), {:restart_run, original_prompt, state.user}, 2000)
               end
+
+              {:noreply, new_state}
           end
 
         {:error, reason} ->
-          if state.retry_count < state.max_retries do
-            # Calculate exponential backoff: 2^retry_count * 1000ms (1s, 2s, 4s, 8s, 16s)
-            delay = round(:math.pow(2, state.retry_count) * 1000)
+          Logger.error("Failed to process invocation: #{inspect(reason)}")
 
-            Logger.warning(
-              "Failed to process invocation (attempt #{state.retry_count + 1}/#{state.max_retries + 1}), " <>
-                "retrying in #{delay}ms: #{inspect(reason)}"
-            )
+          # Same error handling - restart with original prompt
+          genesis = state.genesis_invocation
+          original_prompt = genesis && genesis.input
 
-            # Schedule retry with exponential backoff
-            ref = Process.send_after(self(), :retry_invocation, delay)
+          # Clear current state
+          new_state = %{state | current_invocation: nil, processing_ref: nil, genesis_invocation: nil}
 
-            new_state = %{state | processing_ref: ref, retry_count: state.retry_count + 1}
-            {:noreply, new_state}
-          else
-            Logger.error("Failed to process invocation after #{state.max_retries + 1} attempts: #{inspect(reason)}")
-            # Clear the current invocation after exhausting retries
-            {:noreply, %{state | current_invocation: nil, processing_ref: nil, retry_count: 0}}
+          # Restart the run with the original prompt after a short delay
+          if original_prompt do
+            Process.send_after(self(), {:restart_run, original_prompt, state.user}, 2000)
           end
+
+          {:noreply, new_state}
       end
     else
       {:noreply, state}
@@ -322,10 +301,49 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   @impl true
-  def handle_info(:retry_invocation, state) do
-    # Retry the current invocation
-    send(self(), :process_invocation)
-    {:noreply, state}
+  def handle_info({:restart_run, prompt, user}, state) do
+    # Only restart if we're not already running something
+    if state.current_invocation == nil do
+      # Get the network
+      network = Ash.get!(Engine.Network, state.network_id, actor: user)
+
+      # Check for lockout period
+      if under_lockout?(state, network) do
+        {:noreply, state}
+      else
+        # Get vestaboard watchers
+        watchers = vestaboard_watchers(network)
+
+        case Engine.prepare_first(network, prompt, actor: user) do
+          {:ok, invocation} ->
+            case Engine.start_run(invocation, actor: user) do
+              {:ok, genesis_invocation} ->
+                ref = Process.send_after(self(), :process_invocation, 0)
+
+                new_state = %{
+                  state
+                  | current_invocation: invocation,
+                    genesis_invocation: genesis_invocation,
+                    user: user,
+                    processing_ref: ref,
+                    watchers: watchers
+                }
+
+                {:noreply, new_state}
+
+              {:error, reason} ->
+                Logger.error("Failed to restart run: #{inspect(reason)}")
+                {:noreply, state}
+            end
+
+          {:error, reason} ->
+            Logger.error("Failed to prepare first invocation on restart: #{inspect(reason)}")
+            {:noreply, state}
+        end
+      end
+    else
+      {:noreply, state}
+    end
   end
 
   @impl true
@@ -365,7 +383,6 @@ defmodule Panic.Engine.NetworkRunner do
       state
       | current_invocation: nil,
         processing_ref: nil,
-        retry_count: 0,
         watchers: []
     }
   end
