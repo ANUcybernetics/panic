@@ -12,7 +12,6 @@
 - maybe rename PanicWeb.InvocationWatcher (now that there's a Watcher module) to
   WatcherLive or something similar
 - test with the real birch installation
-- simplify delay logic using the ones built-in to Req?
 - add resizing "shrink to fit" text for the display grids
 - make sure vestaboards crashing doesn't bring down the whole thing
 - add "back off over time logic" based on time
