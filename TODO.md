@@ -2,23 +2,25 @@
 
 ## NIME blockers
 
+- check installation watcher views
+- check that time-based QR code -> terminal workflow works for non-logged-in
+  users (perhaps only required for installations, and also requires real
+  deployment to test properly)
 - investigate the "Sizes of tensors must match except in dimension 0" error from
   Riffusion (check the params I'm sending are correct)
+- get FitText hook working
 - add UI for configuring network lockout timer duration
-- check that time-based QR code -> terminal workflow works on random users
-  (perhaps only required for installations)
 - find one (or a few) good text audio networks to use at NIME
 - load it on to some RPis
+- set up real NIME installations
+- add "back off over time logic" based on time
 
 ## important/quality-of-life
 
 - nicer visuals (no green bg?) for audio cards
 - maybe rename PanicWeb.InvocationWatcher (now that there's a Watcher module) to
   WatcherLive or something similar
-- test with the real birch installation
-- add resizing "shrink to fit" text for the display grids
 - make sure vestaboards crashing doesn't bring down the whole thing
-- add "back off over time logic" based on time
 - create a new `Display` domain or similar (because Installations and Watchers
   shouldn't really be in `Engine`)
 
