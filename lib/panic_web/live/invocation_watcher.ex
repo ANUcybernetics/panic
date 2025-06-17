@@ -109,32 +109,38 @@ defmodule PanicWeb.InvocationWatcher do
     display = socket.assigns.display
     invocation = message.payload.data
 
+    # AIDEV-NOTE: Skip archiving updates to prevent URL glitches in LiveViews
     socket =
-      case {invocation, display} do
-        {%Invocation{state: :ready}, _} ->
-          socket
+      if archiving_update?(invocation, socket) do
+        # Only update genesis for archiving updates, skip stream updates
+        update_genesis(socket, invocation)
+      else
+        case {invocation, display} do
+          {%Invocation{state: :ready}, _} ->
+            socket
 
-        {%Invocation{sequence_number: 0, state: :invoking}, {:grid, _rows, _cols}} ->
-          socket
-          |> update_genesis(invocation)
-          |> LiveView.stream(:invocations, [invocation], reset: true)
+          {%Invocation{sequence_number: 0, state: :invoking}, {:grid, _rows, _cols}} ->
+            socket
+            |> update_genesis(invocation)
+            |> LiveView.stream(:invocations, [invocation], reset: true)
 
-        {_, {:grid, _rows, _cols}} ->
-          socket
-          |> update_genesis(invocation)
-          |> LiveView.stream_insert(:invocations, invocation, at: -1)
+          {_, {:grid, _rows, _cols}} ->
+            socket
+            |> update_genesis(invocation)
+            |> LiveView.stream_insert(:invocations, invocation, at: -1)
 
-        {%Invocation{sequence_number: seq}, {:single, offset, stride}}
-        when rem(seq, stride) == offset ->
-          socket
-          |> LiveView.stream_insert(:invocations, invocation, at: 0, limit: 1)
-          |> update_genesis(invocation)
+          {%Invocation{sequence_number: seq}, {:single, offset, stride}}
+          when rem(seq, stride) == offset ->
+            socket
+            |> LiveView.stream_insert(:invocations, invocation, at: 0, limit: 1)
+            |> update_genesis(invocation)
 
-        {_, {:single, _, _}} ->
-          update_genesis(socket, invocation)
+          {_, {:single, _, _}} ->
+            update_genesis(socket, invocation)
 
-        _ ->
-          socket
+          _ ->
+            socket
+        end
       end
 
     {:noreply, socket}
@@ -143,6 +149,14 @@ defmodule PanicWeb.InvocationWatcher do
   # ---------------------------------------------------------------------------
   # Internal helpers
   # ---------------------------------------------------------------------------
+
+  # AIDEV-NOTE: Detects archiving updates to prevent LiveView URL glitches
+  defp archiving_update?(%Invocation{output: output}, _socket) when is_binary(output) do
+    # Check if this is an archiving update by looking for Tigris storage URL
+    String.starts_with?(output, "https://fly.storage.tigris.dev")
+  end
+
+  defp archiving_update?(_, _), do: false
 
   defp maybe_subscribe(socket, network) do
     if LiveView.connected?(socket) do
