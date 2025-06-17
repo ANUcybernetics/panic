@@ -2,6 +2,9 @@
 
 ## NIME blockers
 
+- investigate the "Sizes of tensors must match except in dimension 0" error from
+  Riffusion (check the params I'm sending are correct)
+- add UI for configuring network lockout timer duration
 - check that time-based QR code -> terminal workflow works on random users
   (perhaps only required for installations)
 - find one (or a few) good text audio networks to use at NIME
@@ -9,6 +12,7 @@
 
 ## important/quality-of-life
 
+- nicer visuals (no green bg?) for audio cards
 - maybe rename PanicWeb.InvocationWatcher (now that there's a Watcher module) to
   WatcherLive or something similar
 - test with the real birch installation
