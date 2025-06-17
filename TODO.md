@@ -2,7 +2,6 @@
 
 ## NIME blockers
 
-- get rid of the "glitch" when the re-uploaded to tigris version loads
 - check that time-based QR code -> terminal workflow works on random users
   (perhaps only required for installations)
 - find one (or a few) good text audio networks to use at NIME
@@ -10,6 +9,8 @@
 
 ## important/quality-of-life
 
+- maybe rename PanicWeb.InvocationWatcher (now that there's a Watcher module) to
+  WatcherLive or something similar
 - test with the real birch installation
 - simplify delay logic using the ones built-in to Req?
 - add resizing "shrink to fit" text for the display grids
