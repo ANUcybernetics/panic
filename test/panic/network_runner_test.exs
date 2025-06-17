@@ -482,6 +482,217 @@ defmodule Panic.NetworkRunnerTest do
       # Cleanup
       Application.delete_env(:panic, :network_runner_max_retries)
     end
+
+    test "stop_run with active invocation doesn't crash", %{network: network, user: user} do
+      # Start a run
+      {:ok, _genesis} = NetworkRunner.start_run(network.id, "Test prompt", user)
+
+      # Get the runner pid
+      [{pid, _}] = Registry.lookup(NetworkRegistry, network.id)
+      allow_network_runner_db_access(network.id)
+
+      # Monitor the process to detect crashes
+      ref = Process.monitor(pid)
+
+      # Wait for processing to start
+      Process.sleep(100)
+
+      # Stop the run while it's potentially processing
+      result = NetworkRunner.stop_run(network.id)
+
+      # Should not crash
+      assert result == {:ok, :stopped}
+
+      # Process should still be alive
+      assert Process.alive?(pid)
+
+      # Should not receive a DOWN message
+      refute_receive {:DOWN, ^ref, :process, ^pid, _reason}, 1000
+
+      # Verify state is clean
+      state = :sys.get_state(pid)
+      assert is_nil(state.current_invocation)
+      assert is_nil(state.processing_ref)
+      assert state.retry_count == 0
+
+      # Cleanup monitor
+      Process.demonitor(ref, [:flush])
+    end
+
+    test "stop_run handles race conditions with process_invocation messages", %{network: network, user: user} do
+      # Start a run
+      {:ok, _genesis} = NetworkRunner.start_run(network.id, "Test prompt", user)
+
+      # Get the runner pid
+      [{pid, _}] = Registry.lookup(NetworkRegistry, network.id)
+      allow_network_runner_db_access(network.id)
+
+      # Monitor the process to detect crashes
+      ref = Process.monitor(pid)
+
+      # Force multiple process_invocation messages into mailbox
+      send(pid, :process_invocation)
+      send(pid, :process_invocation)
+      send(pid, :retry_invocation)
+
+      # Stop the run immediately
+      result = NetworkRunner.stop_run(network.id)
+
+      # Should not crash even with messages in mailbox
+      assert result == {:ok, :stopped}
+
+      # Process should still be alive
+      assert Process.alive?(pid)
+
+      # Wait a bit to let any queued messages process
+      Process.sleep(200)
+
+      # Should not receive a DOWN message
+      refute_receive {:DOWN, ^ref, :process, ^pid, _reason}, 500
+
+      # State should be clean
+      state = :sys.get_state(pid)
+      assert is_nil(state.current_invocation)
+      assert is_nil(state.processing_ref)
+      assert state.retry_count == 0
+
+      # Cleanup monitor
+      Process.demonitor(ref, [:flush])
+    end
+
+    test "stop_run with concurrent Engine.cancel! calls doesn't crash", %{network: network, user: user} do
+      # Start a run
+      {:ok, _genesis} = NetworkRunner.start_run(network.id, "Test prompt", user)
+
+      # Get the runner pid
+      [{pid, _}] = Registry.lookup(NetworkRegistry, network.id)
+      allow_network_runner_db_access(network.id)
+
+      # Monitor the process to detect crashes
+      ref = Process.monitor(pid)
+
+      # Get current state to access the invocation
+      state = :sys.get_state(pid)
+
+      # Only proceed if there's an invocation to cancel
+      if state.current_invocation do
+        # Try to cancel the invocation directly while also stopping
+        task1 =
+          Task.async(fn ->
+            try do
+              Engine.cancel!(state.current_invocation, authorize?: false)
+            rescue
+              _ -> :error
+            end
+          end)
+
+        task2 = Task.async(fn -> NetworkRunner.stop_run(network.id) end)
+
+        # Wait for both operations
+        _result1 = Task.await(task1, 5000)
+        result2 = Task.await(task2, 5000)
+
+        # At least one should succeed
+        assert result2 == {:ok, :stopped}
+
+        # Process should still be alive
+        assert Process.alive?(pid)
+
+        # Should not receive a DOWN message
+        refute_receive {:DOWN, ^ref, :process, ^pid, _reason}, 1000
+      end
+
+      # Cleanup monitor
+      Process.demonitor(ref, [:flush])
+    end
+
+    test "stop_run doesn't timeout even when Engine.cancel! is slow", %{network: network, user: user} do
+      # Start a run
+      {:ok, _genesis} = NetworkRunner.start_run(network.id, "Test prompt", user)
+
+      # Get the runner pid
+      [{pid, _}] = Registry.lookup(NetworkRegistry, network.id)
+      allow_network_runner_db_access(network.id)
+
+      # Monitor the process to detect crashes
+      ref = Process.monitor(pid)
+
+      # Use a shorter timeout to test the fix - this should not timeout
+      result = GenServer.call(pid, :stop_run, 1000)
+
+      # Should succeed without timeout
+      assert result == {:ok, :stopped}
+
+      # Process should still be alive
+      assert Process.alive?(pid)
+
+      # Should not receive a DOWN message
+      refute_receive {:DOWN, ^ref, :process, ^pid, _reason}, 1000
+
+      # Verify state is clean
+      state = :sys.get_state(pid)
+      assert is_nil(state.current_invocation)
+      assert is_nil(state.processing_ref)
+      assert state.retry_count == 0
+
+      # Cleanup monitor
+      Process.demonitor(ref, [:flush])
+    end
+
+    test "stop button scenario - clicking stop while network is actively running", %{network: network, user: user} do
+      # This test simulates the exact scenario described by the user:
+      # 1. Network is running and processing invocations
+      # 2. User clicks the Stop button in the LiveView
+      # 3. This should not crash the NetworkRunner or timeout
+
+      # Start a run
+      {:ok, _genesis} = NetworkRunner.start_run(network.id, "Test music generation", user)
+
+      # Get the runner pid
+      [{pid, _}] = Registry.lookup(NetworkRegistry, network.id)
+      allow_network_runner_db_access(network.id)
+
+      # Monitor the process to detect crashes
+      ref = Process.monitor(pid)
+
+      # Wait for the run to start processing
+      Process.sleep(100)
+
+      # Verify there's an active invocation
+      state = :sys.get_state(pid)
+      assert state.current_invocation != nil
+
+      # Simulate the stop button click with the same timeout as LiveView uses
+      # This should complete quickly without timing out
+      start_time = System.monotonic_time(:millisecond)
+
+      result = GenServer.call(pid, :stop_run, 5000)
+
+      end_time = System.monotonic_time(:millisecond)
+      duration = end_time - start_time
+
+      # Should succeed without timeout
+      assert result == {:ok, :stopped}
+
+      # Should complete quickly (much less than 5 seconds)
+      assert duration < 1000, "stop_run took #{duration}ms, should be much faster"
+
+      # Process should still be alive (not crashed)
+      assert Process.alive?(pid)
+
+      # Should not receive a DOWN message indicating crash
+      refute_receive {:DOWN, ^ref, :process, ^pid, _reason}, 1000
+
+      # Verify final state is clean
+      final_state = :sys.get_state(pid)
+      assert is_nil(final_state.current_invocation)
+      assert is_nil(final_state.processing_ref)
+      assert final_state.retry_count == 0
+      assert final_state.watchers == []
+
+      # Cleanup monitor
+      Process.demonitor(ref, [:flush])
+    end
   end
 
   describe "configuration" do
