@@ -6,8 +6,10 @@ defmodule Panic.NetworkRunnerTest do
   alias Ecto.Adapters.SQL.Sandbox
   alias Panic.Accounts.User
   alias Panic.Engine
+  alias Panic.Engine.Installation
   alias Panic.Engine.NetworkRegistry
   alias Panic.Engine.NetworkRunner
+  alias Panic.Platforms.Vestaboard
 
   require Ash.Query
 
@@ -540,6 +542,106 @@ defmodule Panic.NetworkRunnerTest do
 
       # Cleanup
       NetworkRunner.stop_run(custom_network.id)
+    end
+  end
+
+  describe "watcher dispatch" do
+    @tag :watcher
+    test "dispatches vestaboard watchers based on input before processing", %{user: user} do
+      # Create a network with a vestaboard installation
+      network = Engine.create_network!("Watcher Test Network", "Test network for watcher dispatch", actor: user)
+      network = Engine.update_models!(network, ["dummy-t2t"], actor: user)
+
+      # Create an installation with a vestaboard watcher
+      _installation =
+        Installation
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            name: "Test Installation",
+            network_id: network.id,
+            watchers: [
+              %{type: :vestaboard, stride: 1, offset: 0, name: :panic_1}
+            ]
+          },
+          actor: user
+        )
+        |> Ash.create!()
+
+      # Mock the Vestaboard functions
+      Repatch.patch(Vestaboard, :token_for_board!, [mode: :global], fn _board_name, _user ->
+        "mock_token"
+      end)
+
+      # Mock send_text to capture what gets sent
+      test_pid = self()
+
+      Repatch.patch(Vestaboard, :send_text, [mode: :global], fn text, _token, board ->
+        send(test_pid, {:vestaboard_sent, board, text})
+        {:ok, "mock_id"}
+      end)
+
+      # Start a run
+      {:ok, _genesis} = NetworkRunner.start_run(network.id, "Test input prompt", user)
+      allow_network_runner_db_access(network.id)
+
+      # Wait for the message to be sent
+      assert_receive {:vestaboard_sent, "panic_1", "Test input prompt"}, 2000
+
+      # Cleanup
+      NetworkRunner.stop_run(network.id)
+    end
+
+    @tag :watcher
+    test "dispatches watchers based on stride and offset", %{user: user} do
+      # Create a network with multiple vestaboard watchers
+      network = Engine.create_network!("Multi Watcher Test", "Test network for multiple watchers", actor: user)
+      network = Engine.update_models!(network, ["dummy-t2t"], actor: user)
+
+      # Create an installation with multiple watchers
+      _installation =
+        Installation
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            name: "Multi Watcher Installation",
+            network_id: network.id,
+            watchers: [
+              # fires on seq 0, 2, 4...
+              %{type: :vestaboard, stride: 2, offset: 0, name: :panic_1},
+              # fires on seq 1, 4, 7...
+              %{type: :vestaboard, stride: 3, offset: 1, name: :panic_2}
+            ]
+          },
+          actor: user
+        )
+        |> Ash.create!()
+
+      # Mock the Vestaboard functions
+      Repatch.patch(Vestaboard, :token_for_board!, [mode: :global], fn _board_name, _user ->
+        "mock_token"
+      end)
+
+      # Track which boards got messages
+      test_pid = self()
+
+      Repatch.patch(Vestaboard, :send_text, [mode: :global], fn text, _token, board ->
+        send(test_pid, {:vestaboard_sent, board, text})
+        {:ok, "mock_id"}
+      end)
+
+      # Start a run - this will be sequence 0, should trigger first watcher only
+      {:ok, _genesis} = NetworkRunner.start_run(network.id, "Sequence 0 input", user)
+      allow_network_runner_db_access(network.id)
+
+      # Check that panic_1 board received the message for sequence 0 (stride 2, offset 0 matches seq 0)
+      assert_receive {:vestaboard_sent, "panic_1", "Sequence 0 input"}, 2000
+
+      # Now wait for sequence 1 which should trigger panic_2 (stride 3, offset 1 matches seq 1)
+      assert_receive {:vestaboard_sent, "panic_2", _sequence_1_input}, 2000
+
+      # Cleanup
+      NetworkRunner.stop_run(network.id)
     end
   end
 end
