@@ -168,7 +168,7 @@ defmodule PanicWeb.PanicComponents do
     <.invocation_container id={@id}>
       <.invocation_slot id={@id} type={@model.output_type} value={@invocation.output} />
       <:input>
-        <.invocation_slot type={@model.input_type} value={@invocation.input} />
+        <.invocation_slot id={"#{@id}-input"} type={@model.input_type} value={@invocation.input} />
       </:input>
     </.invocation_container>
     """
@@ -176,14 +176,24 @@ defmodule PanicWeb.PanicComponents do
 
   attr :type, :atom, required: true, doc: "the type (modality) of the invocation input or output"
   attr :value, :string, required: true, doc: "the value of the invocation input or output"
-  attr :id, :string
+  attr :id, :string, required: true
 
   def invocation_slot(%{type: :text} = assigns) do
     ~H"""
-    <div class="size-full grid place-items-center p-2 bg-zinc-800 text-left text-[14px]">
+    <div
+      id={"#{@id}-text"}
+      class="size-full grid place-items-center p-2 bg-zinc-800 text-left text-[14px]"
+      phx-hook="FitText"
+    >
       <div>
         <%= for line <- String.split(@value, "\n\n") do %>
-          <.shadowed_text :if={line != ""}>{line}</.shadowed_text>
+          <p
+            :if={line != ""}
+            class="[text-shadow:2px_2px_0px_#581c87]"
+            style="font-size: var(--fit-text-size, inherit);"
+          >
+            {line}
+          </p>
         <% end %>
       </div>
     </div>
