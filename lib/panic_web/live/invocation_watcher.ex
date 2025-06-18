@@ -51,21 +51,21 @@ defmodule PanicWeb.InvocationWatcher do
   @spec on_mount(term(), map(), map(), LiveView.Socket.t()) ::
           {:cont, LiveView.Socket.t()} | {:halt, LiveView.Socket.t()}
   def on_mount(_display_mode \\ :auto, params, _session, socket) do
-    with %{"network_id" => id} <- params,
-         {:ok, network} <- fetch_network(id, socket.assigns) do
-      # Only subscribe and attach the watcher. We **do not** configure the
-      # invocation stream here because the correct `display` mode is typically
-      # chosen later inside the LiveView (e.g. in `handle_params/3`). Doing it
-      # here caused incorrect behaviour when `socket.assigns.live_action` was
-      # not yet set.
-      socket =
-        socket
-        |> maybe_subscribe(network)
-        |> attach_invocation_hook()
+    case fetch_network_from_params(params, socket.assigns) do
+      {:ok, network} ->
+        # Only subscribe and attach the watcher. We **do not** configure the
+        # invocation stream here because the correct `display` mode is typically
+        # chosen later inside the LiveView (e.g. in `handle_params/3`). Doing it
+        # here caused incorrect behaviour when `socket.assigns.live_action` was
+        # not yet set.
+        socket =
+          socket
+          |> maybe_subscribe(network)
+          |> attach_invocation_hook()
 
-      {:cont, socket}
-    else
-      _ ->
+        {:cont, socket}
+
+      {:error, _} ->
         # No network context: continue without attaching the watcher
         {:cont, socket}
     end
@@ -186,11 +186,36 @@ defmodule PanicWeb.InvocationWatcher do
   # will explicitly call `configure_invocation_stream/3` once it knows which
   # display variant it wants.
 
+  defp fetch_network_from_params(params, assigns) do
+    case params do
+      %{"network_id" => network_id} ->
+        fetch_network(network_id, assigns)
+
+      %{"id" => installation_id} ->
+        # This is an installation route - fetch network via installation
+        fetch_network_from_installation(installation_id, assigns)
+
+      _ ->
+        {:error, :no_network_context}
+    end
+  end
+
   defp fetch_network(id, assigns) do
     actor = Map.get(assigns, :current_user)
 
     case Ash.get(Network, id, actor: actor) do
       {:ok, _} = ok -> ok
+      {:error, _} = err -> err
+    end
+  end
+
+  defp fetch_network_from_installation(installation_id, assigns) do
+    alias Panic.Engine.Installation
+
+    actor = Map.get(assigns, :current_user)
+
+    case Ash.get(Installation, installation_id, actor: actor, authorize?: false, load: [:network]) do
+      {:ok, installation} -> {:ok, installation.network}
       {:error, _} = err -> err
     end
   end

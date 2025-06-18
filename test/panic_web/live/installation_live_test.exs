@@ -225,6 +225,32 @@ defmodule PanicWeb.InstallationLiveTest do
       |> assert_has("title", text: "Test Installation - Watcher 0")
     end
 
+    test "watcher display can be viewed", %{conn: conn, user: user} do
+      # Create network and installation with a single watcher
+      {:ok, network} =
+        Network
+        |> Ash.Changeset.for_create(:create, %{name: "Test Network"}, actor: user)
+        |> Ash.create()
+
+      {:ok, installation} =
+        Installation
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            name: "Test Installation",
+            network_id: network.id,
+            watchers: [%{type: :single, stride: 1, offset: 0}]
+          },
+          actor: user
+        )
+        |> Ash.create()
+
+      # Visit the watcher display page and verify it loads correctly
+      conn
+      |> visit("/i/#{installation.id}/0")
+      |> assert_has("title", text: "Test Installation - Watcher 0")
+    end
+
     test "can delete an installation", %{conn: conn, user: user} do
       # Create network and installation
       {:ok, network} =
