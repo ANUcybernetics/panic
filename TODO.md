@@ -2,7 +2,12 @@
 
 ## NIME blockers
 
-- check installation watcher views
+- update InvocationWatcher code s so that 0-offset means you get the genesis
+  _input_
+- see if the gemini mode ids can be updated (now it's GA)
+- have another go at refactoring the "trigger new run while existing one" logic
+  (perhaps we _do_ need to send an out-of-band message---maybe even from the
+  LiveView rather than the NetworkRunner)
 - check that time-based QR code -> terminal workflow works for non-logged-in
   users (perhaps only required for installations, and also requires real
   deployment to test properly)
@@ -23,6 +28,8 @@
 - make sure vestaboards crashing doesn't bring down the whole thing
 - create a new `Display` domain or similar (because Installations and Watchers
   shouldn't really be in `Engine`)
+- add installations section to user live view (not standalone)
+- add auth for installations (via network.user) or check if it's there already
 
 ## thought bubbles
 
