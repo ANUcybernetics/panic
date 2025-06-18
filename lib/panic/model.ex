@@ -73,7 +73,7 @@ defmodule Panic.Model do
       %__MODULE__{
         id: "gemini-audio-description",
         name: "Gemini Audio Description (Flash)",
-        path: "gemini-2.5-flash-preview-05-20",
+        path: "gemini-2.5-flash",
         input_type: :audio,
         output_type: :text,
         platform: Gemini,
@@ -97,7 +97,7 @@ defmodule Panic.Model do
       %__MODULE__{
         id: "gemini-audio-description-pro",
         name: "Gemini Audio Description (Pro)",
-        path: "gemini-2.5-pro-preview-06-05",
+        path: "gemini-2.5-pro",
         input_type: :audio,
         output_type: :text,
         platform: Gemini,
