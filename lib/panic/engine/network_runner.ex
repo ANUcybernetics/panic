@@ -191,19 +191,13 @@ defmodule Panic.Engine.NetworkRunner do
       if state.current_invocation do
         case Engine.prepare_first(network, prompt, actor: user) do
           {:ok, invocation} ->
-            case Engine.start_run(invocation, actor: user) do
-              {:ok, genesis_invocation} ->
-                # Make the genesis visible immediately via about_to_invoke
-                Engine.about_to_invoke!(genesis_invocation, actor: user)
+            # Make the genesis visible immediately via about_to_invoke
+            Engine.about_to_invoke!(invocation, actor: user)
 
-                # Schedule the actual restart to replace current run
-                Process.send_after(self(), {:restart_run, genesis_invocation, user}, 0)
+            # Schedule the actual restart to replace current run
+            Process.send_after(self(), {:restart_run, invocation, user}, 0)
 
-                {:reply, {:ok, genesis_invocation}, state}
-
-              {:error, reason} ->
-                {:reply, {:error, reason}, state}
-            end
+            {:reply, {:ok, invocation}, state}
 
           {:error, reason} ->
             {:reply, {:error, reason}, state}
@@ -215,24 +209,18 @@ defmodule Panic.Engine.NetworkRunner do
 
         case Engine.prepare_first(network, prompt, actor: user) do
           {:ok, invocation} ->
-            case Engine.start_run(invocation, actor: user) do
-              {:ok, genesis_invocation} ->
-                ref = Process.send_after(self(), :process_invocation, 0)
+            ref = Process.send_after(self(), :process_invocation, 0)
 
-                new_state = %{
-                  new_state
-                  | current_invocation: invocation,
-                    genesis_invocation: genesis_invocation,
-                    user: user,
-                    processing_ref: ref,
-                    watchers: watchers
-                }
+            new_state = %{
+              new_state
+              | current_invocation: invocation,
+                genesis_invocation: invocation,
+                user: user,
+                processing_ref: ref,
+                watchers: watchers
+            }
 
-                {:reply, {:ok, genesis_invocation}, new_state}
-
-              {:error, reason} ->
-                {:reply, {:error, reason}, new_state}
-            end
+            {:reply, {:ok, invocation}, new_state}
 
           {:error, reason} ->
             {:reply, {:error, reason}, new_state}

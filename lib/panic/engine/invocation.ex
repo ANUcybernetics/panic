@@ -110,18 +110,6 @@ defmodule Panic.Engine.Invocation do
       change Panic.Engine.Changes.PrepareNext
     end
 
-    action :start_run, :struct do
-      argument :first_invocation, :struct do
-        constraints instance_of: __MODULE__
-        allow_nil? false
-      end
-
-      run fn input, _context ->
-        invocation = input.arguments.first_invocation
-        {:ok, invocation}
-      end
-    end
-
     update :set_run_number do
       accept [:run_number]
     end
@@ -158,12 +146,6 @@ defmodule Panic.Engine.Invocation do
   end
 
   policies do
-    # this is for the :start_run action for now
-    # perhaps find a better way to authorize
-    policy action_type(:action) do
-      authorize_if always()
-    end
-
     policy action_type(:create) do
       authorize_if always()
     end

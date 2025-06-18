@@ -12,7 +12,6 @@ defmodule Panic.Engine do
     resource Panic.Engine.Invocation do
       define :prepare_first, args: [:network, :input]
       define :prepare_next, args: [:previous_invocation]
-      define :start_run, args: [:first_invocation]
       define :invoke, args: []
       define :about_to_invoke, args: []
       define :cancel, args: []
