@@ -171,7 +171,8 @@ defmodule Panic.Engine.NetworkRunner do
       genesis_invocation: nil,
       user: nil,
       processing_ref: nil,
-      watchers: []
+      watchers: [],
+      archival_timer: nil
     }
 
     {:ok, state}
@@ -266,16 +267,29 @@ defmodule Panic.Engine.NetworkRunner do
             # Handle archiving for image/audio outputs
             model = Panic.Model.by_id!(invocation.model)
 
-            if model.output_type in [:image, :audio] do
-              Task.start(fn ->
-                archive_invocation(invocation, next_invocation)
-              end)
-            end
+            archival_timer =
+              if model.output_type in [:image, :audio] do
+                # Cancel any previous archival timer
+                if state.archival_timer do
+                  Process.cancel_timer(state.archival_timer)
+                end
+
+                # Schedule archival for later (delay by 5 minutes)
+                Process.send_after(self(), {:archive_invocation, invocation, next_invocation}, to_timeout(minute: 5))
+              else
+                state.archival_timer
+              end
 
             # Schedule next invocation
             ref = Process.send_after(self(), :process_invocation, 0)
 
-            new_state = %{state | current_invocation: next_invocation, processing_ref: ref}
+            new_state = %{
+              state
+              | current_invocation: next_invocation,
+                processing_ref: ref,
+                archival_timer: archival_timer
+            }
+
             {:noreply, new_state}
           else
             {:error, reason} ->
@@ -342,6 +356,16 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   @impl true
+  def handle_info({:archive_invocation, invocation, next_invocation}, state) do
+    # Spawn the archival work asynchronously to avoid blocking
+    Task.start(fn ->
+      archive_invocation(invocation, next_invocation)
+    end)
+
+    # Clear the timer reference since it fired
+    {:noreply, %{state | archival_timer: nil}}
+  end
+
   def handle_info(_msg, state) do
     {:noreply, state}
   end
@@ -356,9 +380,14 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   defp cancel_current_run(state) do
-    # Cancel the processing timer
+    # Cancel processing timer
     if state.processing_ref do
       Process.cancel_timer(state.processing_ref)
+    end
+
+    # Cancel archival timer
+    if state.archival_timer do
+      Process.cancel_timer(state.archival_timer)
     end
 
     # Cancel the current invocation - do this safely to avoid timeouts
