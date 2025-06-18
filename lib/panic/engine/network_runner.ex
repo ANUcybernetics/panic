@@ -390,18 +390,8 @@ defmodule Panic.Engine.NetworkRunner do
       Process.cancel_timer(state.archival_timer)
     end
 
-    # Cancel the current invocation - do this safely to avoid timeouts
-    if state.current_invocation do
-      # AIDEV-NOTE: Use Task.start to avoid blocking the GenServer call
-      Task.start(fn ->
-        try do
-          Engine.cancel!(state.current_invocation, authorize?: false)
-        rescue
-          error ->
-            Logger.warning("Failed to cancel invocation: #{inspect(error)}")
-        end
-      end)
-    end
+    # No need to cancel invocation - it's just a state change and the NetworkRunner
+    # stopping processing is the real "cancellation"
 
     %{
       state
