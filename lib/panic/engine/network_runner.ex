@@ -186,38 +186,56 @@ defmodule Panic.Engine.NetworkRunner do
     if under_lockout?(state, network) do
       {:reply, {:lockout, state.genesis_invocation}, state}
     else
-      # Cancel any existing run
-      new_state = cancel_current_run(state)
+      # If we're currently processing, create genesis immediately and schedule restart
+      if state.current_invocation do
+        case Engine.prepare_first(network, prompt, actor: user) do
+          {:ok, invocation} ->
+            case Engine.start_run(invocation, actor: user) do
+              {:ok, genesis_invocation} ->
+                # Make the genesis visible immediately via about_to_invoke
+                Engine.about_to_invoke!(genesis_invocation, actor: user)
 
-      # Get vestaboard watchers
-      watchers = vestaboard_watchers(network)
+                # Schedule the actual restart to replace current run
+                Process.send_after(self(), {:restart_run, genesis_invocation, user}, 0)
 
-      # Create the first invocation
-      case Engine.prepare_first(network, prompt, actor: user) do
-        {:ok, invocation} ->
-          # Start the run
-          case Engine.start_run(invocation, actor: user) do
-            {:ok, genesis_invocation} ->
-              # Start processing
-              ref = Process.send_after(self(), :process_invocation, 0)
+                {:reply, {:ok, genesis_invocation}, state}
 
-              new_state = %{
-                new_state
-                | current_invocation: invocation,
-                  genesis_invocation: genesis_invocation,
-                  user: user,
-                  processing_ref: ref,
-                  watchers: watchers
-              }
+              {:error, reason} ->
+                {:reply, {:error, reason}, state}
+            end
 
-              {:reply, {:ok, genesis_invocation}, new_state}
+          {:error, reason} ->
+            {:reply, {:error, reason}, state}
+        end
+      else
+        # No current run, start immediately as before
+        new_state = cancel_current_run(state)
+        watchers = vestaboard_watchers(network)
 
-            {:error, reason} ->
-              {:reply, {:error, reason}, new_state}
-          end
+        case Engine.prepare_first(network, prompt, actor: user) do
+          {:ok, invocation} ->
+            case Engine.start_run(invocation, actor: user) do
+              {:ok, genesis_invocation} ->
+                ref = Process.send_after(self(), :process_invocation, 0)
 
-        {:error, reason} ->
-          {:reply, {:error, reason}, new_state}
+                new_state = %{
+                  new_state
+                  | current_invocation: invocation,
+                    genesis_invocation: genesis_invocation,
+                    user: user,
+                    processing_ref: ref,
+                    watchers: watchers
+                }
+
+                {:reply, {:ok, genesis_invocation}, new_state}
+
+              {:error, reason} ->
+                {:reply, {:error, reason}, new_state}
+            end
+
+          {:error, reason} ->
+            {:reply, {:error, reason}, new_state}
+        end
       end
     end
   end
@@ -301,49 +319,26 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   @impl true
-  def handle_info({:restart_run, prompt, user}, state) do
-    # Only restart if we're not already running something
-    if state.current_invocation == nil do
-      # Get the network
-      network = Ash.get!(Engine.Network, state.network_id, actor: user)
+  def handle_info({:restart_run, genesis_invocation, user}, state) do
+    # Cancel any existing run first
+    new_state = cancel_current_run(state)
 
-      # Check for lockout period
-      if under_lockout?(state, network) do
-        {:noreply, state}
-      else
-        # Get vestaboard watchers
-        watchers = vestaboard_watchers(network)
+    # Get vestaboard watchers
+    watchers = vestaboard_watchers(Ash.get!(Engine.Network, state.network_id, actor: user))
 
-        case Engine.prepare_first(network, prompt, actor: user) do
-          {:ok, invocation} ->
-            case Engine.start_run(invocation, actor: user) do
-              {:ok, genesis_invocation} ->
-                ref = Process.send_after(self(), :process_invocation, 0)
+    # Use the existing genesis invocation that was already created
+    ref = Process.send_after(self(), :process_invocation, 0)
 
-                new_state = %{
-                  state
-                  | current_invocation: invocation,
-                    genesis_invocation: genesis_invocation,
-                    user: user,
-                    processing_ref: ref,
-                    watchers: watchers
-                }
+    new_state = %{
+      new_state
+      | current_invocation: genesis_invocation,
+        genesis_invocation: genesis_invocation,
+        user: user,
+        processing_ref: ref,
+        watchers: watchers
+    }
 
-                {:noreply, new_state}
-
-              {:error, reason} ->
-                Logger.error("Failed to restart run: #{inspect(reason)}")
-                {:noreply, state}
-            end
-
-          {:error, reason} ->
-            Logger.error("Failed to prepare first invocation on restart: #{inspect(reason)}")
-            {:noreply, state}
-        end
-      end
-    else
-      {:noreply, state}
-    end
+    {:noreply, new_state}
   end
 
   @impl true

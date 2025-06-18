@@ -151,8 +151,9 @@ defmodule Panic.NetworkRunnerTest do
       # Start a new run after lockout period (configured as 1s in test)
       Process.sleep(1_500)
 
+      # Start second run - after lockout, this should succeed
+      # Start second run - after lockout, this should always succeed and return a genesis
       {:ok, second_genesis} = NetworkRunner.start_run(network.id, "Second prompt", user)
-
       assert first_genesis.id != second_genesis.id
 
       # Check that the first invocation was cancelled or failed
