@@ -7,6 +7,7 @@ set -o pipefail  # Exit on pipe failure
 # Configuration
 readonly RASPBIAN_URL="https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2025-05-13/2025-05-13-raspios-bookworm-armhf-lite.img.xz"
 readonly LAUNCH_SCRIPT_PATH="launch.sh"
+readonly IMAGES_DIR="${HOME}/.raspios-images"
 
 # Check for URL argument
 if [ $# -eq 0 ]; then
@@ -78,14 +79,24 @@ printf "Found SD card: %s\n" "${SD_CARD}"
 printf "Unmounting SD card...\n"
 diskutil unmountDisk "${SD_CARD}"
 
-# Download Raspbian image
-printf "Downloading Raspbian image...\n"
-TEMP_DIR=$(mktemp -d)
-IMAGE_FILE="${TEMP_DIR}/raspbian.img.xz"
-curl -L -o "${IMAGE_FILE}" "${RASPBIAN_URL}"
+# Create images directory if it doesn't exist
+mkdir -p "${IMAGES_DIR}"
+
+# Extract filename from URL
+IMAGE_FILENAME=$(basename "${RASPBIAN_URL}")
+IMAGE_FILE="${IMAGES_DIR}/${IMAGE_FILENAME}"
+
+# Download Raspbian image if not already present
+if [[ -f "${IMAGE_FILE}" ]]; then
+    printf "Using existing Raspbian image: %s\n" "${IMAGE_FILE}"
+else
+    printf "Downloading Raspbian image...\n"
+    curl -L -o "${IMAGE_FILE}" "${RASPBIAN_URL}"
+fi
 
 # Extract image
 printf "Extracting image...\n"
+TEMP_DIR=$(mktemp -d)
 EXTRACTED_IMAGE="${TEMP_DIR}/raspbian.img"
 xz -d -c "${IMAGE_FILE}" > "${EXTRACTED_IMAGE}"
 
