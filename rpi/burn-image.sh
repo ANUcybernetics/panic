@@ -147,42 +147,45 @@ cat > "${BOOT_MOUNT}/userconf.txt" << EOF
 panic:\$6\$SALT\$N1UQkqPOmWMjGWpgXCNa8BKdqqXkWBCN0hwQa0Xjdqw5VGzKEGNE1URF6/rFMoq3RRdT1bXNQkOSJdvBAL61U0
 EOF
 
+
+
 # Copy launch script to boot partition
 cp "${LAUNCH_SCRIPT_PATH}" "${BOOT_MOUNT}/launch.sh"
 
-# Create startup script that will run on first boot
-cat > "${BOOT_MOUNT}/setup_kiosk.sh" << EOF
+# Create firstrun.sh script - the modern way for Raspberry Pi OS first-boot setup
+printf "Creating first-run setup script...\n"
+cat > "${BOOT_MOUNT}/firstrun.sh" << 'EOF'
 #!/bin/bash
-# This script runs once on first boot to set up the kiosk
+
+set +e
+
+CURRENT_HOSTNAME=$(hostname)
 
 # Update package list and install required packages
 apt-get update
 apt-get install -y chromium-browser xorg xinit openbox
 
-# Enable autologin for panic user
+# Set up autologin using raspi-config
+raspi-config nonint do_boot_behaviour B4
+
+# Ensure graphical target is set
 systemctl set-default graphical.target
-mkdir -p /etc/systemd/system/getty@tty1.service.d
-cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << 'AUTOLOGIN_EOF'
-[Service]
-ExecStart=
-ExecStart=-/sbin/agetty --autologin panic --noclear %I \$TERM
-AUTOLOGIN_EOF
 
 # Create .xinitrc for automatic X startup
-cat > /home/panic/.xinitrc << 'XINITRC_EOF'
+cat > /home/panic/.xinitrc << XINITRC_EOF
 #!/bin/bash
 # Start openbox window manager
 openbox &
-# Wait a moment for window manager to start
-sleep 2
+# Wait a bit for window manager to start
+sleep 3
 # Launch the kiosk browser
-exec /home/panic/launch.sh ${KIOSK_URL}
+exec /home/panic/launch.sh "${KIOSK_URL}"
 XINITRC_EOF
 
 # Create .bash_profile to automatically start X on login
 cat > /home/panic/.bash_profile << 'BASHPROFILE_EOF'
-# Auto-start X server on tty1 login
-if [ -z "\$DISPLAY" ] && [ "\$(tty)" = "/dev/tty1" ]; then
+# Auto-start X server on tty1 login only
+if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
     exec startx
 fi
 BASHPROFILE_EOF
@@ -195,32 +198,23 @@ chown panic:panic /home/panic/.xinitrc
 chown panic:panic /home/panic/.bash_profile
 chmod +x /home/panic/.xinitrc
 
-# Remove this setup script so it doesn't run again
-rm /boot/setup_kiosk.sh
-rm /etc/rc.local.backup 2>/dev/null || true
-EOF
+# No need for environment variable setup - URL is embedded in xinitrc
 
-# Backup original rc.local and modify it to run setup on first boot
-if [[ -f "${BOOT_MOUNT}/../etc/rc.local" ]]; then
-    cp "${BOOT_MOUNT}/../etc/rc.local" "${BOOT_MOUNT}/../etc/rc.local.backup"
-fi
-
-cat > "${BOOT_MOUNT}/rc.local.firstboot" << 'EOF'
-#!/bin/sh -e
-# Run setup script on first boot
-if [ -f /boot/setup_kiosk.sh ]; then
-    bash /boot/setup_kiosk.sh
-    # Restore original rc.local
-    if [ -f /etc/rc.local.backup ]; then
-        mv /etc/rc.local.backup /etc/rc.local
-    else
-        echo '#!/bin/sh -e' > /etc/rc.local
-        echo 'exit 0' >> /etc/rc.local
-    fi
-    chmod +x /etc/rc.local
-fi
+rm -f /boot/firstrun.sh
+sed -i 's| systemd.run_success_action=reboot||g' /boot/cmdline.txt
 exit 0
 EOF
+
+chmod +x "${BOOT_MOUNT}/firstrun.sh"
+
+# Just copy the launch script as-is
+chmod +x "${BOOT_MOUNT}/launch.sh"
+
+# Add firstrun.sh to cmdline.txt
+if [[ -f "${BOOT_MOUNT}/cmdline.txt" ]]; then
+    # Add systemd.run parameters to trigger firstrun.sh
+    sed -i '' 's/$/ systemd.run="\/boot\/firstrun.sh" systemd.run_success_action=reboot systemd.unit=kernel-command-line.target/' "${BOOT_MOUNT}/cmdline.txt"
+fi
 
 # Unmount SD card
 printf "Unmounting SD card...\n"

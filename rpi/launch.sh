@@ -27,12 +27,12 @@ chromium-browser \
     --kiosk \
     --noerrdialogs \
     --disable-infobars \
-    --enable-features=OverlayScrollbar \
+    --disable-web-security \
+    --disable-features=TranslateUI \
+    --disable-ipc-flooding-protection \
     --class="chromium-browser" \
     --user-data-dir=/tmp/chromium \
     --start-fullscreen \
-    --enable-wayland-server \
-    --ozone-platform=wayland \
     --autoplay-policy=no-user-gesture-required \
     "${URL}" >/dev/null 2>&1 &
 
