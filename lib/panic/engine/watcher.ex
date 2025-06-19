@@ -44,7 +44,7 @@ defmodule Panic.Engine.Installation.Watcher do
     end
 
     attribute :offset, :integer do
-      constraints min: 0
+      constraints min: -1
     end
 
     # Vestaboard-specific attributes

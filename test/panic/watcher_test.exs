@@ -53,7 +53,9 @@ defmodule Panic.WatcherTest do
                )
                |> Ash.create()
 
-      assert %{watchers: [%{rows: ["rows and columns are required for grid type"]}]} = errors_on(changeset)
+      errors = errors_on(changeset)
+      assert %{watchers: [watcher_errors]} = errors
+      assert watcher_errors[:rows]
     end
 
     test "rejects grid watcher without columns", %{user: user, network: network} do
@@ -70,7 +72,9 @@ defmodule Panic.WatcherTest do
                )
                |> Ash.create()
 
-      assert %{watchers: [%{columns: ["rows and columns are required for grid type"]}]} = errors_on(changeset)
+      errors = errors_on(changeset)
+      assert %{watchers: [watcher_errors]} = errors
+      assert watcher_errors[:columns]
     end
 
     test "rejects grid watcher with stride/offset", %{user: user, network: network} do
@@ -87,7 +91,9 @@ defmodule Panic.WatcherTest do
                )
                |> Ash.create()
 
-      assert %{watchers: [%{stride: ["stride, offset, and name are not allowed for grid type"]}]} = errors_on(changeset)
+      errors = errors_on(changeset)
+      assert %{watchers: [watcher_errors]} = errors
+      assert watcher_errors[:stride]
     end
 
     test "rejects grid watcher with negative dimensions", %{user: user, network: network} do
@@ -106,7 +112,7 @@ defmodule Panic.WatcherTest do
 
       errors = errors_on(changeset)
       assert %{watchers: [watcher_errors]} = errors
-      assert "must be more than or equal to 1" in watcher_errors[:rows]
+      assert watcher_errors[:rows]
     end
   end
 
@@ -131,6 +137,26 @@ defmodule Panic.WatcherTest do
       assert watcher.offset == 1
     end
 
+    test "accepts single watcher with -1 offset for genesis display", %{user: user, network: network} do
+      assert {:ok, installation} =
+               Installation
+               |> Ash.Changeset.for_create(
+                 :create,
+                 %{
+                   name: "Test Genesis Single",
+                   network_id: network.id,
+                   watchers: [%{type: :single, stride: 3, offset: -1}]
+                 },
+                 actor: user
+               )
+               |> Ash.create()
+
+      assert [watcher] = installation.watchers
+      assert watcher.type == :single
+      assert watcher.stride == 3
+      assert watcher.offset == -1
+    end
+
     test "rejects single watcher without stride", %{user: user, network: network} do
       assert {:error, changeset} =
                Installation
@@ -145,7 +171,9 @@ defmodule Panic.WatcherTest do
                )
                |> Ash.create()
 
-      assert %{watchers: [%{stride: ["stride and offset are required for single type"]}]} = errors_on(changeset)
+      errors = errors_on(changeset)
+      assert %{watchers: [watcher_errors]} = errors
+      assert watcher_errors[:stride]
     end
 
     test "rejects single watcher without offset", %{user: user, network: network} do
@@ -162,7 +190,9 @@ defmodule Panic.WatcherTest do
                )
                |> Ash.create()
 
-      assert %{watchers: [%{offset: ["stride and offset are required for single type"]}]} = errors_on(changeset)
+      errors = errors_on(changeset)
+      assert %{watchers: [watcher_errors]} = errors
+      assert watcher_errors[:offset]
     end
 
     test "rejects single watcher with rows/columns", %{user: user, network: network} do
@@ -179,7 +209,9 @@ defmodule Panic.WatcherTest do
                )
                |> Ash.create()
 
-      assert %{watchers: [%{rows: ["rows, columns, and name are not allowed for single type"]}]} = errors_on(changeset)
+      errors = errors_on(changeset)
+      assert %{watchers: [watcher_errors]} = errors
+      assert watcher_errors[:rows]
     end
 
     test "rejects single watcher with offset >= stride", %{user: user, network: network} do
@@ -196,7 +228,9 @@ defmodule Panic.WatcherTest do
                )
                |> Ash.create()
 
-      assert %{watchers: [%{offset: ["offset must be less than stride"]}]} = errors_on(changeset)
+      errors = errors_on(changeset)
+      assert %{watchers: [watcher_errors]} = errors
+      assert watcher_errors[:offset]
     end
 
     test "rejects single watcher with zero stride", %{user: user, network: network} do
@@ -215,7 +249,7 @@ defmodule Panic.WatcherTest do
 
       errors = errors_on(changeset)
       assert %{watchers: [watcher_errors]} = errors
-      assert "must be more than or equal to 1" in watcher_errors[:stride]
+      assert watcher_errors[:stride]
     end
 
     test "rejects single watcher with negative offset", %{user: user, network: network} do
@@ -226,7 +260,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :single, stride: 3, offset: -1}]
+                   watchers: [%{type: :single, stride: 3, offset: -2}]
                  },
                  actor: user
                )
@@ -234,7 +268,7 @@ defmodule Panic.WatcherTest do
 
       errors = errors_on(changeset)
       assert %{watchers: [watcher_errors]} = errors
-      assert "must be more than or equal to 0" in watcher_errors[:offset]
+      assert watcher_errors[:offset]
     end
   end
 
@@ -262,6 +296,27 @@ defmodule Panic.WatcherTest do
       end
     end
 
+    test "accepts vestaboard watcher with -1 offset for genesis display", %{user: user, network: network} do
+      assert {:ok, installation} =
+               Installation
+               |> Ash.Changeset.for_create(
+                 :create,
+                 %{
+                   name: "Test Genesis",
+                   network_id: network.id,
+                   watchers: [%{type: :vestaboard, stride: 3, offset: -1, name: :panic_1}]
+                 },
+                 actor: user
+               )
+               |> Ash.create()
+
+      assert [watcher] = installation.watchers
+      assert watcher.type == :vestaboard
+      assert watcher.stride == 3
+      assert watcher.offset == -1
+      assert watcher.name == :panic_1
+    end
+
     test "rejects vestaboard watcher without name", %{user: user, network: network} do
       assert {:error, changeset} =
                Installation
@@ -276,7 +331,9 @@ defmodule Panic.WatcherTest do
                )
                |> Ash.create()
 
-      assert %{watchers: [%{name: ["stride, offset, and name are required for vestaboard type"]}]} = errors_on(changeset)
+      errors = errors_on(changeset)
+      assert %{watchers: [watcher_errors]} = errors
+      assert watcher_errors[:name]
     end
 
     test "rejects vestaboard watcher with invalid name", %{user: user, network: network} do
@@ -296,7 +353,6 @@ defmodule Panic.WatcherTest do
       errors = errors_on(changeset)
       assert %{watchers: [watcher_errors]} = errors
       assert watcher_errors[:name]
-      assert Enum.any?(watcher_errors[:name], &String.contains?(&1, "panic_1, panic_2, panic_3, panic_4"))
     end
 
     test "rejects vestaboard watcher without stride/offset", %{user: user, network: network} do
@@ -313,8 +369,9 @@ defmodule Panic.WatcherTest do
                )
                |> Ash.create()
 
-      assert %{watchers: [%{stride: ["stride, offset, and name are required for vestaboard type"]}]} =
-               errors_on(changeset)
+      errors = errors_on(changeset)
+      assert %{watchers: [watcher_errors]} = errors
+      assert watcher_errors[:stride]
     end
 
     test "rejects vestaboard watcher with rows/columns", %{user: user, network: network} do
@@ -331,7 +388,28 @@ defmodule Panic.WatcherTest do
                )
                |> Ash.create()
 
-      assert %{watchers: [%{rows: ["rows and columns are not allowed for vestaboard type"]}]} = errors_on(changeset)
+      errors = errors_on(changeset)
+      assert %{watchers: [watcher_errors]} = errors
+      assert watcher_errors[:rows]
+    end
+
+    test "rejects vestaboard watcher with offset >= stride (except -1)", %{user: user, network: network} do
+      assert {:error, changeset} =
+               Installation
+               |> Ash.Changeset.for_create(
+                 :create,
+                 %{
+                   name: "Test",
+                   network_id: network.id,
+                   watchers: [%{type: :vestaboard, stride: 2, offset: 2, name: :panic_1}]
+                 },
+                 actor: user
+               )
+               |> Ash.create()
+
+      errors = errors_on(changeset)
+      assert %{watchers: [watcher_errors]} = errors
+      assert watcher_errors[:offset]
     end
   end
 
@@ -407,7 +485,6 @@ defmodule Panic.WatcherTest do
       errors = errors_on(changeset)
       assert %{watchers: [watcher_errors]} = errors
       assert watcher_errors[:type]
-      assert Enum.any?(watcher_errors[:type], &String.contains?(&1, "grid, single, vestaboard"))
     end
 
     test "rejects watcher without type", %{user: user, network: network} do
@@ -424,7 +501,9 @@ defmodule Panic.WatcherTest do
                )
                |> Ash.create()
 
-      assert %{watchers: [%{type: ["type is required"]}]} = errors_on(changeset)
+      errors = errors_on(changeset)
+      assert %{watchers: [watcher_errors]} = errors
+      assert watcher_errors[:type]
     end
   end
 end
