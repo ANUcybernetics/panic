@@ -14,26 +14,40 @@ fi
 readonly URL="$1"
 
 printf "Quitting Chromium if it's running...\n"
-if ! pkill chromium; then
-    printf "No Chromium instances found running\n"
-fi
+pkill -f chromium-browser || true
+pkill -f chromium || true
 
 # Wait for Chromium to fully quit
-sleep 2
+sleep 3
 
 printf "Opening Chromium with specific arguments...\n"
-# Launch fullscreen window
+# Clear any existing user data
+rm -rf /tmp/chromium-kiosk
+
+# Launch fullscreen kiosk window optimized for full desktop
 chromium-browser \
     --kiosk \
-    --noerrdialogs \
-    --disable-infobars \
+    --no-sandbox \
     --disable-web-security \
-    --disable-features=TranslateUI \
+    --disable-features=VizDisplayCompositor,TranslateUI \
     --disable-ipc-flooding-protection \
-    --class="chromium-browser" \
-    --user-data-dir=/tmp/chromium \
-    --start-fullscreen \
+    --disable-background-timer-throttling \
+    --disable-backgrounding-occluded-windows \
+    --disable-renderer-backgrounding \
+    --disable-field-trial-config \
+    --disable-background-networking \
+    --user-data-dir=/tmp/chromium-kiosk \
+    --no-first-run \
+    --disable-default-apps \
+    --disable-popup-blocking \
+    --disable-prompt-on-repost \
+    --no-message-box \
     --autoplay-policy=no-user-gesture-required \
+    --allow-running-insecure-content \
+    --disable-hang-monitor \
+    --disable-session-crashed-bubble \
+    --disable-infobars \
+    --force-device-scale-factor=1 \
     "${URL}" >/dev/null 2>&1 &
 
 printf "Setup complete - fullscreen window opened\n"

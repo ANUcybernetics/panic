@@ -5,7 +5,7 @@ set -o pipefail  # Exit on pipe failure
 # set -x           # Enable debugging output
 
 # Configuration
-readonly RASPBIAN_URL="https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2025-05-13/2025-05-13-raspios-bookworm-armhf-lite.img.xz"
+readonly RASPBIAN_URL="https://downloads.raspberrypi.com/raspios_full_arm64/images/raspios_full_arm64-2025-05-13/2025-05-13-raspios-bookworm-arm64-full.img.xz"
 readonly LAUNCH_SCRIPT_PATH="launch.sh"
 readonly IMAGES_DIR="${HOME}/.raspios-images"
 
@@ -161,44 +161,56 @@ set +e
 
 CURRENT_HOSTNAME=$(hostname)
 
-# Update package list and install required packages
+# Update package list (chromium already installed in full image)
 apt-get update
-apt-get install -y chromium-browser xorg xinit openbox
 
-# Set up autologin using raspi-config
+# Set up autologin using raspi-config - this works with the existing display manager
 raspi-config nonint do_boot_behaviour B4
 
 # Ensure graphical target is set
 systemctl set-default graphical.target
 
-# Create .xinitrc for automatic X startup
-cat > /home/panic/.xinitrc << XINITRC_EOF
-#!/bin/bash
-# Start openbox window manager
-openbox &
-# Wait a bit for window manager to start
-sleep 3
-# Launch the kiosk browser
-exec /home/panic/launch.sh "${KIOSK_URL}"
-XINITRC_EOF
+# Create autostart directory for LXDE desktop
+mkdir -p /home/panic/.config/lxsession/LXDE-pi
 
-# Create .bash_profile to automatically start X on login
-cat > /home/panic/.bash_profile << 'BASHPROFILE_EOF'
-# Auto-start X server on tty1 login only
-if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
-    exec startx
-fi
-BASHPROFILE_EOF
+# Create custom LXDE session that launches our kiosk instead of the desktop
+cat > /home/panic/.config/lxsession/LXDE-pi/autostart << AUTOSTART_EOF
+# Disable screen saver and power management
+@xset s off
+@xset -dpms
+@xset s noblank
+
+# Kill any existing desktop components to ensure clean kiosk
+@pkill -f pcmanfm
+@pkill -f lxpanel
+
+# Launch our kiosk application
+@/home/panic/launch.sh "${KIOSK_URL}"
+AUTOSTART_EOF
 
 # Make launch script executable and copy to home directory
 chmod +x /boot/launch.sh
 cp /boot/launch.sh /home/panic/launch.sh
+chown -R panic:panic /home/panic/.config
 chown panic:panic /home/panic/launch.sh
-chown panic:panic /home/panic/.xinitrc
-chown panic:panic /home/panic/.bash_profile
-chmod +x /home/panic/.xinitrc
 
-# No need for environment variable setup - URL is embedded in xinitrc
+# Create a simple script to restart the kiosk if it crashes
+cat > /home/panic/kiosk-watchdog.sh << 'WATCHDOG_EOF'
+#!/bin/bash
+while true; do
+    if ! pgrep -f "chromium.*--kiosk" > /dev/null; then
+        sleep 5
+        /home/panic/launch.sh "${KIOSK_URL}" &
+    fi
+    sleep 10
+done
+WATCHDOG_EOF
+
+chmod +x /home/panic/kiosk-watchdog.sh
+chown panic:panic /home/panic/kiosk-watchdog.sh
+
+# Add watchdog to autostart as well
+echo "@/home/panic/kiosk-watchdog.sh &" >> /home/panic/.config/lxsession/LXDE-pi/autostart
 
 rm -f /boot/firstrun.sh
 sed -i 's| systemd.run_success_action=reboot||g' /boot/cmdline.txt
