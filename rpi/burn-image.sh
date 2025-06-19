@@ -6,7 +6,7 @@ set -x           # Enable debugging output
 
 # Configuration
 readonly RASPBIAN_URL="https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2023-12-11/2023-12-11-raspios-bookworm-armhf-lite.img.xz"
-readonly LAUNCH_SCRIPT_PATH="panic/rpi/launch.sh"
+readonly LAUNCH_SCRIPT_PATH="launch.sh"
 
 # Check for URL argument
 if [ $# -eq 0 ]; then
