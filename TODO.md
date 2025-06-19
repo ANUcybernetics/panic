@@ -2,12 +2,7 @@
 
 ## NIME blockers
 
-- update InvocationWatcher code s so that 0-offset means you get the genesis
-  _input_
-- see if the gemini mode ids can be updated (now it's GA)
-- have another go at refactoring the "trigger new run while existing one" logic
-  (perhaps we _do_ need to send an out-of-band message---maybe even from the
-  LiveView rather than the NetworkRunner)
+- ensure the vestaboard delays are still appropriate
 - check that time-based QR code -> terminal workflow works for non-logged-in
   users (perhaps only required for installations, and also requires real
   deployment to test properly)
@@ -22,6 +17,7 @@
 
 ## important/quality-of-life
 
+- fix flaky tests
 - nicer visuals (no green bg?) for audio cards
 - maybe rename PanicWeb.InvocationWatcher (now that there's a Watcher module) to
   WatcherLive or something similar
