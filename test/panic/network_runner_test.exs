@@ -771,5 +771,76 @@ defmodule Panic.NetworkRunnerTest do
       # Cleanup
       NetworkRunner.stop_run(network.id)
     end
+
+    @tag :watcher
+    test "dispatches vestaboard watchers with -1 offset for genesis and stride-1 for others", %{user: user} do
+      # Create a network with a vestaboard installation
+      network = Engine.create_network!("Watcher Test Network -1", "Test network for -1 offset", actor: user)
+      network = Engine.update_models!(network, ["dummy-t2t"], actor: user)
+
+      # Create an installation with a vestaboard watcher using -1 offset
+      _installation =
+        Installation
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            name: "Test Installation -1",
+            network_id: network.id,
+            watchers: [
+              %{type: :vestaboard, stride: 3, offset: -1, name: :panic_2}
+            ]
+          },
+          actor: user
+        )
+        |> Ash.create!()
+
+      # Mock the Vestaboard functions
+      Repatch.patch(Vestaboard, :token_for_board!, [mode: :global], fn _board_name, _user ->
+        "mock_token"
+      end)
+
+      # Mock send_text to capture what gets sent
+      test_pid = self()
+      messages = fn -> [] end |> Agent.start_link() |> elem(1)
+
+      Repatch.patch(Vestaboard, :send_text, [mode: :global], fn text, _token, board ->
+        Agent.update(messages, fn msgs -> [{board, text} | msgs] end)
+        send(test_pid, {:vestaboard_sent, board, text})
+        {:ok, "mock_id"}
+      end)
+
+      # Start a run
+      {:ok, _genesis} = NetworkRunner.start_run(network.id, "Genesis input text", user)
+      allow_network_runner_db_access(network.id)
+
+      # Should receive genesis input immediately for -1 offset
+      assert_receive {:vestaboard_sent, "panic_2", "Genesis input text"}, 2000
+
+      # Let the run process several invocations to get to sequence_number 2
+      Process.sleep(2000)
+
+      # Collect all messages received
+      all_messages = messages |> Agent.get(& &1) |> Enum.reverse()
+
+      # Filter messages to panic_2 board
+      panic_2_messages = Enum.filter(all_messages, fn {board, _text} -> board == "panic_2" end)
+
+      # Should have at least 2 messages: genesis input and sequence 2 output
+      assert length(panic_2_messages) >= 2
+
+      # First message should be genesis input
+      assert {"panic_2", "Genesis input text"} in panic_2_messages
+
+      # Should have at least one message with DUMMY_TEXT (sequence 2 output)
+      output_messages =
+        Enum.filter(panic_2_messages, fn {_board, text} ->
+          String.contains?(text, "DUMMY_TEXT")
+        end)
+
+      assert length(output_messages) >= 1
+
+      # Cleanup
+      NetworkRunner.stop_run(network.id)
+    end
   end
 end

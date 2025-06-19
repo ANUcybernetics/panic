@@ -109,38 +109,44 @@ defmodule PanicWeb.InvocationWatcher do
     display = socket.assigns.display
     invocation = message.payload.data
 
-    # AIDEV-NOTE: Skip archiving updates to prevent URL glitches in LiveViews
+    # AIDEV-NOTE: Filter out invocations from old runs to prevent stale updates
     socket =
-      if archiving_update?(invocation, socket) do
-        # Only update genesis for archiving updates, skip stream updates
-        update_genesis(socket, invocation)
-      else
-        case {invocation, display} do
-          {%Invocation{state: :ready}, _} ->
-            socket
+      cond do
+        from_old_run?(invocation, socket) ->
+          # Ignore invocations from previous runs
+          socket
 
-          {%Invocation{sequence_number: 0, state: :invoking}, {:grid, _rows, _cols}} ->
-            socket
-            |> update_genesis(invocation)
-            |> LiveView.stream(:invocations, [invocation], reset: true)
+        archiving_update?(invocation, socket) ->
+          # Only update genesis for archiving updates, skip stream updates
+          update_genesis(socket, invocation)
 
-          {_, {:grid, _rows, _cols}} ->
-            socket
-            |> update_genesis(invocation)
-            |> LiveView.stream_insert(:invocations, invocation, at: -1)
+        true ->
+          case {invocation, display} do
+            {%Invocation{state: :ready}, _} ->
+              socket
 
-          {%Invocation{sequence_number: seq}, {:single, offset, stride}}
-          when rem(seq, stride) == offset ->
-            socket
-            |> LiveView.stream_insert(:invocations, invocation, at: 0, limit: 1)
-            |> update_genesis(invocation)
+            {%Invocation{sequence_number: 0, state: :invoking}, {:grid, _rows, _cols}} ->
+              socket
+              |> update_genesis(invocation)
+              |> LiveView.stream(:invocations, [invocation], reset: true)
 
-          {_, {:single, _, _}} ->
-            update_genesis(socket, invocation)
+            {_, {:grid, _rows, _cols}} ->
+              socket
+              |> update_genesis(invocation)
+              |> LiveView.stream_insert(:invocations, invocation, at: -1)
 
-          _ ->
-            socket
-        end
+            {%Invocation{sequence_number: seq}, {:single, offset, stride}}
+            when rem(seq, stride) == offset ->
+              socket
+              |> LiveView.stream_insert(:invocations, invocation, at: 0, limit: 1)
+              |> update_genesis(invocation)
+
+            {_, {:single, _, _}} ->
+              update_genesis(socket, invocation)
+
+            _ ->
+              socket
+          end
       end
 
     {:noreply, socket}
@@ -149,6 +155,21 @@ defmodule PanicWeb.InvocationWatcher do
   # ---------------------------------------------------------------------------
   # Internal helpers
   # ---------------------------------------------------------------------------
+
+  # AIDEV-NOTE: Detects invocations from old runs to prevent stale updates
+  defp from_old_run?(%Invocation{sequence_number: 0}, _socket) do
+    # Genesis invocations (sequence_number: 0) always represent new runs and should never be filtered.
+    # This ensures that when a new run starts while another is active, the new genesis immediately
+    # becomes visible in the LiveView, replacing the previous genesis.
+    false
+  end
+
+  defp from_old_run?(%Invocation{run_number: run_number}, socket) do
+    case socket.assigns[:genesis_invocation] do
+      %Invocation{run_number: current_run} when run_number < current_run -> true
+      _ -> false
+    end
+  end
 
   # AIDEV-NOTE: Detects archiving updates to prevent LiveView URL glitches
   defp archiving_update?(%Invocation{output: output}, _socket) when is_binary(output) do

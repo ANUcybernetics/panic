@@ -192,7 +192,11 @@ defmodule Panic.Engine.NetworkRunner do
         case Engine.prepare_first(network, prompt, actor: user) do
           {:ok, invocation} ->
             # Make the genesis visible immediately via about_to_invoke
-            Engine.about_to_invoke!(invocation, actor: user)
+            invocation = Engine.about_to_invoke!(invocation, actor: user)
+
+            # Dispatch watchers for the genesis invocation immediately
+            watchers = vestaboard_watchers(network)
+            maybe_dispatch_watchers(invocation, watchers, user)
 
             # Schedule the actual restart to replace current run
             Process.send_after(self(), {:restart_run, invocation, user}, 0)
@@ -203,12 +207,18 @@ defmodule Panic.Engine.NetworkRunner do
             {:reply, {:error, reason}, state}
         end
       else
-        # No current run, start immediately as before
+        # No current run, start immediately
         new_state = cancel_current_run(state)
         watchers = vestaboard_watchers(network)
 
         case Engine.prepare_first(network, prompt, actor: user) do
           {:ok, invocation} ->
+            # Make the genesis visible immediately via about_to_invoke
+            invocation = Engine.about_to_invoke!(invocation, actor: user)
+
+            # Dispatch watchers for the genesis invocation immediately
+            maybe_dispatch_watchers(invocation, watchers, user)
+
             ref = Process.send_after(self(), :process_invocation, 0)
 
             new_state = %{
@@ -238,50 +248,45 @@ defmodule Panic.Engine.NetworkRunner do
   @impl true
   def handle_info(:process_invocation, state) do
     if state.current_invocation do
-      # Update state for genesis invocation
-      if state.current_invocation.sequence_number == 0 do
-        Engine.about_to_invoke!(state.current_invocation, actor: state.user)
-      end
-
       # Process the invocation
-      case Engine.about_to_invoke(state.current_invocation, actor: state.user) do
+      case Engine.invoke(state.current_invocation, actor: state.user) do
         {:ok, invocation} ->
-          # Dispatch any watchers that should fire for this invocation based on input
+          # Dispatch watchers for completed invocation output
           maybe_dispatch_watchers(invocation, state.watchers, state.user)
 
-          # Continue with invocation processing
-          with {:ok, invocation} <- Engine.invoke(invocation, actor: state.user),
-               {:ok, next_invocation} <- Engine.prepare_next(invocation, actor: state.user) do
-            # Handle archiving for image/audio outputs
-            model = Panic.Model.by_id!(invocation.model)
+          # Continue with next invocation preparation
+          case Engine.prepare_next(invocation, actor: state.user) do
+            {:ok, next_invocation} ->
+              # Handle archiving for image/audio outputs
+              model = Panic.Model.by_id!(invocation.model)
 
-            archival_timer =
-              if model.output_type in [:image, :audio] do
-                # Cancel any previous archival timer
-                if state.archival_timer do
-                  Process.cancel_timer(state.archival_timer)
+              archival_timer =
+                if model.output_type in [:image, :audio] do
+                  # Cancel any previous archival timer
+                  if state.archival_timer do
+                    Process.cancel_timer(state.archival_timer)
+                  end
+
+                  # Schedule archival for later (delay by 5 minutes)
+                  Process.send_after(self(), {:archive_invocation, invocation, next_invocation}, to_timeout(minute: 5))
+                else
+                  state.archival_timer
                 end
 
-                # Schedule archival for later (delay by 5 minutes)
-                Process.send_after(self(), {:archive_invocation, invocation, next_invocation}, to_timeout(minute: 5))
-              else
-                state.archival_timer
-              end
+              # Schedule next invocation
+              ref = Process.send_after(self(), :process_invocation, 0)
 
-            # Schedule next invocation
-            ref = Process.send_after(self(), :process_invocation, 0)
+              new_state = %{
+                state
+                | current_invocation: next_invocation,
+                  processing_ref: ref,
+                  archival_timer: archival_timer
+              }
 
-            new_state = %{
-              state
-              | current_invocation: next_invocation,
-                processing_ref: ref,
-                archival_timer: archival_timer
-            }
+              {:noreply, new_state}
 
-            {:noreply, new_state}
-          else
             {:error, reason} ->
-              Logger.error("Failed to process invocation: #{inspect(reason)}")
+              Logger.error("Failed to prepare next invocation: #{inspect(reason)}")
 
               # Instead of retrying, restart the entire run with the original prompt
               genesis = state.genesis_invocation
@@ -299,7 +304,7 @@ defmodule Panic.Engine.NetworkRunner do
           end
 
         {:error, reason} ->
-          Logger.error("Failed to process invocation: #{inspect(reason)}")
+          Logger.error("Failed to invoke invocation: #{inspect(reason)}")
 
           # Same error handling - restart with original prompt
           genesis = state.genesis_invocation
@@ -329,6 +334,7 @@ defmodule Panic.Engine.NetworkRunner do
     watchers = vestaboard_watchers(Ash.get!(Engine.Network, state.network_id, actor: user))
 
     # Use the existing genesis invocation that was already created
+    # No need to dispatch watchers again as it was done when creating the genesis
     ref = Process.send_after(self(), :process_invocation, 0)
 
     new_state = %{
@@ -402,18 +408,45 @@ defmodule Panic.Engine.NetworkRunner do
     end)
   end
 
-  defp maybe_dispatch_watchers(%{sequence_number: seq, input: input} = _inv, watchers, user)
-       when is_list(watchers) and is_binary(input) do
+  defp maybe_dispatch_watchers(%{sequence_number: seq} = inv, watchers, user) when is_list(watchers) do
     Enum.each(watchers, fn watcher ->
       case watcher.type do
         :vestaboard ->
           %{stride: stride, offset: offset, name: name} = watcher
 
-          if rem(seq, stride) == offset do
+          should_dispatch =
+            cond do
+              # Genesis invocation (seq 0): display input for any offset that matches
+              seq == 0 and is_binary(inv.input) ->
+                if offset == -1 do
+                  # -1 always matches genesis
+                  true
+                else
+                  rem(seq, stride) == offset
+                end
+
+              # Non-genesis invocations: display output when sequence matches offset
+              seq > 0 and is_binary(inv.output) ->
+                if offset == -1 do
+                  # -1 acts as stride-1 for subsequent invocations
+                  rem(seq, stride) == stride - 1
+                else
+                  rem(seq, stride) == offset
+                end
+
+              # No match
+              true ->
+                false
+            end
+
+          if should_dispatch do
             board_name = Atom.to_string(name)
             token = Vestaboard.token_for_board!(board_name, user)
 
-            case Vestaboard.send_text(input, token, board_name) do
+            # For genesis (seq 0), display input; otherwise display output
+            content = if seq == 0, do: inv.input, else: inv.output
+
+            case Vestaboard.send_text(content, token, board_name) do
               {:ok, _id} ->
                 :ok
 

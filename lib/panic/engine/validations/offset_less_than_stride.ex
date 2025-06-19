@@ -20,8 +20,9 @@ defmodule Panic.Engine.Validations.OffsetLessThanStride do
       when type in [:single, :vestaboard] and
              is_integer(stride) and
              is_integer(offset) and
-             offset >= stride ->
-        {:error, field: :offset, message: "offset must be less than stride"}
+             offset >= stride and
+             offset != -1 ->
+        {:error, field: :offset, message: "offset must be less than stride (or -1 for genesis display)"}
 
       _ ->
         :ok
