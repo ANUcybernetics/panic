@@ -51,7 +51,7 @@ if [[ ! -e "${SD_CARD}" ]]; then
 fi
 
 # Additional check to avoid system disks
-if diskutil info "${SD_CARD}" 2>/dev/null | grep -qE "(internal.*APFS|synthesized)" >/dev/null; then
+if diskutil info "${SD_CARD}" 2>/dev/null | grep -qE "(internal.*APFS|synthesized|APPLE SSD)" >/dev/null; then
     printf "Error: %s appears to be a system disk. Please select an SD card.\n" "${SD_CARD}" >&2
     exit 1
 fi
