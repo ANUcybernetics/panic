@@ -29,15 +29,32 @@ if [[ ! -f "${LAUNCH_SCRIPT_PATH}" ]]; then
     exit 1
 fi
 
-# Find mounted SD card
-printf "Looking for mounted SD card...\n"
-SD_CARD=""
-for disk in /dev/disk*; do
-    if diskutil info "${disk}" 2>/dev/null | grep -q "SD Card"; then
-        SD_CARD="${disk}"
-        break
+# Print all candidate paths with helpful info
+printf "\nCandidate SD card paths:\n"
+diskutil list 2>/dev/null | grep -E "^/dev/disk[0-9]+" | while read -r disk_line; do
+    disk=$(echo "$disk_line" | awk '{print $1}')
+    if diskutil info "$disk" 2>/dev/null | grep -qE "(internal|synthesized|APFS Container|APPLE SSD)"; then
+        continue
     fi
+    size=$(diskutil info "$disk" 2>/dev/null | grep "Disk Size" | awk -F: '{print $2}' | xargs)
+    name=$(diskutil info "$disk" 2>/dev/null | grep "Device / Media Name" | awk -F: '{print $2}' | xargs)
+    printf "%s - %s (%s)\n" "$disk" "$name" "$size"
 done
+
+printf "\nPlease enter the SD card device path (e.g., /dev/disk4): "
+read -r SD_CARD
+
+# Validate the entered path
+if [[ ! -e "${SD_CARD}" ]]; then
+    printf "Error: Device %s does not exist\n" "${SD_CARD}" >&2
+    exit 1
+fi
+
+# Additional check to avoid system disks
+if diskutil info "${SD_CARD}" 2>/dev/null | grep -qE "(internal.*APFS|synthesized)" >/dev/null; then
+    printf "Error: %s appears to be a system disk. Please select an SD card.\n" "${SD_CARD}" >&2
+    exit 1
+fi
 
 if [[ -z "${SD_CARD}" ]]; then
     printf "Error: No SD card found. Please insert an SD card.\n" >&2
