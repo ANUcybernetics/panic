@@ -17,6 +17,17 @@ fi
 
 readonly KIOSK_URL="$1"
 
+# Check for WiFi credentials from environment variables
+if [[ -z "${WIFI_SSID:-}" ]]; then
+    printf "Error: WIFI_SSID environment variable is required\n" >&2
+    exit 1
+fi
+
+if [[ -z "${WIFI_PASSWORD:-}" ]]; then
+    printf "Error: WIFI_PASSWORD environment variable is required\n" >&2
+    exit 1
+fi
+
 # Check if running on macOS
 if [[ "$(uname)" != "Darwin" ]]; then
     printf "Error: This script is designed for macOS\n" >&2
@@ -106,6 +117,19 @@ printf "Boot partition mounted at: %s\n" "${BOOT_MOUNT}"
 # Enable SSH
 touch "${BOOT_MOUNT}/ssh"
 
+# Configure WiFi credentials
+printf "Configuring WiFi credentials...\n"
+cat > "${BOOT_MOUNT}/wpa_supplicant.conf" << EOF
+country=US
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+network={
+    ssid="${WIFI_SSID}"
+    psk="${WIFI_PASSWORD}"
+}
+EOF
+
 # Copy launch script to boot partition
 cp "${LAUNCH_SCRIPT_PATH}" "${BOOT_MOUNT}/launch.sh"
 
@@ -182,3 +206,4 @@ rm -rf "${TEMP_DIR}"
 
 printf "Setup complete! SD card is ready for Raspberry Pi.\n"
 printf "The launch.sh script will automatically run on startup with URL: %s\n" "${KIOSK_URL}"
+printf "WiFi will automatically connect to network: %s\n" "${WIFI_SSID}"
