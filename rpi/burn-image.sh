@@ -2,7 +2,7 @@
 set -e           # Exit on error
 set -u           # Exit on undefined variable
 set -o pipefail  # Exit on pipe failure
-set -x           # Enable debugging output
+# set -x           # Enable debugging output
 
 # Configuration
 readonly RASPBIAN_URL="https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2025-05-13/2025-05-13-raspios-bookworm-armhf-lite.img.xz"
