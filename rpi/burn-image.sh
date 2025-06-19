@@ -50,7 +50,7 @@ diskutil list 2>/dev/null | grep -E "^/dev/disk[0-9]+" | while read -r disk_line
     fi
     size=$(diskutil info "$disk" 2>/dev/null | grep "Disk Size" | awk -F: '{print $2}' | xargs)
     name=$(diskutil info "$disk" 2>/dev/null | grep "Device / Media Name" | awk -F: '{print $2}' | xargs)
-    printf "%s - %s (%s)\n" "$disk" "$name" "$size"
+    printf "%s - %s - %s\n" "$disk" "$name" "$size"
 done
 
 printf "\nPlease enter the SD card device path (e.g., /dev/disk4): "
