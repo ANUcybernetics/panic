@@ -141,6 +141,12 @@ network={
 }
 EOF
 
+# Configure automatic user creation to skip user setup wizard
+printf "Configuring automatic user creation...\n"
+cat > "${BOOT_MOUNT}/userconf.txt" << EOF
+panic:\$6\$SALT\$N1UQkqPOmWMjGWpgXCNa8BKdqqXkWBCN0hwQa0Xjdqw5VGzKEGNE1URF6/rFMoq3RRdT1bXNQkOSJdvBAL61U0
+EOF
+
 # Copy launch script to boot partition
 cp "${LAUNCH_SCRIPT_PATH}" "${BOOT_MOUNT}/launch.sh"
 
@@ -149,37 +155,45 @@ cat > "${BOOT_MOUNT}/setup_kiosk.sh" << EOF
 #!/bin/bash
 # This script runs once on first boot to set up the kiosk
 
-# Install chromium if not present
+# Update package list and install required packages
 apt-get update
-apt-get install -y chromium-browser
+apt-get install -y chromium-browser xorg xinit openbox
 
-# Make launch script executable
-chmod +x /boot/launch.sh
-
-# Copy launch script to home directory
-cp /boot/launch.sh /home/pi/launch.sh
-chown pi:pi /home/pi/launch.sh
-
-# Create systemd service for kiosk
-cat > /etc/systemd/system/kiosk.service << 'SYSTEMD_EOF'
-[Unit]
-Description=Kiosk Browser
-After=graphical-session.target
-
+# Enable autologin for panic user
+systemctl set-default graphical.target
+mkdir -p /etc/systemd/system/getty@tty1.service.d
+cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << 'AUTOLOGIN_EOF'
 [Service]
-Type=forking
-User=pi
-Environment=KIOSK_URL=${KIOSK_URL}
-ExecStart=/home/pi/launch.sh ${KIOSK_URL}
-Restart=always
-RestartSec=10
+ExecStart=
+ExecStart=-/sbin/agetty --autologin panic --noclear %I \$TERM
+AUTOLOGIN_EOF
 
-[Install]
-WantedBy=graphical-session.target
-SYSTEMD_EOF
+# Create .xinitrc for automatic X startup
+cat > /home/panic/.xinitrc << 'XINITRC_EOF'
+#!/bin/bash
+# Start openbox window manager
+openbox &
+# Wait a moment for window manager to start
+sleep 2
+# Launch the kiosk browser
+exec /home/panic/launch.sh ${KIOSK_URL}
+XINITRC_EOF
 
-# Enable the service
-systemctl enable kiosk.service
+# Create .bash_profile to automatically start X on login
+cat > /home/panic/.bash_profile << 'BASHPROFILE_EOF'
+# Auto-start X server on tty1 login
+if [ -z "\$DISPLAY" ] && [ "\$(tty)" = "/dev/tty1" ]; then
+    exec startx
+fi
+BASHPROFILE_EOF
+
+# Make launch script executable and copy to home directory
+chmod +x /boot/launch.sh
+cp /boot/launch.sh /home/panic/launch.sh
+chown panic:panic /home/panic/launch.sh
+chown panic:panic /home/panic/.xinitrc
+chown panic:panic /home/panic/.bash_profile
+chmod +x /home/panic/.xinitrc
 
 # Remove this setup script so it doesn't run again
 rm /boot/setup_kiosk.sh
@@ -218,3 +232,4 @@ rm -rf "${TEMP_DIR}"
 printf "Setup complete! SD card is ready for Raspberry Pi.\n"
 printf "The launch.sh script will automatically run on startup with URL: %s\n" "${KIOSK_URL}"
 printf "WiFi will automatically connect to network: %s\n" "${WIFI_SSID}"
+printf "User 'panic' will be automatically created and logged in (no password required).\n"
