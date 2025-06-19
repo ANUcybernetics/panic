@@ -27,8 +27,7 @@ chromium-browser \
     --enable-features=OverlayScrollbar \
     --class="chromium-browser" \
     --user-data-dir=/tmp/chromium \
-    --window-position=0,0 \
-    --window-size=1920,1080 \
+    --start-fullscreen \
     --enable-wayland-server \
     --ozone-platform=wayland \
     --autoplay-policy=no-user-gesture-required \
