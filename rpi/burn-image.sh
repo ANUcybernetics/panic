@@ -8,6 +8,15 @@ set -x           # Enable debugging output
 readonly RASPBIAN_URL="https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2023-12-11/2023-12-11-raspios-bookworm-armhf-lite.img.xz"
 readonly LAUNCH_SCRIPT_PATH="panic/rpi/launch.sh"
 
+# Check for URL argument
+if [ $# -eq 0 ]; then
+    printf "Error: URL argument required\n" >&2
+    printf "Usage: %s <URL>\n" "$0" >&2
+    exit 1
+fi
+
+readonly KIOSK_URL="$1"
+
 # Check if running on macOS
 if [[ "$(uname)" != "Darwin" ]]; then
     printf "Error: This script is designed for macOS\n" >&2
@@ -84,7 +93,7 @@ touch "${BOOT_MOUNT}/ssh"
 cp "${LAUNCH_SCRIPT_PATH}" "${BOOT_MOUNT}/launch.sh"
 
 # Create startup script that will run on first boot
-cat > "${BOOT_MOUNT}/setup_kiosk.sh" << 'EOF'
+cat > "${BOOT_MOUNT}/setup_kiosk.sh" << EOF
 #!/bin/bash
 # This script runs once on first boot to set up the kiosk
 
@@ -108,7 +117,8 @@ After=graphical-session.target
 [Service]
 Type=forking
 User=pi
-ExecStart=/home/pi/launch.sh
+Environment=KIOSK_URL=${KIOSK_URL}
+ExecStart=/home/pi/launch.sh ${KIOSK_URL}
 Restart=always
 RestartSec=10
 
@@ -154,4 +164,4 @@ diskutil unmountDisk "${SD_CARD}"
 rm -rf "${TEMP_DIR}"
 
 printf "Setup complete! SD card is ready for Raspberry Pi.\n"
-printf "The launch.sh script will automatically run on startup.\n"
+printf "The launch.sh script will automatically run on startup with URL: %s\n" "${KIOSK_URL}"

@@ -5,7 +5,13 @@ set -o pipefail  # Exit on pipe failure
 set -x           # Enable debugging output
 
 # Configuration
-readonly URL="https://panic.fly.dev/"
+if [ $# -eq 0 ]; then
+    printf "Error: URL argument required\n" >&2
+    printf "Usage: %s <URL>\n" "$0" >&2
+    exit 1
+fi
+
+readonly URL="$1"
 
 printf "Quitting Chromium if it's running...\n"
 if ! pkill chromium; then
