@@ -42,20 +42,27 @@ if [[ ! -f "${LAUNCH_SCRIPT_PATH}" ]]; then
     exit 1
 fi
 
-# Print all candidate paths with helpful info
-printf "\nCandidate SD card paths:\n"
-diskutil list 2>/dev/null | grep -E "^/dev/disk[0-9]+" | while read -r disk_line; do
+# Find SD card device with name "Built In SDXC Reader"
+printf "\nLooking for Built In SDXC Reader...\n"
+SD_CARD=""
+while IFS= read -r disk_line; do
     disk=$(echo "$disk_line" | awk '{print $1}')
     if diskutil info "$disk" 2>/dev/null | grep -qE "(internal|synthesized|APFS Container|APPLE SSD)"; then
         continue
     fi
-    size=$(diskutil info "$disk" 2>/dev/null | grep "Disk Size" | awk -F: '{print $2}' | xargs)
     name=$(diskutil info "$disk" 2>/dev/null | grep "Device / Media Name" | awk -F: '{print $2}' | xargs)
-    printf "%s - %s - %s\n" "$disk" "$name" "$size"
-done
+    if [[ "$name" == "Built In SDXC Reader" ]]; then
+        SD_CARD="$disk"
+        break
+    fi
+done < <(diskutil list 2>/dev/null | grep -E "^/dev/disk[0-9]+")
 
-printf "\nPlease enter the SD card device path (e.g., /dev/disk4): "
-read -r SD_CARD
+if [[ -z "${SD_CARD}" ]]; then
+    printf "Error: Built In SDXC Reader not found. Please insert an SD card.\n" >&2
+    exit 1
+fi
+
+printf "Found Built In SDXC Reader: %s\n" "${SD_CARD}"
 
 # Validate the entered path
 if [[ ! -e "${SD_CARD}" ]]; then
@@ -73,8 +80,6 @@ if [[ -z "${SD_CARD}" ]]; then
     printf "Error: No SD card found. Please insert an SD card.\n" >&2
     exit 1
 fi
-
-printf "Found SD card: %s\n" "${SD_CARD}"
 
 # Unmount SD card
 printf "Unmounting SD card...\n"
