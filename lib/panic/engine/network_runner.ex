@@ -338,7 +338,7 @@ defmodule Panic.Engine.NetworkRunner do
     genserver_pid = self()
 
     # Process the invocation asynchronously
-    {:ok, task_pid} =
+    {:ok, _task_pid} =
       Task.Supervisor.start_child(@task_supervisor, fn ->
         try do
           # Process the invocation
@@ -359,7 +359,7 @@ defmodule Panic.Engine.NetworkRunner do
     if Mix.env() == :test do
       :ok
     else
-      {:ok, task_pid} =
+      {:ok, _task_pid} =
         Task.Supervisor.start_child(@task_supervisor, fn ->
           try do
             Archiver.archive_invocation(invocation, next_invocation)
