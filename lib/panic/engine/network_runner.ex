@@ -34,7 +34,6 @@ defmodule Panic.Engine.NetworkRunner do
 
   use GenServer
 
-  alias Ecto.Adapters.SQL.Sandbox
   alias Panic.Engine
   alias Panic.Engine.Archiver
   alias Panic.Engine.NetworkRegistry
@@ -353,11 +352,6 @@ defmodule Panic.Engine.NetworkRunner do
             # Don't crash - just let the run end
         end
       end)
-
-    # Allow task to access database connection if configured (for tests)
-    if Application.get_env(:panic, :allow_task_db_connections, false) do
-      Sandbox.allow(Panic.Repo, self(), task_pid)
-    end
   end
 
   defp archive_invocation_async(invocation, next_invocation) do
@@ -375,11 +369,6 @@ defmodule Panic.Engine.NetworkRunner do
               # Don't crash - archiving is best effort
           end
         end)
-
-      # Allow task to access database connection if configured (for tests)
-      if Application.get_env(:panic, :allow_task_db_connections, false) do
-        Sandbox.allow(Panic.Repo, self(), task_pid)
-      end
     end
   end
 
