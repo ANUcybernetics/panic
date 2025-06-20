@@ -122,9 +122,6 @@ defmodule PanicWeb.InvocationWatcher do
 
         true ->
           case {invocation, display} do
-            {%Invocation{state: :ready}, _} ->
-              socket
-
             {%Invocation{sequence_number: 0, state: :invoking}, {:grid, _rows, _cols}} ->
               socket
               |> update_genesis(invocation)
