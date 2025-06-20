@@ -111,13 +111,7 @@ defmodule PanicWeb.NetworkLive.Info do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
-    # for this view, only show completed ones
-    # no need to show the panic loading screen
-    if message.payload.data.state == :completed do
-      InvocationWatcher.handle_invocation_message(message, socket)
-    else
-      {:noreply, socket}
-    end
+    InvocationWatcher.handle_invocation_message(message, socket)
   end
 
   @impl true
