@@ -348,4 +348,94 @@ defmodule PanicWeb.Helpers do
 
     :ok
   end
+
+  @doc """
+  Sets up database connection patches for NetworkRunner and async task testing.
+
+  This function patches Task.Supervisor.start_child to prevent database connection
+  ownership issues that cause TransportError and DBConnection.OwnershipError.
+
+  The patch ensures that async tasks started by NetworkRunner processes run in
+  the same process context, avoiding database connection ownership problems.
+
+  ## Usage
+
+  Call this in setup_all blocks for tests that use NetworkRunner or async tasks:
+
+      setup_all do
+        PanicWeb.Helpers.setup_database_patches()
+        :ok
+      end
+
+  Or use the convenience macro:
+
+      use PanicWeb.Helpers.DatabasePatches
+  """
+  def setup_database_patches do
+    Repatch.patch(Task.Supervisor, :start_child, [mode: :global], fn _supervisor, fun ->
+      fun.()
+      {:ok, self()}
+    end)
+
+    :ok
+  end
+
+  @doc """
+  Allows database access for NetworkRunner processes.
+
+  This helper grants database sandbox access to NetworkRunner GenServers,
+  which is necessary when they need to perform database operations during
+  invocation processing.
+
+  ## Usage
+
+  Call this after creating a network but before starting runs:
+
+      network = create_network(user)
+      PanicWeb.Helpers.allow_network_runner_db_access(network.id)
+
+  ## Parameters
+
+  - `network_id`: The ID of the network whose NetworkRunner process needs database access
+  """
+  def allow_network_runner_db_access(network_id) do
+    alias Ecto.Adapters.SQL.Sandbox
+    alias Panic.Engine.NetworkRegistry
+
+    case Registry.lookup(NetworkRegistry, network_id) do
+      [{pid, _}] -> Sandbox.allow(Panic.Repo, self(), pid)
+      [] -> :ok
+    end
+  end
+end
+
+defmodule PanicWeb.Helpers.DatabasePatches do
+  @moduledoc """
+  Convenience module for setting up database patches in test modules.
+
+  ## Usage
+
+      defmodule MyTest do
+        use ExUnit.Case, async: false
+        use PanicWeb.Helpers.DatabasePatches
+
+        # Your tests here...
+      end
+
+  This is equivalent to adding:
+
+      setup_all do
+        PanicWeb.Helpers.setup_database_patches()
+        :ok
+      end
+  """
+
+  defmacro __using__(_opts) do
+    quote do
+      setup_all do
+        PanicWeb.Helpers.setup_database_patches()
+        :ok
+      end
+    end
+  end
 end

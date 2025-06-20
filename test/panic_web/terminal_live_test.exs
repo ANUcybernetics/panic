@@ -40,6 +40,7 @@ defmodule PanicWeb.TerminalLiveTest do
   """
   use PanicWeb.ConnCase, async: false
   use ExUnitProperties
+  use PanicWeb.Helpers.DatabasePatches
 
   import Phoenix.LiveViewTest
 
