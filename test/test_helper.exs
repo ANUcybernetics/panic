@@ -6,7 +6,8 @@ Repatch.setup(enable_global: true, enable_shared: true)
 
 Ecto.Adapters.SQL.Sandbox.mode(Panic.Repo, :manual)
 
-# Patch archiving functions to avoid download/upload errors in tests
+# Archiving is now skipped in test environment via Mix.env() check in NetworkRunner
+# These patches are kept for any remaining direct archiver tests
 Repatch.patch(Panic.Engine.Archiver, :download_file, fn _url ->
   {:ok, "/tmp/dummy_file.webp"}
 end)

@@ -361,20 +361,25 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   defp archive_invocation_async(invocation, next_invocation) do
-    {:ok, task_pid} =
-      Task.Supervisor.start_child(@task_supervisor, fn ->
-        try do
-          Archiver.archive_invocation(invocation, next_invocation)
-        rescue
-          e ->
-            Logger.error("Archiving failed: #{inspect(e)}")
-            # Don't crash - archiving is best effort
-        end
-      end)
+    # Skip archiving in test environment to avoid network requests
+    if Mix.env() == :test do
+      :ok
+    else
+      {:ok, task_pid} =
+        Task.Supervisor.start_child(@task_supervisor, fn ->
+          try do
+            Archiver.archive_invocation(invocation, next_invocation)
+          rescue
+            e ->
+              Logger.error("Archiving failed: #{inspect(e)}")
+              # Don't crash - archiving is best effort
+          end
+        end)
 
-    # Allow task to access database connection if configured (for tests)
-    if Application.get_env(:panic, :allow_task_db_connections, false) do
-      Sandbox.allow(Panic.Repo, self(), task_pid)
+      # Allow task to access database connection if configured (for tests)
+      if Application.get_env(:panic, :allow_task_db_connections, false) do
+        Sandbox.allow(Panic.Repo, self(), task_pid)
+      end
     end
   end
 
