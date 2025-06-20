@@ -28,9 +28,6 @@ config :panic, PanicWeb.Endpoint,
   secret_key_base: "6fMtFbo7K5GsdxuA9hk6X1hEn80aqXOJ37byZ//ba4YknWXTQDDJinMCdbXRj1aR",
   server: false
 
-# Allow async tasks to share database connections in tests
-config :panic, :allow_task_db_connections, true
-
 # Lockout period is now configured per-network via the lockout_seconds attribute
 config :panic, :token_signing_secret, "keep_out"
 
