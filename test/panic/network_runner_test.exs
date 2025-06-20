@@ -57,9 +57,7 @@ defmodule Panic.NetworkRunnerTest do
   end
 
   setup_all do
-    Repatch.patch(Panic.Engine.Archiver, :archive_invocation, [mode: :global], fn _inv, _next -> :ok end)
-
-    Repatch.patch(Task, :start, [mode: :global], fn fun ->
+    Repatch.patch(Task.Supervisor, :start_child, [mode: :global], fn _supervisor, fun ->
       fun.()
       {:ok, self()}
     end)
