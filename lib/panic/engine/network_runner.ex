@@ -36,13 +36,6 @@ defmodule Panic.Engine.NetworkRunner do
   NetworkRunner GenServers persist in the NetworkRegistry across test runs and maintain
   user state. This can cause Ash.Error.Forbidden when stale processes run with wrong
   actor context. Use PanicWeb.Helpers.stop_all_network_runners/0 in test setup.
-
-  ## Stop Button Fix
-
-  # AIDEV-NOTE: Fixed timeout crash when stopping active NetworkRunner
-  The stop_run operation previously could timeout when Engine.cancel! took too long,
-  causing the LiveView to crash. Now Engine.cancel! runs asynchronously to prevent
-  blocking the GenServer call response.
   """
 
   use GenServer
@@ -93,7 +86,7 @@ defmodule Panic.Engine.NetworkRunner do
   ## Returns
 
     * `{:ok, genesis_invocation}` - Successfully started a new run
-    * `{:lockout, genesis_invocation}` - Cannot start due to lockout period (30s)
+    * `{:lockout, genesis_invocation}` - Cannot start due to lockout period
     * `{:error, reason}` - Failed to start the run
 
   ## Examples
