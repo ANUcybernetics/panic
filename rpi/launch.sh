@@ -24,30 +24,24 @@ printf "Opening Chromium with specific arguments...\n"
 # Clear any existing user data
 rm -rf /tmp/chromium-kiosk
 
-# Launch fullscreen kiosk window optimized for full desktop
+# AIDEV-NOTE: Removed dangerous security flags (--no-sandbox, --disable-web-security, --allow-running-insecure-content)
+# Launch fullscreen kiosk window with safe configuration
 chromium-browser \
     --kiosk \
-    --no-sandbox \
-    --disable-web-security \
-    --disable-features=VizDisplayCompositor,TranslateUI \
-    --disable-ipc-flooding-protection \
-    --disable-background-timer-throttling \
-    --disable-backgrounding-occluded-windows \
-    --disable-renderer-backgrounding \
-    --disable-field-trial-config \
-    --disable-background-networking \
-    --user-data-dir=/tmp/chromium-kiosk \
+    --disable-infobars \
+    --disable-session-crashed-bubble \
+    --disable-translate \
+    --disable-features=TranslateUI \
     --no-first-run \
     --disable-default-apps \
     --disable-popup-blocking \
     --disable-prompt-on-repost \
     --no-message-box \
     --autoplay-policy=no-user-gesture-required \
-    --allow-running-insecure-content \
     --disable-hang-monitor \
-    --disable-session-crashed-bubble \
-    --disable-infobars \
-    --force-device-scale-factor=1 \
+    --window-position=0,0 \
+    --start-fullscreen \
+    --user-data-dir=/tmp/chromium-kiosk \
     "${URL}" >/dev/null 2>&1 &
 
 printf "Setup complete - fullscreen window opened\n"
