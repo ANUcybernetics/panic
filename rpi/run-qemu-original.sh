@@ -11,7 +11,7 @@ readonly QEMU_CORES="4"
 readonly SSH_KEY_NAME="panic_rpi_ssh"
 readonly SSH_KEY_PATH="${HOME}/.ssh/${SSH_KEY_NAME}"
 
-readonly IMAGE_NAME="panic-kiosk-temp.img"
+readonly IMAGE_NAME="panic-kiosk.img"
 readonly IMAGE_PATH="${IMAGES_DIR}/${IMAGE_NAME}"
 
 # Function to display usage
@@ -132,9 +132,10 @@ printf "CPU: %s (cores: %s)\n" "${QEMU_CPU}" "${QEMU_CORES}"
 printf "Kernel: %s\n" "${KERNEL_FILE}"
 printf "DTB: %s\n" "${DTB_FILE}"
 printf "\nPress Ctrl+C to stop the virtual machine\n"
-printf "Running in basic mode without networking for initial setup\n"
-printf "The Pi will boot and run the setup script\n\n"
-# Build QEMU command parameters - basic mode without networking
+printf "SSH will be forwarded to localhost:5555\n"
+printf "SSH command: ssh -i %s -p 5555 panic@localhost\n" "${SSH_KEY_PATH}"
+printf "The Pi desktop should appear in the QEMU window once booted\n\n"
+# Build QEMU command parameters
 exec qemu-system-aarch64 \
     -machine raspi3b \
     -cpu "${QEMU_CPU}" \
@@ -144,7 +145,10 @@ exec qemu-system-aarch64 \
     -dtb "${DTB_FILE}" \
     -drive file="${IMAGE_PATH}",format=raw,if=sd \
     -append "rw earlyprintk loglevel=8 console=ttyAMA0,115200 root=/dev/mmcblk0p2 rootdelay=1" \
+    -netdev user,id=net0,hostfwd=tcp::5555-:22 \
+    -device usb-net,netdev=net0 \
     -no-reboot \
-    -nographic \
-    -monitor none \
+    -usbdevice keyboard \
+    -usbdevice mouse \
+    -display cocoa \
     -serial stdio
