@@ -7,6 +7,14 @@ defmodule Panic.Engine.Archiver do
   - Converting files to appropriate formats
   - Uploading processed files to S3
   - Updating invocation metadata with archived URLs
+
+  ## External Dependencies
+
+  File conversion requires external tools to be installed:
+  - **ImageMagick** (`convert` command) for image conversion (JPG/PNG → WebP)
+  - **FFmpeg** for audio conversion (WAV/OGG/FLAC → MP3)
+
+  If these tools are not available, conversion will fail with an error.
   """
 
   require Logger
@@ -99,26 +107,64 @@ defmodule Panic.Engine.Archiver do
   @doc """
   Converts a file to an appropriate format for archiving.
 
-  Currently supports WebP files (no conversion needed) and rejects other formats.
+  Supports conversion of various image and audio formats:
+  - WebP/WebM files: No conversion needed
+  - JPG/JPEG/PNG images: Convert to WebP using ImageMagick
+  - MP3/WAV/OGG/FLAC audio: Convert to MP3 using FFmpeg
 
   ## Parameters
   - `filename` - Path to the file to convert
-  - `dest_rootname` - Base name for the output file (currently unused)
+  - `dest_rootname` - Base name for the output file
 
   ## Returns
   - `{:ok, converted_filename}` - Path to the converted file
   - `{:error, reason}` - Conversion error
   """
-  def convert_file(filename, _dest_rootname) do
-    ext = Path.extname(filename)
+  def convert_file(filename, dest_rootname) do
+    extension = Path.extname(filename)
 
-    case ext do
-      ".webp" ->
-        # No conversion needed for webp
+    case String.downcase(extension) do
+      ext when ext in [".webp", ".webm"] ->
+        # No conversion needed for webp/webm
         {:ok, filename}
 
-      other ->
-        {:error, "Unsupported file format: #{other}"}
+      ext when ext in [".jpg", ".jpeg", ".png"] ->
+        output_filename = "#{Path.dirname(filename)}/#{dest_rootname}.webp"
+
+        case System.cmd("convert", [
+               filename,
+               "-quality",
+               "75",
+               "-define",
+               "webp:lossless=false",
+               "-define",
+               "webp:method=4",
+               output_filename
+             ]) do
+          {_, 0} -> {:ok, output_filename}
+          {error, _} -> {:error, "Image conversion failed: #{error}"}
+        end
+
+      ext when ext in [".mp3", ".wav", ".ogg", ".flac"] ->
+        output_filename = "#{Path.dirname(filename)}/#{dest_rootname}.mp3"
+
+        case System.cmd("ffmpeg", [
+               "-i",
+               filename,
+               "-c:a",
+               "libmp3lame",
+               "-b:a",
+               "64k",
+               "-loglevel",
+               "error",
+               output_filename
+             ]) do
+          {_, 0} -> {:ok, output_filename}
+          {error, _} -> {:error, "Audio conversion failed: #{error}"}
+        end
+
+      _ ->
+        {:error, "Unsupported file format: #{extension}"}
     end
   end
 
