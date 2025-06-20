@@ -174,6 +174,7 @@ defmodule PanicWeb.InvocationWatcher do
   # AIDEV-NOTE: Detects archiving updates to prevent LiveView URL glitches
   defp archiving_update?(%Invocation{output: output}, _socket) when is_binary(output) do
     # Check if this is an archiving update by looking for Tigris storage URL
+    # Only applies to completed invocations - :invoking and :failed should always stream live
     String.starts_with?(output, "https://fly.storage.tigris.dev")
   end
 
