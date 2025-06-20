@@ -51,6 +51,9 @@ defmodule PanicWeb.InstallationLive.Show do
               <:item :if={watcher.type == :vestaboard} title="Name">
                 {watcher.name}
               </:item>
+              <:item :if={watcher.type == :vestaboard} title="Initial Prompt">
+                {if watcher.initial_prompt, do: "Yes", else: "No"}
+              </:item>
             </.list>
             <div class="mt-4">
               <.link
@@ -178,6 +181,8 @@ defmodule PanicWeb.InstallationLive.Show do
   end
 
   defp watcher_title(%{type: :vestaboard} = watcher, index) do
-    "Watcher #{index}: Vestaboard #{watcher.name} (stride: #{watcher.stride}, offset: #{watcher.offset})"
+    prompt_indicator = if watcher.initial_prompt, do: ", initial prompt", else: ""
+
+    "Watcher #{index}: Vestaboard #{watcher.name} (stride: #{watcher.stride}, offset: #{watcher.offset}#{prompt_indicator})"
   end
 end

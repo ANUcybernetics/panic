@@ -16,8 +16,8 @@ defmodule Panic.Engine.Installation.Watcher do
       # Single watcher showing every 3rd invocation starting from offset 1
       %Watcher{type: :single, stride: 3, offset: 1}
 
-      # Vestaboard watcher
-      %Watcher{type: :vestaboard, stride: 1, offset: 0, name: :panic_1}
+      # Vestaboard watcher showing every 3rd invocation and initial prompt
+      %Watcher{type: :vestaboard, stride: 3, offset: 0, name: :panic_1, initial_prompt: true}
   """
 
   use Ash.Resource,
@@ -44,19 +44,23 @@ defmodule Panic.Engine.Installation.Watcher do
     end
 
     attribute :offset, :integer do
-      constraints min: -1
+      constraints min: 0
     end
 
     # Vestaboard-specific attributes
     attribute :name, :atom do
       constraints one_of: [:panic_1, :panic_2, :panic_3, :panic_4]
     end
+
+    attribute :initial_prompt, :boolean do
+      default false
+    end
   end
 
   actions do
     create :create do
       primary? true
-      accept [:type, :rows, :columns, :stride, :offset, :name]
+      accept [:type, :rows, :columns, :stride, :offset, :name, :initial_prompt]
     end
   end
 
@@ -89,6 +93,10 @@ defmodule Panic.Engine.Installation.Watcher do
     validate absent([:rows, :columns]),
       where: attribute_equals(:type, :vestaboard),
       message: "rows and columns are not allowed for vestaboard type"
+
+    validate attribute_equals(:initial_prompt, false),
+      where: attribute_does_not_equal(:type, :vestaboard),
+      message: "initial_prompt can only be true for vestaboard type"
 
     # Ensure offset is less than stride for single and vestaboard types
     validate Panic.Engine.Validations.OffsetLessThanStride

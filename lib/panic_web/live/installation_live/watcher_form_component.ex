@@ -46,7 +46,7 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
             <.input field={watcher_form[:offset]} type="number" label="Offset" min="0" />
           </div>
 
-          <div :if={watcher_form[:type].value == :vestaboard}>
+          <div :if={watcher_form[:type].value == :vestaboard} class="space-y-4">
             <.input
               field={watcher_form[:name]}
               type="select"
@@ -58,6 +58,10 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
                 {"Panic 4", :panic_4}
               ]}
             />
+            <.input field={watcher_form[:initial_prompt]} type="checkbox" label="Show Initial Prompt" />
+            <p class="mt-1 text-sm text-gray-600">
+              When enabled, this vestaboard will display the initial prompt text when a new run starts
+            </p>
           </div>
         </.inputs_for>
 

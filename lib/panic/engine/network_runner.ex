@@ -391,27 +391,17 @@ defmodule Panic.Engine.NetworkRunner do
     Enum.each(watchers, fn watcher ->
       case watcher.type do
         :vestaboard ->
-          %{stride: stride, offset: offset, name: name} = watcher
+          %{stride: stride, offset: offset, name: name, initial_prompt: initial_prompt} = watcher
 
           should_dispatch =
             cond do
-              # Genesis invocation (seq 0): display input for any offset that matches
+              # Genesis invocation (seq 0): display input if initial_prompt is true OR offset matches
               seq == 0 and is_binary(inv.input) ->
-                if offset == -1 do
-                  # -1 always matches genesis
-                  true
-                else
-                  rem(seq, stride) == offset
-                end
+                initial_prompt or rem(seq, stride) == offset
 
               # Non-genesis invocations: display output when sequence matches offset
               seq > 0 and is_binary(inv.output) ->
-                if offset == -1 do
-                  # -1 acts as stride-1 for subsequent invocations
-                  rem(seq, stride) == stride - 1
-                else
-                  rem(seq, stride) == offset
-                end
+                rem(seq, stride) == offset
 
               # No match
               true ->

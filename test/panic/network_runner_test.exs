@@ -672,7 +672,7 @@ defmodule Panic.NetworkRunnerTest do
             name: "Test Installation",
             network_id: network.id,
             watchers: [
-              %{type: :vestaboard, stride: 1, offset: 0, name: :panic_1}
+              %{type: :vestaboard, stride: 1, offset: 0, name: :panic_1, initial_prompt: true}
             ]
           },
           actor: user
@@ -756,21 +756,21 @@ defmodule Panic.NetworkRunnerTest do
     end
 
     @tag :watcher
-    test "dispatches vestaboard watchers with -1 offset for genesis and stride-1 for others", %{user: user} do
+    test "dispatches vestaboard watchers with initial_prompt for genesis", %{user: user} do
       # Create a network with a vestaboard installation
-      network = Engine.create_network!("Watcher Test Network -1", "Test network for -1 offset", actor: user)
+      network = Engine.create_network!("Watcher Test Network Initial", "Test network for initial_prompt", actor: user)
       network = Engine.update_models!(network, ["dummy-t2t"], actor: user)
 
-      # Create an installation with a vestaboard watcher using -1 offset
+      # Create an installation with a vestaboard watcher using initial_prompt
       _installation =
         Installation
         |> Ash.Changeset.for_create(
           :create,
           %{
-            name: "Test Installation -1",
+            name: "Test Installation Initial",
             network_id: network.id,
             watchers: [
-              %{type: :vestaboard, stride: 3, offset: -1, name: :panic_2}
+              %{type: :vestaboard, stride: 3, offset: 0, name: :panic_2, initial_prompt: true}
             ]
           },
           actor: user
@@ -794,7 +794,7 @@ defmodule Panic.NetworkRunnerTest do
       {:ok, _genesis} = NetworkRunner.start_run(network.id, "Genesis input text", user)
       allow_network_runner_db_access(network.id)
 
-      # Should receive genesis input immediately for -1 offset
+      # Should receive genesis input immediately for initial_prompt: true
       assert_receive {:vestaboard_sent, "panic_2", "Genesis input text"}, 2000
 
       # Cleanup
