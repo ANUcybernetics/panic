@@ -7,15 +7,7 @@ set -o pipefail  # Exit on pipe failure
 # Configuration
 readonly IMAGES_DIR="${HOME}/.raspios-images"
 
-# Check for image argument
-if [ $# -eq 0 ]; then
-    printf "Error: Image name argument required\n" >&2
-    printf "Usage: %s <image_name>\n" "$0" >&2
-    printf "Example: %s kiosk-20250101-120000.img\n" "$0" >&2
-    exit 1
-fi
-
-readonly IMAGE_NAME="$1"
+readonly IMAGE_NAME="panic-kiosk.img"
 readonly IMAGE_PATH="${IMAGES_DIR}/${IMAGE_NAME}"
 
 # Check if running on macOS
@@ -27,8 +19,7 @@ fi
 # Check if image exists
 if [[ ! -f "${IMAGE_PATH}" ]]; then
     printf "Error: Image not found at %s\n" "${IMAGE_PATH}" >&2
-    printf "Available images in %s:\n" "${IMAGES_DIR}" >&2
-    ls -la "${IMAGES_DIR}"/*.img 2>/dev/null || printf "No .img files found\n" >&2
+    printf "Run './workflow.sh create <URL>' first to create the image\n" >&2
     exit 1
 fi
 

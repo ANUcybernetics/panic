@@ -9,42 +9,41 @@ readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Function to display usage
 usage() {
     cat << EOF
-Usage: $0 <command> <url> [options]
+Usage: $0 <command> [url]
 
 Commands:
-  create-only <url>           Create customized image only
-  test <url>                  Create image and test in QEMU
-  burn <url>                  Create image and burn to SD card
-  burn-existing <image_name>  Burn existing image to SD card
-  test-existing <image_name>  Test existing image in QEMU
-  list                        List available images
+  prepare-base         Create prepared base image (one-time setup)
+  create <url>         Create final image from prepared base
+  test <url>           Create final image and test in QEMU
+  burn <url>           Create final image and burn to SD card
+  test-only            Test existing panic-kiosk.img in QEMU
+  burn-only            Burn existing panic-kiosk.img to SD card
 
-Options:
-  --name <name>              Custom name for created image (default: auto-generated)
+Environment Variables (required for prepare-base):
+  WIFI_SSID       WiFi network name
+  WIFI_PASSWORD   WiFi network password
 
-Environment Variables (required for create operations):
-  WIFI_SSID                  WiFi network name
-  WIFI_PASSWORD              WiFi network password
+Two-Stage Workflow:
+  # One-time: Create prepared base image with packages installed
+  WIFI_SSID="MyNetwork" WIFI_PASSWORD="secret123" $0 prepare-base
 
-Examples:
-  # Create and test in QEMU
-  WIFI_SSID="MyNetwork" WIFI_PASSWORD="secret123" $0 test https://example.com
+  # Fast: Create final images from prepared base
+  $0 create https://example.com
+  $0 test https://example.com
+  $0 burn https://example.com
 
-  # Create and burn to SD card
-  WIFI_SSID="MyNetwork" WIFI_PASSWORD="secret123" $0 burn https://example.com --name my-kiosk
+  # Test existing image (graphic mode)
+  $0 test-only
 
-  # Test existing image
-  $0 test-existing kiosk-20250101-120000.img
+  # Test existing image (nographic mode)
+  $0 test-only-nographic
 
   # Burn existing image to SD card
-  $0 burn-existing kiosk-20250101-120000.img
-
-  # List available images
-  $0 list
+  $0 burn-only
 EOF
 }
 
-# Function to check if required environment variables are set
+# Function to check if required environment variables are set for base image preparation
 check_env_vars() {
     if [[ -z "${WIFI_SSID:-}" ]]; then
         printf "Error: WIFI_SSID environment variable is required\n" >&2
@@ -57,74 +56,41 @@ check_env_vars() {
     fi
 }
 
-# Function to list available images
-list_images() {
-    local images_dir="${HOME}/.raspios-images"
-
-    if [[ ! -d "${images_dir}" ]]; then
-        printf "No images directory found at %s\n" "${images_dir}"
-        return 0
-    fi
-
-    printf "Available images in %s:\n" "${images_dir}"
-    printf "%-40s %10s %20s\n" "IMAGE NAME" "SIZE" "MODIFIED"
-    printf "%-40s %10s %20s\n" "$(printf '%*s' 40 '' | tr ' ' '-')" "$(printf '%*s' 10 '' | tr ' ' '-')" "$(printf '%*s' 20 '' | tr ' ' '-')"
-
-    if ls "${images_dir}"/*.img >/dev/null 2>&1; then
-        for img in "${images_dir}"/*.img; do
-            local basename_img=$(basename "$img")
-            local size=$(ls -lh "$img" | awk '{print $5}')
-            local modified=$(stat -f "%Sm" -t "%Y-%m-%d %H:%M" "$img" 2>/dev/null || stat -c "%y" "$img" 2>/dev/null | cut -d' ' -f1-2)
-            printf "%-40s %10s %20s\n" "$basename_img" "$size" "$modified"
-        done
-    else
-        printf "No .img files found\n"
-    fi
-}
-
-# Function to create image
-create_image() {
-    local url="$1"
-    local image_name="${2:-}"
-
+# Function to prepare base image
+prepare_base_image() {
     check_env_vars
 
-    printf "🔨 Creating customized Raspberry Pi image...\n"
-    printf "URL: %s\n" "$url"
+    printf "🔨 Preparing base image (one-time setup)...\n"
+    printf "This will install packages in QEMU and may take 15-30 minutes\n"
     printf "WiFi: %s\n" "$WIFI_SSID"
 
-    if [[ -n "$image_name" ]]; then
-        "${SCRIPT_DIR}/create-image.sh" "$url" "$image_name"
-        echo "$image_name"
-    else
-        local output
-        output=$("${SCRIPT_DIR}/create-image.sh" "$url" 2>&1)
-        printf "%s\n" "$output"
-        # Extract image name from output (last line should contain the path)
-        echo "$output" | grep "Custom image created successfully" | sed 's/.*\/\([^\/]*\.img\)$/\1/'
-    fi
+    "${SCRIPT_DIR}/prepare-base-image.sh"
+}
+
+# Function to create final image from base
+create_final_image() {
+    local url="$1"
+
+    printf "🔨 Creating final panic-kiosk.img from prepared base...\n"
+    printf "URL: %s\n" "$url"
+
+    "${SCRIPT_DIR}/create-final-image.sh" "$url"
 }
 
 # Function to test image in QEMU
 test_image() {
-    local image_name="$1"
-
-    printf "🖥️  Testing image in QEMU...\n"
-    printf "Image: %s\n" "$image_name"
+    printf "🖥️  Testing panic-kiosk.img in QEMU...\n"
     printf "Note: The Pi desktop should appear in the QEMU window once booted\n"
     printf "      Press Ctrl+C to stop the virtual machine\n\n"
 
-    "${SCRIPT_DIR}/run-qemu.sh" "$image_name"
+    "${SCRIPT_DIR}/run-qemu.sh"
 }
 
 # Function to burn image to SD card
 burn_image() {
-    local image_name="$1"
+    printf "💾 Burning panic-kiosk.img to SD card...\n"
 
-    printf "💾 Burning image to SD card...\n"
-    printf "Image: %s\n" "$image_name"
-
-    "${SCRIPT_DIR}/burn-sdcard.sh" "$image_name"
+    "${SCRIPT_DIR}/burn-sdcard.sh"
 }
 
 # Parse command line arguments
@@ -137,32 +103,18 @@ COMMAND="$1"
 shift
 
 case "$COMMAND" in
-    "create-only")
+    "prepare-base")
+        prepare_base_image
+        ;;
+
+    "create")
         if [[ $# -eq 0 ]]; then
             printf "Error: URL argument required\n" >&2
             usage
             exit 1
         fi
 
-        URL="$1"
-        shift
-
-        IMAGE_NAME=""
-        while [[ $# -gt 0 ]]; do
-            case $1 in
-                --name)
-                    IMAGE_NAME="$2"
-                    shift 2
-                    ;;
-                *)
-                    printf "Error: Unknown option $1\n" >&2
-                    usage
-                    exit 1
-                    ;;
-            esac
-        done
-
-        create_image "$URL" "$IMAGE_NAME"
+        create_final_image "$1"
         ;;
 
     "test")
@@ -172,26 +124,8 @@ case "$COMMAND" in
             exit 1
         fi
 
-        URL="$1"
-        shift
-
-        IMAGE_NAME=""
-        while [[ $# -gt 0 ]]; do
-            case $1 in
-                --name)
-                    IMAGE_NAME="$2"
-                    shift 2
-                    ;;
-                *)
-                    printf "Error: Unknown option $1\n" >&2
-                    usage
-                    exit 1
-                    ;;
-            esac
-        done
-
-        CREATED_IMAGE=$(create_image "$URL" "$IMAGE_NAME")
-        test_image "$CREATED_IMAGE"
+        create_final_image "$1"
+        test_image
         ;;
 
     "burn")
@@ -201,52 +135,22 @@ case "$COMMAND" in
             exit 1
         fi
 
-        URL="$1"
-        shift
-
-        IMAGE_NAME=""
-        while [[ $# -gt 0 ]]; do
-            case $1 in
-                --name)
-                    IMAGE_NAME="$2"
-                    shift 2
-                    ;;
-                *)
-                    printf "Error: Unknown option $1\n" >&2
-                    usage
-                    exit 1
-                    ;;
-            esac
-        done
-
-        CREATED_IMAGE=$(create_image "$URL" "$IMAGE_NAME")
-        burn_image "$CREATED_IMAGE"
+        create_final_image "$1"
+        burn_image
         ;;
 
-    "test-existing")
-        if [[ $# -eq 0 ]]; then
-            printf "Error: Image name argument required\n" >&2
-            usage
-            exit 1
-        fi
-
-        test_image "$1"
+    "test-only")
+        test_image
         ;;
 
-    "burn-existing")
-        if [[ $# -eq 0 ]]; then
-            printf "Error: Image name argument required\n" >&2
-            usage
-            exit 1
-        fi
-
-        burn_image "$1"
+    "burn-only")
+        burn_image
         ;;
 
-    "list")
-        list_images
+    "-h"|"--help"|"help")
+        usage
+        exit 0
         ;;
-
     *)
         printf "Error: Unknown command '$COMMAND'\n" >&2
         usage
