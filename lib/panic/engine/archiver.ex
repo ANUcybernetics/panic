@@ -131,16 +131,20 @@ defmodule Panic.Engine.Archiver do
       ext when ext in [".jpg", ".jpeg", ".png"] ->
         output_filename = "#{Path.dirname(filename)}/#{dest_rootname}.webp"
 
-        case System.cmd("convert", [
-               filename,
-               "-quality",
-               "75",
-               "-define",
-               "webp:lossless=false",
-               "-define",
-               "webp:method=4",
-               output_filename
-             ]) do
+        case System.cmd(
+               "convert",
+               [
+                 filename,
+                 "-quality",
+                 "75",
+                 "-define",
+                 "webp:lossless=false",
+                 "-define",
+                 "webp:method=4",
+                 output_filename
+               ],
+               stderr_to_stdout: true
+             ) do
           {_, 0} -> {:ok, output_filename}
           {error, _} -> {:error, "Image conversion failed: #{error}"}
         end
@@ -148,17 +152,21 @@ defmodule Panic.Engine.Archiver do
       ext when ext in [".mp3", ".wav", ".ogg", ".flac"] ->
         output_filename = "#{Path.dirname(filename)}/#{dest_rootname}.mp3"
 
-        case System.cmd("ffmpeg", [
-               "-i",
-               filename,
-               "-c:a",
-               "libmp3lame",
-               "-b:a",
-               "64k",
-               "-loglevel",
-               "error",
-               output_filename
-             ]) do
+        case System.cmd(
+               "ffmpeg",
+               [
+                 "-i",
+                 filename,
+                 "-c:a",
+                 "libmp3lame",
+                 "-b:a",
+                 "64k",
+                 "-loglevel",
+                 "error",
+                 output_filename
+               ],
+               stderr_to_stdout: true
+             ) do
           {_, 0} -> {:ok, output_filename}
           {error, _} -> {:error, "Audio conversion failed: #{error}"}
         end
