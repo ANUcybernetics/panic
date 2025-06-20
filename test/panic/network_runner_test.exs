@@ -2,8 +2,8 @@ defmodule Panic.NetworkRunnerTest do
   use Panic.DataCase, async: false
   use ExUnitProperties
   use Repatch.ExUnit
+  use PanicWeb.Helpers.DatabasePatches
 
-  alias Ecto.Adapters.SQL.Sandbox
   alias Panic.Accounts.User
   alias Panic.Engine
   alias Panic.Engine.Installation
@@ -50,19 +50,7 @@ defmodule Panic.NetworkRunnerTest do
 
   # Helper function to allow NetworkRunner processes to access the test database
   defp allow_network_runner_db_access(network_id) do
-    case Registry.lookup(NetworkRegistry, network_id) do
-      [{pid, _}] -> Sandbox.allow(Panic.Repo, self(), pid)
-      [] -> :ok
-    end
-  end
-
-  setup_all do
-    Repatch.patch(Task.Supervisor, :start_child, [mode: :global], fn _supervisor, fun ->
-      fun.()
-      {:ok, self()}
-    end)
-
-    :ok
+    PanicWeb.Helpers.allow_network_runner_db_access(network_id)
   end
 
   describe "start_link/1" do
