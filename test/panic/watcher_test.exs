@@ -137,7 +137,7 @@ defmodule Panic.WatcherTest do
       assert watcher.offset == 1
     end
 
-    test "accepts single watcher with -1 offset for genesis display", %{user: user, network: network} do
+    test "accepts single watcher with valid offset", %{user: user, network: network} do
       assert {:ok, installation} =
                Installation
                |> Ash.Changeset.for_create(
@@ -145,7 +145,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test Genesis Single",
                    network_id: network.id,
-                   watchers: [%{type: :single, stride: 3, offset: -1}]
+                   watchers: [%{type: :single, stride: 3, offset: 0}]
                  },
                  actor: user
                )
@@ -154,7 +154,7 @@ defmodule Panic.WatcherTest do
       assert [watcher] = installation.watchers
       assert watcher.type == :single
       assert watcher.stride == 3
-      assert watcher.offset == -1
+      assert watcher.offset == 0
     end
 
     test "rejects single watcher without stride", %{user: user, network: network} do
@@ -260,7 +260,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :single, stride: 3, offset: -2}]
+                   watchers: [%{type: :single, stride: 1, offset: -1}]
                  },
                  actor: user
                )
@@ -296,7 +296,7 @@ defmodule Panic.WatcherTest do
       end
     end
 
-    test "accepts vestaboard watcher with -1 offset for genesis display", %{user: user, network: network} do
+    test "accepts vestaboard watcher with initial_prompt", %{user: user, network: network} do
       assert {:ok, installation} =
                Installation
                |> Ash.Changeset.for_create(
@@ -304,7 +304,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test Genesis",
                    network_id: network.id,
-                   watchers: [%{type: :vestaboard, stride: 3, offset: -1, name: :panic_1}]
+                   watchers: [%{type: :vestaboard, stride: 3, offset: 0, name: :panic_1, initial_prompt: true}]
                  },
                  actor: user
                )
@@ -313,8 +313,9 @@ defmodule Panic.WatcherTest do
       assert [watcher] = installation.watchers
       assert watcher.type == :vestaboard
       assert watcher.stride == 3
-      assert watcher.offset == -1
+      assert watcher.offset == 0
       assert watcher.name == :panic_1
+      assert watcher.initial_prompt == true
     end
 
     test "rejects vestaboard watcher without name", %{user: user, network: network} do
@@ -393,7 +394,7 @@ defmodule Panic.WatcherTest do
       assert watcher_errors[:rows]
     end
 
-    test "rejects vestaboard watcher with offset >= stride (except -1)", %{user: user, network: network} do
+    test "rejects vestaboard watcher with offset >= stride", %{user: user, network: network} do
       assert {:error, changeset} =
                Installation
                |> Ash.Changeset.for_create(
@@ -410,6 +411,25 @@ defmodule Panic.WatcherTest do
       errors = errors_on(changeset)
       assert %{watchers: [watcher_errors]} = errors
       assert watcher_errors[:offset]
+    end
+
+    test "rejects non-vestaboard watcher with initial_prompt", %{user: user, network: network} do
+      assert {:error, changeset} =
+               Installation
+               |> Ash.Changeset.for_create(
+                 :create,
+                 %{
+                   name: "Test",
+                   network_id: network.id,
+                   watchers: [%{type: :single, stride: 1, offset: 0, initial_prompt: true}]
+                 },
+                 actor: user
+               )
+               |> Ash.create()
+
+      errors = errors_on(changeset)
+      assert %{watchers: [watcher_errors]} = errors
+      assert watcher_errors[:initial_prompt]
     end
   end
 
