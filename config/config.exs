@@ -49,6 +49,8 @@ config :panic, PanicWeb.Endpoint,
   pubsub_server: Panic.PubSub,
   live_view: [signing_salt: "aVE1mUTr"]
 
+# Database connection sharing for async tasks (enabled in test env)
+config :panic, :allow_task_db_connections, false
 config :panic, :ash_domains, [Panic.Engine, Panic.Accounts]
 
 config :panic,

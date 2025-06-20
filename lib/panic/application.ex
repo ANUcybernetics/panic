@@ -15,6 +15,8 @@ defmodule Panic.Application do
       {Registry, keys: :unique, name: Panic.Engine.NetworkRegistry},
       # DynamicSupervisor for NetworkRunner GenServers
       Panic.Engine.NetworkSupervisor,
+      # Task.Supervisor for NetworkRunner async operations
+      {Task.Supervisor, name: Panic.Engine.TaskSupervisor},
       {AshAuthentication.Supervisor, otp_app: :panic},
       {DNSCluster, query: Application.get_env(:panic, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Panic.PubSub},
