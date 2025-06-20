@@ -1,10 +1,23 @@
 # Configure ExUnit to exclude API tests by default
 ExUnit.start(exclude: [apikeys: true])
 
-# Setup Repatch for mocking in tests
-Repatch.setup(enable_global: true)
+# Setup Repatch for mocking in tests - use shared mode so spawned tasks also get patches
+Repatch.setup(enable_global: true, enable_shared: true)
 
 Ecto.Adapters.SQL.Sandbox.mode(Panic.Repo, :manual)
+
+# Patch archiving functions to avoid download/upload errors in tests
+Repatch.patch(Panic.Engine.Archiver, :download_file, fn _url ->
+  {:ok, "/tmp/dummy_file.webp"}
+end)
+
+Repatch.patch(Panic.Engine.Archiver, :convert_file, fn filename, _dest_rootname ->
+  {:ok, filename}
+end)
+
+Repatch.patch(Panic.Engine.Archiver, :upload_to_s3, fn _file_path ->
+  {:ok, "https://dummy-s3-url.com/test-file.webp"}
+end)
 
 defmodule Panic.Generators do
   @moduledoc """
@@ -306,8 +319,32 @@ defmodule PanicWeb.Helpers do
       end
     end)
 
-    # Small buffer to ensure cleanup is complete
-    Process.sleep(50)
+    # Wait for and terminate any remaining async tasks
+    task_supervisor = Panic.Engine.TaskSupervisor
+
+    if Process.whereis(task_supervisor) do
+      # Get all running task PIDs
+      task_pids = Task.Supervisor.children(task_supervisor)
+
+      # Terminate each task and wait for completion
+      Enum.each(task_pids, fn pid ->
+        if Process.alive?(pid) do
+          # Monitor the task before terminating
+          ref = Process.monitor(pid)
+          Task.Supervisor.terminate_child(task_supervisor, pid)
+
+          # Wait for the task to actually terminate
+          receive do
+            {:DOWN, ^ref, :process, ^pid, _reason} -> :ok
+          after
+            500 -> :timeout
+          end
+        end
+      end)
+    end
+
+    # Wait for any database transactions to complete
+    Process.sleep(200)
 
     :ok
   end

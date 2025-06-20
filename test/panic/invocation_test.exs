@@ -5,6 +5,12 @@ defmodule Panic.InvocationTest do
   alias Ash.Error.Invalid
   alias Panic.Engine.Invocation
 
+  setup do
+    # Stop all network runners to ensure clean state
+    PanicWeb.Helpers.stop_all_network_runners()
+    :ok
+  end
+
   describe "Invocation CRUD operations" do
     property "accepts valid input with non-empty networks" do
       user = Panic.Fixtures.user()

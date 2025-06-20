@@ -1,37 +1,31 @@
 defmodule Panic.Engine.NetworkRunner do
   @moduledoc """
-  A GenServer that processes invocations for a specific network.
+  A GenServer that manages the execution of a network's invocation runs.
 
-  Handles recursive invocation processing, lockout periods, and archiving.
-
-  This GenServer replaces the previous Oban-based invocation processing system.
-  Each network gets its own NetworkRunner GenServer that is started on demand
-  and registered via the NetworkRegistry.
+  The NetworkRunner acts as a state machine with two logical states:
+  - **idle**: No current run, ready to accept new runs
+  - **running**: Actively processing a run with a genesis invocation
 
   ## Key Features
-
-  - **Recursive Processing**: Automatically processes invocations in sequence until stopped
-  - **Lockout Period**: Enforces a 30-second lockout between genesis invocations
-  - **Automatic Archiving**: Archives image/audio outputs to S3-compatible storage
-  - **Graceful Cancellation**: Supports stopping runs in progress
-  - **Restart on Failure**: Failed invocations trigger a restart of the entire run with the original prompt
+  - Manages invocation lifecycle from creation to completion
+  - Enforces network lockout periods between runs
+  - Handles async invocation processing without blocking the GenServer
+  - Dispatches to watchers (like Vestaboard) asynchronously
+  - Archives multimedia outputs asynchronously
 
   ## State Management
-
-  The GenServer maintains the following state:
+  The state contains:
   - `network_id`: The ID of the network being processed
-  - `current_invocation`: The invocation currently being processed
-  - `genesis_invocation`: The first invocation of the current run
   - `user`: The user who started the current run
-  - `processing_ref`: Timer reference for the next processing cycle
+  - `genesis_invocation`: The first invocation of the current run (nil when idle)
+  - `current_invocation`: The invocation currently being processed (nil when idle)
   - `watchers`: List of active watchers for this network
 
   ## Configuration
-
-  The lockout period between genesis invocations is configured per-network via the `lockout_seconds` attribute on the Network resource (default: 30).
+  NetworkRunner processes are dynamically started and registered by network ID.
+  Each network can have at most one NetworkRunner process at a time.
 
   ## Testing Considerations
-
   # AIDEV-NOTE: NetworkRunner persists across tests; requires cleanup in test setup
   NetworkRunner GenServers persist in the NetworkRegistry across test runs and maintain
   user state. This can cause Ash.Error.Forbidden when stale processes run with wrong
@@ -40,57 +34,52 @@ defmodule Panic.Engine.NetworkRunner do
 
   use GenServer
 
+  alias Ecto.Adapters.SQL.Sandbox
   alias Panic.Engine
+  alias Panic.Engine.Archiver
   alias Panic.Engine.NetworkRegistry
   alias Panic.Platforms.Vestaboard
 
   require Logger
 
-  # Client API
+  # AIDEV-NOTE: Task supervisor for async operations to prevent blocking GenServer
+  @task_supervisor Panic.Engine.TaskSupervisor
 
   @doc """
-  Starts a NetworkRunner for the given network.
+  Starts a NetworkRunner GenServer for the given network.
 
-  The runner is registered in the NetworkRegistry under the network_id.
+  This function is typically called by the DynamicSupervisor when a new
+  NetworkRunner is needed for a network.
 
   ## Options
-
-    * `:network_id` - Required. The ID of the network to process
+  - `network_id` - The ID of the network this runner will manage
 
   ## Examples
-
-      iex> NetworkRunner.start_link(network_id: 123)
+      iex> NetworkRunner.start_link(network_id: 1)
       {:ok, #PID<0.123.0>}
   """
   def start_link(opts) do
     network_id = Keyword.fetch!(opts, :network_id)
-    name = {:via, Registry, {NetworkRegistry, network_id}}
-    GenServer.start_link(__MODULE__, opts, name: name)
+    GenServer.start_link(__MODULE__, network_id, name: {:via, Registry, {NetworkRegistry, network_id}})
   end
 
   @doc """
-  Starts a new run for the network with the given prompt.
+  Starts a new invocation run for the given network.
 
-  This function will:
-  1. Start a NetworkRunner if one isn't already running
-  2. Cancel any existing run for the network
-  3. Create a new genesis invocation with the given prompt
-  4. Begin processing invocations recursively
+  If no NetworkRunner exists for the network, it will be started automatically.
+  If a run is already in progress, lockout rules apply based on the network's settings.
 
   ## Parameters
-
-    * `network_id` - The ID of the network to run
-    * `prompt` - The initial prompt text
-    * `user` - The user starting the run
+  - `network_id` - The ID of the network to run
+  - `prompt` - The initial prompt text
+  - `user` - The user starting the run
 
   ## Returns
-
-    * `{:ok, genesis_invocation}` - Successfully started a new run
-    * `{:lockout, genesis_invocation}` - Cannot start due to lockout period
-    * `{:error, reason}` - Failed to start the run
+  - `{:ok, invocation}` - Successfully started, returns the genesis invocation
+  - `{:lockout, invocation}` - Rejected due to lockout, returns the current genesis invocation
 
   ## Examples
-
+      # Start a new run
       iex> NetworkRunner.start_run(1, "Hello world", user)
       {:ok, %Invocation{...}}
 
@@ -104,7 +93,7 @@ defmodule Panic.Engine.NetworkRunner do
         GenServer.call(pid, {:start_run, prompt, user})
 
       [] ->
-        # Start the runner if it doesn't exist
+        # Start the NetworkRunner if it doesn't exist
         case DynamicSupervisor.start_child(
                Panic.Engine.NetworkSupervisor,
                {__MODULE__, network_id: network_id}
@@ -122,50 +111,34 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   @doc """
-  Stops the current run for the network.
-
-  Cancels any invocation currently being processed and stops the recursive
-  processing loop. The NetworkRunner GenServer remains alive and can
-  accept new runs.
+  Stops the current run for the given network.
 
   ## Parameters
-
-    * `network_id` - The ID of the network to stop
+  - `network_id` - The ID of the network to stop
 
   ## Returns
-
-    * `{:ok, :stopped}` - Successfully stopped the run
-    * `{:ok, :not_running}` - No runner was running for this network
+  - `{:ok, :stopped}` - Successfully stopped the run
+  - `{:ok, :not_running}` - No run was active
 
   ## Examples
-
       iex> NetworkRunner.stop_run(1)
       {:ok, :stopped}
   """
   def stop_run(network_id) do
     case Registry.lookup(NetworkRegistry, network_id) do
-      [{pid, _}] ->
-        GenServer.call(pid, :stop_run)
-
-      [] ->
-        {:ok, :not_running}
+      [{pid, _}] -> GenServer.call(pid, :stop_run)
+      [] -> {:ok, :not_running}
     end
   end
 
-  # Server callbacks
-
   @impl true
-  def init(opts) do
-    network_id = Keyword.fetch!(opts, :network_id)
-
+  def init(network_id) do
     state = %{
       network_id: network_id,
-      current_invocation: nil,
-      genesis_invocation: nil,
       user: nil,
-      processing_ref: nil,
-      watchers: [],
-      archival_timer: nil
+      genesis_invocation: nil,
+      current_invocation: nil,
+      watchers: []
     }
 
     {:ok, state}
@@ -173,224 +146,237 @@ defmodule Panic.Engine.NetworkRunner do
 
   @impl true
   def handle_call({:start_run, prompt, user}, _from, state) do
-    # Get the network first to check lockout
-    network = Ash.get!(Engine.Network, state.network_id, actor: user)
+    case state do
+      %{genesis_invocation: nil} ->
+        # Idle state - start new run
+        handle_start_run_idle(prompt, user, state)
 
-    # Check for lockout period
-    if under_lockout?(state, network) do
-      {:reply, {:lockout, state.genesis_invocation}, state}
-    else
-      # If we're currently processing, create genesis immediately and schedule restart
-      if state.current_invocation do
-        case Engine.prepare_first(network, prompt, actor: user) do
-          {:ok, invocation} ->
-            # Make the genesis visible immediately via about_to_invoke
-            invocation = Engine.about_to_invoke!(invocation, actor: user)
-
-            # Dispatch watchers for the genesis invocation immediately
-            watchers = vestaboard_watchers(network)
-            maybe_dispatch_watchers(invocation, watchers, user)
-
-            # Schedule the actual restart to replace current run
-            Process.send_after(self(), {:restart_run, invocation, user}, 0)
-
-            {:reply, {:ok, invocation}, state}
-
-          {:error, reason} ->
-            {:reply, {:error, reason}, state}
-        end
-      else
-        # No current run, start immediately
-        new_state = cancel_current_run(state)
-        watchers = vestaboard_watchers(network)
-
-        case Engine.prepare_first(network, prompt, actor: user) do
-          {:ok, invocation} ->
-            # Make the genesis visible immediately via about_to_invoke
-            invocation = Engine.about_to_invoke!(invocation, actor: user)
-
-            # Dispatch watchers for the genesis invocation immediately
-            maybe_dispatch_watchers(invocation, watchers, user)
-
-            ref = Process.send_after(self(), :process_invocation, 0)
-
-            new_state = %{
-              new_state
-              | current_invocation: invocation,
-                genesis_invocation: invocation,
-                user: user,
-                processing_ref: ref,
-                watchers: watchers
-            }
-
-            {:reply, {:ok, invocation}, new_state}
-
-          {:error, reason} ->
-            {:reply, {:error, reason}, new_state}
-        end
-      end
+      %{genesis_invocation: genesis} ->
+        # Running state - check lockout
+        handle_start_run_running(prompt, user, genesis, state)
     end
   end
 
   @impl true
   def handle_call(:stop_run, _from, state) do
-    new_state = cancel_current_run(state)
-    {:reply, {:ok, :stopped}, new_state}
-  end
+    case state do
+      %{genesis_invocation: nil} ->
+        # Already idle
+        {:reply, {:ok, :not_running}, state}
 
-  @impl true
-  def handle_info(:process_invocation, state) do
-    if state.current_invocation do
-      # Process the invocation
-      case Engine.invoke(state.current_invocation, actor: state.user) do
-        {:ok, invocation} ->
-          # Dispatch watchers for completed invocation output
-          maybe_dispatch_watchers(invocation, state.watchers, state.user)
-
-          # Continue with next invocation preparation
-          case Engine.prepare_next(invocation, actor: state.user) do
-            {:ok, next_invocation} ->
-              # Handle archiving for image/audio outputs
-              model = Panic.Model.by_id!(invocation.model)
-
-              archival_timer =
-                if model.output_type in [:image, :audio] do
-                  # Cancel any previous archival timer
-                  if state.archival_timer do
-                    Process.cancel_timer(state.archival_timer)
-                  end
-
-                  # Schedule archival for later (delay by 5 minutes)
-                  Process.send_after(self(), {:archive_invocation, invocation, next_invocation}, to_timeout(minute: 5))
-                else
-                  state.archival_timer
-                end
-
-              # Schedule next invocation
-              ref = Process.send_after(self(), :process_invocation, 0)
-
-              new_state = %{
-                state
-                | current_invocation: next_invocation,
-                  processing_ref: ref,
-                  archival_timer: archival_timer
-              }
-
-              {:noreply, new_state}
-
-            {:error, reason} ->
-              Logger.error("Failed to prepare next invocation: #{inspect(reason)}")
-
-              # Instead of retrying, restart the entire run with the original prompt
-              genesis = state.genesis_invocation
-              original_prompt = genesis && genesis.input
-
-              # Clear current state
-              new_state = %{state | current_invocation: nil, processing_ref: nil, genesis_invocation: nil}
-
-              # Restart the run with the original prompt after a short delay
-              if original_prompt do
-                Process.send_after(self(), {:restart_run, original_prompt, state.user}, 2000)
-              end
-
-              {:noreply, new_state}
+      %{current_invocation: current} ->
+        # Stop current run
+        try do
+          if current && current.state == :invoking do
+            Engine.cancel!(current, actor: state.user)
           end
+        rescue
+          e -> Logger.error("Error canceling invocation during stop: #{inspect(e)}")
+        end
 
-        {:error, reason} ->
-          Logger.error("Failed to invoke invocation: #{inspect(reason)}")
-
-          # Same error handling - restart with original prompt
-          genesis = state.genesis_invocation
-          original_prompt = genesis && genesis.input
-
-          # Clear current state
-          new_state = %{state | current_invocation: nil, processing_ref: nil, genesis_invocation: nil}
-
-          # Restart the run with the original prompt after a short delay
-          if original_prompt do
-            Process.send_after(self(), {:restart_run, original_prompt, state.user}, 2000)
-          end
-
-          {:noreply, new_state}
-      end
-    else
-      {:noreply, state}
+        new_state = %{state | genesis_invocation: nil, current_invocation: nil, user: nil}
+        {:reply, {:ok, :stopped}, new_state}
     end
   end
 
   @impl true
-  def handle_info({:restart_run, genesis_invocation, user}, state) do
-    # Cancel any existing run first
-    new_state = cancel_current_run(state)
+  def handle_info({:processing_completed, invocation}, state) do
+    case state do
+      %{genesis_invocation: nil} ->
+        # Idle state - ignore stale completion
+        Logger.debug("Ignoring stale processing completion in idle state")
+        {:noreply, state}
 
-    # Get vestaboard watchers
-    watchers = vestaboard_watchers(Ash.get!(Engine.Network, state.network_id, actor: user))
+      %{current_invocation: current} when current.id == invocation.id ->
+        # Valid completion for current invocation
+        handle_processing_completed(invocation, state)
 
-    # Use the existing genesis invocation that was already created
-    # No need to dispatch watchers again as it was done when creating the genesis
-    ref = Process.send_after(self(), :process_invocation, 0)
-
-    new_state = %{
-      new_state
-      | current_invocation: genesis_invocation,
-        genesis_invocation: genesis_invocation,
-        user: user,
-        processing_ref: ref,
-        watchers: watchers
-    }
-
-    {:noreply, new_state}
+      _ ->
+        # Stale completion - ignore
+        Logger.debug("Ignoring stale processing completion for invocation #{invocation.id}")
+        {:noreply, state}
+    end
   end
 
   @impl true
-  def handle_info({:archive_invocation, invocation, next_invocation}, state) do
-    # Spawn the archival work asynchronously to avoid blocking
-    Task.start(fn ->
-      archive_invocation(invocation, next_invocation)
-    end)
-
-    # Clear the timer reference since it fired
-    {:noreply, %{state | archival_timer: nil}}
-  end
-
   def handle_info(_msg, state) do
     {:noreply, state}
   end
 
   # Private functions
 
-  defp under_lockout?(%{genesis_invocation: nil}, _network), do: false
+  defp handle_start_run_idle(prompt, user, state) do
+    network = Ash.get!(Engine.Network, state.network_id, actor: user)
+    watchers = vestaboard_watchers(network)
 
-  defp under_lockout?(%{genesis_invocation: genesis}, network) do
-    lockout_seconds = network.lockout_seconds
-    DateTime.diff(DateTime.utc_now(), genesis.inserted_at, :second) < lockout_seconds
+    case Engine.prepare_first(network, prompt, actor: user) do
+      {:ok, invocation} ->
+        # Make the genesis visible immediately via about_to_invoke
+        invocation = Engine.about_to_invoke!(invocation, actor: user)
+
+        # Dispatch watchers for the genesis invocation immediately (synchronous)
+        maybe_dispatch_watchers(invocation, watchers, user)
+
+        new_state = %{
+          state
+          | user: user,
+            genesis_invocation: invocation,
+            current_invocation: invocation,
+            watchers: watchers
+        }
+
+        # Trigger async invocation processing
+        trigger_invocation(invocation, new_state)
+
+        {:reply, {:ok, invocation}, new_state}
+
+      {:error, error} ->
+        Logger.error("Failed to prepare first invocation: #{inspect(error)}")
+        {:reply, {:error, error}, state}
+    end
+  rescue
+    e ->
+      Logger.error("Error starting run in idle state: #{inspect(e)}")
+      {:reply, {:error, e}, state}
   end
 
-  defp cancel_current_run(state) do
-    # Cancel processing timer
-    if state.processing_ref do
-      Process.cancel_timer(state.processing_ref)
+  defp handle_start_run_running(prompt, user, genesis, state) do
+    network = Ash.get!(Engine.Network, state.network_id, actor: user)
+
+    if under_lockout?(genesis, network) do
+      {:reply, {:lockout, genesis}, state}
+    else
+      # Cancel current run and start new one
+      if state.current_invocation && state.current_invocation.state == :invoking do
+        Engine.cancel!(state.current_invocation, actor: user)
+      end
+
+      watchers = vestaboard_watchers(network)
+
+      case Engine.prepare_first(network, prompt, actor: user) do
+        {:ok, invocation} ->
+          # Make the genesis visible immediately via about_to_invoke
+          invocation = Engine.about_to_invoke!(invocation, actor: user)
+
+          # Dispatch watchers for the genesis invocation immediately (synchronous)
+          maybe_dispatch_watchers(invocation, watchers, user)
+
+          new_state = %{
+            state
+            | user: user,
+              genesis_invocation: invocation,
+              current_invocation: invocation,
+              watchers: watchers
+          }
+
+          # Trigger async invocation processing
+          trigger_invocation(invocation, new_state)
+
+          {:reply, {:ok, invocation}, new_state}
+
+        {:error, error} ->
+          Logger.error("Failed to prepare first invocation: #{inspect(error)}")
+          {:reply, {:error, error}, state}
+      end
     end
-
-    # Cancel archival timer
-    if state.archival_timer do
-      Process.cancel_timer(state.archival_timer)
-    end
-
-    # No need to cancel invocation - it's just a state change and the NetworkRunner
-    # stopping processing is the real "cancellation"
-
-    %{
-      state
-      | current_invocation: nil,
-        processing_ref: nil,
-        watchers: []
-    }
+  rescue
+    e ->
+      Logger.error("Error starting run in running state: #{inspect(e)}")
+      {:reply, {:error, e}, state}
   end
 
-  # ---------------------------------------------------------------------------
-  # Watcher support
-  # ---------------------------------------------------------------------------
+  defp handle_processing_completed(invocation, state) do
+    # Dispatch watchers for completed invocation output
+    maybe_dispatch_watchers(invocation, state.watchers, state.user)
+
+    case Engine.prepare_next(invocation, actor: state.user) do
+      {:ok, next_invocation} ->
+        # Archive if needed (async)
+        model = Panic.Model.by_id!(invocation.model)
+
+        if model.output_type in [:image, :audio] do
+          archive_invocation_async(invocation, next_invocation)
+        end
+
+        # Continue with next invocation
+        new_state = %{state | current_invocation: next_invocation}
+        trigger_invocation(next_invocation, new_state)
+
+        {:noreply, new_state}
+
+      {:error, :no_next_model} ->
+        # Run completed - return to idle
+        Logger.info("Run completed for network #{state.network_id}")
+        new_state = %{state | genesis_invocation: nil, current_invocation: nil, user: nil}
+        {:noreply, new_state}
+
+      {:error, error} ->
+        Logger.error("Failed to prepare next invocation: #{inspect(error)}")
+        # Return to idle on error
+        new_state = %{state | genesis_invocation: nil, current_invocation: nil, user: nil}
+        {:noreply, new_state}
+    end
+  rescue
+    e ->
+      Logger.error("Error handling processing completion: #{inspect(e)}")
+      # Return to idle on error
+      new_state = %{state | genesis_invocation: nil, current_invocation: nil, user: nil}
+      {:noreply, new_state}
+  end
+
+  defp under_lockout?(genesis_invocation, network) do
+    lockout_seconds = network.lockout_seconds || 60
+    lockout_ms = lockout_seconds * 1000
+
+    case DateTime.compare(DateTime.utc_now(), DateTime.add(genesis_invocation.inserted_at, lockout_ms, :millisecond)) do
+      :lt -> true
+      _ -> false
+    end
+  end
+
+  defp trigger_invocation(invocation, state) do
+    # Capture the GenServer pid to send messages back to it
+    genserver_pid = self()
+
+    # Process the invocation asynchronously
+    {:ok, task_pid} =
+      Task.Supervisor.start_child(@task_supervisor, fn ->
+        try do
+          # Process the invocation
+          processed_invocation = Engine.invoke!(invocation, actor: state.user)
+
+          # Notify completion to the GenServer
+          send(genserver_pid, {:processing_completed, processed_invocation})
+        rescue
+          e ->
+            Logger.error("Invocation processing failed: #{inspect(e)}")
+            # Don't crash - just let the run end
+        end
+      end)
+
+    # Allow task to access database connection if configured (for tests)
+    if Application.get_env(:panic, :allow_task_db_connections, false) do
+      Sandbox.allow(Panic.Repo, self(), task_pid)
+    end
+  end
+
+  defp archive_invocation_async(invocation, next_invocation) do
+    {:ok, task_pid} =
+      Task.Supervisor.start_child(@task_supervisor, fn ->
+        try do
+          Archiver.archive_invocation(invocation, next_invocation)
+        rescue
+          e ->
+            Logger.error("Archiving failed: #{inspect(e)}")
+            # Don't crash - archiving is best effort
+        end
+      end)
+
+    # Allow task to access database connection if configured (for tests)
+    if Application.get_env(:panic, :allow_task_db_connections, false) do
+      Sandbox.allow(Panic.Repo, self(), task_pid)
+    end
+  end
 
   defp vestaboard_watchers(network) do
     # Ensure installations are loaded (skip auth checks – we already authorized the network)
@@ -449,126 +435,11 @@ defmodule Panic.Engine.NetworkRunner do
             end
           end
 
-        :single ->
-          # Single watchers could be handled here in the future
-          # %{stride: stride, offset: offset} = watcher
-          # Logic for single watcher dispatch would go here
-          :ok
-
-        :grid ->
-          # Grid watchers could be handled here in the future
-          # %{rows: rows, columns: columns} = watcher
-          # Logic for grid watcher dispatch would go here
-          :ok
-
         _ ->
-          :ok
+          Logger.warning("Unknown watcher type: #{inspect(watcher.type)}")
       end
     end)
   end
 
   defp maybe_dispatch_watchers(_inv, _watchers, _user), do: :ok
-
-  defp archive_invocation(invocation, next_invocation) do
-    case download_file(invocation.output) do
-      {:ok, temp_file_path} ->
-        case convert_file(temp_file_path, "invocation-#{invocation.id}-output") do
-          {:ok, converted_file_path} ->
-            case upload_to_s3(converted_file_path) do
-              {:ok, url} ->
-                Engine.update_output!(invocation, url, authorize?: false)
-                Engine.update_input!(next_invocation, url, authorize?: false)
-                File.rm(converted_file_path)
-                :ok
-
-              {:error, reason} ->
-                Logger.error("Failed to upload to S3: #{inspect(reason)}")
-                File.rm(converted_file_path)
-            end
-
-          {:error, reason} ->
-            Logger.error("Failed to convert file: #{inspect(reason)}")
-            File.rm(temp_file_path)
-        end
-
-      {:error, reason} ->
-        Logger.error("Failed to download file: #{inspect(reason)}")
-    end
-  end
-
-  defp download_file(url) do
-    temp_file_path = Path.join(System.tmp_dir!(), Path.basename(url))
-
-    case Req.get(url: url) do
-      {:ok, %Req.Response{body: body, status: status}} when status in 200..299 ->
-        File.write!(temp_file_path, body)
-        {:ok, temp_file_path}
-
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
-
-  defp convert_file(filename, dest_rootname) do
-    extension = Path.extname(filename)
-
-    case String.downcase(extension) do
-      ext when ext in [".webp", ".webm"] ->
-        {:ok, filename}
-
-      ext when ext in [".jpg", ".jpeg", ".png"] ->
-        output_filename = "#{Path.dirname(filename)}/#{dest_rootname}.webp"
-
-        case System.cmd("convert", [
-               filename,
-               "-quality",
-               "75",
-               "-define",
-               "webp:lossless=false",
-               "-define",
-               "webp:method=4",
-               output_filename
-             ]) do
-          {_, 0} -> {:ok, output_filename}
-          {error, _} -> {:error, "Image conversion failed: #{error}"}
-        end
-
-      ext when ext in [".mp3", ".wav", ".ogg", ".flac"] ->
-        output_filename = "#{Path.dirname(filename)}/#{dest_rootname}.mp3"
-
-        case System.cmd("ffmpeg", [
-               "-i",
-               filename,
-               "-c:a",
-               "libmp3lame",
-               "-b:a",
-               "64k",
-               "-loglevel",
-               "error",
-               output_filename
-             ]) do
-          {_, 0} -> {:ok, output_filename}
-          {error, _} -> {:error, "Audio conversion failed: #{error}"}
-        end
-
-      _ ->
-        {:error, "Unsupported file format: #{extension}"}
-    end
-  end
-
-  defp upload_to_s3(file_path) do
-    bucket = "panic-invocation-outputs"
-    key = Path.basename(file_path)
-    body = File.read!(file_path)
-
-    req = ReqS3.attach(Req.new())
-
-    case Req.put(req, url: "s3://#{bucket}/#{key}", body: body) do
-      {:ok, %Req.Response{status: status}} when status in 200..299 ->
-        {:ok, "https://fly.storage.tigris.dev/#{bucket}/#{key}"}
-
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
 end

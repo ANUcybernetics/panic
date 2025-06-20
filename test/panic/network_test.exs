@@ -7,6 +7,12 @@ defmodule Panic.NetworkTest do
   alias Panic.Accounts.User
   alias Panic.Engine.Network
 
+  setup do
+    # Stop all network runners to ensure clean state
+    PanicWeb.Helpers.stop_all_network_runners()
+    :ok
+  end
+
   describe "Network CRUD operations" do
     test "lockout_seconds defaults to 30" do
       user = Ash.Generator.seed!(User)
