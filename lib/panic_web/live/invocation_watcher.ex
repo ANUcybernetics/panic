@@ -48,8 +48,6 @@ defmodule PanicWeb.InvocationWatcher do
   params & live_action, or a display tuple (`{:grid, rows, cols}` /
   `{:single, offset, stride}`) to force a specific mode.
   """
-  @spec on_mount(term(), map(), map(), LiveView.Socket.t()) ::
-          {:cont, LiveView.Socket.t()} | {:halt, LiveView.Socket.t()}
   def on_mount(_display_mode \\ :auto, params, _session, socket) do
     case fetch_network_from_params(params, socket.assigns) do
       {:ok, network} ->
@@ -222,11 +220,9 @@ defmodule PanicWeb.InvocationWatcher do
   end
 
   defp fetch_network_from_installation(installation_id, assigns) do
-    alias Panic.Engine.Installation
-
     actor = Map.get(assigns, :current_user)
 
-    case Ash.get(Installation, installation_id, actor: actor, authorize?: false, load: [:network]) do
+    case Ash.get(Panic.Engine.Installation, installation_id, actor: actor, authorize?: false, load: [:network]) do
       {:ok, installation} -> {:ok, installation.network}
       {:error, _} = err -> err
     end
@@ -250,7 +246,7 @@ defmodule PanicWeb.InvocationWatcher do
 
   defp fetch_genesis_invocation(%Invocation{run_number: run_number}, _network) do
     # AIDEV-NOTE: run_number is the id of the genesis invocation
-    case Ash.get(Invocation, run_number, actor: nil, authorize?: false) do
+    case Ash.get(Invocation, run_number, authorize?: false) do
       {:ok, genesis} -> {:ok, genesis}
       {:error, _} = error -> error
     end
