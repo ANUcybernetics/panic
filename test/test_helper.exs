@@ -408,6 +408,46 @@ defmodule PanicWeb.Helpers do
       [] -> :ok
     end
   end
+
+  @doc """
+  Enables synchronous NetworkRunner mode for web tests.
+
+  When enabled, NetworkRunner processes invocations synchronously instead
+  of spawning async tasks. This prevents database connection ownership
+  issues and makes tests more predictable.
+  """
+  def enable_sync_network_runner do
+    Application.put_env(:panic, :sync_network_runner, true)
+  end
+
+  @doc """
+  Disables synchronous NetworkRunner mode.
+
+  Returns NetworkRunner to its default async behavior.
+  """
+  def disable_sync_network_runner do
+    Application.put_env(:panic, :sync_network_runner, false)
+  end
+
+  @doc """
+  Sets up web tests with proper NetworkRunner cleanup and synchronous mode.
+
+  This is a convenience function that combines common web test setup:
+  - Stops all existing NetworkRunner processes
+  - Enables synchronous mode
+  - Sets up cleanup on exit
+  """
+  def setup_web_test do
+    stop_all_network_runners()
+    enable_sync_network_runner()
+
+    ExUnit.Callbacks.on_exit(fn ->
+      stop_all_network_runners()
+      disable_sync_network_runner()
+    end)
+
+    :ok
+  end
 end
 
 defmodule PanicWeb.Helpers.DatabasePatches do

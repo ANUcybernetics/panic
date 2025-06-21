@@ -20,8 +20,17 @@ defmodule PanicWeb.NetworkLiveTest do
   alias Phoenix.Socket.Broadcast
 
   setup do
-    # Stop all network runners to ensure clean state
-    PanicWeb.Helpers.stop_all_network_runners()
+    # Setup external API patches to avoid real network calls
+    Panic.ExternalAPIPatches.setup()
+
+    # Setup web test environment with sync mode and cleanup
+    PanicWeb.Helpers.setup_web_test()
+
+    on_exit(fn ->
+      # Teardown API patches
+      Panic.ExternalAPIPatches.teardown()
+    end)
+
     :ok
   end
 
