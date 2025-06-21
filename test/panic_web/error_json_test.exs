@@ -1,5 +1,5 @@
 defmodule PanicWeb.ErrorJSONTest do
-  use PanicWeb.ConnCase, async: false
+  use PanicWeb.ConnCase, async: true
 
   test "renders 404" do
     assert PanicWeb.ErrorJSON.render("404.json", %{}) == %{errors: %{detail: "Not Found"}}
