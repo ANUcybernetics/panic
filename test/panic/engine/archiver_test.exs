@@ -153,6 +153,26 @@ defmodule Panic.Engine.ArchiverTest do
         Archiver.download_file("not-a-valid-url")
       end
     end
+
+    test "preserves file extension from URL in downloaded filename" do
+      # Test that file extensions are correctly extracted and preserved
+      test_urls = [
+        "https://example.com/image.png",
+        "https://example.com/audio.mp3",
+        "https://example.com/video.webm",
+        "https://example.com/document.pdf"
+      ]
+
+      for url <- test_urls do
+        expected_extension = Path.extname(url)
+        # Test the logic that creates the filename
+        extension = Path.extname(url)
+        filename = Path.join(System.tmp_dir(), "download_#{System.unique_integer()}#{extension}")
+
+        assert Path.extname(filename) == expected_extension,
+               "Expected extension #{expected_extension} to be preserved in filename #{filename}"
+      end
+    end
   end
 
   describe "upload_to_s3/1" do

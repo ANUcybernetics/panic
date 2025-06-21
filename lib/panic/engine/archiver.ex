@@ -20,14 +20,14 @@ defmodule Panic.Engine.Archiver do
   require Logger
 
   @doc """
-  Archives an invocation's output and updates the next invocation's metadata.
+  Archives an invocation's output.
 
   This function downloads the output from the given invocation, converts it if needed,
-  uploads it to S3, and updates the next invocation's metadata with the S3 URL.
+  and uploads it to S3.
 
   ## Parameters
   - `invocation` - The invocation whose output should be archived
-  - `next_invocation` - The next invocation to update with the archived URL
+  - `next_invocation` - The next invocation (unused, kept for compatibility)
 
   ## Returns
   - `:ok` on success
@@ -44,25 +44,11 @@ defmodule Panic.Engine.Archiver do
           {:ok, converted_filename} ->
             # Upload to S3
             case upload_to_s3(converted_filename) do
-              {:ok, s3_url} ->
-                # Update the next invocation's metadata with the S3 URL
-                metadata = Map.put(next_invocation.metadata, "previous_output_url", s3_url)
-
-                try do
-                  next_invocation
-                  |> Ash.Changeset.for_update(:update, %{metadata: metadata})
-                  |> Ash.update!(authorize?: false)
-
-                  # Clean up temporary files
-                  File.rm(filename)
-                  if converted_filename != filename, do: File.rm(converted_filename)
-
-                  :ok
-                rescue
-                  e ->
-                    Logger.error("Failed to update invocation metadata: #{inspect(e)}")
-                    {:error, :metadata_update_failed}
-                end
+              {:ok, _s3_url} ->
+                # Clean up temporary files
+                File.rm(filename)
+                if converted_filename != filename, do: File.rm(converted_filename)
+                :ok
 
               {:error, reason} ->
                 Logger.error("Failed to upload to S3: #{inspect(reason)}")
@@ -71,7 +57,7 @@ defmodule Panic.Engine.Archiver do
             end
 
           {:error, reason} ->
-            Logger.error("Failed to convert file: #{inspect(reason)}")
+            Logger.error("Failed to convert file #{filename}: #{inspect(reason)}")
             File.rm(filename)
             {:error, :conversion_failed}
         end
@@ -95,7 +81,9 @@ defmodule Panic.Engine.Archiver do
   def download_file(url) do
     case Req.get(url) do
       {:ok, %{status: 200, body: body}} ->
-        filename = Path.join(System.tmp_dir(), "download_#{System.unique_integer()}")
+        # AIDEV-NOTE: Extract extension from URL to preserve file type for convert_file/2
+        extension = Path.extname(url)
+        filename = Path.join(System.tmp_dir(), "download_#{System.unique_integer()}#{extension}")
         File.write!(filename, body)
         {:ok, filename}
 
@@ -192,7 +180,8 @@ defmodule Panic.Engine.Archiver do
 
     req = ReqS3.attach(Req.new())
 
-    case Req.put(req, url: "https://fly.storage.tigris.dev/#{bucket}/#{key}", body: File.read!(file_path)) do
+    # AIDEV-NOTE: Use s3:// URL format for ReqS3 plugin, not direct HTTPS URL
+    case Req.put(req, url: "s3://#{bucket}/#{key}", body: File.read!(file_path)) do
       {:ok, %{status: status}} when status in 200..299 ->
         {:ok, "https://fly.storage.tigris.dev/#{bucket}/#{key}"}
 
