@@ -27,6 +27,7 @@ defmodule Panic.Generators do
   use ExUnitProperties
 
   alias Panic.Accounts.User
+  alias Panic.Engine.Invocation
   alias Panic.Engine.Network
   alias Panic.Platforms.Dummy
 
@@ -160,7 +161,7 @@ defmodule Panic.Generators do
     user = Ash.get!(User, network.user_id, authorize?: false)
 
     gen all(input <- Panic.Generators.ascii_sentence()) do
-      Panic.Engine.Invocation
+      Invocation
       |> Ash.Changeset.for_create(:prepare_first, %{input: input, network: network}, actor: user)
       |> Ash.create!()
     end

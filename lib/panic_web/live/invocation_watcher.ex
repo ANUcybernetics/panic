@@ -109,40 +109,57 @@ defmodule PanicWeb.InvocationWatcher do
     display = socket.assigns.display
     invocation = message.payload.data
 
-    # AIDEV-NOTE: Filter out invocations from old runs to prevent stale updates
+    # AIDEV-NOTE: Simplified logic - reset on genesis, filter by run_number for others
     socket =
-      cond do
-        from_old_run?(invocation, socket) ->
-          # Ignore invocations from previous runs
-          socket
-
-        archiving_update?(invocation, socket) ->
-          # Only update genesis for archiving updates, skip stream updates
-          update_genesis(socket, invocation)
-
-        true ->
-          case {invocation, display} do
-            {%Invocation{sequence_number: 0, state: :invoking}, {:grid, _rows, _cols}} ->
+      case invocation do
+        # Genesis invocation: reset everything and start new run
+        %Invocation{sequence_number: 0} ->
+          case display do
+            {:grid, _rows, _cols} ->
               socket
-              |> update_genesis(invocation)
+              |> Component.assign(genesis_invocation: invocation)
               |> LiveView.stream(:invocations, [invocation], reset: true)
 
-            {_, {:grid, _rows, _cols}} ->
+            {:single, _, _} ->
               socket
-              |> update_genesis(invocation)
-              |> LiveView.stream_insert(:invocations, invocation, at: -1)
+              |> Component.assign(genesis_invocation: invocation)
+              |> LiveView.stream(:invocations, [invocation], reset: true)
+          end
 
-            {%Invocation{sequence_number: seq}, {:single, offset, stride}}
-            when rem(seq, stride) == offset ->
-              socket
-              |> LiveView.stream_insert(:invocations, invocation, at: 0, limit: 1)
-              |> update_genesis(invocation)
+        # Non-genesis invocation: handle based on current genesis state
+        %Invocation{run_number: run_number} ->
+          case socket.assigns[:genesis_invocation] do
+            %Invocation{run_number: ^run_number} ->
+              # Same run - process the invocation
+              handle_non_genesis_invocation(socket, invocation, display)
 
-            {_, {:single, _, _}} ->
-              update_genesis(socket, invocation)
+            nil ->
+              # No genesis set - this is a mid-run join, fetch genesis invocation
+              case fetch_genesis_invocation(invocation, socket.assigns.network) do
+                {:ok, genesis} ->
+                  # Set genesis and process this invocation
+                  socket
+                  |> Component.assign(genesis_invocation: genesis)
+                  |> handle_non_genesis_invocation(invocation, display)
 
-            _ ->
-              socket
+                {:error, _} ->
+                  # Failed to fetch genesis, ignore this invocation
+                  socket
+              end
+
+            %Invocation{run_number: different_run} when different_run != run_number ->
+              # Different run - reset with new genesis and process invocation
+              case fetch_genesis_invocation(invocation, socket.assigns.network) do
+                {:ok, genesis} ->
+                  socket
+                  |> Component.assign(genesis_invocation: genesis)
+                  |> LiveView.stream(:invocations, [], reset: true)
+                  |> handle_non_genesis_invocation(invocation, display)
+
+                {:error, _} ->
+                  # Failed to fetch genesis, ignore this invocation
+                  socket
+              end
           end
       end
 
@@ -152,30 +169,6 @@ defmodule PanicWeb.InvocationWatcher do
   # ---------------------------------------------------------------------------
   # Internal helpers
   # ---------------------------------------------------------------------------
-
-  # AIDEV-NOTE: Detects invocations from old runs to prevent stale updates
-  defp from_old_run?(%Invocation{sequence_number: 0}, _socket) do
-    # Genesis invocations (sequence_number: 0) always represent new runs and should never be filtered.
-    # This ensures that when a new run starts while another is active, the new genesis immediately
-    # becomes visible in the LiveView, replacing the previous genesis.
-    false
-  end
-
-  defp from_old_run?(%Invocation{run_number: run_number}, socket) do
-    case socket.assigns[:genesis_invocation] do
-      %Invocation{run_number: current_run} when run_number < current_run -> true
-      _ -> false
-    end
-  end
-
-  # AIDEV-NOTE: Detects archiving updates to prevent LiveView URL glitches
-  defp archiving_update?(%Invocation{output: output}, _socket) when is_binary(output) do
-    # Check if this is an archiving update by looking for Tigris storage URL
-    # Only applies to completed invocations - :invoking and :failed should always stream live
-    String.starts_with?(output, "https://fly.storage.tigris.dev")
-  end
-
-  defp archiving_update?(_, _), do: false
 
   defp maybe_subscribe(socket, network) do
     if LiveView.connected?(socket) do
@@ -255,15 +248,27 @@ defmodule PanicWeb.InvocationWatcher do
   # Genesis invocation handling
   # ---------------------------------------------------------------------------
 
-  defp update_genesis(socket, %Invocation{sequence_number: 0} = inv) do
-    Component.assign(socket, genesis_invocation: inv)
+  defp fetch_genesis_invocation(%Invocation{run_number: run_number}, _network) do
+    # AIDEV-NOTE: run_number is the id of the genesis invocation
+    case Ash.get(Invocation, run_number, actor: nil, authorize?: false) do
+      {:ok, genesis} -> {:ok, genesis}
+      {:error, _} = error -> error
+    end
   end
 
-  defp update_genesis(socket, %Invocation{run_number: id}) do
-    genesis =
-      socket.assigns.genesis_invocation ||
-        Ash.get!(Invocation, id, authorize?: false)
+  defp handle_non_genesis_invocation(socket, invocation, display) do
+    # AIDEV-NOTE: Handle non-genesis invocation processing after genesis is set
+    case {invocation, display} do
+      {_, {:grid, _rows, _cols}} ->
+        LiveView.stream_insert(socket, :invocations, invocation, at: -1)
 
-    Component.assign(socket, :genesis_invocation, genesis)
+      {%Invocation{sequence_number: seq}, {:single, offset, stride}}
+      when rem(seq, stride) == offset ->
+        LiveView.stream_insert(socket, :invocations, invocation, at: 0, limit: 1)
+
+      {_, {:single, _, _}} ->
+        # Not matching the display criteria, don't add to stream
+        socket
+    end
   end
 end
