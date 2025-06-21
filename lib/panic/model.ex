@@ -26,6 +26,7 @@ defmodule Panic.Model do
   alias Panic.Platforms.Gemini
   alias Panic.Platforms.OpenAI
   alias Panic.Platforms.Replicate
+  alias Reactor.Dsl.Flunk
 
   require Logger
 
@@ -643,6 +644,28 @@ defmodule Panic.Model do
             },
             token
           )
+        end
+      },
+      %__MODULE__{
+        id: "flux-music",
+        platform: Replicate,
+        path: "zsxkib/flux-music",
+        name: "Flux Music",
+        input_type: :text,
+        output_type: :audio,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => %{"wav" => audio_url}}} <-
+                 Replicate.invoke(
+                   model,
+                   %{
+                     prompt: input,
+                     model_version: "small",
+                     steps: 30
+                   },
+                   token
+                 ) do
+            {:ok, audio_url}
+          end
         end
       },
       %__MODULE__{
