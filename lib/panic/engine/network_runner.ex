@@ -349,6 +349,8 @@ defmodule Panic.Engine.NetworkRunner do
     if Application.get_env(:panic, :sync_network_runner, false) do
       # Synchronous mode for tests - send message to self but process immediately
       try do
+        # Make the invocation visible with pending state first
+        invocation = Engine.about_to_invoke!(invocation, actor: state.user)
         processed_invocation = Engine.invoke!(invocation, actor: state.user)
         send(self(), {:processing_completed, processed_invocation})
       rescue
@@ -364,6 +366,8 @@ defmodule Panic.Engine.NetworkRunner do
       {:ok, _task_pid} =
         Task.Supervisor.start_child(@task_supervisor, fn ->
           try do
+            # Make the invocation visible with pending state first
+            invocation = Engine.about_to_invoke!(invocation, actor: state.user)
             # Process the invocation
             processed_invocation = Engine.invoke!(invocation, actor: state.user)
 
