@@ -20,14 +20,16 @@ defmodule Panic.Engine.Archiver do
   require Logger
 
   @doc """
-  Archives an invocation's output.
+  Archives an invocation's output and updates both invocations.
 
   This function downloads the output from the given invocation, converts it if needed,
-  and uploads it to S3.
+  uploads it to S3, and updates both invocations with the S3 URL:
+  - Updates `invocation.output` with the S3 URL
+  - Updates `next_invocation.input` with the same S3 URL
 
   ## Parameters
   - `invocation` - The invocation whose output should be archived
-  - `next_invocation` - The next invocation (unused, kept for compatibility)
+  - `next_invocation` - The next invocation whose input should point to the archived output
 
   ## Returns
   - `:ok` on success
@@ -38,17 +40,34 @@ defmodule Panic.Engine.Archiver do
     case download_file(invocation.output) do
       {:ok, filename} ->
         # Convert to appropriate format
-        dest_rootname = "invocation_#{invocation.id}_#{next_invocation.id}"
+        dest_rootname = "invocation-#{invocation.id}-output"
 
         case convert_file(filename, dest_rootname) do
           {:ok, converted_filename} ->
             # Upload to S3
             case upload_to_s3(converted_filename) do
-              {:ok, _s3_url} ->
-                # Clean up temporary files
-                File.rm(filename)
-                if converted_filename != filename, do: File.rm(converted_filename)
-                :ok
+              {:ok, s3_url} ->
+                # AIDEV-NOTE: Both invocations need the same S3 URL - current.output and next.input reference same file
+                # Update both invocations with the S3 URL
+                try do
+                  invocation
+                  |> Ash.Changeset.for_update(:update_output, %{output: s3_url})
+                  |> Ash.update!(authorize?: false)
+
+                  next_invocation
+                  |> Ash.Changeset.for_update(:update_input, %{input: s3_url})
+                  |> Ash.update!(authorize?: false)
+
+                  # Clean up temporary files
+                  File.rm(filename)
+                  if converted_filename != filename, do: File.rm(converted_filename)
+
+                  :ok
+                rescue
+                  e ->
+                    Logger.error("Failed to update invocation records: #{inspect(e)}")
+                    {:error, :update_failed}
+                end
 
               {:error, reason} ->
                 Logger.error("Failed to upload to S3: #{inspect(reason)}")
