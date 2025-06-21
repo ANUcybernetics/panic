@@ -387,27 +387,16 @@ defmodule Panic.Engine.NetworkRunner do
     if Mix.env() == :test do
       :ok
     else
-      if Application.get_env(:panic, :sync_network_runner, false) do
-        # Synchronous mode for tests - don't spawn task
-        try do
-          Archiver.archive_invocation(invocation, next_invocation)
-        rescue
-          e ->
-            Logger.error("Archiving failed: #{inspect(e)}")
-            # Don't crash - archiving is best effort
-        end
-      else
-        {:ok, _task_pid} =
-          Task.Supervisor.start_child(@task_supervisor, fn ->
-            try do
-              Archiver.archive_invocation(invocation, next_invocation)
-            rescue
-              e ->
-                Logger.error("Archiving failed: #{inspect(e)}")
-                # Don't crash - archiving is best effort
-            end
-          end)
-      end
+      {:ok, _task_pid} =
+        Task.Supervisor.start_child(@task_supervisor, fn ->
+          try do
+            Archiver.archive_invocation(invocation, next_invocation)
+          rescue
+            e ->
+              Logger.error("Archiving failed: #{inspect(e)}")
+              # Don't crash - archiving is best effort
+          end
+        end)
     end
   end
 
