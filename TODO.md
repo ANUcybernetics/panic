@@ -2,18 +2,29 @@
 
 ## NIME blockers
 
+- see if archiving (in tests) can be simplified
+- update all tests to use the new network runner testing approach
+- check if a catch all handler needs to be added to NetworkRunner
+- find out why the live cards aren't showing :invoking or :failed invocations
 - ensure the vestaboard delays are still appropriate
 - check that time-based QR code -> terminal workflow works for non-logged-in
   users (perhaps only required for installations, and also requires real
   deployment to test properly)
 - investigate the "Sizes of tensors must match except in dimension 0" error from
   Riffusion (check the params I'm sending are correct)
+- add [this](https://replicate.com/zsxkib/flux-music), and maybe
+  <https://replicate.com/ardianfe/music-gen-fn-400e?prediction=kpjdayh931rma0cqj3cbyv0p8c>
 - get FitText hook working
 - add UI for configuring network lockout timer duration
 - find one (or a few) good text audio networks to use at NIME
 - load it on to some RPis
 - set up real NIME installations
 - add "back off over time logic" based on time
+
+## network ideas
+
+- musicgen and gemini flash (even flash-lite for more crappiness and fun)
+- one of the ones with lyrics, plus whisper
 
 ## important/quality-of-life
 
