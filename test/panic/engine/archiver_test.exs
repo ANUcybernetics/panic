@@ -183,5 +183,36 @@ defmodule Panic.Engine.ArchiverTest do
         Archiver.upload_to_s3(non_existent_file)
       end
     end
+
+    @tag :apikeys
+    test "uploads and downloads text file successfully" do
+      # Create a test text file
+      test_content = "Hello, S3! This is a test file content.\nLine 2 of the test."
+      temp_file = Path.join(System.tmp_dir(), "s3_test_#{System.unique_integer()}.txt")
+      File.write!(temp_file, test_content)
+
+      try do
+        # Upload to S3
+        case Archiver.upload_to_s3(temp_file) do
+          {:ok, s3_url} ->
+            # Download from S3 URL and verify content
+            case Req.get(s3_url) do
+              {:ok, %{status: 200, body: downloaded_content}} ->
+                assert downloaded_content == test_content
+
+              {:ok, %{status: status}} ->
+                flunk("Download failed with status: #{status}")
+
+              {:error, reason} ->
+                flunk("Download failed: #{inspect(reason)}")
+            end
+
+          {:error, reason} ->
+            flunk("Upload failed: #{inspect(reason)}")
+        end
+      after
+        File.rm(temp_file)
+      end
+    end
   end
 end
