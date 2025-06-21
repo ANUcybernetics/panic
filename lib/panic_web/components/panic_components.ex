@@ -186,7 +186,7 @@ defmodule PanicWeb.PanicComponents do
       phx-hook="FitText"
     >
       <div>
-        <%= for line <- String.split(@value, "\n\n") do %>
+        <%= for line <- String.split(@value || "", "\n\n") do %>
           <p
             :if={line != ""}
             class="[text-shadow:2px_2px_0px_#581c87]"

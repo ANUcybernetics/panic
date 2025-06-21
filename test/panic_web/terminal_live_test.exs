@@ -49,7 +49,17 @@ defmodule PanicWeb.TerminalLiveTest do
 
   describe "authenticated user terminal access" do
     setup do
-      PanicWeb.Helpers.stop_all_network_runners()
+      # Setup external API patches to avoid real network calls
+      Panic.ExternalAPIPatches.setup()
+
+      # Setup web test environment with sync mode and cleanup
+      PanicWeb.Helpers.setup_web_test()
+
+      on_exit(fn ->
+        # Teardown API patches
+        Panic.ExternalAPIPatches.teardown()
+      end)
+
       :ok
     end
 
@@ -90,11 +100,20 @@ defmodule PanicWeb.TerminalLiveTest do
 
   describe "anonymous user terminal access via QR code" do
     setup do
-      PanicWeb.Helpers.stop_all_network_runners()
+      # Setup external API patches to avoid real network calls
+      Panic.ExternalAPIPatches.setup()
+
+      # Setup web test environment with sync mode and cleanup
+      PanicWeb.Helpers.setup_web_test()
 
       # Create a user and network for testing
       user = Fixtures.user("password123")
       network = Fixtures.network_with_dummy_models(user)
+
+      on_exit(fn ->
+        # Teardown API patches
+        Panic.ExternalAPIPatches.teardown()
+      end)
 
       {:ok, user: user, network: network}
     end
@@ -179,10 +198,19 @@ defmodule PanicWeb.TerminalLiveTest do
 
   describe "token expiration behavior" do
     setup do
-      PanicWeb.Helpers.stop_all_network_runners()
+      # Setup external API patches to avoid real network calls
+      Panic.ExternalAPIPatches.setup()
+
+      # Setup web test environment with sync mode and cleanup
+      PanicWeb.Helpers.setup_web_test()
 
       user = Fixtures.user("password123")
       network = Fixtures.network_with_dummy_models(user)
+
+      on_exit(fn ->
+        # Teardown API patches
+        Panic.ExternalAPIPatches.teardown()
+      end)
 
       {:ok, user: user, network: network}
     end
@@ -250,7 +278,17 @@ defmodule PanicWeb.TerminalLiveTest do
 
   describe "QR code generation workflow" do
     setup do
-      PanicWeb.Helpers.stop_all_network_runners()
+      # Setup external API patches to avoid real network calls
+      Panic.ExternalAPIPatches.setup()
+
+      # Setup web test environment with sync mode and cleanup
+      PanicWeb.Helpers.setup_web_test()
+
+      on_exit(fn ->
+        # Teardown API patches
+        Panic.ExternalAPIPatches.teardown()
+      end)
+
       :ok
     end
 
@@ -280,7 +318,17 @@ defmodule PanicWeb.TerminalLiveTest do
 
   describe "terminal component interaction" do
     setup do
-      PanicWeb.Helpers.stop_all_network_runners()
+      # Setup external API patches to avoid real network calls
+      Panic.ExternalAPIPatches.setup()
+
+      # Setup web test environment with sync mode and cleanup
+      PanicWeb.Helpers.setup_web_test()
+
+      on_exit(fn ->
+        # Teardown API patches
+        Panic.ExternalAPIPatches.teardown()
+      end)
+
       :ok
     end
 
