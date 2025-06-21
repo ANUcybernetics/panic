@@ -157,6 +157,11 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   @impl true
+  def handle_call(:get_state, _from, state) do
+    {:reply, state, state}
+  end
+
+  @impl true
   def handle_call(:stop_run, _from, state) do
     case state do
       %{genesis_invocation: nil} ->
@@ -288,6 +293,19 @@ defmodule Panic.Engine.NetworkRunner do
     # Dispatch watchers for completed invocation output
     maybe_dispatch_watchers(invocation, state.watchers, state.user)
 
+    # In sync test mode, prevent infinite loops but preserve lockout behavior
+    if Application.get_env(:panic, :sync_network_runner, false) do
+      # For tests, stop creating new invocations after the first one completes
+      # but keep the genesis_invocation for lockout functionality
+      Logger.info("Test mode: preventing infinite loop after invocation #{invocation.sequence_number}")
+      new_state = %{state | current_invocation: nil}
+      {:noreply, new_state}
+    else
+      handle_processing_completed_normal(invocation, state)
+    end
+  end
+
+  defp handle_processing_completed_normal(invocation, state) do
     case Engine.prepare_next(invocation, actor: state.user) do
       {:ok, next_invocation} ->
         # Archive if needed (async)
@@ -301,12 +319,6 @@ defmodule Panic.Engine.NetworkRunner do
         new_state = %{state | current_invocation: next_invocation}
         trigger_invocation(next_invocation, new_state)
 
-        {:noreply, new_state}
-
-      {:error, :no_next_model} ->
-        # Run completed - return to idle
-        Logger.info("Run completed for network #{state.network_id}")
-        new_state = %{state | genesis_invocation: nil, current_invocation: nil, user: nil}
         {:noreply, new_state}
 
       {:error, error} ->
@@ -334,24 +346,36 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   defp trigger_invocation(invocation, state) do
-    # Capture the GenServer pid to send messages back to it
-    genserver_pid = self()
+    if Application.get_env(:panic, :sync_network_runner, false) do
+      # Synchronous mode for tests - send message to self but process immediately
+      try do
+        processed_invocation = Engine.invoke!(invocation, actor: state.user)
+        send(self(), {:processing_completed, processed_invocation})
+      rescue
+        e ->
+          Logger.error("Invocation processing failed: #{inspect(e)}")
+          # Don't crash - just let the run end
+      end
+    else
+      # Capture the GenServer pid to send messages back to it
+      genserver_pid = self()
 
-    # Process the invocation asynchronously
-    {:ok, _task_pid} =
-      Task.Supervisor.start_child(@task_supervisor, fn ->
-        try do
-          # Process the invocation
-          processed_invocation = Engine.invoke!(invocation, actor: state.user)
+      # Process the invocation asynchronously
+      {:ok, _task_pid} =
+        Task.Supervisor.start_child(@task_supervisor, fn ->
+          try do
+            # Process the invocation
+            processed_invocation = Engine.invoke!(invocation, actor: state.user)
 
-          # Notify completion to the GenServer
-          send(genserver_pid, {:processing_completed, processed_invocation})
-        rescue
-          e ->
-            Logger.error("Invocation processing failed: #{inspect(e)}")
-            # Don't crash - just let the run end
-        end
-      end)
+            # Notify completion to the GenServer
+            send(genserver_pid, {:processing_completed, processed_invocation})
+          rescue
+            e ->
+              Logger.error("Invocation processing failed: #{inspect(e)}")
+              # Don't crash - just let the run end
+          end
+        end)
+    end
   end
 
   defp archive_invocation_async(invocation, next_invocation) do
@@ -359,16 +383,27 @@ defmodule Panic.Engine.NetworkRunner do
     if Mix.env() == :test do
       :ok
     else
-      {:ok, _task_pid} =
-        Task.Supervisor.start_child(@task_supervisor, fn ->
-          try do
-            Archiver.archive_invocation(invocation, next_invocation)
-          rescue
-            e ->
-              Logger.error("Archiving failed: #{inspect(e)}")
-              # Don't crash - archiving is best effort
-          end
-        end)
+      if Application.get_env(:panic, :sync_network_runner, false) do
+        # Synchronous mode for tests - don't spawn task
+        try do
+          Archiver.archive_invocation(invocation, next_invocation)
+        rescue
+          e ->
+            Logger.error("Archiving failed: #{inspect(e)}")
+            # Don't crash - archiving is best effort
+        end
+      else
+        {:ok, _task_pid} =
+          Task.Supervisor.start_child(@task_supervisor, fn ->
+            try do
+              Archiver.archive_invocation(invocation, next_invocation)
+            rescue
+              e ->
+                Logger.error("Archiving failed: #{inspect(e)}")
+                # Don't crash - archiving is best effort
+            end
+          end)
+      end
     end
   end
 
@@ -383,44 +418,38 @@ defmodule Panic.Engine.NetworkRunner do
 
   defp maybe_dispatch_watchers(%{sequence_number: seq} = inv, watchers, user) when is_list(watchers) do
     Enum.each(watchers, fn watcher ->
-      case watcher.type do
-        :vestaboard ->
-          %{stride: stride, offset: offset, name: name, initial_prompt: initial_prompt} = watcher
+      %{stride: stride, offset: offset, name: name, initial_prompt: initial_prompt} = watcher
 
-          should_dispatch =
-            cond do
-              # Genesis invocation (seq 0): display input if initial_prompt is true OR offset matches
-              seq == 0 and is_binary(inv.input) ->
-                initial_prompt or rem(seq, stride) == offset
+      should_dispatch =
+        cond do
+          # Genesis invocation (seq 0): display input if initial_prompt is true OR offset matches
+          seq == 0 and is_binary(inv.input) ->
+            initial_prompt or rem(seq, stride) == offset
 
-              # Non-genesis invocations: display output when sequence matches offset
-              seq > 0 and is_binary(inv.output) ->
-                rem(seq, stride) == offset
+          # Non-genesis invocations: display output when sequence matches offset
+          seq > 0 and is_binary(inv.output) ->
+            rem(seq, stride) == offset
 
-              # No match
-              true ->
-                false
-            end
+          # No match
+          true ->
+            false
+        end
 
-          if should_dispatch do
-            board_name = Atom.to_string(name)
-            token = Vestaboard.token_for_board!(board_name, user)
+      if should_dispatch do
+        board_name = Atom.to_string(name)
+        token = Vestaboard.token_for_board!(board_name, user)
 
-            # For genesis (seq 0), display input; otherwise display output
-            content = if seq == 0, do: inv.input, else: inv.output
+        # For genesis (seq 0), display input; otherwise display output
+        content = if seq == 0, do: inv.input, else: inv.output
 
-            case Vestaboard.send_text(content, token, board_name) do
-              {:ok, _id} ->
-                :ok
+        case Vestaboard.send_text(content, token, board_name) do
+          {:ok, _id} ->
+            :ok
 
-              {:error, _reason} ->
-                # error message has already been logged, so no need to re-log it
-                :ok
-            end
-          end
-
-        _ ->
-          Logger.warning("Unknown watcher type: #{inspect(watcher.type)}")
+          {:error, _reason} ->
+            # error message has already been logged, so no need to re-log it
+            :ok
+        end
       end
     end)
   end
