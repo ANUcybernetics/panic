@@ -2,10 +2,10 @@
 
 ## NIME blockers
 
-- see if archiving (in tests) can be simplified
-- update all tests to use the new network runner testing approach
-- check if a catch all handler needs to be added to NetworkRunner
-- find out why the live cards aren't showing :invoking or :failed invocations
+- see why text runs don't get the P!
+- add timeout coutdown broadcasts to the network runner and invocation watchers
+  (and remove the need for the hook)
+- check that re-started runs don't get clobbered
 - ensure the vestaboard delays are still appropriate
 - check that time-based QR code -> terminal workflow works for non-logged-in
   users (perhaps only required for installations, and also requires real
