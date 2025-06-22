@@ -8,8 +8,6 @@
   deployment to test properly)
 - investigate the "Sizes of tensors must match except in dimension 0" error from
   Riffusion (check the params I'm sending are correct)
-- add [this](https://replicate.com/zsxkib/flux-music), and maybe
-  <https://replicate.com/ardianfe/music-gen-fn-400e?prediction=kpjdayh931rma0cqj3cbyv0p8c>
 - get FitText hook working
 - find one (or a few) good text audio networks to use at NIME
 - load it on to some RPis
