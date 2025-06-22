@@ -658,8 +658,8 @@ defmodule Panic.Model do
                    model,
                    %{
                      prompt: input,
-                     model_version: "small",
-                     steps: 30
+                     model_version: "base",
+                     steps: 50
                    },
                    token
                  ) do
