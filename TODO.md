@@ -2,14 +2,13 @@
 
 ## NIME blockers
 
-- check that installations track network changes
-- kiosk burn script hangs (silently) waiting for password input
-- add vestaboard delays are still appropriate
+- deploy to fly.io
+- see why audio vis isn't working for watchers
+- get FitText hook working
+- add vestaboard delays
 - check that time-based QR code -> terminal workflow works for non-logged-in
   users (perhaps only required for installations, and also requires real
   deployment to test properly)
-- get FitText hook working
-- deploy to fly.io
 - find one (or a few) good text audio networks to use at NIME
 - load it on to some RPis
 - set up real NIME installations
