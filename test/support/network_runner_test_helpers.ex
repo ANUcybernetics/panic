@@ -126,7 +126,6 @@ defmodule Panic.NetworkRunnerTestHelpers do
         state = :sys.get_state(pid)
         assert state.genesis_invocation == nil
         assert state.current_invocation == nil
-        assert state.user == nil
 
       [] ->
         # No runner exists, which is also idle

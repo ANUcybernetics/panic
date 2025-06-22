@@ -7,6 +7,7 @@ defmodule Panic.Engine.NetworkRunner do
   - **running**: Actively processing a run with a genesis invocation
 
   ## Key Features
+  - **Crash-resilient**: User context is loaded dynamically from the network relationship using system context, allowing the process to survive restarts without losing authorization context
   - Manages invocation lifecycle from creation to completion
   - Enforces network lockout periods between runs
   - Implements gradual backoff delays between invocations based on run age:
@@ -19,13 +20,14 @@ defmodule Panic.Engine.NetworkRunner do
 
   ## State Management
   The state contains:
-  - `network_id`: The ID of the network being processed
-  - `user`: The user who started the current run
+  - `network_id`: The ID of the network being processed (used to dynamically load user context)
   - `genesis_invocation`: The first invocation of the current run (nil when idle)
   - `current_invocation`: The invocation currently being processed (nil when idle)
   - `watchers`: List of active watchers for this network
   - `lockout_timer`: Timer reference for broadcasting lockout countdown (nil when not in lockout)
   - `pending_delayed_invocation`: Invocation waiting for scheduled delay before processing (nil when no delay)
+
+  **Note**: User context is no longer stored in state but loaded dynamically from the network relationship using system actor privileges. This makes the NetworkRunner crash-resilient while maintaining proper authorization.
 
   ## Configuration
   NetworkRunner processes are dynamically started and registered by network ID.
@@ -33,9 +35,9 @@ defmodule Panic.Engine.NetworkRunner do
 
   ## Testing Considerations
   # AIDEV-NOTE: NetworkRunner persists across tests; requires cleanup in test setup
-  NetworkRunner GenServers persist in the NetworkRegistry across test runs and maintain
-  user state. This can cause Ash.Error.Forbidden when stale processes run with wrong
-  actor context. Use PanicWeb.Helpers.stop_all_network_runners/0 in test setup.
+  NetworkRunner GenServers persist in the NetworkRegistry across test runs. While they
+  no longer maintain stale user state (user is loaded dynamically), they should still
+  be cleaned up between tests. Use PanicWeb.Helpers.stop_all_network_runners/0 in test setup.
   """
 
   use GenServer
@@ -140,7 +142,6 @@ defmodule Panic.Engine.NetworkRunner do
   def init(network_id) do
     state = %{
       network_id: network_id,
-      user: nil,
       genesis_invocation: nil,
       current_invocation: nil,
       watchers: [],
@@ -184,7 +185,6 @@ defmodule Panic.Engine.NetworkRunner do
             state
             | genesis_invocation: nil,
               current_invocation: nil,
-              user: nil,
               pending_delayed_invocation: nil
           })
 
@@ -215,7 +215,7 @@ defmodule Panic.Engine.NetworkRunner do
   def handle_info(:lockout_tick, state) do
     case state do
       %{genesis_invocation: %{} = genesis} ->
-        network = Ash.get!(Engine.Network, state.network_id, actor: state.user)
+        network = Ash.get!(Engine.Network, state.network_id, authorize?: false)
         remaining_seconds = calculate_lockout_remaining(genesis, network)
 
         if remaining_seconds >= 0 do
@@ -248,19 +248,10 @@ defmodule Panic.Engine.NetworkRunner do
 
   @impl true
   def handle_info({:delayed_invocation, invocation}, state) do
-    # Guard against missing user context
-    if is_nil(state.user) do
-      Logger.error(
-        "Cannot process delayed invocation #{invocation.id} - missing user context. NetworkRunner may have lost state due to previous error."
-      )
-
-      {:noreply, state}
-    else
-      # Process the delayed invocation
-      new_state = %{state | current_invocation: invocation, pending_delayed_invocation: nil}
-      trigger_invocation(invocation, new_state)
-      {:noreply, new_state}
-    end
+    # Process the delayed invocation
+    new_state = %{state | current_invocation: invocation, pending_delayed_invocation: nil}
+    trigger_invocation(invocation, new_state)
+    {:noreply, new_state}
   end
 
   def handle_info(_msg, state) do
@@ -270,7 +261,7 @@ defmodule Panic.Engine.NetworkRunner do
   # Private functions
 
   defp handle_start_run_idle(prompt, user, state) do
-    network = Ash.get!(Engine.Network, state.network_id, actor: user)
+    network = Ash.get!(Engine.Network, state.network_id, authorize?: false)
     watchers = vestaboard_watchers(network)
 
     case Engine.prepare_first(network, prompt, actor: user) do
@@ -285,8 +276,7 @@ defmodule Panic.Engine.NetworkRunner do
           start_lockout_timer(
             %{
               state
-              | user: user,
-                genesis_invocation: invocation,
+              | genesis_invocation: invocation,
                 current_invocation: invocation,
                 watchers: watchers,
                 pending_delayed_invocation: nil
@@ -311,7 +301,7 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   defp handle_start_run_running(prompt, user, genesis, state) do
-    network = Ash.get!(Engine.Network, state.network_id, actor: user)
+    network = Ash.get!(Engine.Network, state.network_id, authorize?: false)
 
     if under_lockout?(genesis, network) do
       {:reply, {:lockout, genesis}, state}
@@ -334,8 +324,7 @@ defmodule Panic.Engine.NetworkRunner do
           new_state =
             %{
               state
-              | user: user,
-                genesis_invocation: invocation,
+              | genesis_invocation: invocation,
                 current_invocation: invocation,
                 watchers: watchers,
                 pending_delayed_invocation: nil
@@ -361,7 +350,11 @@ defmodule Panic.Engine.NetworkRunner do
 
   defp handle_processing_completed(invocation, state) do
     # Dispatch watchers for completed invocation output
-    maybe_dispatch_watchers(invocation, state.watchers, state.user)
+    # Only get user if there are watchers to dispatch to
+    if state.watchers != [] do
+      {_network, user} = get_network_and_user!(state.network_id)
+      maybe_dispatch_watchers(invocation, state.watchers, user)
+    end
 
     # In sync test mode, prevent infinite loops but preserve lockout behavior
     if Application.get_env(:panic, :sync_network_runner, false) do
@@ -376,7 +369,9 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   defp handle_processing_completed_normal(invocation, state) do
-    case Engine.prepare_next(invocation, actor: state.user) do
+    {_network, user} = get_network_and_user!(state.network_id)
+
+    case Engine.prepare_next(invocation, actor: user) do
       {:ok, next_invocation} ->
         # Archive if needed (async)
         model = Panic.Model.by_id!(invocation.model)
@@ -400,7 +395,6 @@ defmodule Panic.Engine.NetworkRunner do
           state
           | genesis_invocation: nil,
             current_invocation: nil,
-            user: nil,
             pending_delayed_invocation: nil
         }
 
@@ -415,7 +409,6 @@ defmodule Panic.Engine.NetworkRunner do
           state
           | genesis_invocation: nil,
             current_invocation: nil,
-            user: nil,
             pending_delayed_invocation: nil
         })
 
@@ -433,64 +426,58 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   defp trigger_invocation(invocation, state) do
-    # Guard against missing user context to prevent authorization errors
-    if is_nil(state.user) do
-      Logger.error(
-        "Cannot process invocation #{invocation.id} - missing user context. NetworkRunner may have lost state due to previous error."
-      )
+    # Get user dynamically - NetworkRunner is now crash-resilient
+    {_network, user} = get_network_and_user!(state.network_id)
 
-      :ok
-    else
-      if Application.get_env(:panic, :sync_network_runner, false) do
-        # Synchronous mode for tests - send message to self but process immediately
-        try do
-          # Make the invocation visible with pending state first
-          invocation = Engine.about_to_invoke!(invocation, actor: state.user)
-          processed_invocation = Engine.invoke!(invocation, actor: state.user)
-          send(self(), {:processing_completed, processed_invocation})
-        rescue
-          e ->
-            # Mark invocation as failed before logging error
-            try do
-              Engine.mark_as_failed!(invocation, actor: state.user)
-            rescue
-              # If marking as failed fails, just continue
-              _mark_error -> nil
-            end
+    if Application.get_env(:panic, :sync_network_runner, false) do
+      # Synchronous mode for tests - send message to self but process immediately
+      try do
+        # Make the invocation visible with pending state first
+        invocation = Engine.about_to_invoke!(invocation, actor: user)
+        processed_invocation = Engine.invoke!(invocation, actor: user)
+        send(self(), {:processing_completed, processed_invocation})
+      rescue
+        e ->
+          # Mark invocation as failed before logging error
+          try do
+            Engine.mark_as_failed!(invocation, actor: user)
+          rescue
+            # If marking as failed fails, just continue
+            _mark_error -> nil
+          end
 
-            Logger.error("Invocation processing failed: #{inspect(e)}")
-            # Don't crash - just let the run end
-        end
-      else
-        # Capture the GenServer pid to send messages back to it
-        genserver_pid = self()
-
-        # Process the invocation asynchronously
-        {:ok, _task_pid} =
-          Task.Supervisor.start_child(@task_supervisor, fn ->
-            try do
-              # Make the invocation visible with pending state first
-              invocation = Engine.about_to_invoke!(invocation, actor: state.user)
-              # Process the invocation
-              processed_invocation = Engine.invoke!(invocation, actor: state.user)
-
-              # Notify completion to the GenServer
-              send(genserver_pid, {:processing_completed, processed_invocation})
-            rescue
-              e ->
-                # Mark invocation as failed before logging error
-                try do
-                  Engine.mark_as_failed!(invocation, actor: state.user)
-                rescue
-                  # If marking as failed fails, just continue
-                  _mark_error -> nil
-                end
-
-                Logger.error("Invocation processing failed: #{inspect(e)}")
-                # Don't crash - just let the run end
-            end
-          end)
+          Logger.error("Invocation processing failed: #{inspect(e)}")
+          # Don't crash - just let the run end
       end
+    else
+      # Capture the GenServer pid to send messages back to it
+      genserver_pid = self()
+
+      # Process the invocation asynchronously
+      {:ok, _task_pid} =
+        Task.Supervisor.start_child(@task_supervisor, fn ->
+          try do
+            # Make the invocation visible with pending state first
+            invocation = Engine.about_to_invoke!(invocation, actor: user)
+            # Process the invocation
+            processed_invocation = Engine.invoke!(invocation, actor: user)
+
+            # Notify completion to the GenServer
+            send(genserver_pid, {:processing_completed, processed_invocation})
+          rescue
+            e ->
+              # Mark invocation as failed before logging error
+              try do
+                Engine.mark_as_failed!(invocation, actor: user)
+              rescue
+                # If marking as failed fails, just continue
+                _mark_error -> nil
+              end
+
+              Logger.error("Invocation processing failed: #{inspect(e)}")
+              # Don't crash - just let the run end
+          end
+        end)
     end
   end
 
@@ -510,6 +497,20 @@ defmodule Panic.Engine.NetworkRunner do
           end
         end)
     end
+  end
+
+  # AIDEV-NOTE: Helper to get network and user context - makes NetworkRunner crash-resilient
+  defp get_network_and_user!(network_id) do
+    # Use authorize?: false to read network and user since NetworkRunner is a system service
+    # This allows the process to survive restarts and still access the required user context
+    # Only call this when user context is actually needed to minimize database calls
+    network =
+      Ash.get!(Engine.Network, network_id,
+        authorize?: false,
+        load: [:user]
+      )
+
+    {network, network.user}
   end
 
   defp vestaboard_watchers(network) do

@@ -2,6 +2,7 @@ defmodule Panic.NetworkRunnerTest do
   use Panic.DataCase, async: false
   use ExUnitProperties
   use Repatch.ExUnit
+  use PanicWeb.Helpers.DatabasePatches
 
   alias Panic.Accounts.User
   alias Panic.Engine
@@ -17,6 +18,9 @@ defmodule Panic.NetworkRunnerTest do
   setup do
     # Setup external API patches to avoid real network calls
     ExternalAPIPatches.setup()
+
+    # Stop all network runners to ensure clean state
+    PanicWeb.Helpers.stop_all_network_runners()
 
     # Enable synchronous mode for predictable tests
     NetworkRunnerTestHelpers.enable_sync_mode()
@@ -36,6 +40,9 @@ defmodule Panic.NetworkRunnerTest do
     on_exit(fn ->
       # Stop the specific network runner
       NetworkRunnerTestHelpers.stop_network_runner(network.id)
+
+      # Stop all network runners to ensure complete cleanup
+      PanicWeb.Helpers.stop_all_network_runners()
 
       # Disable synchronous mode
       NetworkRunnerTestHelpers.disable_sync_mode()
@@ -58,7 +65,7 @@ defmodule Panic.NetworkRunnerTest do
 
       state = :sys.get_state(pid)
       assert state.network_id == network.id
-      assert state.user == nil
+
       assert state.genesis_invocation == nil
       assert state.current_invocation == nil
       assert state.watchers == []
@@ -293,7 +300,6 @@ defmodule Panic.NetworkRunnerTest do
 
       state = :sys.get_state(pid)
       assert state.genesis_invocation.input == "original prompt"
-      assert state.user.id == user.id
 
       # Stop and verify cleanup
       {:ok, :stopped} = GenServer.call(pid, :stop_run)
@@ -332,6 +338,45 @@ defmodule Panic.NetworkRunnerTest do
       assert result in [{:ok, :stopped}, {:ok, :not_running}]
       assert Process.alive?(pid)
     end
+
+    test "survives process restart without losing user context", %{network: network, user: user} do
+      # Start a NetworkRunner and get it processing
+      {:ok, pid1} = start_supervised({NetworkRunner, network_id: network.id})
+      {:ok, genesis} = GenServer.call(pid1, {:start_run, "test prompt", user})
+
+      # Wait for processing to start
+      Process.sleep(100)
+
+      # Stop the supervised process to simulate a crash/restart
+      stop_supervised(NetworkRunner)
+
+      # Wait for registry cleanup
+      Process.sleep(100)
+
+      # Start a new NetworkRunner with the same network_id (simulating restart)
+      {:ok, pid2} = start_supervised({NetworkRunner, network_id: network.id})
+
+      # Verify it's a different process
+      refute pid1 == pid2
+
+      # The new process should be able to handle operations that require user context
+      # by dynamically loading the user from the network (this tests crash resilience)
+
+      # Send a delayed invocation message to test user context loading
+      # In the old implementation, this would fail because state.user would be nil
+      send(pid2, {:delayed_invocation, genesis})
+
+      # The process should be able to handle this without crashing
+      # (it will try to get user context dynamically)
+      Process.sleep(500)
+
+      # Verify the process is still alive and hasn't crashed
+      assert Process.alive?(pid2)
+
+      # Verify it can start new runs (which also requires user context)
+      # This demonstrates that the NetworkRunner is truly crash-resilient
+      {:ok, _new_invocation} = GenServer.call(pid2, {:start_run, "new prompt after restart", user})
+    end
   end
 
   describe "configuration" do
@@ -341,7 +386,6 @@ defmodule Panic.NetworkRunnerTest do
       # Check state has expected fields
       state = :sys.get_state(pid)
       assert state.network_id == network.id
-      assert state.user == nil
       assert state.genesis_invocation == nil
       assert state.current_invocation == nil
       assert state.watchers == []
