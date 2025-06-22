@@ -2,7 +2,6 @@
 
 ## NIME blockers
 
-- deploy to fly.io
 - see why audio vis isn't working for watchers
 - get FitText hook working
 - add vestaboard delays
