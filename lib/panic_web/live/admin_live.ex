@@ -84,6 +84,34 @@ defmodule PanicWeb.AdminLive do
     {:noreply, stream_insert(socket, :invocations, invocation, at: 0, limit: @invocation_stream_limit)}
   end
 
+  @impl true
+  def handle_event("cancel_all_jobs", _params, socket) do
+    # Get all running NetworkRunner processes from the registry
+    registry_entries = Registry.select(Panic.Engine.NetworkRegistry, [{{:"$1", :"$2", :"$3"}, [], [{{:"$1", :"$2"}}]}])
+
+    # Stop each NetworkRunner
+    stopped_count =
+      registry_entries
+      |> Enum.map(fn {_network_id, pid} ->
+        if Process.alive?(pid) do
+          DynamicSupervisor.terminate_child(Panic.Engine.NetworkSupervisor, pid)
+          1
+        else
+          0
+        end
+      end)
+      |> Enum.sum()
+
+    message =
+      case stopped_count do
+        0 -> "No running jobs found to cancel"
+        1 -> "Cancelled 1 running job"
+        n -> "Cancelled #{n} running jobs"
+      end
+
+    {:noreply, put_flash(socket, :info, message)}
+  end
+
   defp invocation_io_link(%{type: :input} = assigns) do
     ~H"""
     <%= case Panic.Model.by_id!(@invocation.model) |> Map.fetch!(:input_type) do %>
