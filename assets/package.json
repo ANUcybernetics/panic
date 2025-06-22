@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@tailwindcss/container-queries": "^0.1.1",
     "@types/howler": "^2.2.12",
     "audiomotion-analyzer": "^4.5.1",
     "howler": "^2.2.4"

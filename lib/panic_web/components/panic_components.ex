@@ -179,22 +179,15 @@ defmodule PanicWeb.PanicComponents do
   attr :id, :string, required: true
 
   def invocation_slot(%{type: :text} = assigns) do
+    assigns = assign(assigns, :parsed_content, parse_text_content(assigns.value))
+
     ~H"""
     <div
       id={"#{@id}-text"}
-      class="size-full grid place-items-center p-2 bg-zinc-800 text-left text-[14px]"
-      phx-hook="FitText"
+      class="size-full grid place-items-center p-2 bg-zinc-800 text-left @container"
     >
-      <div>
-        <%= for line <- String.split(@value || "", "\n\n") do %>
-          <p
-            :if={line != ""}
-            class="[text-shadow:2px_2px_0px_#581c87]"
-            style="font-size: var(--fit-text-size, inherit);"
-          >
-            {line}
-          </p>
-        <% end %>
+      <div class="[text-shadow:2px_2px_0px_#581c87] text-left text-[8px] @[200px]:text-[10px] @[400px]:text-xs @[600px]:text-sm @[800px]:text-base">
+        {@parsed_content}
       </div>
     </div>
     """
@@ -230,6 +223,17 @@ defmodule PanicWeb.PanicComponents do
   #   </div>
   #   """
   # end
+
+  defp parse_text_content(nil), do: ""
+  defp parse_text_content(""), do: ""
+
+  defp parse_text_content(text) do
+    case MDEx.to_html(text) do
+      {:ok, html} -> Phoenix.HTML.raw(html)
+      # Fallback to raw text if parsing fails
+      {:error, _} -> text
+    end
+  end
 
   # #581c87 is purple-900
   def shadowed_text(assigns) do

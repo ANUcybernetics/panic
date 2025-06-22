@@ -26,11 +26,9 @@ import live_select from "live_select";
 // LiveView hooks
 
 import AudioVisualizer from "./hooks/audio_visualizer";
-import FitText from "./hooks/fit_text";
 
 const hooks = {
   AudioVisualizer,
-  FitText,
   ...live_select,
 };
 
