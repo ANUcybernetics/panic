@@ -13,7 +13,15 @@ defmodule PanicWeb.InstallationLive.Show do
 
     <.header>
       {@installation.name}
-      <:subtitle>Network: {@installation.network.name}</:subtitle>
+      <:subtitle>
+        Network:
+        <.link
+          navigate={~p"/networks/#{@installation.network}"}
+          class="text-blue-600 hover:text-blue-800 underline"
+        >
+          {@installation.network.name}
+        </.link>
+      </:subtitle>
       <:actions>
         <.link patch={~p"/installations/#{@installation}/show/edit"} phx-click={JS.push_focus()}>
           <.button>Edit installation</.button>
