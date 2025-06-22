@@ -313,6 +313,113 @@ defmodule PanicWeb.InvocationWatcherTest do
     end
   end
 
+  describe "archive URL filtering" do
+    test "invocations with archive URL in input should be filtered out", %{network: network} do
+      invocation = %Invocation{
+        id: 1,
+        sequence_number: 0,
+        run_number: 100,
+        network_id: network.id,
+        state: :completed,
+        input: "https://fly.storage.tigris.dev/some-archive-file.txt",
+        output: "normal output",
+        model: "test-model"
+      }
+
+      assert should_filter_archive_url?(invocation)
+    end
+
+    test "invocations with archive URL in output should be filtered out", %{network: network} do
+      invocation = %Invocation{
+        id: 1,
+        sequence_number: 0,
+        run_number: 100,
+        network_id: network.id,
+        state: :completed,
+        input: "normal input",
+        output: "https://fly.storage.tigris.dev/some-archive-result.json",
+        model: "test-model"
+      }
+
+      assert should_filter_archive_url?(invocation)
+    end
+
+    test "invocations with archive URL in both input and output should be filtered out", %{network: network} do
+      invocation = %Invocation{
+        id: 1,
+        sequence_number: 0,
+        run_number: 100,
+        network_id: network.id,
+        state: :completed,
+        input: "https://fly.storage.tigris.dev/input-file.txt",
+        output: "https://fly.storage.tigris.dev/output-file.json",
+        model: "test-model"
+      }
+
+      assert should_filter_archive_url?(invocation)
+    end
+
+    test "invocations without archive URLs should not be filtered", %{network: network} do
+      invocation = %Invocation{
+        id: 1,
+        sequence_number: 0,
+        run_number: 100,
+        network_id: network.id,
+        state: :completed,
+        input: "normal input text",
+        output: "normal output text",
+        model: "test-model"
+      }
+
+      refute should_filter_archive_url?(invocation)
+    end
+
+    test "invocations with nil input and output should not be filtered", %{network: network} do
+      invocation = %Invocation{
+        id: 1,
+        sequence_number: 0,
+        run_number: 100,
+        network_id: network.id,
+        state: :ready,
+        input: nil,
+        output: nil,
+        model: "test-model"
+      }
+
+      refute should_filter_archive_url?(invocation)
+    end
+
+    test "invocations with URLs that don't match archive prefix should not be filtered", %{network: network} do
+      invocation = %Invocation{
+        id: 1,
+        sequence_number: 0,
+        run_number: 100,
+        network_id: network.id,
+        state: :completed,
+        input: "https://example.com/some-file.txt",
+        output: "https://other-storage.com/result.json",
+        model: "test-model"
+      }
+
+      refute should_filter_archive_url?(invocation)
+    end
+
+    test "invocations with partial archive URL match should not be filtered", %{network: network} do
+      invocation = %Invocation{
+        id: 1,
+        sequence_number: 0,
+        run_number: 100,
+        network_id: network.id,
+        state: :completed,
+        input: "contains https://fly.storage.tigris.dev/ in the middle",
+        output: "normal output",
+        model: "test-model"
+      }
+
+      refute should_filter_archive_url?(invocation)
+    end
+  end
+
   # Helper functions that extract the core business logic
   # These mirror the logic in the actual InvocationWatcher module
 
@@ -348,5 +455,11 @@ defmodule PanicWeb.InvocationWatcherTest do
   defp matches_display_criteria?(sequence_number, {:single, offset, stride}) do
     # Single mode filters by stride and offset
     rem(sequence_number, stride) == offset
+  end
+
+  defp should_filter_archive_url?(%Invocation{input: input, output: output}) do
+    # Helper function that mirrors the logic in InvocationWatcher
+    archive_prefix = "https://fly.storage.tigris.dev/"
+    String.starts_with?(input || "", archive_prefix) or String.starts_with?(output || "", archive_prefix)
   end
 end

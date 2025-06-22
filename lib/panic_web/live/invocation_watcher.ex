@@ -107,6 +107,20 @@ defmodule PanicWeb.InvocationWatcher do
     display = socket.assigns.display
     invocation = message.payload.data
 
+    # Filter out invocations with archive URLs
+    if should_filter_archive_url?(invocation) do
+      {:noreply, socket}
+    else
+      handle_filtered_invocation_message(invocation, socket, display)
+    end
+  end
+
+  defp should_filter_archive_url?(%Invocation{input: input, output: output}) do
+    archive_prefix = "https://fly.storage.tigris.dev/"
+    String.starts_with?(input || "", archive_prefix) or String.starts_with?(output || "", archive_prefix)
+  end
+
+  defp handle_filtered_invocation_message(invocation, socket, display) do
     # AIDEV-NOTE: Simplified logic - reset on genesis, filter by run_number for others
     socket =
       case invocation do
