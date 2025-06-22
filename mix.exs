@@ -4,8 +4,8 @@ defmodule Panic.MixProject do
   def project do
     [
       app: :panic,
-      version: "2.0.0-beta.0",
-      elixir: "~> 1.17",
+      version: "3.0.0-beta.0",
+      elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       consolidate_protocols: Mix.env() != :dev,
