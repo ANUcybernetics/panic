@@ -26,7 +26,6 @@ defmodule Panic.Model do
   alias Panic.Platforms.Gemini
   alias Panic.Platforms.OpenAI
   alias Panic.Platforms.Replicate
-  alias Reactor.Dsl.Flunk
 
   require Logger
 
