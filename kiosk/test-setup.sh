@@ -68,28 +68,29 @@ test_main_script_exists() {
     fi
 }
 
-# Test 2: Check if helper script exists
-test_helper_script_exists() {
-    if [ -f "$SCRIPT_DIR/quick-setup.sh" ]; then
+# Test 2: Check cache directory creation
+test_cache_directory() {
+    local test_cache_dir="${HOME}/.raspios-images-test"
+
+    if mkdir -p "$test_cache_dir"; then
+        log_info "Can create cache directory"
+        rmdir "$test_cache_dir"
         return 0
     else
-        log_error "quick-setup.sh not found"
+        log_error "Cannot create cache directory"
         return 1
     fi
 }
 
 # Test 3: Check script permissions
 test_script_permissions() {
-    local all_executable=true
-
-    for script in setup-kiosk.sh quick-setup.sh; do
-        if [ ! -x "$SCRIPT_DIR/$script" ]; then
-            log_error "$script is not executable"
-            all_executable=false
-        fi
-    done
-
-    return $($all_executable && echo 0 || echo 1)
+    if [ ! -x "$SCRIPT_DIR/setup-kiosk.sh" ]; then
+        log_error "setup-kiosk.sh is not executable"
+        return 1
+    else
+        log_info "setup-kiosk.sh is executable"
+        return 0
+    fi
 }
 
 # Test 4: Check required system tools
@@ -132,55 +133,51 @@ test_argument_parsing() {
         return 1
     fi
 
-    # Test help functionality
-    if bash "$SCRIPT_DIR/quick-setup.sh" --help >/dev/null 2>&1; then
-        log_info "Help functionality works"
+    # Test argument validation by checking the usage message
+    local usage_output=$(bash "$SCRIPT_DIR/setup-kiosk.sh" 2>&1 || true)
+    if echo "$usage_output" | grep -q "wifi-username"; then
+        log_info "Script correctly requires 4 arguments including wifi-username"
         return 0
     else
-        log_warning "Help functionality may have issues"
+        log_error "Script does not properly validate enterprise WiFi arguments"
         return 1
     fi
 }
 
-# Test 7: Test preset functionality
-test_preset_functionality() {
-    # Check if preset function is defined in quick-setup.sh
-    if grep -q "get_preset_url()" "$SCRIPT_DIR/quick-setup.sh"; then
-        log_info "Preset functionality is defined in quick-setup.sh"
+# Test 7: Test enterprise WiFi configuration
+test_enterprise_wifi_config() {
+    # Check if the script properly handles enterprise WiFi configuration
+    if grep -q "key_mgmt=WPA-EAP" "$SCRIPT_DIR/setup-kiosk.sh"; then
+        log_info "Enterprise WiFi configuration found"
 
-        # Test a few presets
-        local test_presets=("dashboard" "clock" "test")
-        local preset_count=0
-
-        for preset in "${test_presets[@]}"; do
-            if grep -q "^[[:space:]]*$preset)" "$SCRIPT_DIR/quick-setup.sh"; then
-                preset_count=$((preset_count + 1))
-            fi
-        done
-
-        if [ $preset_count -gt 0 ]; then
-            log_info "Found $preset_count test presets working"
+        if grep -q "eap=PEAP" "$SCRIPT_DIR/setup-kiosk.sh" && grep -q "phase2=" "$SCRIPT_DIR/setup-kiosk.sh"; then
+            log_info "PEAP configuration properly implemented"
             return 0
         else
-            log_error "No working presets found"
+            log_error "Incomplete enterprise WiFi configuration"
             return 1
         fi
     else
-        log_error "No preset functionality found in quick-setup.sh"
+        log_error "No enterprise WiFi configuration found"
         return 1
     fi
 }
 
-# Test 8: Test workspace creation (dry run)
-test_workspace_creation() {
-    local test_workspace="/tmp/kiosk-test-$$"
+# Test 8: Test image caching functionality
+test_image_caching() {
+    # Check if the script implements proper image caching
+    if grep -q "CACHE_DIR=" "$SCRIPT_DIR/setup-kiosk.sh"; then
+        log_info "Image caching directory configured"
 
-    if mkdir -p "$test_workspace"; then
-        log_info "Can create workspace directories"
-        rmdir "$test_workspace"
-        return 0
+        if grep -q '\.raspios-images' "$SCRIPT_DIR/setup-kiosk.sh"; then
+            log_info "Cache directory uses proper location"
+            return 0
+        else
+            log_error "Cache directory not properly configured"
+            return 1
+        fi
     else
-        log_error "Cannot create workspace directories"
+        log_error "No image caching functionality found"
         return 1
     fi
 }
@@ -247,7 +244,7 @@ test_readme_completeness() {
     fi
 
     # Check for essential sections
-    local required_sections=("Requirements" "Quick Start" "Troubleshooting")
+    local required_sections=("Requirements" "Troubleshooting")
     local missing_sections=()
 
     for section in "${required_sections[@]}"; do
@@ -257,7 +254,7 @@ test_readme_completeness() {
     done
 
     if [ ${#missing_sections[@]} -eq 0 ]; then
-        log_info "README.md contains all required sections"
+        log_info "README.md contains required sections"
         return 0
     else
         log_error "README.md missing sections: ${missing_sections[*]}"
@@ -267,12 +264,12 @@ test_readme_completeness() {
 
 # Test 12: Test error handling
 test_error_handling() {
-    # Check if scripts use 'set -e' for error handling
-    if grep -q "set -e" "$SCRIPT_DIR/setup-kiosk.sh" && grep -q "set -e" "$SCRIPT_DIR/quick-setup.sh"; then
-        log_info "Scripts use proper error handling (set -e)"
+    # Check if script uses 'set -e' for error handling
+    if grep -q "set -e" "$SCRIPT_DIR/setup-kiosk.sh"; then
+        log_info "Script uses proper error handling (set -e)"
         return 0
     else
-        log_warning "Scripts may not have proper error handling"
+        log_warning "Script may not have proper error handling"
         return 1
     fi
 }
@@ -297,9 +294,7 @@ print_summary() {
     if [ $TESTS_FAILED -eq 0 ]; then
         log_success "All tests passed! Setup appears to be working correctly."
         log_info "You can now run the actual setup with:"
-        log_info "  ./quick-setup.sh"
-        log_info "  or"
-        log_info "  ./setup-kiosk.sh <your-url>"
+        log_info "  ./setup-kiosk.sh <url> <wifi-ssid> <wifi-username> <wifi-password>"
     else
         log_error "Some tests failed. Please fix the issues before running the setup."
         return 1
@@ -314,13 +309,13 @@ main() {
 
     # Run all tests
     run_test "Main script exists" test_main_script_exists
-    run_test "Helper script exists" test_helper_script_exists
+    run_test "Cache directory creation" test_cache_directory
     run_test "Script permissions" test_script_permissions
     run_test "System dependencies" test_system_dependencies
     run_test "macOS compatibility" test_macos_compatibility
     run_test "Argument parsing" test_argument_parsing
-    run_test "Preset functionality" test_preset_functionality
-    run_test "Workspace creation" test_workspace_creation
+    run_test "Enterprise WiFi config" test_enterprise_wifi_config
+    run_test "Image caching" test_image_caching
     run_test "URL validation" test_url_validation
     run_test "Config generation" test_config_generation
     run_test "README completeness" test_readme_completeness

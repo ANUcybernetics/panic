@@ -1,9 +1,9 @@
 # Raspberry Pi 5 Kiosk Mode Setup
 
-This directory contains scripts to automatically download, configure, and burn a
-Raspberry Pi 5 image for kiosk mode operation. The resulting SD card will boot
+This directory contains a script to automatically download, configure, and burn
+a Raspberry Pi 5 image for kiosk mode operation. The resulting SD card will boot
 straight into a full-screen Chromium browser displaying a specified URL, with no
-user interaction required.
+user interaction required. Downloaded images are cached for reuse.
 
 ## Features
 
@@ -11,8 +11,8 @@ user interaction required.
   automatically
 - **Kiosk Mode**: Boots directly to full-screen Chromium browser
 - **Audio Support**: Configured to play audio content
-- **WiFi Support**: Optional WiFi configuration during setup
-- **Security Options**: Includes optional hardening features
+- **Enterprise WiFi Support**: Supports enterprise WiFi with username/password
+  authentication
 - **macOS Compatible**: Designed for macOS with SDXC Reader
 
 ## Requirements
@@ -35,60 +35,37 @@ user interaction required.
 
 ## Quick Start
 
-### Method 1: Interactive Setup (Recommended)
-
 ```bash
 cd kiosk/
-chmod +x *.sh
-./quick-setup.sh
+chmod +x setup-kiosk.sh
+./setup-kiosk.sh <kiosk-url> <wifi-ssid> <wifi-username> <wifi-password>
 ```
 
-This will guide you through:
-
-1. Choosing a preset or entering a custom URL
-2. Optional WiFi configuration
-3. Confirming settings before proceeding
-
-### Method 2: Direct Setup
+Example:
 
 ```bash
-./setup-kiosk.sh https://your-kiosk-url.com [wifi-ssid] [wifi-password]
+./setup-kiosk.sh https://cybernetics.anu.edu.au MyWiFiNetwork myusername mypassword
 ```
 
-### Method 3: Using Presets
+The script requires all four arguments:
 
-```bash
-./quick-setup.sh dashboard    # Grafana dashboard
-./quick-setup.sh clock        # Time display
-./quick-setup.sh weather      # Weather information
-./quick-setup.sh local        # Local development server
-```
-
-## Available Presets
-
-| Preset      | URL                                    | Use Case              |
-| ----------- | -------------------------------------- | --------------------- |
-| `dashboard` | https://grafana.com/grafana/dashboards | System monitoring     |
-| `clock`     | https://time.is                        | Digital clock display |
-| `weather`   | https://weather.com                    | Weather information   |
-| `news`      | https://news.google.com                | News headlines        |
-| `calendar`  | https://calendar.google.com            | Calendar display      |
-| `photos`    | https://photos.google.com              | Photo slideshow       |
-| `youtube`   | https://youtube.com                    | Video content         |
-| `local`     | http://localhost:3000                  | Local development     |
-| `test`      | https://example.com                    | Testing setup         |
+- **kiosk-url**: The URL to display in the browser
+- **wifi-ssid**: Enterprise WiFi network name
+- **wifi-username**: Enterprise WiFi username
+- **wifi-password**: Enterprise WiFi password
 
 ## Process Overview
 
 The setup script performs these steps:
 
-1. **Download**: Gets the latest Raspberry Pi OS Lite image
+1. **Download**: Gets the latest Raspberry Pi OS Lite image (cached in
+   `~/.raspios-images/`)
 2. **Extract**: Decompresses the image file
 3. **Mount**: Mounts boot and root partitions for modification
 4. **Configure**:
    - Enables SSH access
    - Sets up user account (username: `kiosk`, password: `raspberry`)
-   - Configures WiFi (if provided)
+   - Configures enterprise WiFi
    - Disables Bluetooth
    - Sets up kiosk mode autostart
 5. **Unmount**: Safely unmounts the modified image
@@ -114,24 +91,7 @@ The setup script performs these steps:
 - Audio playback enabled
 - Automatic cursor hiding
 - No user interaction required
-
-### Security Hardening (Optional)
-
-After the Pi boots, you can run additional security hardening:
-
-```bash
-ssh kiosk@pi-kiosk.local
-~/harden-system.sh
-```
-
-This will:
-
-- Disable USB ports
-- Disable Ethernet port
-- Make changes persistent across reboots
-
-**Warning**: Only run hardening if you have reliable WiFi access for remote
-management.
+- Enterprise WiFi authentication (PEAP/MSCHAPV2)
 
 ## Troubleshooting
 
@@ -162,9 +122,10 @@ Permission denied when writing to SD card
 Pi not connecting to WiFi
 ```
 
-- Double-check WiFi credentials
-- Ensure network is 2.4GHz (Pi may have issues with 5GHz-only networks)
-- Try connecting via Ethernet initially
+- Double-check enterprise WiFi credentials (SSID, username, password)
+- Ensure the enterprise network supports PEAP authentication
+- Verify the network allows device registration
+- Try connecting via Ethernet initially for troubleshooting
 
 **Kiosk Not Starting**
 
@@ -218,12 +179,15 @@ If automatic setup fails, you can manually configure the Pi:
 kiosk/
 ├── README.md           # This file
 ├── setup-kiosk.sh      # Main setup script
-├── quick-setup.sh      # Interactive helper script
+├── test-setup.sh       # Test script for validation
 └── work/               # Created during setup (temporary files)
-    ├── raspios-lite-arm64.img.xz    # Downloaded image
-    ├── raspios-lite-arm64.img       # Extracted image
+    ├── 2025-05-13-raspios-bookworm-arm64-lite.img.xz    # Downloaded image
+    ├── raspios-bookworm-arm64-lite.img                  # Extracted image
     ├── boot/           # Mounted boot partition
     └── root/           # Mounted root partition
+
+~/.raspios-images/      # Cached images (created automatically)
+└── 2025-05-13-raspios-bookworm-arm64-lite.img.xz
 ```
 
 ## Advanced Usage
@@ -258,10 +222,13 @@ done
 
 ### Development Mode
 
-For development, use the `local` preset and set up port forwarding:
+For local development, use a localhost URL and set up port forwarding:
 
 ```bash
-# On your development machine
+# Setup with local URL
+./setup-kiosk.sh http://localhost:3000 MyWiFi myuser mypass
+
+# Then forward port from your development machine
 ssh -L 3000:localhost:3000 kiosk@pi-kiosk.local
 ```
 

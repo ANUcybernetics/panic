@@ -2,19 +2,19 @@
 
 # Raspberry Pi 5 Kiosk Mode Setup Script
 # This script downloads, configures, and burns a Raspberry Pi OS image for kiosk mode
-# Usage: ./setup-kiosk.sh <kiosk-url> [wifi-ssid] [wifi-password]
+# Usage: ./setup-kiosk.sh <kiosk-url> <wifi-ssid> <wifi-username> <wifi-password>
 
 set -e  # Exit on any error
 
-# AIDEV-NOTE: Main script for automated RPi5 kiosk image creation and SD card burning
+# AIDEV-NOTE: Simplified RPi5 kiosk setup with enterprise WiFi and image caching
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORK_DIR="${SCRIPT_DIR}/work"
+CACHE_DIR="${HOME}/.raspios-images"
 IMAGE_URL="https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2025-05-13/2025-05-13-raspios-bookworm-arm64-lite.img.xz"
-IMAGE_FILE="raspios-lite-arm64.img.xz"
-IMAGE_EXTRACTED="raspios-lite-arm64.img"
-SDCARD_DEVICE="/dev/disk2"  # Common macOS SDXC Reader location
+IMAGE_FILE="2025-05-13-raspios-bookworm-arm64-lite.img.xz"
+IMAGE_EXTRACTED="raspios-bookworm-arm64-lite.img"
 HOSTNAME="pi-kiosk"
 USERNAME="kiosk"
 DEFAULT_PASSWORD="raspberry"
@@ -53,20 +53,20 @@ check_macos() {
 
 # Check required arguments
 check_arguments() {
-    if [ $# -lt 1 ]; then
-        log_error "Usage: $0 <kiosk-url> [wifi-ssid] [wifi-password]"
-        log_info "Example: $0 https://example.com MyWiFi MyPassword"
+    if [ $# -ne 4 ]; then
+        log_error "Usage: $0 <kiosk-url> <wifi-ssid> <wifi-username> <wifi-password>"
+        log_info "Example: $0 https://cybernetics.anu.edu.au MyWiFi myuser mypass"
         exit 1
     fi
 
     KIOSK_URL="$1"
-    WIFI_SSID="${2:-}"
-    WIFI_PASSWORD="${3:-}"
+    WIFI_SSID="$2"
+    WIFI_USERNAME="$3"
+    WIFI_PASSWORD="$4"
 
     log_info "Kiosk URL: $KIOSK_URL"
-    if [ -n "$WIFI_SSID" ]; then
-        log_info "WiFi SSID: $WIFI_SSID"
-    fi
+    log_info "WiFi SSID: $WIFI_SSID"
+    log_info "WiFi Username: $WIFI_USERNAME"
 }
 
 # Check required tools
@@ -87,24 +87,30 @@ check_dependencies() {
     fi
 }
 
-# Create work directory
+# Create work directories
 setup_workspace() {
     log_info "Setting up workspace..."
     mkdir -p "$WORK_DIR"
+    mkdir -p "$CACHE_DIR"
     cd "$WORK_DIR"
 }
 
-# Download Raspberry Pi OS image
+# Download or use cached Raspberry Pi OS image
 download_image() {
-    log_info "Downloading Raspberry Pi OS Lite image..."
+    local cached_image="$CACHE_DIR/$IMAGE_FILE"
 
-    if [ -f "$IMAGE_FILE" ]; then
-        log_warning "Image file already exists. Skipping download."
+    if [ -f "$cached_image" ]; then
+        log_success "Using cached image: $cached_image"
+        cp "$cached_image" "$IMAGE_FILE"
         return
     fi
 
+    log_info "Downloading Raspberry Pi OS Lite image..."
     curl -L -o "$IMAGE_FILE" "$IMAGE_URL"
-    log_success "Image downloaded successfully"
+
+    # Cache the downloaded image
+    cp "$IMAGE_FILE" "$cached_image"
+    log_success "Image downloaded and cached successfully"
 }
 
 # Extract image if compressed
@@ -149,9 +155,11 @@ mount_image() {
     # Mount root partition (ext4) - requires additional tools on macOS
     if command -v fuse-ext2 &> /dev/null; then
         fuse-ext2 "${LOOP_DEVICE}s2" root -o rw+
+        ROOT_MOUNTED=true
     else
         log_warning "fuse-ext2 not found. Some configurations will be skipped."
         log_info "Install fuse-ext2 with: brew install fuse-ext2"
+        ROOT_MOUNTED=false
     fi
 }
 
@@ -167,20 +175,22 @@ configure_image() {
     echo "${USERNAME}:$(echo "$DEFAULT_PASSWORD" | openssl passwd -6 -stdin)" > boot/userconf.txt
     log_info "User account configured: $USERNAME"
 
-    # Configure WiFi if provided
-    if [ -n "$WIFI_SSID" ] && [ -n "$WIFI_PASSWORD" ]; then
-        cat > boot/wpa_supplicant.conf << EOF
+    # Configure enterprise WiFi
+    cat > boot/wpa_supplicant.conf << EOF
 country=US
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
 
 network={
     ssid="$WIFI_SSID"
-    psk="$WIFI_PASSWORD"
+    key_mgmt=WPA-EAP
+    eap=PEAP
+    identity="$WIFI_USERNAME"
+    password="$WIFI_PASSWORD"
+    phase2="auth=MSCHAPV2"
 }
 EOF
-        log_info "WiFi configured for SSID: $WIFI_SSID"
-    fi
+    log_info "Enterprise WiFi configured for SSID: $WIFI_SSID"
 
     # Configure boot options
     echo "dtoverlay=disable-bt" >> boot/config.txt
@@ -191,8 +201,8 @@ EOF
         sed -i '' 's/$/ quiet splash/' boot/cmdline.txt
     fi
 
-    # If root partition is mounted, configure system files
-    if mountpoint -q root; then
+    # Configure system files if root partition is mounted
+    if [ "$ROOT_MOUNTED" = true ]; then
         configure_root_partition
     else
         log_warning "Root partition not mounted. Creating post-boot configuration script."
@@ -220,7 +230,7 @@ USERNAME="__USERNAME__"
 sudo apt update && sudo apt upgrade -y
 
 # Install required packages
-sudo apt install -y chromium-browser wtype openbox lightdm
+sudo apt install -y chromium-browser openbox lightdm unclutter
 
 # Configure auto-login
 sudo sed -i 's/#autologin-user=/autologin-user='${USERNAME}'/' /etc/lightdm/lightdm.conf
@@ -249,39 +259,11 @@ chmod +x /home/${USERNAME}/.config/openbox/autostart
 sudo systemctl set-default graphical.target
 sudo systemctl enable lightdm
 
-# Create security hardening script
-cat > /home/${USERNAME}/harden-system.sh << HARDEN_EOF
-#!/bin/bash
-
-# Security hardening for kiosk mode
-# AIDEV-NOTE: Optional security hardening - run manually if needed
-
-# Disable USB ports
-echo '1-1' | sudo tee /sys/bus/usb/drivers/usb/unbind
-
-# Disable Ethernet
-sudo ifconfig eth0 down
-
-# Make changes persistent
-sudo tee -a /etc/rc.local > /dev/null << RC_EOF
-
-# Disable USB and Ethernet for kiosk security
-echo '1-1' | sudo tee /sys/bus/usb/drivers/usb/unbind
-sudo ifconfig eth0 down
-
-RC_EOF
-
-echo "Security hardening applied. Reboot to take effect."
-HARDEN_EOF
-
-chmod +x /home/${USERNAME}/harden-system.sh
-
 # Set ownership
 sudo chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 
 echo "Kiosk mode configuration completed!"
 echo "The system will now reboot and start in kiosk mode."
-echo "To apply security hardening, run: ~/harden-system.sh"
 
 # Clean up - remove this script
 rm -- "$0"
@@ -313,75 +295,22 @@ RemainAfterExit=yes
 WantedBy=multi-user.target
 EOF
 
-    # Enable the service
-    chroot root systemctl enable kiosk-setup.service
+    # Enable the service (using chroot)
+    if command -v chroot &> /dev/null; then
+        chroot root systemctl enable kiosk-setup.service 2>/dev/null || log_warning "Could not enable service via chroot"
+    fi
 
     log_success "Root partition configured"
 }
 
 # Create first-boot script for systems where root partition can't be mounted
 create_firstboot_script() {
-    # Create a script that will run on first boot
-    cat > boot/firstboot.sh << EOF
-#!/bin/bash
-
-# First boot configuration script
-# This will be executed automatically on first boot
-
-# Enable service that will complete kiosk setup
-systemctl enable ssh
-systemctl start ssh
-
-# Create setup script
-cat > /tmp/complete-kiosk-setup.sh << 'SETUP_EOF'
-#!/bin/bash
-
-# Complete kiosk mode setup
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y chromium-browser wtype openbox lightdm unclutter
-
-# Configure auto-login
-sudo sed -i 's/#autologin-user=/autologin-user=${USERNAME}/' /etc/lightdm/lightdm.conf
-sudo sed -i 's/#autologin-user-timeout=0/autologin-user-timeout=0/' /etc/lightdm/lightdm.conf
-
-# Create openbox config
-mkdir -p ~/.config/openbox
-cat > ~/.config/openbox/autostart << 'AUTOSTART_EOF'
-xset s off
-xset -dpms
-xset s noblank
-unclutter -idle 1 &
-chromium-browser --kiosk --noerrdialogs --disable-infobars --no-first-run --enable-features=OverlayScrollbar --disable-translate --no-default-browser-check --disable-extensions --disable-plugins --incognito --disable-dev-shm-usage "${KIOSK_URL}" &
-AUTOSTART_EOF
-
-chmod +x ~/.config/openbox/autostart
-
-sudo systemctl set-default graphical.target
-sudo systemctl enable lightdm
-
-echo "Setup complete! Rebooting to kiosk mode..."
-sleep 3
-sudo reboot
-SETUP_EOF
-
-chmod +x /tmp/complete-kiosk-setup.sh
-
-# Setup to run on next login
-echo "/tmp/complete-kiosk-setup.sh" >> ~/.bashrc
-
-rm -- "$0"
+    # Create a simple first-boot configuration
+    cat > boot/userconf.txt << EOF
+${USERNAME}:$(echo "$DEFAULT_PASSWORD" | openssl passwd -6 -stdin)
 EOF
 
-    # Replace placeholder
-    sed -i '' "s/\${KIOSK_URL}/$KIOSK_URL/g" boot/firstboot.sh
-    sed -i '' "s/\${USERNAME}/$USERNAME/g" boot/firstboot.sh
-
-    chmod +x boot/firstboot.sh
-
-    # Add to cmdline.txt to run on boot
-    if [ -f boot/cmdline.txt ]; then
-        echo " init=/boot/firstboot.sh" >> boot/cmdline.txt
-    fi
+    log_info "First-boot configuration created"
 }
 
 # Unmount the image
@@ -389,11 +318,11 @@ unmount_image() {
     log_info "Unmounting image..."
 
     # Unmount partitions
-    if mountpoint -q boot; then
+    if mountpoint -q boot 2>/dev/null; then
         umount boot
     fi
 
-    if mountpoint -q root; then
+    if [ "$ROOT_MOUNTED" = true ] && mountpoint -q root 2>/dev/null; then
         umount root
     fi
 
@@ -429,7 +358,12 @@ find_sdcard() {
         exit 1
     fi
 
-    SDCARD_DEVICE="/dev/$sdcard_found"
+    # Handle case where disk path already includes /dev/
+    if [[ "$sdcard_found" == /dev/* ]]; then
+        SDCARD_DEVICE="$sdcard_found"
+    else
+        SDCARD_DEVICE="/dev/$sdcard_found"
+    fi
     log_success "Found SD card: $SDCARD_DEVICE"
 
     # Show SD card info
@@ -481,7 +415,7 @@ cleanup() {
         umount boot 2>/dev/null || true
     fi
 
-    if mountpoint -q root 2>/dev/null; then
+    if [ "$ROOT_MOUNTED" = true ] && mountpoint -q root 2>/dev/null; then
         umount root 2>/dev/null || true
     fi
 
