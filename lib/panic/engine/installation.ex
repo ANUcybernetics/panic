@@ -27,7 +27,8 @@ defmodule Panic.Engine.Installation do
     otp_app: :panic,
     domain: Panic.Engine,
     data_layer: AshSqlite.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub]
 
   alias Panic.Engine.Installation.Watcher
   alias Panic.Engine.Network
@@ -58,6 +59,7 @@ defmodule Panic.Engine.Installation do
     defaults [:read, :destroy]
 
     create :create do
+      primary? true
       accept [:name, :watchers]
       argument :network_id, :integer, allow_nil?: false
 
@@ -103,6 +105,12 @@ defmodule Panic.Engine.Installation do
 
   resource do
     plural_name :installations
+  end
+
+  pub_sub do
+    module PanicWeb.Endpoint
+    prefix "installation"
+    publish_all :update, [:id]
   end
 
   sqlite do

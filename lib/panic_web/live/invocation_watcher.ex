@@ -59,10 +59,17 @@ defmodule PanicWeb.InvocationWatcher do
         # chosen later inside the LiveView (e.g. in `handle_params/3`). Doing it
         # here caused incorrect behaviour when `socket.assigns.live_action` was
         # not yet set.
+        installation_id =
+          case params do
+            %{"id" => id} -> id
+            _ -> nil
+          end
+
         socket =
           socket
-          |> maybe_subscribe(network)
+          |> maybe_subscribe(network, installation_id)
           |> attach_invocation_hook()
+          |> Component.assign(installation_id: installation_id)
 
         {:cont, socket}
 
@@ -182,13 +189,56 @@ defmodule PanicWeb.InvocationWatcher do
     {:noreply, socket}
   end
 
+  @doc """
+  Handle an installation update broadcast and switch to the new network if needed.
+
+  Returns `{:noreply, socket}` so callers can simply use it in handle_info hooks.
+  """
+  def handle_installation_update_message(message, socket) do
+    installation = message.payload.data
+    current_network = socket.assigns[:network]
+
+    # Check if the network has changed
+    if current_network && installation.network_id != current_network.id do
+      # Network changed - need to switch subscriptions
+      case fetch_network(installation.network_id, socket.assigns) do
+        {:ok, new_network} ->
+          # Unsubscribe from old network, subscribe to new
+          if LiveView.connected?(socket) do
+            PanicWeb.Endpoint.unsubscribe("invocation:#{current_network.id}")
+            PanicWeb.Endpoint.subscribe("invocation:#{new_network.id}")
+          end
+
+          # Update network assignment and reset stream if configured
+          socket =
+            socket
+            |> Component.assign(network: new_network)
+            |> maybe_reset_stream_for_network_change()
+
+          {:noreply, socket}
+
+        {:error, _} ->
+          # Failed to fetch new network, keep current state
+          {:noreply, socket}
+      end
+    else
+      # Network unchanged or no current network
+      {:noreply, socket}
+    end
+  end
+
   # ---------------------------------------------------------------------------
   # Internal helpers
   # ---------------------------------------------------------------------------
 
-  defp maybe_subscribe(socket, network) do
+  defp maybe_subscribe(socket, network, installation_id) do
     if LiveView.connected?(socket) do
       PanicWeb.Endpoint.subscribe("invocation:#{network.id}")
+
+      # Also subscribe to installation updates if we're in installation mode
+      if installation_id do
+        PanicWeb.Endpoint.subscribe("installation:#{installation_id}")
+      end
     end
 
     socket
@@ -206,6 +256,10 @@ defmodule PanicWeb.InvocationWatcher do
 
         %Broadcast{topic: "invocation:" <> _} = msg, socket ->
           {:noreply, new_socket} = handle_invocation_message(msg, socket)
+          {:halt, new_socket}
+
+        %Broadcast{topic: "installation:" <> _} = msg, socket ->
+          {:noreply, new_socket} = handle_installation_update_message(msg, socket)
           {:halt, new_socket}
 
         _other, socket ->
@@ -287,6 +341,17 @@ defmodule PanicWeb.InvocationWatcher do
       {_, {:single, _, _}} ->
         # Not matching the display criteria, don't add to stream
         socket
+    end
+  end
+
+  defp maybe_reset_stream_for_network_change(socket) do
+    # Reset the invocation stream if it's configured
+    if socket.assigns[:streams] && Map.has_key?(socket.assigns.streams, :invocations) do
+      socket
+      |> LiveView.stream(:invocations, [], reset: true)
+      |> Component.assign(genesis_invocation: nil)
+    else
+      socket
     end
   end
 end

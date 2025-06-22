@@ -51,6 +51,36 @@ defmodule PanicWeb.NetworkLive.Show do
     </section>
 
     <section class="mt-16">
+      <h2 class="font-semibold mb-8">Installations</h2>
+      <div :if={@network.installations == []} class="text-gray-500 italic">
+        No installations yet.
+        <.link
+          navigate={~p"/installations/new"}
+          class="text-purple-600 hover:text-purple-800 underline"
+        >
+          Create one
+        </.link>
+      </div>
+      <.table
+        :if={@network.installations != []}
+        id="network-installations"
+        rows={@streams.installations}
+        row_click={fn {_id, installation} -> JS.navigate(~p"/installations/#{installation}") end}
+      >
+        <:col :let={{_id, installation}} label="Name">{installation.name}</:col>
+        <:col :let={{_id, installation}} label="Watchers">
+          {length(installation.watchers)}
+        </:col>
+        <:action :let={{_id, installation}}>
+          <div class="sr-only">
+            <.link navigate={~p"/installations/#{installation}"}>Show</.link>
+          </div>
+          <.link navigate={~p"/installations/#{installation}/edit"}>Edit</.link>
+        </:action>
+      </.table>
+    </section>
+
+    <section class="mt-16">
       <h2 class="font-semibold mb-8">Terminal</h2>
       <.live_component
         module={PanicWeb.NetworkLive.TerminalComponent}
@@ -97,12 +127,13 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_params(%{"network_id" => network_id}, _session, socket) do
-    case Ash.get(Panic.Engine.Network, network_id, actor: socket.assigns.current_user) do
+    case Ash.get(Panic.Engine.Network, network_id, actor: socket.assigns.current_user, load: [:installations]) do
       {:ok, network} ->
         {:noreply,
          socket
          |> assign(:page_title, page_title(socket.assigns[:live_action]))
          |> assign(:network, network)
+         |> stream(:installations, network.installations)
          |> InvocationWatcher.configure_invocation_stream(network, {:grid, 2, 3})}
 
       {:error, _error} ->

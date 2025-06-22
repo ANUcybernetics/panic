@@ -2,7 +2,10 @@
 
 ## NIME blockers
 
-- check that installations work
+- check that installations track network changes
+- check that the admin page still has a working "stop all" button
+- remove the terminal at the top of the grid display (for installations), or
+  perhaps add a "terminal" boolean
 - add vestaboard delays are still appropriate
 - check that time-based QR code -> terminal workflow works for non-logged-in
   users (perhaps only required for installations, and also requires real

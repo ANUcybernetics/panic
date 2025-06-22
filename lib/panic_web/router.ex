@@ -86,8 +86,6 @@ defmodule PanicWeb.Router do
         live "/:network_id/info", NetworkLive.Info, :info
         live "/:network_id/terminal", NetworkLive.Terminal, :terminal
         live "/:network_id/terminal/expired", NetworkLive.TerminalExpired, :expired
-        live "/:network_id/display/single/:a/:b", NetworkLive.Display, :single
-        live "/:network_id/display/grid/:a/:b", NetworkLive.Display, :grid
       end
 
       # static invocation display doesn't need a network ID
