@@ -1,27 +1,18 @@
 #!/bin/bash
 
-# Raspberry Pi 5 Kiosk Mode Setup Script
-# This script downloads, configures, and burns a Raspberry Pi OS image for kiosk mode
+# Raspberry Pi 5 Kiosk Mode Setup Script using rpi-imager
+# This script uses rpi-imager CLI to configure and burn a Raspberry Pi OS image for kiosk mode
 # Usage: ./setup-kiosk.sh <kiosk-url> <wifi-ssid> <wifi-username> <wifi-password>
 
 set -e  # Exit on any error
 
-# AIDEV-NOTE: Simplified RPi5 kiosk setup with enterprise WiFi and image caching
+# AIDEV-NOTE: Modern RPi5 kiosk setup using rpi-imager CLI with JSON config and enterprise WiFi
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORK_DIR="${SCRIPT_DIR}/work"
-CACHE_DIR="${HOME}/.raspios-images"
-IMAGE_URL="https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2025-05-13/2025-05-13-raspios-bookworm-arm64-lite.img.xz"
-
-# Parse image file name from URL
-IMAGE_FILE=$(basename "$IMAGE_URL")
-
-# Parse extracted image name by removing compression extensions
-IMAGE_EXTRACTED=$(basename "$IMAGE_FILE" .xz)
-if [[ "$IMAGE_EXTRACTED" == *.gz ]]; then
-    IMAGE_EXTRACTED=$(basename "$IMAGE_EXTRACTED" .gz)
-fi
+RPI_IMAGER_PATH="/Applications/Raspberry Pi Imager.app/Contents/MacOS/rpi-imager"
+OS_URL="https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2024-11-19/2024-11-19-raspios-bookworm-arm64-lite.img.xz"
 
 HOSTNAME="pi-kiosk"
 USERNAME="kiosk"
@@ -81,8 +72,15 @@ check_arguments() {
 check_dependencies() {
     local missing_tools=()
 
+    # Check for rpi-imager
+    if [ ! -f "$RPI_IMAGER_PATH" ]; then
+        log_error "Raspberry Pi Imager not found at: $RPI_IMAGER_PATH"
+        log_info "Please install Raspberry Pi Imager from: https://www.raspberrypi.com/software/"
+        exit 1
+    fi
+
     # Check for required commands
-    for tool in curl diskutil hdiutil; do
+    for tool in diskutil; do
         if ! command -v "$tool" &> /dev/null; then
             missing_tools+=("$tool")
         fi
@@ -99,148 +97,99 @@ check_dependencies() {
 setup_workspace() {
     log_info "Setting up workspace..."
     mkdir -p "$WORK_DIR"
-    mkdir -p "$CACHE_DIR"
     cd "$WORK_DIR"
 }
 
-# Download or use cached Raspberry Pi OS image
-download_image() {
-    local cached_image="$CACHE_DIR/$IMAGE_FILE"
+# Create rpi-imager JSON configuration
+create_config_json() {
+    log_info "Creating rpi-imager configuration..."
 
-    if [ -f "$cached_image" ]; then
-        log_success "Using cached image: $cached_image"
-        cp "$cached_image" "$IMAGE_FILE"
-        return
-    fi
-
-    log_info "Downloading Raspberry Pi OS Lite image..."
-    curl -L -o "$IMAGE_FILE" "$IMAGE_URL"
-
-    # Cache the downloaded image
-    cp "$IMAGE_FILE" "$cached_image"
-    log_success "Image downloaded and cached successfully"
-}
-
-# Extract image if compressed
-extract_image() {
-    log_info "Extracting image..."
-
-    if [ -f "$IMAGE_EXTRACTED" ]; then
-        log_warning "Extracted image already exists. Skipping extraction."
-        return
-    fi
-
-    if [[ "$IMAGE_FILE" == *.xz ]]; then
-        xz -d -k "$IMAGE_FILE"
-        mv "${IMAGE_FILE%.xz}" "$IMAGE_EXTRACTED"
-    else
-        cp "$IMAGE_FILE" "$IMAGE_EXTRACTED"
-    fi
-
-    log_success "Image extracted successfully"
-}
-
-# Mount the image for modification
-mount_image() {
-    log_info "Mounting image for configuration..."
-
-    # Attach the image to a device
-    LOOP_DEVICE=$(hdiutil attach -nomount "$IMAGE_EXTRACTED" | head -1 | awk '{print $1}')
-
-    if [ -z "$LOOP_DEVICE" ]; then
-        log_error "Failed to attach image"
-        exit 1
-    fi
-
-    log_info "Image attached to $LOOP_DEVICE"
-
-    # Create mount point for boot partition only
-    mkdir -p boot
-
-    # Mount boot partition (FAT32)
-    mount -t msdos "${LOOP_DEVICE}s1" boot
-}
-
-# Configure the image for kiosk mode
-configure_image() {
-    log_info "Configuring image for kiosk mode..."
-
-    # Enable SSH
-    touch boot/ssh
-    log_info "SSH enabled"
-
-    # Configure user account
-    echo "${USERNAME}:$(echo "$DEFAULT_PASSWORD" | openssl passwd -6 -stdin)" > boot/userconf.txt
-    log_info "User account configured: $USERNAME"
-
-    # Configure enterprise WiFi
-    cat > boot/wpa_supplicant.conf << EOF
-country=US
-ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-update_config=1
-
-network={
-    ssid="$WIFI_SSID"
-    key_mgmt=WPA-EAP
-    eap=PEAP
-    identity="$WIFI_USERNAME"
-    password="$WIFI_PASSWORD"
-    phase2="auth=MSCHAPV2"
+    # Create the JSON configuration file
+    cat > config.json << EOF
+{
+    "version": "1.7.5",
+    "hostname": "$HOSTNAME",
+    "ssh": {
+        "enabled": true,
+        "passwordAuthentication": true
+    },
+    "user": {
+        "name": "$USERNAME",
+        "password": "$DEFAULT_PASSWORD"
+    },
+    "wlan": {
+        "ssid": "$WIFI_SSID",
+        "username": "$WIFI_USERNAME",
+        "password": "$WIFI_PASSWORD",
+        "keyMgmt": "WPA-EAP",
+        "eapMethod": "PEAP",
+        "phase2Method": "MSCHAPV2"
+    },
+    "locale": {
+        "keyboard": "us",
+        "timezone": "America/New_York"
+    },
+    "firstRunScript": "firstrun.sh"
 }
 EOF
-    log_info "Enterprise WiFi configured for SSID: $WIFI_SSID"
 
-    # Configure boot options
-    echo "dtoverlay=disable-bt" >> boot/config.txt
-    log_info "Bluetooth disabled"
-
-    # Configure cmdline for faster boot
-    if [ -f boot/cmdline.txt ]; then
-        sed -i '' 's/$/ quiet splash/' boot/cmdline.txt
-    fi
-
-    # Create first-boot configuration script
-    log_info "Creating first-boot configuration script..."
-    create_firstboot_script
+    log_success "Configuration JSON created"
 }
 
+# Create first-boot script for kiosk setup
+create_firstrun_script() {
+    log_info "Creating first-boot kiosk setup script..."
 
-
-# Create first-boot script for systems where root partition can't be mounted
-create_firstboot_script() {
-    # Create user configuration
-    cat > boot/userconf.txt << EOF
-${USERNAME}:$(echo "$DEFAULT_PASSWORD" | openssl passwd -6 -stdin)
-EOF
-
-    # Create firstrun.sh script using Raspberry Pi OS built-in mechanism
-    cat > boot/firstrun.sh << 'FIRSTRUN_EOF'
+    cat > firstrun.sh << 'FIRSTRUN_EOF'
 #!/bin/bash
 
-# First-run script for Raspberry Pi OS
-# AIDEV-NOTE: This script uses the built-in firstrun.sh mechanism for reliable first-boot setup
+# First-run script for Raspberry Pi OS Kiosk Mode
+# AIDEV-NOTE: Enhanced firstrun.sh with proper error handling and logging
 
 set -e
 
 KIOSK_URL="__KIOSK_URL__"
 USERNAME="__USERNAME__"
+LOGFILE="/var/log/kiosk-setup.log"
 
-# Update system
+# Logging function
+log_setup() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOGFILE"
+}
+
+log_setup "Starting kiosk setup for user: $USERNAME"
+log_setup "Target URL: $KIOSK_URL"
+
+# Update system packages
+log_setup "Updating system packages..."
 apt update && apt upgrade -y
 
 # Install required packages for kiosk mode
-apt install -y xserver-xorg lightdm openbox chromium-browser unclutter
+log_setup "Installing kiosk mode packages..."
+apt install -y \
+    xserver-xorg \
+    lightdm \
+    openbox \
+    chromium-browser \
+    unclutter \
+    xdotool
 
-# Configure auto-login
+# Configure LightDM for auto-login
+log_setup "Configuring auto-login..."
 sed -i 's/#autologin-user=/autologin-user='${USERNAME}'/' /etc/lightdm/lightdm.conf
 sed -i 's/#autologin-user-timeout=0/autologin-user-timeout=0/' /etc/lightdm/lightdm.conf
 
-# Create openbox configuration directory
+# Create user directories
+log_setup "Setting up user environment..."
 mkdir -p /home/${USERNAME}/.config/openbox
 
 # Create kiosk autostart script
+log_setup "Creating kiosk autostart configuration..."
 cat > /home/${USERNAME}/.config/openbox/autostart << AUTOSTART_EOF
 #!/bin/bash
+
+# Kiosk mode startup script
+# AIDEV-NOTE: Comprehensive kiosk startup with audio support and error recovery
 
 # Disable screensaver and power management
 xset s off
@@ -248,82 +197,165 @@ xset -dpms
 xset s noblank
 
 # Hide cursor after 1 second of inactivity
-unclutter -idle 1 &
+unclutter -idle 1 -root &
 
-# Start Chromium in kiosk mode
-chromium-browser --kiosk --noerrdialogs --disable-infobars --no-first-run --enable-features=OverlayScrollbar --disable-translate --no-default-browser-check --disable-extensions --disable-plugins --incognito --disable-dev-shm-usage "${KIOSK_URL}" &
+# Set audio output to headphone jack (adjust as needed)
+amixer cset numid=3 1
+
+# Function to start Chromium with retry logic
+start_chromium() {
+    local url="\$1"
+    local max_attempts=5
+    local attempt=1
+
+    while [ \$attempt -le \$max_attempts ]; do
+        echo "Attempt \$attempt to start Chromium..."
+
+        # Kill any existing Chromium processes
+        pkill -f chromium-browser || true
+        sleep 2
+
+        # Start Chromium in kiosk mode
+        chromium-browser \
+            --kiosk \
+            --noerrdialogs \
+            --disable-infobars \
+            --no-first-run \
+            --enable-features=OverlayScrollbar \
+            --disable-translate \
+            --no-default-browser-check \
+            --disable-extensions \
+            --disable-plugins \
+            --incognito \
+            --disable-dev-shm-usage \
+            --disable-gpu-sandbox \
+            --no-sandbox \
+            --autoplay-policy=no-user-gesture-required \
+            --allow-running-insecure-content \
+            --disable-web-security \
+            --disable-features=VizDisplayCompositor \
+            "\$url" &
+
+        sleep 10
+
+        # Check if Chromium is running
+        if pgrep -f chromium-browser > /dev/null; then
+            echo "Chromium started successfully"
+            break
+        else
+            echo "Chromium failed to start, attempt \$attempt failed"
+            ((attempt++))
+            sleep 5
+        fi
+    done
+
+    if [ \$attempt -gt \$max_attempts ]; then
+        echo "Failed to start Chromium after \$max_attempts attempts"
+        # Show error message on screen
+        xterm -fullscreen -bg red -fg white -e "echo 'Kiosk startup failed. Check network connection.'; read" &
+    fi
+}
+
+# Wait for network connectivity
+echo "Waiting for network connectivity..."
+for i in {1..30}; do
+    if ping -c 1 8.8.8.8 &> /dev/null; then
+        echo "Network is available"
+        break
+    fi
+    echo "Waiting for network... (\$i/30)"
+    sleep 2
+done
+
+# Start Chromium with the specified URL
+start_chromium "${KIOSK_URL}"
+
+# Monitor and restart Chromium if it crashes
+while true; do
+    sleep 30
+    if ! pgrep -f chromium-browser > /dev/null; then
+        echo "Chromium not running, restarting..."
+        start_chromium "${KIOSK_URL}"
+    fi
+done
 AUTOSTART_EOF
 
 chmod +x /home/${USERNAME}/.config/openbox/autostart
 
 # Configure system to boot to graphical desktop
+log_setup "Configuring boot target..."
 systemctl set-default graphical.target
 systemctl enable lightdm
 
+# Disable unnecessary services to speed up boot
+log_setup "Optimizing boot services..."
+systemctl disable bluetooth
+systemctl disable hciuart || true
+systemctl disable triggerhappy || true
+
 # Set proper ownership of user files
+log_setup "Setting file permissions..."
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 
+# Configure audio for automatic output
+log_setup "Configuring audio..."
+# Add user to audio group
+usermod -a -G audio ${USERNAME}
+
+# Set up audio configuration
+mkdir -p /home/${USERNAME}/.config/pulse
+echo "load-module module-alsa-sink device=hw:0,0" > /home/${USERNAME}/.config/pulse/default.pa
+echo "set-default-sink alsa_output.hw_0_0" >> /home/${USERNAME}/.config/pulse/default.pa
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/.config/pulse
+
 # Clean up - remove this script after successful run
+log_setup "Cleaning up..."
 rm -f /boot/firstrun.sh
 
-echo "Kiosk setup completed successfully"
+log_setup "Kiosk setup completed successfully!"
+log_setup "System will reboot into kiosk mode"
+
+# Reboot to apply all changes
+sleep 5
+reboot
 FIRSTRUN_EOF
 
     # Replace placeholders in the script
-    sed -i '' "s|__KIOSK_URL__|$KIOSK_URL|g" boot/firstrun.sh
-    sed -i '' "s|__USERNAME__|$USERNAME|g" boot/firstrun.sh
-    chmod +x boot/firstrun.sh
+    sed -i '' "s|__KIOSK_URL__|$KIOSK_URL|g" firstrun.sh
+    sed -i '' "s|__USERNAME__|$USERNAME|g" firstrun.sh
+    chmod +x firstrun.sh
 
-    log_info "First-boot kiosk configuration created using firstrun.sh"
-}
-
-# Unmount the image
-unmount_image() {
-    log_info "Unmounting image..."
-
-    # Unmount boot partition
-    if mountpoint -q boot 2>/dev/null; then
-        umount boot
-    fi
-
-    # Detach the image
-    if [ -n "$LOOP_DEVICE" ]; then
-        hdiutil detach "$LOOP_DEVICE"
-    fi
-
-    log_success "Image unmounted"
+    log_success "First-boot kiosk script created"
 }
 
 # Find and verify SD card
 find_sdcard() {
-    log_info "Looking for SD card in SDXC Reader..."
+    log_info "Looking for SD card..."
 
-    # List all disks and find the SDXC reader
-    local disks=$(diskutil list | grep -E "disk[0-9]" | awk '{print $1}')
+    # List all disks and find removable media
+    local disks=$(diskutil list | grep -E "^/dev/disk[0-9]+" | awk '{print $1}')
     local sdcard_found=""
 
     for disk in $disks; do
         local disk_info=$(diskutil info "$disk" 2>/dev/null || echo "")
-        if echo "$disk_info" | grep -q "SDXC Reader"; then
+
+        # Look for removable media that's likely an SD card
+        if echo "$disk_info" | grep -q "Removable Media.*Yes" &&
+           echo "$disk_info" | grep -qE "(SD|MMC|Generic|USB)"; then
             sdcard_found="$disk"
             break
         fi
     done
 
     if [ -z "$sdcard_found" ]; then
-        log_error "No SD card found in SDXC Reader"
+        log_error "No SD card found"
         log_info "Please insert an SD card and try again"
         log_info "Available disks:"
         diskutil list
         exit 1
     fi
 
-    # Handle case where disk path already includes /dev/
-    if [[ "$sdcard_found" == /dev/* ]]; then
-        SDCARD_DEVICE="$sdcard_found"
-    else
-        SDCARD_DEVICE="/dev/$sdcard_found"
-    fi
+    SDCARD_DEVICE="$sdcard_found"
     log_success "Found SD card: $SDCARD_DEVICE"
 
     # Show SD card info
@@ -339,27 +371,27 @@ find_sdcard() {
     fi
 }
 
-# Burn image to SD card
+# Use rpi-imager to configure and burn the image
 burn_image() {
-    log_info "Burning image to SD card..."
+    log_info "Using rpi-imager to configure and burn image..."
+    log_info "This process may take several minutes..."
 
     # Unmount the SD card if mounted
-    diskutil unmountDisk "$SDCARD_DEVICE"
+    diskutil unmountDisk "$SDCARD_DEVICE" || true
 
-    # Use dd to write the image
-    log_info "Writing image to $SDCARD_DEVICE (this may take several minutes)..."
+    # Use rpi-imager CLI to write the configured image
+    "$RPI_IMAGER_PATH" --cli \
+        --config config.json \
+        --first-run-script firstrun.sh \
+        "$OS_URL" \
+        "$SDCARD_DEVICE"
 
-    # Use pv for progress if available
-    if command -v pv &> /dev/null; then
-        pv "$IMAGE_EXTRACTED" | sudo dd of="$SDCARD_DEVICE" bs=1M
+    if [ $? -eq 0 ]; then
+        log_success "Image configured and burned successfully!"
     else
-        sudo dd if="$IMAGE_EXTRACTED" of="$SDCARD_DEVICE" bs=1M status=progress
+        log_error "Failed to burn image with rpi-imager"
+        exit 1
     fi
-
-    # Sync to ensure all data is written
-    sync
-
-    log_success "Image burned successfully!"
 
     # Eject the SD card
     diskutil eject "$SDCARD_DEVICE"
@@ -368,20 +400,9 @@ burn_image() {
 
 # Cleanup function
 cleanup() {
-    log_info "Cleaning up..."
-
-    # Unmount if still mounted
-    if mountpoint -q boot 2>/dev/null; then
-        umount boot 2>/dev/null || true
-    fi
-
-    # Detach image if still attached
-    if [ -n "$LOOP_DEVICE" ]; then
-        hdiutil detach "$LOOP_DEVICE" 2>/dev/null || true
-    fi
-
-    # Remove temporary directories
-    rm -rf boot 2>/dev/null || true
+    log_info "Cleaning up temporary files..."
+    cd "$SCRIPT_DIR"
+    rm -rf "$WORK_DIR" 2>/dev/null || true
 }
 
 # Trap to ensure cleanup on exit
@@ -389,31 +410,39 @@ trap cleanup EXIT
 
 # Main execution
 main() {
-    log_info "Raspberry Pi 5 Kiosk Mode Setup"
-    log_info "================================"
+    log_info "Raspberry Pi 5 Kiosk Mode Setup (rpi-imager version)"
+    log_info "====================================================="
 
     check_macos
     check_arguments "$@"
     check_dependencies
     setup_workspace
-    download_image
-    extract_image
-    mount_image
-    configure_image
-    unmount_image
+    create_config_json
+    create_firstrun_script
     find_sdcard
     burn_image
 
     log_success "Setup completed successfully!"
-    log_info "Insert the SD card into your Raspberry Pi 5 and power it on."
-    log_info "The Pi will boot into kiosk mode displaying: $KIOSK_URL"
     log_info ""
-    log_info "Default login credentials:"
+    log_info "Your Raspberry Pi 5 kiosk is ready!"
+    log_info "=================================="
+    log_info "Insert the SD card into your Raspberry Pi 5 and power it on."
+    log_info ""
+    log_info "The Pi will:"
+    log_info "  1. Boot and run the first-time setup automatically"
+    log_info "  2. Install required kiosk software"
+    log_info "  3. Configure auto-login and kiosk mode"
+    log_info "  4. Reboot into full-screen browser displaying: $KIOSK_URL"
+    log_info ""
+    log_info "Configuration:"
+    log_info "  Hostname: $HOSTNAME.local"
     log_info "  Username: $USERNAME"
     log_info "  Password: $DEFAULT_PASSWORD"
-    log_info "  Hostname: $HOSTNAME.local"
+    log_info "  WiFi SSID: $WIFI_SSID"
+    log_info "  SSH: Enabled"
     log_info ""
-    log_info "SSH is enabled for remote access if needed."
+    log_info "The initial setup may take 5-10 minutes on first boot."
+    log_info "Setup logs are available at: /var/log/kiosk-setup.log"
 }
 
 # Run main function with all arguments

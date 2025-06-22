@@ -1,19 +1,27 @@
 # Raspberry Pi 5 Kiosk Mode Setup
 
-This directory contains a script to automatically download, configure, and burn
-a Raspberry Pi 5 image for kiosk mode operation. The resulting SD card will boot
-straight into a full-screen Chromium browser displaying a specified URL, with no
-user interaction required. Downloaded images are cached for reuse.
+This directory contains a script that uses the official Raspberry Pi Imager CLI
+to automatically configure and burn a Raspberry Pi 5 image for kiosk mode
+operation. The resulting SD card will boot straight into a full-screen Chromium
+browser displaying a specified URL, with no user interaction required. The
+script leverages rpi-imager's built-in configuration capabilities for reliable,
+automated setup.
 
 ## Features
 
-- **Automated Setup**: Downloads latest Raspberry Pi OS Lite and configures it
-  automatically
-- **Kiosk Mode**: Boots directly to full-screen Chromium browser
-- **Audio Support**: Configured to play audio content
-- **Enterprise WiFi Support**: Supports enterprise WiFi with username/password
+- **rpi-imager Integration**: Uses official Raspberry Pi Imager CLI for reliable
+  setup
+- **JSON Configuration**: Modern configuration approach using rpi-imager's JSON
+  format
+- **Automated Setup**: No manual image mounting or modification required
+- **Kiosk Mode**: Boots directly to full-screen Chromium browser with crash
+  recovery
+- **Audio Support**: Configured to play audio content with proper output routing
+- **Enterprise WiFi Support**: Supports enterprise WiFi with PEAP/MSCHAPV2
   authentication
-- **macOS Compatible**: Designed for macOS with SDXC Reader
+- **Enhanced Monitoring**: Built-in Chromium restart and network connectivity
+  monitoring
+- **macOS Compatible**: Designed for macOS with automatic SD card detection
 
 ## Requirements
 
@@ -28,10 +36,11 @@ user interaction required. Downloaded images are cached for reuse.
 ### Software Dependencies
 
 - macOS (tested on recent versions)
-- Command line tools: `curl`, `diskutil`, `hdiutil`
-- Optional: `pv` (for progress display) - install with `brew install pv`
-- Optional: `fuse-ext2` (for advanced configuration) - install with
-  `brew install fuse-ext2`
+- **Raspberry Pi Imager**: Download from
+  [raspberrypi.com/software](https://www.raspberrypi.com/software/)
+- Command line tools: `diskutil` (included with macOS)
+- No additional tools required - rpi-imager handles image download and
+  configuration
 
 ## Quick Start
 
@@ -58,19 +67,23 @@ The script requires all four arguments:
 
 The setup script performs these steps:
 
-1. **Download**: Gets the latest Raspberry Pi OS Lite image (cached in
-   `~/.raspios-images/`)
-2. **Extract**: Decompresses the image file
-3. **Mount**: Mounts boot and root partitions for modification
-4. **Configure**:
-   - Enables SSH access
-   - Sets up user account (username: `kiosk`, password: `raspberry`)
-   - Configures enterprise WiFi
-   - Disables Bluetooth
-   - Sets up kiosk mode autostart
-5. **Unmount**: Safely unmounts the modified image
-6. **Burn**: Writes the configured image to SD card
-7. **Eject**: Safely ejects the SD card
+1. **Create Configuration**: Generates JSON configuration for rpi-imager with:
+   - SSH access enabled
+   - User account setup (username: `kiosk`, password: `raspberry`)
+   - Enterprise WiFi credentials (PEAP/MSCHAPV2)
+   - Hostname configuration
+2. **Create First-Run Script**: Generates comprehensive setup script for:
+   - Package installation (Chromium, OpenBox, etc.)
+   - Kiosk mode configuration with auto-restart
+   - Audio system setup
+   - Boot optimization
+3. **Detect SD Card**: Automatically finds removable SD card
+4. **Configure & Burn**: Uses rpi-imager CLI to:
+   - Download latest Raspberry Pi OS Lite
+   - Apply configuration
+   - Install first-run script
+   - Write everything to SD card in one step
+5. **Eject**: Safely ejects the configured SD card
 
 ## Configuration Details
 
@@ -80,18 +93,23 @@ The setup script performs these steps:
 - **Username**: `kiosk`
 - **Password**: `raspberry`
 - **SSH**: Enabled
-- **Bluetooth**: Disabled
-- **Boot**: Direct to kiosk mode (no desktop)
+- **Bluetooth**: Disabled (for faster boot)
+- **Boot**: Auto-login to graphical desktop, then launch kiosk mode
+- **Audio**: Configured for headphone jack output
+- **Network**: Enterprise WiFi with automatic reconnection
 
 ### Kiosk Mode Features
 
-- Full-screen Chromium browser
+- Full-screen Chromium browser with enhanced flags
 - No browser UI elements (toolbars, etc.)
 - Disabled screensaver and power management
-- Audio playback enabled
-- Automatic cursor hiding
+- Audio playback enabled with automatic output routing
+- Automatic cursor hiding after 1 second
+- Crash recovery and automatic Chromium restart
+- Network connectivity monitoring
 - No user interaction required
 - Enterprise WiFi authentication (PEAP/MSCHAPV2)
+- Comprehensive logging at `/var/log/kiosk-setup.log`
 
 ## Troubleshooting
 
@@ -100,12 +118,13 @@ The setup script performs these steps:
 **SD Card Not Found**
 
 ```
-[ERROR] No SD card found in SDXC Reader
+[ERROR] No SD card found
 ```
 
 - Ensure SD card is properly inserted
 - Try reinserting the card
 - Check that the card isn't write-protected
+- Script now detects any removable media, not just SDXC readers
 
 **Permission Denied**
 
@@ -133,9 +152,11 @@ Pi not connecting to WiFi
 Pi boots to desktop instead of kiosk mode
 ```
 
-- Check that the setup completed successfully
-- SSH to the Pi and run: `systemctl status kiosk-setup.service`
-- Check logs: `journalctl -u kiosk-setup.service`
+- Check that the first-run setup completed successfully
+- SSH to the Pi and check logs: `cat /var/log/kiosk-setup.log`
+- Verify Chromium is running: `pgrep -f chromium-browser`
+- Check if the autostart script exists: `ls -la ~/.config/openbox/autostart`
+- The setup may take 5-10 minutes on first boot
 
 ### Manual Configuration
 
@@ -178,27 +199,25 @@ If automatic setup fails, you can manually configure the Pi:
 ```
 kiosk/
 ├── README.md           # This file
-├── setup-kiosk.sh      # Main setup script
-├── test-setup.sh       # Test script for validation
-└── work/               # Created during setup (temporary files)
-    ├── 2025-05-13-raspios-bookworm-arm64-lite.img.xz    # Downloaded image
-    ├── raspios-bookworm-arm64-lite.img                  # Extracted image
-    ├── boot/           # Mounted boot partition
-    └── root/           # Mounted root partition
+├── setup-kiosk.sh      # Main setup script using rpi-imager
+└── work/               # Created during setup (temporary files, auto-cleaned)
+    ├── config.json     # rpi-imager configuration
+    └── firstrun.sh     # First-boot setup script
 
-~/.raspios-images/      # Cached images (created automatically)
-└── 2025-05-13-raspios-bookworm-arm64-lite.img.xz
+# rpi-imager handles image caching automatically in:
+# ~/Library/Caches/Raspberry Pi/
 ```
 
 ## Advanced Usage
 
 ### Custom Chromium Flags
 
-Edit the setup script to add custom Chromium flags:
+Edit the firstrun.sh script generation in setup-kiosk.sh to add custom Chromium
+flags:
 
 ```bash
-# In configure_image() function, modify the chromium-browser line:
-chromium-browser --kiosk --your-custom-flags "${KIOSK_URL}"
+# In create_firstrun_script() function, modify the chromium-browser line:
+chromium-browser --kiosk --your-custom-flags "\$url" &
 ```
 
 ### Multiple URL Rotation
@@ -236,9 +255,11 @@ ssh -L 3000:localhost:3000 kiosk@pi-kiosk.local
 
 For issues specific to this setup script, check:
 
-1. Script logs during execution
-2. Pi system logs: `journalctl -f`
-3. Kiosk service logs: `journalctl -u kiosk-setup.service`
+1. Script logs during execution (verbose output)
+2. Pi setup logs: `cat /var/log/kiosk-setup.log` (on the Pi)
+3. Pi system logs: `journalctl -f`
+4. Chromium process status: `pgrep -f chromium-browser`
+5. Network connectivity: `ping 8.8.8.8`
 
 For general Raspberry Pi kiosk mode questions, refer to:
 
