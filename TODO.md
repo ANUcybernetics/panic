@@ -2,9 +2,10 @@
 
 ## NIME blockers
 
-- see why audio vis isn't working for watchers
-- get FitText hook working
-- add vestaboard delays
+- get the rpi ready for testing at SOAD
+- add the "restart on failure" back into the networkrunner
+- add vestaboard delays (move it inside the trigger invocation, and then use an
+  async await on both?)
 - check that time-based QR code -> terminal workflow works for non-logged-in
   users (perhaps only required for installations, and also requires real
   deployment to test properly)
