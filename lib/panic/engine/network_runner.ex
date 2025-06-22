@@ -585,7 +585,7 @@ defmodule Panic.Engine.NetworkRunner do
 
     cond do
       # Less than 5 minutes old - no delay
-      age_seconds < 300 -> 0
+      age_seconds < 300 -> to_timeout(second: 1)
       # Less than 1 hour old - 30 second delay
       age_seconds < 3600 -> to_timeout(second: 30)
       # More than 1 hour old - 1 hour delay
