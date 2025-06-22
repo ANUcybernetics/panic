@@ -72,6 +72,36 @@ Key LiveViews include:
 - Various display modes for viewing invocation outputs
 - Installation management for configuring external displays
 
+## Real-time Updates with InvocationWatcher
+
+The **InvocationWatcher** module
+([`lib/panic_web/live/invocation_watcher.ex`](lib/panic_web/live/invocation_watcher.ex))
+provides real-time invocation updates across LiveViews through Phoenix PubSub:
+
+- **on_mount hook**: Configured in the router for authenticated and optional
+  authentication sessions, automatically subscribes LiveViews to the
+  `"invocation:<network_id>"` topic
+- **Stream management**: Maintains an `:invocations` stream that updates
+  whenever new invocations are created or existing ones change state
+- **Display modes**: Supports two rendering patterns:
+  - `{:grid, rows, cols}` - Shows multiple invocations in a grid layout
+  - `{:single, offset, stride}` - Shows one invocation at a time, updating based
+    on sequence number matching (sequence % stride == offset)
+- **Automatic handling**: Once mounted, LiveViews receive invocation broadcasts
+  without any boilerplate - the watcher attaches a `handle_info` callback that
+  processes updates
+
+In practice, this enables features like:
+
+- Live terminal displays showing the current invocation output
+- Grid views displaying multiple recent invocations
+- Installation watchers that update physical displays (Vestaboards) in real-time
+- Synchronized updates across all connected clients viewing the same network
+
+The Invocation resource publishes all updates via Ash's pub_sub configuration,
+ensuring any state change (from creation through completion) is broadcast to
+subscribed LiveViews.
+
 ## Testing Strategy
 
 The test suite employs several patterns:
