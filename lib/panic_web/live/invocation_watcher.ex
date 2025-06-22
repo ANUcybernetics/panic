@@ -114,14 +114,27 @@ defmodule PanicWeb.InvocationWatcher do
   Returns `{:noreply, socket}` so callers can simply `handle_invocation_message/2`.
   """
   def handle_invocation_message(message, socket) do
-    display = socket.assigns.display
-    invocation = message.payload.data
+    # Check if invocation stream is configured - if not, ignore the message
+    configured? =
+      socket.assigns
+      |> Map.get(:streams)
+      |> case do
+        nil -> false
+        streams -> Map.has_key?(streams, :invocations)
+      end
 
-    # Filter out invocations with archive URLs
-    if should_filter_archive_url?(invocation) do
-      {:noreply, socket}
+    if configured? do
+      display = socket.assigns.display
+      invocation = message.payload.data
+
+      # Filter out invocations with archive URLs
+      if should_filter_archive_url?(invocation) do
+        {:noreply, socket}
+      else
+        handle_filtered_invocation_message(invocation, socket, display)
+      end
     else
-      handle_filtered_invocation_message(invocation, socket, display)
+      {:noreply, socket}
     end
   end
 

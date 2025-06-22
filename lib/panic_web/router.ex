@@ -43,8 +43,9 @@ defmodule PanicWeb.Router do
     auth_routes_for Panic.Accounts.User, to: AuthController
     reset_route []
 
+    # Routes that don't need InvocationWatcher
     ash_authentication_live_session :authentication_required,
-      on_mount: [{PanicWeb.LiveUserAuth, :live_user_required}, {PanicWeb.InvocationWatcher, :auto}] do
+      on_mount: [{PanicWeb.LiveUserAuth, :live_user_required}] do
       scope "/users" do
         live "/", UserLive.Index, :index
         live "/new", UserLive.Index, :new
@@ -56,10 +57,7 @@ defmodule PanicWeb.Router do
       scope "/networks" do
         # no "network list" view, because UserLive.Show fulfils that role
         live "/new", NetworkLive.Index, :new
-        live "/:network_id", NetworkLive.Show, :show
         live "/:network_id/edit", NetworkLive.Show, :edit
-        live "/:network_id/info/qr", NetworkLive.Info, :qr
-        live "/:network_id/info/all", NetworkLive.Info, :all
       end
 
       scope "/installations" do
@@ -75,13 +73,28 @@ defmodule PanicWeb.Router do
       live "/admin", AdminLive, :index
     end
 
+    # Routes that need InvocationWatcher (authenticated)
+    ash_authentication_live_session :authentication_required_with_watcher,
+      on_mount: [{PanicWeb.LiveUserAuth, :live_user_required}, {PanicWeb.InvocationWatcher, :auto}] do
+      scope "/networks" do
+        live "/:network_id", NetworkLive.Show, :show
+        live "/:network_id/info/qr", NetworkLive.Info, :qr
+        live "/:network_id/info/all", NetworkLive.Info, :all
+      end
+    end
+
+    # Routes that don't need InvocationWatcher
     ash_authentication_live_session :authentication_optional,
-      on_mount: [{PanicWeb.LiveUserAuth, :live_user_optional}, {PanicWeb.InvocationWatcher, :auto}] do
+      on_mount: [{PanicWeb.LiveUserAuth, :live_user_optional}] do
       live "/", IndexLive, :index
 
       # a helper for when you have to type URLs using a TV remote :/
       live "/r/:redirect", RedirectLive, :index
+    end
 
+    # Routes that need InvocationWatcher (optional auth)
+    ash_authentication_live_session :authentication_optional_with_watcher,
+      on_mount: [{PanicWeb.LiveUserAuth, :live_user_optional}, {PanicWeb.InvocationWatcher, :auto}] do
       scope "/networks" do
         live "/:network_id/info", NetworkLive.Info, :info
         live "/:network_id/terminal", NetworkLive.Terminal, :terminal
