@@ -87,7 +87,7 @@ defmodule PanicWeb.PanicComponents do
     case type do
       :text -> "bg-orange-500"
       :image -> "bg-blue-400"
-      :audio -> "bg-green-500"
+      :audio -> "bg-emerald-800"
     end
   end
 
