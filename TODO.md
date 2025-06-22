@@ -6,9 +6,6 @@
 - add the "restart on failure" back into the networkrunner
 - add vestaboard delays (move it inside the trigger invocation, and then use an
   async await on both?)
-- check that time-based QR code -> terminal workflow works for non-logged-in
-  users (perhaps only required for installations, and also requires real
-  deployment to test properly)
 - find one (or a few) good text audio networks to use at NIME
 - load it on to some RPis
 - set up real NIME installations
@@ -23,13 +20,14 @@
 
 ## important/quality-of-life
 
+- check that time-based QR code -> terminal workflow works for non-logged-in
+  users (perhaps only required for installations, and also requires real
+  deployment to test properly)
 - maybe rename PanicWeb.InvocationWatcher (now that there's a Watcher module) to
   WatcherLive or something similar
 - make sure vestaboards crashing doesn't bring down the whole thing
 - create a new `Display` domain or similar (because Installations and Watchers
   shouldn't really be in `Engine`)
-- add installations section to user live view (not standalone)
-- add auth for installations (via network.user) or check if it's there already
 
 ## thought bubbles
 
@@ -38,6 +36,11 @@
   rolling QR code terminal)
 - update to tailwind 4.0, and use the text shadow stuff (actually this might
   happen with Phoenix 1.8)
+- honestly, it's looking less likely that this will be a "multi-user SaaS thing"
+  and more like I'll always be tweaking it and making bespoke changes for our
+  specific purposes... so perhaps remove the auth/policy stuff in general (and
+  move to the "API tokens as standalone resources" thing mentioned elsewhere in
+  this doc)
 - add the ability to specify multiple offsets for single screen view
 - show multiple invocations in info view
 - why aren't <p>s geting margins in prose blocks in info view?
