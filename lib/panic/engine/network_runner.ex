@@ -248,10 +248,19 @@ defmodule Panic.Engine.NetworkRunner do
 
   @impl true
   def handle_info({:delayed_invocation, invocation}, state) do
-    # Process the delayed invocation
-    new_state = %{state | current_invocation: invocation, pending_delayed_invocation: nil}
-    trigger_invocation(invocation, new_state)
-    {:noreply, new_state}
+    # Guard against missing user context
+    if is_nil(state.user) do
+      Logger.error(
+        "Cannot process delayed invocation #{invocation.id} - missing user context. NetworkRunner may have lost state due to previous error."
+      )
+
+      {:noreply, state}
+    else
+      # Process the delayed invocation
+      new_state = %{state | current_invocation: invocation, pending_delayed_invocation: nil}
+      trigger_invocation(invocation, new_state)
+      {:noreply, new_state}
+    end
   end
 
   def handle_info(_msg, state) do
@@ -424,55 +433,64 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   defp trigger_invocation(invocation, state) do
-    if Application.get_env(:panic, :sync_network_runner, false) do
-      # Synchronous mode for tests - send message to self but process immediately
-      try do
-        # Make the invocation visible with pending state first
-        invocation = Engine.about_to_invoke!(invocation, actor: state.user)
-        processed_invocation = Engine.invoke!(invocation, actor: state.user)
-        send(self(), {:processing_completed, processed_invocation})
-      rescue
-        e ->
-          # Mark invocation as failed before logging error
-          try do
-            Engine.mark_as_failed!(invocation, actor: state.user)
-          rescue
-            # If marking as failed fails, just continue
-            _mark_error -> nil
-          end
+    # Guard against missing user context to prevent authorization errors
+    if is_nil(state.user) do
+      Logger.error(
+        "Cannot process invocation #{invocation.id} - missing user context. NetworkRunner may have lost state due to previous error."
+      )
 
-          Logger.error("Invocation processing failed: #{inspect(e)}")
-          # Don't crash - just let the run end
-      end
+      :ok
     else
-      # Capture the GenServer pid to send messages back to it
-      genserver_pid = self()
+      if Application.get_env(:panic, :sync_network_runner, false) do
+        # Synchronous mode for tests - send message to self but process immediately
+        try do
+          # Make the invocation visible with pending state first
+          invocation = Engine.about_to_invoke!(invocation, actor: state.user)
+          processed_invocation = Engine.invoke!(invocation, actor: state.user)
+          send(self(), {:processing_completed, processed_invocation})
+        rescue
+          e ->
+            # Mark invocation as failed before logging error
+            try do
+              Engine.mark_as_failed!(invocation, actor: state.user)
+            rescue
+              # If marking as failed fails, just continue
+              _mark_error -> nil
+            end
 
-      # Process the invocation asynchronously
-      {:ok, _task_pid} =
-        Task.Supervisor.start_child(@task_supervisor, fn ->
-          try do
-            # Make the invocation visible with pending state first
-            invocation = Engine.about_to_invoke!(invocation, actor: state.user)
-            # Process the invocation
-            processed_invocation = Engine.invoke!(invocation, actor: state.user)
+            Logger.error("Invocation processing failed: #{inspect(e)}")
+            # Don't crash - just let the run end
+        end
+      else
+        # Capture the GenServer pid to send messages back to it
+        genserver_pid = self()
 
-            # Notify completion to the GenServer
-            send(genserver_pid, {:processing_completed, processed_invocation})
-          rescue
-            e ->
-              # Mark invocation as failed before logging error
-              try do
-                Engine.mark_as_failed!(invocation, actor: state.user)
-              rescue
-                # If marking as failed fails, just continue
-                _mark_error -> nil
-              end
+        # Process the invocation asynchronously
+        {:ok, _task_pid} =
+          Task.Supervisor.start_child(@task_supervisor, fn ->
+            try do
+              # Make the invocation visible with pending state first
+              invocation = Engine.about_to_invoke!(invocation, actor: state.user)
+              # Process the invocation
+              processed_invocation = Engine.invoke!(invocation, actor: state.user)
 
-              Logger.error("Invocation processing failed: #{inspect(e)}")
-              # Don't crash - just let the run end
-          end
-        end)
+              # Notify completion to the GenServer
+              send(genserver_pid, {:processing_completed, processed_invocation})
+            rescue
+              e ->
+                # Mark invocation as failed before logging error
+                try do
+                  Engine.mark_as_failed!(invocation, actor: state.user)
+                rescue
+                  # If marking as failed fails, just continue
+                  _mark_error -> nil
+                end
+
+                Logger.error("Invocation processing failed: #{inspect(e)}")
+                # Don't crash - just let the run end
+            end
+          end)
+      end
     end
   end
 

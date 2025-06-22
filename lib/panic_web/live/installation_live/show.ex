@@ -95,7 +95,7 @@ defmodule PanicWeb.InstallationLive.Show do
         action={@live_action}
         installation={@installation}
         current_user={@current_user}
-        networks={[@installation.network]}
+        networks={@networks}
         patch={~p"/installations/#{@installation}"}
       />
     </.modal>
@@ -120,7 +120,7 @@ defmodule PanicWeb.InstallationLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, assign(socket, :networks, list_networks(socket.assigns.current_user))}
   end
 
   @impl true
@@ -184,5 +184,9 @@ defmodule PanicWeb.InstallationLive.Show do
     prompt_indicator = if watcher.initial_prompt, do: ", initial prompt", else: ""
 
     "Watcher #{index}: Vestaboard #{watcher.name} (stride: #{watcher.stride}, offset: #{watcher.offset}#{prompt_indicator})"
+  end
+
+  defp list_networks(user) do
+    Ash.read!(Panic.Engine.Network, actor: user)
   end
 end

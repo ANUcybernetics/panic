@@ -27,7 +27,6 @@ defmodule PanicWeb.InstallationLive.FormComponent do
         <.input field={@form[:name]} type="text" label="Name" />
 
         <.input
-          :if={@action == :new}
           field={@form[:network_id]}
           type="select"
           label="Network"

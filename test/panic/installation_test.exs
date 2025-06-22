@@ -336,6 +336,37 @@ defmodule Panic.InstallationTest do
                )
                |> Ash.create()
     end
+
+    test "updates installation network", %{user: user, network: network} do
+      # Create another network
+      network2 =
+        Network
+        |> Ash.Changeset.for_create(:create, %{name: "Network 2"}, actor: user)
+        |> Ash.create!()
+
+      # Create installation with first network
+      {:ok, installation} =
+        Installation
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            name: "Test Installation",
+            network_id: network.id
+          },
+          actor: user
+        )
+        |> Ash.create()
+
+      assert installation.network_id == network.id
+
+      # Update to use second network
+      assert {:ok, updated} =
+               installation
+               |> Ash.Changeset.for_update(:update, %{network_id: network2.id}, actor: user)
+               |> Ash.update()
+
+      assert updated.network_id == network2.id
+    end
   end
 
   describe "Installation policies" do

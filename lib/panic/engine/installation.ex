@@ -66,6 +66,10 @@ defmodule Panic.Engine.Installation do
 
     update :update do
       accept [:name, :watchers]
+      argument :network_id, :integer, allow_nil?: true
+      require_atomic? false
+
+      change manage_relationship(:network_id, :network, type: :append_and_remove)
     end
 
     update :add_watcher do
