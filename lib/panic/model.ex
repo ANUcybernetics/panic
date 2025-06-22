@@ -712,6 +712,30 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
+        id: "music-01",
+        platform: Replicate,
+        path: "minimax/music-01",
+        name: "Music-01",
+        description: "Quickly generate up to 1 minute of music with lyrics and vocals in the style of a reference track",
+        input_type: :audio,
+        output_type: :audio,
+        invoke: fn model, input, token ->
+          Replicate.invoke(
+            model,
+            %{
+              lyrics: """
+              The theme of NIME2025 is entangled NIME.
+              This theme recognises the multilayered contexts of activity and impact involved in music making with new technology.
+              In an era where music creation and performance are increasingly intertwined with social, cultural, and environmental factors, entanglement emphasises how musical interfaces are not simply tools
+              but active agents in the complex web of human and technological relationships.
+              """,
+              song_file: input
+            },
+            token
+          )
+        end
+      },
+      %__MODULE__{
         id: "whisper",
         platform: Replicate,
         path: "openai/whisper",
