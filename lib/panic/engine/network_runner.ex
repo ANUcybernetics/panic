@@ -9,6 +9,10 @@ defmodule Panic.Engine.NetworkRunner do
   ## Key Features
   - Manages invocation lifecycle from creation to completion
   - Enforces network lockout periods between runs
+  - Implements gradual backoff delays between invocations based on run age:
+    - Genesis < 5 minutes old: Process next invocation immediately
+    - Genesis 5 minutes - 1 hour old: 30 second delay before next invocation
+    - Genesis > 1 hour old: 1 hour delay before next invocation
   - Handles async invocation processing without blocking the GenServer
   - Dispatches to watchers (like Vestaboard) asynchronously
   - Archives multimedia outputs asynchronously
@@ -21,6 +25,7 @@ defmodule Panic.Engine.NetworkRunner do
   - `current_invocation`: The invocation currently being processed (nil when idle)
   - `watchers`: List of active watchers for this network
   - `lockout_timer`: Timer reference for broadcasting lockout countdown (nil when not in lockout)
+  - `pending_delayed_invocation`: Invocation waiting for scheduled delay before processing (nil when no delay)
 
   ## Configuration
   NetworkRunner processes are dynamically started and registered by network ID.
@@ -139,7 +144,8 @@ defmodule Panic.Engine.NetworkRunner do
       genesis_invocation: nil,
       current_invocation: nil,
       watchers: [],
-      lockout_timer: nil
+      lockout_timer: nil,
+      pending_delayed_invocation: nil
     }
 
     {:ok, state}
@@ -180,7 +186,15 @@ defmodule Panic.Engine.NetworkRunner do
           e -> Logger.error("Error canceling invocation during stop: #{inspect(e)}")
         end
 
-        new_state = stop_lockout_timer(%{state | genesis_invocation: nil, current_invocation: nil, user: nil})
+        new_state =
+          stop_lockout_timer(%{
+            state
+            | genesis_invocation: nil,
+              current_invocation: nil,
+              user: nil,
+              pending_delayed_invocation: nil
+          })
+
         {:reply, {:ok, :stopped}, new_state}
     end
   end
@@ -240,6 +254,13 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   @impl true
+  def handle_info({:delayed_invocation, invocation}, state) do
+    # Process the delayed invocation
+    new_state = %{state | current_invocation: invocation, pending_delayed_invocation: nil}
+    trigger_invocation(invocation, new_state)
+    {:noreply, new_state}
+  end
+
   def handle_info(_msg, state) do
     {:noreply, state}
   end
@@ -260,7 +281,14 @@ defmodule Panic.Engine.NetworkRunner do
 
         new_state =
           start_lockout_timer(
-            %{state | user: user, genesis_invocation: invocation, current_invocation: invocation, watchers: watchers},
+            %{
+              state
+              | user: user,
+                genesis_invocation: invocation,
+                current_invocation: invocation,
+                watchers: watchers,
+                pending_delayed_invocation: nil
+            },
             invocation,
             network
           )
@@ -307,7 +335,8 @@ defmodule Panic.Engine.NetworkRunner do
               | user: user,
                 genesis_invocation: invocation,
                 current_invocation: invocation,
-                watchers: watchers
+                watchers: watchers,
+                pending_delayed_invocation: nil
             }
             |> stop_lockout_timer()
             |> start_lockout_timer(invocation, network)
@@ -354,23 +383,47 @@ defmodule Panic.Engine.NetworkRunner do
           archive_invocation_async(invocation, next_invocation)
         end
 
-        # Continue with next invocation
-        new_state = %{state | current_invocation: next_invocation}
-        trigger_invocation(next_invocation, new_state)
+        # Calculate delay based on genesis invocation age
+        delay_ms = calculate_invocation_delay(state.genesis_invocation)
 
-        {:noreply, new_state}
+        if delay_ms > 0 do
+          # Schedule delayed invocation
+          Process.send_after(self(), {:delayed_invocation, next_invocation}, delay_ms)
+          new_state = %{state | current_invocation: nil, pending_delayed_invocation: next_invocation}
+          {:noreply, new_state}
+        else
+          # Continue with next invocation immediately
+          new_state = %{state | current_invocation: next_invocation}
+          trigger_invocation(next_invocation, new_state)
+          {:noreply, new_state}
+        end
 
       {:error, error} ->
         Logger.error("Failed to prepare next invocation: #{inspect(error)}")
         # Return to idle on error
-        new_state = %{state | genesis_invocation: nil, current_invocation: nil, user: nil}
+        new_state = %{
+          state
+          | genesis_invocation: nil,
+            current_invocation: nil,
+            user: nil,
+            pending_delayed_invocation: nil
+        }
+
         {:noreply, new_state}
     end
   rescue
     e ->
       Logger.error("Error handling processing completion: #{inspect(e)}")
       # Return to idle on error
-      new_state = stop_lockout_timer(%{state | genesis_invocation: nil, current_invocation: nil, user: nil})
+      new_state =
+        stop_lockout_timer(%{
+          state
+          | genesis_invocation: nil,
+            current_invocation: nil,
+            user: nil,
+            pending_delayed_invocation: nil
+        })
+
       {:noreply, new_state}
   end
 
@@ -522,6 +575,21 @@ defmodule Panic.Engine.NetworkRunner do
     case DateTime.compare(DateTime.utc_now(), lockout_end) do
       :lt -> DateTime.diff(lockout_end, DateTime.utc_now(), :second)
       _ -> 0
+    end
+  end
+
+  # AIDEV-NOTE: Calculates delay between invocations based on genesis invocation age
+  defp calculate_invocation_delay(genesis_invocation) do
+    now = DateTime.utc_now()
+    age_seconds = DateTime.diff(now, genesis_invocation.inserted_at, :second)
+
+    cond do
+      # Less than 5 minutes old - no delay
+      age_seconds < 300 -> 0
+      # Less than 1 hour old - 30 second delay
+      age_seconds < 3600 -> to_timeout(second: 30)
+      # More than 1 hour old - 1 hour delay
+      true -> to_timeout(hour: 1)
     end
   end
 end
