@@ -9,10 +9,7 @@ const AudioVisualizer = {
   },
   updated() {
     const newAudioSrc = this.el.dataset.audioSrc;
-    if (
-      newAudioSrc.startsWith("https://fly.storage.tigris.dev") &&
-      newAudioSrc !== this.audioSrc
-    ) {
+    if (newAudioSrc !== this.audioSrc) {
       this.audioSrc = newAudioSrc;
       this.playSound();
     }
