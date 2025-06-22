@@ -2,17 +2,19 @@
 
 ## NIME blockers
 
-- ensure the vestaboard delays are still appropriate
+- check that installations work
+- add vestaboard delays are still appropriate
 - check that time-based QR code -> terminal workflow works for non-logged-in
   users (perhaps only required for installations, and also requires real
   deployment to test properly)
-- investigate the "Sizes of tensors must match except in dimension 0" error from
-  Riffusion (check the params I'm sending are correct)
 - get FitText hook working
+- deploy to fly.io
 - find one (or a few) good text audio networks to use at NIME
 - load it on to some RPis
 - set up real NIME installations
-- add "back off over time logic" based on time
+- check the "back off over time logic" works with the fly settings re: putting
+  the machine to sleep
+- check that the audio files never get stuck/hang around
 
 ## network ideas
 
@@ -21,7 +23,6 @@
 
 ## important/quality-of-life
 
-- nicer visuals (no green bg?) for audio cards
 - maybe rename PanicWeb.InvocationWatcher (now that there's a Watcher module) to
   WatcherLive or something similar
 - make sure vestaboards crashing doesn't bring down the whole thing
