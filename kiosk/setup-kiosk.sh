@@ -146,21 +146,11 @@ mount_image() {
 
     log_info "Image attached to $LOOP_DEVICE"
 
-    # Create mount points
-    mkdir -p boot root
+    # Create mount point for boot partition only
+    mkdir -p boot
 
     # Mount boot partition (FAT32)
     mount -t msdos "${LOOP_DEVICE}s1" boot
-
-    # Mount root partition (ext4) - requires additional tools on macOS
-    if command -v fuse-ext2 &> /dev/null; then
-        fuse-ext2 "${LOOP_DEVICE}s2" root -o rw+
-        ROOT_MOUNTED=true
-    else
-        log_warning "fuse-ext2 not found. Some configurations will be skipped."
-        log_info "Install fuse-ext2 with: brew install fuse-ext2"
-        ROOT_MOUNTED=false
-    fi
 }
 
 # Configure the image for kiosk mode
@@ -201,25 +191,26 @@ EOF
         sed -i '' 's/$/ quiet splash/' boot/cmdline.txt
     fi
 
-    # Configure system files if root partition is mounted
-    if [ "$ROOT_MOUNTED" = true ]; then
-        configure_root_partition
-    else
-        log_warning "Root partition not mounted. Creating post-boot configuration script."
-        create_firstboot_script
-    fi
+    # Create first-boot configuration script
+    log_info "Creating first-boot configuration script..."
+    create_firstboot_script
 }
 
-# Configure root partition directly
-configure_root_partition() {
-    log_info "Configuring root partition..."
 
-    # Create kiosk configuration script
-    cat > root/home/${USERNAME}/setup-kiosk-mode.sh << 'EOF'
+
+# Create first-boot script for systems where root partition can't be mounted
+create_firstboot_script() {
+    # Create user configuration
+    cat > boot/userconf.txt << EOF
+${USERNAME}:$(echo "$DEFAULT_PASSWORD" | openssl passwd -6 -stdin)
+EOF
+
+    # Create firstrun.sh script using Raspberry Pi OS built-in mechanism
+    cat > boot/firstrun.sh << 'FIRSTRUN_EOF'
 #!/bin/bash
 
-# Post-boot kiosk configuration script
-# AIDEV-NOTE: This script runs on first boot to complete kiosk setup
+# First-run script for Raspberry Pi OS
+# AIDEV-NOTE: This script uses the built-in firstrun.sh mechanism for reliable first-boot setup
 
 set -e
 
@@ -227,17 +218,19 @@ KIOSK_URL="__KIOSK_URL__"
 USERNAME="__USERNAME__"
 
 # Update system
-sudo apt update && sudo apt upgrade -y
+apt update && apt upgrade -y
 
-# Install required packages
-sudo apt install -y chromium-browser openbox lightdm unclutter
+# Install required packages for kiosk mode
+apt install -y xserver-xorg lightdm openbox chromium-browser unclutter
 
 # Configure auto-login
-sudo sed -i 's/#autologin-user=/autologin-user='${USERNAME}'/' /etc/lightdm/lightdm.conf
-sudo sed -i 's/#autologin-user-timeout=0/autologin-user-timeout=0/' /etc/lightdm/lightdm.conf
+sed -i 's/#autologin-user=/autologin-user='${USERNAME}'/' /etc/lightdm/lightdm.conf
+sed -i 's/#autologin-user-timeout=0/autologin-user-timeout=0/' /etc/lightdm/lightdm.conf
 
-# Create openbox autostart
+# Create openbox configuration directory
 mkdir -p /home/${USERNAME}/.config/openbox
+
+# Create kiosk autostart script
 cat > /home/${USERNAME}/.config/openbox/autostart << AUTOSTART_EOF
 #!/bin/bash
 
@@ -255,75 +248,34 @@ AUTOSTART_EOF
 
 chmod +x /home/${USERNAME}/.config/openbox/autostart
 
-# Configure system to boot to desktop
-sudo systemctl set-default graphical.target
-sudo systemctl enable lightdm
+# Configure system to boot to graphical desktop
+systemctl set-default graphical.target
+systemctl enable lightdm
 
-# Set ownership
-sudo chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
+# Set proper ownership of user files
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 
-echo "Kiosk mode configuration completed!"
-echo "The system will now reboot and start in kiosk mode."
+# Clean up - remove this script after successful run
+rm -f /boot/firstrun.sh
 
-# Clean up - remove this script
-rm -- "$0"
+echo "Kiosk setup completed successfully"
+FIRSTRUN_EOF
 
-# Reboot to apply changes
-sudo reboot
-EOF
+    # Replace placeholders in the script
+    sed -i '' "s|__KIOSK_URL__|$KIOSK_URL|g" boot/firstrun.sh
+    sed -i '' "s|__USERNAME__|$USERNAME|g" boot/firstrun.sh
+    chmod +x boot/firstrun.sh
 
-    # Replace placeholders
-    sed -i '' "s|__KIOSK_URL__|$KIOSK_URL|g" root/home/${USERNAME}/setup-kiosk-mode.sh
-    sed -i '' "s|__USERNAME__|$USERNAME|g" root/home/${USERNAME}/setup-kiosk-mode.sh
-
-    chmod +x root/home/${USERNAME}/setup-kiosk-mode.sh
-
-    # Create a service to run the setup script on first boot
-    cat > root/etc/systemd/system/kiosk-setup.service << EOF
-[Unit]
-Description=Kiosk Mode Setup
-After=network.target
-Wants=network.target
-
-[Service]
-Type=oneshot
-User=${USERNAME}
-ExecStart=/home/${USERNAME}/setup-kiosk-mode.sh
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-    # Enable the service (using chroot)
-    if command -v chroot &> /dev/null; then
-        chroot root systemctl enable kiosk-setup.service 2>/dev/null || log_warning "Could not enable service via chroot"
-    fi
-
-    log_success "Root partition configured"
-}
-
-# Create first-boot script for systems where root partition can't be mounted
-create_firstboot_script() {
-    # Create a simple first-boot configuration
-    cat > boot/userconf.txt << EOF
-${USERNAME}:$(echo "$DEFAULT_PASSWORD" | openssl passwd -6 -stdin)
-EOF
-
-    log_info "First-boot configuration created"
+    log_info "First-boot kiosk configuration created using firstrun.sh"
 }
 
 # Unmount the image
 unmount_image() {
     log_info "Unmounting image..."
 
-    # Unmount partitions
+    # Unmount boot partition
     if mountpoint -q boot 2>/dev/null; then
         umount boot
-    fi
-
-    if [ "$ROOT_MOUNTED" = true ] && mountpoint -q root 2>/dev/null; then
-        umount root
     fi
 
     # Detach the image
@@ -415,17 +367,13 @@ cleanup() {
         umount boot 2>/dev/null || true
     fi
 
-    if [ "$ROOT_MOUNTED" = true ] && mountpoint -q root 2>/dev/null; then
-        umount root 2>/dev/null || true
-    fi
-
     # Detach image if still attached
     if [ -n "$LOOP_DEVICE" ]; then
         hdiutil detach "$LOOP_DEVICE" 2>/dev/null || true
     fi
 
     # Remove temporary directories
-    rm -rf boot root 2>/dev/null || true
+    rm -rf boot 2>/dev/null || true
 }
 
 # Trap to ensure cleanup on exit
