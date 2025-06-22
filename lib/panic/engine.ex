@@ -14,7 +14,7 @@ defmodule Panic.Engine do
       define :prepare_next, args: [:previous_invocation]
       define :invoke, args: []
       define :about_to_invoke, args: []
-      define :cancel, args: []
+      define :mark_as_failed, args: []
       define :update_input, args: [:input]
       define :update_output, args: [:output]
       define :list_run, args: [:network_id, :run_number]

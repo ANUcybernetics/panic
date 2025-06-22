@@ -176,15 +176,8 @@ defmodule Panic.Engine.NetworkRunner do
         # Already idle
         {:reply, {:ok, :not_running}, state}
 
-      %{current_invocation: current} ->
-        # Stop current run
-        try do
-          if current && current.state == :invoking do
-            Engine.cancel!(current, actor: state.user)
-          end
-        rescue
-          e -> Logger.error("Error canceling invocation during stop: #{inspect(e)}")
-        end
+      %{current_invocation: _current} ->
+        # Stop current run - let current invocation complete naturally
 
         new_state =
           stop_lockout_timer(%{
@@ -316,7 +309,7 @@ defmodule Panic.Engine.NetworkRunner do
     else
       # Cancel current run and start new one
       if state.current_invocation && state.current_invocation.state == :invoking do
-        Engine.cancel!(state.current_invocation, actor: user)
+        Engine.mark_as_failed!(state.current_invocation, actor: user)
       end
 
       watchers = vestaboard_watchers(network)
@@ -447,6 +440,14 @@ defmodule Panic.Engine.NetworkRunner do
         send(self(), {:processing_completed, processed_invocation})
       rescue
         e ->
+          # Mark invocation as failed before logging error
+          try do
+            Engine.mark_as_failed!(invocation, actor: state.user)
+          rescue
+            # If marking as failed fails, just continue
+            _mark_error -> nil
+          end
+
           Logger.error("Invocation processing failed: #{inspect(e)}")
           # Don't crash - just let the run end
       end
@@ -467,6 +468,14 @@ defmodule Panic.Engine.NetworkRunner do
             send(genserver_pid, {:processing_completed, processed_invocation})
           rescue
             e ->
+              # Mark invocation as failed before logging error
+              try do
+                Engine.mark_as_failed!(invocation, actor: state.user)
+              rescue
+                # If marking as failed fails, just continue
+                _mark_error -> nil
+              end
+
               Logger.error("Invocation processing failed: #{inspect(e)}")
               # Don't crash - just let the run end
           end

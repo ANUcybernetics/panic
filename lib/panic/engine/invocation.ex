@@ -136,7 +136,9 @@ defmodule Panic.Engine.Invocation do
       change Panic.Engine.Changes.InvokeModel
     end
 
-    update :cancel do
+    # Marks an invocation as failed by setting its state to :failed.
+    # This does not cancel any running processes, it only updates the database state.
+    update :mark_as_failed do
       change set_attribute(:state, :failed)
     end
   end
