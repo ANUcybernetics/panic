@@ -98,6 +98,11 @@ defmodule Panic.ExternalAPIPatches do
     Repatch.patch(Archiver, :archive_invocation, fn _invocation, _next_invocation ->
       :ok
     end)
+
+    # Patch NetworkRunner.archive_invocation_async to avoid Task.Supervisor calls in tests
+    Repatch.patch(Panic.Engine.NetworkRunner, :archive_invocation_async, fn _invocation, _next_invocation ->
+      :ok
+    end)
   end
 
   defp generate_mock_output do

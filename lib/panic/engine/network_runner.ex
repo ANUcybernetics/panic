@@ -481,22 +481,39 @@ defmodule Panic.Engine.NetworkRunner do
     end
   end
 
-  defp archive_invocation_async(invocation, next_invocation) do
-    # Skip archiving in test environment to avoid network requests
-    if Mix.env() == :test do
-      :ok
-    else
-      {:ok, _task_pid} =
-        Task.Supervisor.start_child(@task_supervisor, fn ->
-          try do
-            Archiver.archive_invocation(invocation, next_invocation)
-          rescue
-            e ->
-              Logger.error("Archiving failed: #{inspect(e)}")
-              # Don't crash - archiving is best effort
-          end
-        end)
-    end
+  @doc """
+  Archives an invocation asynchronously using Task.Supervisor.
+
+  This function spawns a supervised task to archive the given invocation
+  along with context from the next invocation. Archiving is done as a
+  best-effort operation and will not crash the NetworkRunner if it fails.
+
+  ## Parameters
+
+  - `invocation` - The invocation to archive
+  - `next_invocation` - The next invocation for context
+
+  ## Returns
+
+  - `{:ok, task_pid}` - The PID of the spawned archiving task
+
+  ## Examples
+
+      iex> NetworkRunner.archive_invocation_async(invocation, next_invocation)
+      {:ok, #PID<0.234.0>}
+
+  """
+  def archive_invocation_async(invocation, next_invocation) do
+    {:ok, _task_pid} =
+      Task.Supervisor.start_child(@task_supervisor, fn ->
+        try do
+          Archiver.archive_invocation(invocation, next_invocation)
+        rescue
+          e ->
+            Logger.error("Archiving failed: #{inspect(e)}")
+            # Don't crash - archiving is best effort
+        end
+      end)
   end
 
   # AIDEV-NOTE: Helper to get network and user context - makes NetworkRunner crash-resilient
