@@ -2,10 +2,6 @@
 
 ## NIME blockers
 
-- see why text runs don't get the P!
-- add timeout coutdown broadcasts to the network runner and invocation watchers
-  (and remove the need for the hook)
-- check that re-started runs don't get clobbered
 - ensure the vestaboard delays are still appropriate
 - check that time-based QR code -> terminal workflow works for non-logged-in
   users (perhaps only required for installations, and also requires real
@@ -28,7 +24,8 @@
 
 ## important/quality-of-life
 
-- fix flaky tests
+- add timeout coutdown broadcasts to the network runner and invocation watchers
+  (and remove the need for the hook)
 - nicer visuals (no green bg?) for audio cards
 - maybe rename PanicWeb.InvocationWatcher (now that there's a Watcher module) to
   WatcherLive or something similar
