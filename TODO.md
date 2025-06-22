@@ -11,7 +11,6 @@
 - add [this](https://replicate.com/zsxkib/flux-music), and maybe
   <https://replicate.com/ardianfe/music-gen-fn-400e?prediction=kpjdayh931rma0cqj3cbyv0p8c>
 - get FitText hook working
-- add UI for configuring network lockout timer duration
 - find one (or a few) good text audio networks to use at NIME
 - load it on to some RPis
 - set up real NIME installations
@@ -24,8 +23,6 @@
 
 ## important/quality-of-life
 
-- add timeout coutdown broadcasts to the network runner and invocation watchers
-  (and remove the need for the hook)
 - nicer visuals (no green bg?) for audio cards
 - maybe rename PanicWeb.InvocationWatcher (now that there's a Watcher module) to
   WatcherLive or something similar
@@ -37,6 +34,9 @@
 
 ## thought bubbles
 
+- don't have api tokens per-user, have them as a standalone resource which can
+  have many users (and also could be set as "default" for requests using the
+  rolling QR code terminal)
 - update to tailwind 4.0, and use the text shadow stuff (actually this might
   happen with Phoenix 1.8)
 - add the ability to specify multiple offsets for single screen view
