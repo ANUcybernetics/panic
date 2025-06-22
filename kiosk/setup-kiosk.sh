@@ -13,8 +13,16 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORK_DIR="${SCRIPT_DIR}/work"
 CACHE_DIR="${HOME}/.raspios-images"
 IMAGE_URL="https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2025-05-13/2025-05-13-raspios-bookworm-arm64-lite.img.xz"
-IMAGE_FILE="2025-05-13-raspios-bookworm-arm64-lite.img.xz"
-IMAGE_EXTRACTED="raspios-bookworm-arm64-lite.img"
+
+# Parse image file name from URL
+IMAGE_FILE=$(basename "$IMAGE_URL")
+
+# Parse extracted image name by removing compression extensions
+IMAGE_EXTRACTED=$(basename "$IMAGE_FILE" .xz)
+if [[ "$IMAGE_EXTRACTED" == *.gz ]]; then
+    IMAGE_EXTRACTED=$(basename "$IMAGE_EXTRACTED" .gz)
+fi
+
 HOSTNAME="pi-kiosk"
 USERNAME="kiosk"
 DEFAULT_PASSWORD="raspberry"
