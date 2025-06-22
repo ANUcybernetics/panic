@@ -24,12 +24,11 @@ import topbar from "../vendor/topbar";
 import live_select from "live_select";
 
 // LiveView hooks
-import TerminalLockoutTimer from "./hooks/terminal_lockout_timer";
+
 import AudioVisualizer from "./hooks/audio_visualizer";
 import FitText from "./hooks/fit_text";
 
 const hooks = {
-  TerminalLockoutTimer,
   AudioVisualizer,
   FitText,
   ...live_select,

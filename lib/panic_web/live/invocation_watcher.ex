@@ -10,6 +10,7 @@ defmodule PanicWeb.InvocationWatcher do
         • configures the `:invocations` stream
         • attaches a `handle_info` hook so the LiveView itself needs **no**
           boilerplate for invocation broadcasts
+        • handles lockout countdown messages for terminal input state
     * `configure_invocation_stream/3` – manual set-up (kept for
       backwards-compatibility)
     * `handle_invocation_message/2` – processes a broadcast and updates the
@@ -40,6 +41,8 @@ defmodule PanicWeb.InvocationWatcher do
   # ---------------------------------------------------------------------------
   # on_mount hook
   # ---------------------------------------------------------------------------
+
+  alias Phoenix.Socket.Broadcast
 
   @doc """
   LiveView `on_mount/4` callback.
@@ -94,7 +97,7 @@ defmodule PanicWeb.InvocationWatcher do
       socket
       |> LiveView.stream_configure(:invocations, dom_id: &dom_id(&1, display))
       |> LiveView.stream(:invocations, [])
-      |> Component.assign(network: network, display: display, genesis_invocation: nil)
+      |> Component.assign(network: network, display: display, genesis_invocation: nil, lockout_seconds_remaining: 0)
     end
   end
 
@@ -178,6 +181,17 @@ defmodule PanicWeb.InvocationWatcher do
     {:noreply, socket}
   end
 
+  @doc """
+  Handle a lockout countdown broadcast and update the LiveView socket.
+
+  Returns `{:noreply, socket}` so callers can simply use it in handle_info hooks.
+  """
+  def handle_lockout_countdown_message(message, socket) do
+    seconds_remaining = message.payload.seconds_remaining
+    socket = Component.assign(socket, lockout_seconds_remaining: seconds_remaining)
+    {:noreply, socket}
+  end
+
   # ---------------------------------------------------------------------------
   # Internal helpers
   # ---------------------------------------------------------------------------
@@ -196,7 +210,11 @@ defmodule PanicWeb.InvocationWatcher do
       :invocation_watcher,
       :handle_info,
       fn
-        %Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = msg, socket ->
+        %Broadcast{topic: "invocation:" <> _, event: "lockout_countdown"} = msg, socket ->
+          {:noreply, new_socket} = handle_lockout_countdown_message(msg, socket)
+          {:halt, new_socket}
+
+        %Broadcast{topic: "invocation:" <> _} = msg, socket ->
           {:noreply, new_socket} = handle_invocation_message(msg, socket)
           {:halt, new_socket}
 

@@ -57,6 +57,7 @@ defmodule PanicWeb.NetworkLive.Show do
         network={@network}
         genesis_invocation={@genesis_invocation}
         current_user={@current_user}
+        lockout_seconds_remaining={@lockout_seconds_remaining}
         id={@network.id}
       />
     </section>

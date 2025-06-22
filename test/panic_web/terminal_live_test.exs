@@ -74,7 +74,7 @@ defmodule PanicWeb.TerminalLiveTest do
       |> assert_has("span", text: "Current run:")
       |> fill_in("Prompt", with: "a sheep on the grass")
       |> submit()
-      |> assert_has("input[placeholder='Starting up...']")
+      |> assert_has("input[placeholder*='until ready for new input']")
     end
 
     test "logged in user can access terminal without token", %{conn: conn, user: user} do
