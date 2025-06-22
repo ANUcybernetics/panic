@@ -162,19 +162,9 @@ defmodule PanicWeb.InvocationWatcher do
                   socket
               end
 
-            %Invocation{run_number: different_run} when different_run != run_number ->
-              # Different run - reset with new genesis and process invocation
-              case fetch_genesis_invocation(invocation, socket.assigns.network) do
-                {:ok, genesis} ->
-                  socket
-                  |> Component.assign(genesis_invocation: genesis)
-                  |> LiveView.stream(:invocations, [], reset: true)
-                  |> handle_non_genesis_invocation(invocation, display)
-
-                {:error, _} ->
-                  # Failed to fetch genesis, ignore this invocation
-                  socket
-              end
+            _ ->
+              # Different run - ignore this invocation
+              socket
           end
       end
 
