@@ -60,7 +60,7 @@ defmodule PanicWeb.InstallationLive.Show do
                 navigate={~p"/i/#{@installation.id}/#{index}"}
                 class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700 dark:text-zinc-100 dark:hover:text-zinc-300"
               >
-                View watcher →
+                View watcher at /i/{@installation.id}/{index} →
               </.link>
             </div>
           </div>

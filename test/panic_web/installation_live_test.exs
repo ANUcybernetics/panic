@@ -221,7 +221,7 @@ defmodule PanicWeb.InstallationLiveTest do
 
       conn
       |> visit("/installations/#{installation.id}")
-      |> click_link("View watcher →")
+      |> click_link("View watcher at /i/#{installation.id}/0 →")
       |> assert_has("title", text: "Test Installation - Watcher 0")
     end
 
