@@ -379,17 +379,10 @@ defmodule Panic.Engine.NetworkRunner do
         # Calculate delay based on genesis invocation age
         delay_ms = calculate_invocation_delay(state.genesis_invocation)
 
-        if delay_ms > 0 do
-          # Schedule delayed invocation
-          Process.send_after(self(), {:delayed_invocation, next_invocation}, delay_ms)
-          new_state = %{state | current_invocation: nil, pending_delayed_invocation: next_invocation}
-          {:noreply, new_state}
-        else
-          # Continue with next invocation immediately
-          new_state = %{state | current_invocation: next_invocation}
-          trigger_invocation(next_invocation, new_state)
-          {:noreply, new_state}
-        end
+        # Schedule delayed invocation
+        Process.send_after(self(), {:delayed_invocation, next_invocation}, delay_ms)
+        new_state = %{state | current_invocation: nil, pending_delayed_invocation: next_invocation}
+        {:noreply, new_state}
 
       {:error, error} ->
         Logger.error("Failed to prepare next invocation: #{inspect(error)}")
