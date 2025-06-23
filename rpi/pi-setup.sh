@@ -11,7 +11,7 @@ set -o pipefail  # Exit on pipe failure
 if [ $# -eq 0 ]; then
     echo "Error: URL argument required" >&2
     echo "Usage: $0 <URL>" >&2
-    echo "Example: curl -sSL https://example.com/pi-setup.sh | bash -s -- \"https://your-site.com\"" >&2
+    echo "Example: curl -sSL https://raw.githubusercontent.com/ANUcybernetics/panic/main/rpi/pi-setup.sh | bash -s -- \"https://example.com\"" >&2
     exit 1
 fi
 
