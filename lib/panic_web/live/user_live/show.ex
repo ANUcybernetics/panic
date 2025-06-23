@@ -20,7 +20,7 @@ defmodule PanicWeb.UserLive.Show do
       <%= if @networks != [] do %>
         <.table id="network-list" rows={@networks}>
           <:col :let={network} label="Name">
-            <.link patch={~p"/networks/#{network}/"} phx-click={JS.push_focus()}>
+            <.link href={~p"/networks/#{network}/"} phx-click={JS.push_focus()}>
               {network.name}
             </.link>
           </:col>

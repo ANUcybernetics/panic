@@ -54,12 +54,6 @@ defmodule PanicWeb.Router do
         live "/:user_id/new-network", UserLive.Show, :new_network
       end
 
-      scope "/networks" do
-        # no "network list" view, because UserLive.Show fulfils that role
-        live "/new", NetworkLive.Index, :new
-        live "/:network_id/edit", NetworkLive.Show, :edit
-      end
-
       scope "/installations" do
         live "/", InstallationLive.Index, :index
         live "/new", InstallationLive.Index, :new
@@ -77,7 +71,10 @@ defmodule PanicWeb.Router do
     ash_authentication_live_session :authentication_required_with_watcher,
       on_mount: [{PanicWeb.LiveUserAuth, :live_user_required}, {PanicWeb.InvocationWatcher, :auto}] do
       scope "/networks" do
+        # no "network list" view, because UserLive.Show fulfils that role
+        live "/new", NetworkLive.Index, :new
         live "/:network_id", NetworkLive.Show, :show
+        live "/:network_id/edit", NetworkLive.Show, :edit
         live "/:network_id/info/qr", NetworkLive.Info, :qr
         live "/:network_id/info/all", NetworkLive.Info, :all
       end

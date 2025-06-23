@@ -8,7 +8,7 @@ defmodule PanicWeb.IndexLive do
   def render(assigns) do
     ~H"""
     <div class="relative w-dvw h-dvh grid place-items-center">
-      <.link navigate={(@current_user && ~p"/users/#{@current_user}") || ~p"/sign-in"}>
+      <.link href={(@current_user && ~p"/users/#{@current_user}") || ~p"/sign-in"}>
         <.panic_button class="size-[60vmin] text-[12vmin]"></.panic_button>
       </.link>
       <.link

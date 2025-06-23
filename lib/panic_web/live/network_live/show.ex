@@ -27,7 +27,7 @@ defmodule PanicWeb.NetworkLive.Show do
         <.link patch={~p"/networks/#{@network}/info/qr"} type="button">
           <.button>QR code</.button>
         </.link>
-        <.link navigate={~p"/networks/#{@network}/terminal"} type="button">
+        <.link href={~p"/networks/#{@network}/terminal"} type="button">
           <.button>Terminal</.button>
         </.link>
         <.link navigate={~p"/sign-out"} type="button">
@@ -100,7 +100,7 @@ defmodule PanicWeb.NetworkLive.Show do
       <.display invocations={@streams.invocations} display={@display} />
     </section>
 
-    <.back navigate={~p"/users/#{@current_user}/"}>Back to networks</.back>
+    <.back href={~p"/users/#{@current_user}/"}>Back to networks</.back>
     <.modal
       :if={@live_action == :edit}
       id="network-modal"

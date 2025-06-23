@@ -560,14 +560,15 @@ defmodule PanicWeb.CoreComponents do
 
       <.back navigate={~p"/posts"}>Back to posts</.back>
   """
-  attr :navigate, :any, required: true
+  attr :navigate, :any, default: nil
+  attr :href, :any, default: nil
   slot :inner_block, required: true
 
   def back(assigns) do
     ~H"""
     <div class="mt-16">
       <.link
-        navigate={@navigate}
+        {if @navigate, do: [navigate: @navigate], else: [href: @href]}
         class="text-sm font-semibold leading-6 text-purple-300 hover:text-purple-300"
       >
         <.icon name="hero-arrow-left-solid" class="h-3 w-3" />

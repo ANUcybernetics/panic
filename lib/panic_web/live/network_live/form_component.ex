@@ -47,10 +47,14 @@ defmodule PanicWeb.NetworkLive.FormComponent do
       {:ok, network} ->
         notify_parent({:saved, network})
 
+        socket = put_flash(socket, :info, "Network #{socket.assigns.form.source.type}d successfully")
+
         socket =
-          socket
-          |> put_flash(:info, "Network #{socket.assigns.form.source.type}d successfully")
-          |> push_navigate(to: socket.assigns.navigate)
+          if socket.assigns.navigate do
+            redirect(socket, to: socket.assigns.navigate)
+          else
+            push_navigate(socket, to: ~p"/networks/#{network}")
+          end
 
         {:noreply, socket}
 
