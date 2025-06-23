@@ -24,8 +24,7 @@ printf "Opening Chromium with specific arguments...\n"
 # Clear any existing user data
 rm -rf /tmp/chromium-kiosk
 
-# AIDEV-NOTE: Removed dangerous security flags (--no-sandbox, --disable-web-security, --allow-running-insecure-content)
-# Launch fullscreen kiosk window with safe configuration
+# Launch fullscreen kiosk window
 chromium-browser \
     --kiosk \
     --disable-infobars \
