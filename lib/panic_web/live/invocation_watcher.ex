@@ -31,6 +31,13 @@ defmodule PanicWeb.InvocationWatcher do
 
   The display tuple format is also used by Installation watchers, where each watcher
   struct is converted to the appropriate display tuple format.
+
+  ## Special Case: Single Display with stride=1, offset=0
+
+  When using `{:single, 0, 1}` (which shows every invocation), the watcher
+  automatically filters out invocations in the `:invoking` state to prevent
+  constantly displaying the red "invoking" indicator. Only `:completed`, `:ready`,
+  and `:failed` states are shown in this configuration.
   """
 
   alias Panic.Engine.Invocation
@@ -347,9 +354,15 @@ defmodule PanicWeb.InvocationWatcher do
       {_, {:grid, _rows, _cols}} ->
         LiveView.stream_insert(socket, :invocations, invocation, at: -1)
 
-      {%Invocation{sequence_number: seq}, {:single, offset, stride}}
+      {%Invocation{sequence_number: seq, state: state}, {:single, offset, stride}}
       when rem(seq, stride) == offset ->
-        LiveView.stream_insert(socket, :invocations, invocation, at: 0, limit: 1)
+        # Special case: when stride=1 and offset=0, ignore :invoking invocations
+        # to avoid constantly showing the red "invoking" state
+        if stride == 1 and offset == 0 and state == :invoking do
+          socket
+        else
+          LiveView.stream_insert(socket, :invocations, invocation, at: 0, limit: 1)
+        end
 
       {_, {:single, _, _}} ->
         # Not matching the display criteria, don't add to stream

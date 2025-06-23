@@ -264,6 +264,44 @@ defmodule PanicWeb.InvocationWatcherTest do
       assert matches_display_criteria?(99, display)
     end
 
+    test "single mode with stride=1 and offset=0 should ignore :invoking state" do
+      display = {:single, 0, 1}
+
+      # This special case should ignore :invoking invocations
+      refute should_show_invocation_for_display?(:invoking, 1, display)
+      refute should_show_invocation_for_display?(:invoking, 5, display)
+      refute should_show_invocation_for_display?(:invoking, 99, display)
+
+      # But should still show :completed invocations
+      assert should_show_invocation_for_display?(:completed, 1, display)
+      assert should_show_invocation_for_display?(:completed, 5, display)
+      assert should_show_invocation_for_display?(:completed, 99, display)
+
+      # And should show other states as well
+      assert should_show_invocation_for_display?(:ready, 1, display)
+      assert should_show_invocation_for_display?(:failed, 1, display)
+    end
+
+    test "single mode with other stride/offset combinations should show all states" do
+      # Test with different stride/offset to ensure special case is only for stride=1, offset=0
+      display = {:single, 0, 2}
+
+      # Should show all states including :invoking for other stride/offset combinations
+      # 2 % 2 == 0
+      assert should_show_invocation_for_display?(:invoking, 2, display)
+      assert should_show_invocation_for_display?(:completed, 2, display)
+      assert should_show_invocation_for_display?(:ready, 2, display)
+      assert should_show_invocation_for_display?(:failed, 2, display)
+
+      # Test with stride=2 and offset=1 (not the special case)
+      display = {:single, 1, 2}
+
+      # Should show all states including :invoking when not the special case
+      # 1 % 2 == 1, matches offset=1
+      assert should_show_invocation_for_display?(:invoking, 1, display)
+      assert should_show_invocation_for_display?(:completed, 1, display)
+    end
+
     property "single mode filtering works correctly for all offsets and strides" do
       ExUnitProperties.check all(
                                offset <- integer(0..4),
@@ -461,5 +499,26 @@ defmodule PanicWeb.InvocationWatcherTest do
     # Helper function that mirrors the logic in InvocationWatcher
     archive_prefix = "https://fly.storage.tigris.dev/"
     String.starts_with?(input || "", archive_prefix) or String.starts_with?(output || "", archive_prefix)
+  end
+
+  defp should_show_invocation_for_display?(state, sequence_number, display) do
+    # Helper function that mirrors the logic in InvocationWatcher for the special case
+    case display do
+      {:grid, _rows, _cols} ->
+        true
+
+      {:single, offset, stride} when rem(sequence_number, stride) == offset ->
+        # Special case: when stride=1 and offset=0, ignore :invoking invocations
+        # to avoid constantly showing the red "invoking" state
+        if stride == 1 and offset == 0 and state == :invoking do
+          false
+        else
+          true
+        end
+
+      {:single, _, _} ->
+        # Not matching the display criteria, don't show
+        false
+    end
   end
 end
