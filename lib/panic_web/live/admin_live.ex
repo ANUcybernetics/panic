@@ -11,10 +11,10 @@ defmodule PanicWeb.AdminLive do
       Admin panel
       <:actions>
         <.button
-          phx-click="cancel_all_jobs"
-          data-confirm="Are you sure you want to cancel all running jobs?"
+          phx-click="stop_all_jobs"
+          data-confirm="Are you sure you want to stop all running jobs?"
         >
-          Cancel All Jobs
+          Stop all jobs
         </.button>
       </:actions>
     </.header>
@@ -85,7 +85,7 @@ defmodule PanicWeb.AdminLive do
   end
 
   @impl true
-  def handle_event("cancel_all_jobs", _params, socket) do
+  def handle_event("stop_all_jobs", _params, socket) do
     # Get all running NetworkRunner processes from the registry
     registry_entries = Registry.select(Panic.Engine.NetworkRegistry, [{{:"$1", :"$2", :"$3"}, [], [{{:"$1", :"$2"}}]}])
 
@@ -104,9 +104,9 @@ defmodule PanicWeb.AdminLive do
 
     message =
       case stopped_count do
-        0 -> "No running jobs found to cancel"
-        1 -> "Cancelled 1 running job"
-        n -> "Cancelled #{n} running jobs"
+        0 -> "No running jobs found to stop"
+        1 -> "Stopped 1 running job"
+        n -> "Stopped #{n} running jobs"
       end
 
     {:noreply, put_flash(socket, :info, message)}

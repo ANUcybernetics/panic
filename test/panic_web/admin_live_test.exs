@@ -22,8 +22,8 @@ defmodule PanicWeb.AdminLiveTest do
     %{network1: network1, network2: network2}
   end
 
-  describe "cancel_all_jobs" do
-    test "cancels all running NetworkRunner jobs", %{conn: conn, user: user, network1: network1, network2: network2} do
+  describe "stop_all_jobs" do
+    test "stops all running NetworkRunner jobs", %{conn: conn, user: user, network1: network1, network2: network2} do
       # Start some NetworkRunner processes
       {:ok, _} = NetworkRunner.start_run(network1.id, "test prompt 1", user)
       {:ok, _} = NetworkRunner.start_run(network2.id, "test prompt 2", user)
@@ -35,14 +35,14 @@ defmodule PanicWeb.AdminLiveTest do
       # Mount the admin live view
       {:ok, view, _html} = live(conn, ~p"/admin")
 
-      # Click the cancel all jobs button
-      view |> element("button", "Cancel All Jobs") |> render_click()
+      # Click the stop all jobs button
+      view |> element("button", "Stop all jobs") |> render_click()
 
       # Give a moment for processes to be terminated
       Process.sleep(100)
 
       # Verify the flash message
-      assert view |> element("#flash-info") |> render() =~ "Cancelled 2 running jobs"
+      assert view |> element("#flash-info") |> render() =~ "Stopped 2 running jobs"
 
       # Verify processes are no longer in registry
       # Note: processes might still be alive briefly while shutting down, but they should be removed from registry
@@ -57,11 +57,11 @@ defmodule PanicWeb.AdminLiveTest do
       # Mount the admin live view
       {:ok, view, _html} = live(conn, ~p"/admin")
 
-      # Click the cancel all jobs button
-      view |> element("button", "Cancel All Jobs") |> render_click()
+      # Click the stop all jobs button
+      view |> element("button", "Stop all jobs") |> render_click()
 
       # Verify the flash message
-      assert view |> element("#flash-info") |> render() =~ "No running jobs found to cancel"
+      assert view |> element("#flash-info") |> render() =~ "No running jobs found to stop"
     end
 
     test "shows correct message for single job", %{conn: conn, user: user, network1: network1} do
@@ -74,14 +74,14 @@ defmodule PanicWeb.AdminLiveTest do
       # Mount the admin live view
       {:ok, view, _html} = live(conn, ~p"/admin")
 
-      # Click the cancel all jobs button
-      view |> element("button", "Cancel All Jobs") |> render_click()
+      # Click the stop all jobs button
+      view |> element("button", "Stop all jobs") |> render_click()
 
       # Give a moment for process to be terminated
       Process.sleep(100)
 
       # Verify the flash message
-      assert view |> element("#flash-info") |> render() =~ "Cancelled 1 running job"
+      assert view |> element("#flash-info") |> render() =~ "Stopped 1 running job"
     end
   end
 
@@ -90,7 +90,7 @@ defmodule PanicWeb.AdminLiveTest do
       {:ok, _view, html} = live(conn, ~p"/admin")
 
       assert html =~ "Admin panel"
-      assert html =~ "Cancel All Jobs"
+      assert html =~ "Stop all jobs"
       assert html =~ "Invocations"
       assert html =~ "Networks"
     end
