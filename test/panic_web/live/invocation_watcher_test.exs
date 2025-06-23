@@ -239,8 +239,8 @@ defmodule PanicWeb.InvocationWatcherTest do
 
   describe "display mode filtering" do
     test "single mode should filter by stride and offset" do
-      # Test single mode with offset=1, stride=3
-      display = {:single, 1, 3}
+      # Test single mode with offset=1, stride=3, show_invoking=true
+      display = {:single, 1, 3, true}
 
       # sequence_number=4: 4 % 3 = 1, matches offset=1 ✓
       assert matches_display_criteria?(4, display)
@@ -264,10 +264,10 @@ defmodule PanicWeb.InvocationWatcherTest do
       assert matches_display_criteria?(99, display)
     end
 
-    test "single mode with stride=1 and offset=0 should ignore :invoking state" do
-      display = {:single, 0, 1}
+    test "single mode with show_invoking=false should ignore :invoking state" do
+      display = {:single, 0, 1, false}
 
-      # This special case should ignore :invoking invocations
+      # With show_invoking=false, should ignore :invoking invocations
       refute should_show_invocation_for_display?(:invoking, 1, display)
       refute should_show_invocation_for_display?(:invoking, 5, display)
       refute should_show_invocation_for_display?(:invoking, 99, display)
@@ -282,24 +282,38 @@ defmodule PanicWeb.InvocationWatcherTest do
       assert should_show_invocation_for_display?(:failed, 1, display)
     end
 
-    test "single mode with other stride/offset combinations should show all states" do
-      # Test with different stride/offset to ensure special case is only for stride=1, offset=0
-      display = {:single, 0, 2}
+    test "single mode with show_invoking=true should show all states" do
+      # Test with show_invoking=true
+      display = {:single, 0, 2, true}
 
-      # Should show all states including :invoking for other stride/offset combinations
+      # Should show all states including :invoking when show_invoking=true
       # 2 % 2 == 0
       assert should_show_invocation_for_display?(:invoking, 2, display)
       assert should_show_invocation_for_display?(:completed, 2, display)
       assert should_show_invocation_for_display?(:ready, 2, display)
       assert should_show_invocation_for_display?(:failed, 2, display)
 
-      # Test with stride=2 and offset=1 (not the special case)
-      display = {:single, 1, 2}
+      # Test with different offset
+      display = {:single, 1, 2, true}
 
-      # Should show all states including :invoking when not the special case
+      # Should show all states including :invoking when show_invoking=true
       # 1 % 2 == 1, matches offset=1
       assert should_show_invocation_for_display?(:invoking, 1, display)
       assert should_show_invocation_for_display?(:completed, 1, display)
+    end
+
+    test "backward compatibility: 3-element single tuples default to show_invoking=false" do
+      # Test backward compatibility with 3-element tuples
+      display = {:single, 0, 1}
+
+      # Should ignore :invoking invocations (defaults to show_invoking=false)
+      refute should_show_invocation_for_display?(:invoking, 1, display)
+      refute should_show_invocation_for_display?(:invoking, 5, display)
+
+      # But should still show other states
+      assert should_show_invocation_for_display?(:completed, 1, display)
+      assert should_show_invocation_for_display?(:ready, 1, display)
+      assert should_show_invocation_for_display?(:failed, 1, display)
     end
 
     property "single mode filtering works correctly for all offsets and strides" do
@@ -495,6 +509,11 @@ defmodule PanicWeb.InvocationWatcherTest do
     rem(sequence_number, stride) == offset
   end
 
+  defp matches_display_criteria?(sequence_number, {:single, offset, stride, _show_invoking}) do
+    # Single mode filters by stride and offset
+    rem(sequence_number, stride) == offset
+  end
+
   defp should_filter_archive_url?(%Invocation{input: input, output: output}) do
     # Helper function that mirrors the logic in InvocationWatcher
     archive_prefix = "https://fly.storage.tigris.dev/"
@@ -502,21 +521,24 @@ defmodule PanicWeb.InvocationWatcherTest do
   end
 
   defp should_show_invocation_for_display?(state, sequence_number, display) do
-    # Helper function that mirrors the logic in InvocationWatcher for the special case
+    # Helper function that mirrors the logic in InvocationWatcher
     case display do
       {:grid, _rows, _cols} ->
         true
 
       {:single, offset, stride} when rem(sequence_number, stride) == offset ->
-        # Special case: when stride=1 and offset=0, ignore :invoking invocations
-        # to avoid constantly showing the red "invoking" state
-        if stride == 1 and offset == 0 and state == :invoking do
-          false
-        else
-          true
-        end
+        # Backward compatibility: 3-element tuple defaults to show_invoking=false
+        state != :invoking
+
+      {:single, offset, stride, show_invoking} when rem(sequence_number, stride) == offset ->
+        # Use show_invoking flag to determine whether to show :invoking invocations
+        show_invoking or state != :invoking
 
       {:single, _, _} ->
+        # Not matching the display criteria, don't show
+        false
+
+      {:single, _, _, _} ->
         # Not matching the display criteria, don't show
         false
     end

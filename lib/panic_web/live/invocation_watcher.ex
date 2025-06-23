@@ -26,18 +26,20 @@ defmodule PanicWeb.InvocationWatcher do
         ...
       end
 
-  Pass an explicit display tuple (`{:grid, rows, cols}` or `{:single, off, stride}`)
+  Pass an explicit display tuple (`{:grid, rows, cols}` or `{:single, off, stride, show_invoking}`)
   instead of `:auto` if you don't want automatic detection.
 
   The display tuple format is also used by Installation watchers, where each watcher
   struct is converted to the appropriate display tuple format.
 
-  ## Special Case: Single Display with stride=1, offset=0
+  ## Single Display Format
 
-  When using `{:single, 0, 1}` (which shows every invocation), the watcher
-  automatically filters out invocations in the `:invoking` state to prevent
-  constantly displaying the red "invoking" indicator. Only `:completed`, `:ready`,
-  and `:failed` states are shown in this configuration.
+  Single display tuples can be either:
+  - `{:single, offset, stride}` (backward compatibility - defaults to show_invoking: false)
+  - `{:single, offset, stride, show_invoking}` where show_invoking is a boolean
+
+  When show_invoking is false, invocations in the `:invoking` state are filtered out
+  to prevent constantly displaying the red "invoking" indicator.
   """
 
   alias Panic.Engine.Invocation
@@ -56,7 +58,7 @@ defmodule PanicWeb.InvocationWatcher do
 
   The first argument can be `:auto` (default) to infer the display mode from the
   params & live_action, or a display tuple (`{:grid, rows, cols}` /
-  `{:single, offset, stride}`) to force a specific mode.
+  `{:single, offset, stride, show_invoking}`) to force a specific mode.
   """
   def on_mount(_display_mode \\ :auto, params, _session, socket) do
     case fetch_network_from_params(params, socket.assigns) do
@@ -163,6 +165,11 @@ defmodule PanicWeb.InvocationWatcher do
               |> LiveView.stream(:invocations, [invocation], reset: true)
 
             {:single, _, _} ->
+              socket
+              |> Component.assign(genesis_invocation: invocation)
+              |> LiveView.stream(:invocations, [invocation], reset: true)
+
+            {:single, _, _, _} ->
               socket
               |> Component.assign(genesis_invocation: invocation)
               |> LiveView.stream(:invocations, [invocation], reset: true)
@@ -336,6 +343,10 @@ defmodule PanicWeb.InvocationWatcher do
     if rem(seq, stride) == offset, do: "slot-#{offset}"
   end
 
+  defp dom_id(%Invocation{sequence_number: seq}, {:single, offset, stride, _show_invoking}) do
+    if rem(seq, stride) == offset, do: "slot-#{offset}"
+  end
+
   # ---------------------------------------------------------------------------
   # Genesis invocation handling
   # ---------------------------------------------------------------------------
@@ -356,15 +367,27 @@ defmodule PanicWeb.InvocationWatcher do
 
       {%Invocation{sequence_number: seq, state: state}, {:single, offset, stride}}
       when rem(seq, stride) == offset ->
-        # Special case: when stride=1 and offset=0, ignore :invoking invocations
-        # to avoid constantly showing the red "invoking" state
-        if stride == 1 and offset == 0 and state == :invoking do
+        # Backward compatibility: 3-element tuple defaults to show_invoking: false
+        if state == :invoking do
           socket
         else
           LiveView.stream_insert(socket, :invocations, invocation, at: 0, limit: 1)
         end
 
+      {%Invocation{sequence_number: seq, state: state}, {:single, offset, stride, show_invoking}}
+      when rem(seq, stride) == offset ->
+        # Use show_invoking flag to determine whether to show :invoking invocations
+        if show_invoking or state != :invoking do
+          LiveView.stream_insert(socket, :invocations, invocation, at: 0, limit: 1)
+        else
+          socket
+        end
+
       {_, {:single, _, _}} ->
+        # Not matching the display criteria, don't add to stream
+        socket
+
+      {_, {:single, _, _, _}} ->
         # Not matching the display criteria, don't add to stream
         socket
     end

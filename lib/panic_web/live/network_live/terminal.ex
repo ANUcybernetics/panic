@@ -60,7 +60,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
         {:noreply,
          socket
          |> assign(:page_title, "Network #{network_id} terminal")
-         |> InvocationWatcher.configure_invocation_stream(network, {:single, 0, 1})}
+         |> InvocationWatcher.configure_invocation_stream(network, {:single, 0, 1, false})}
 
       {:error, _error} ->
         {:noreply, push_navigate(socket, to: ~p"/404")}

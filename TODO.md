@@ -3,8 +3,6 @@
 ## NIME blockers
 
 - set up real NIME installations
-- make single watchers with stride 1 / offset 0 ignore :invoking ones (special
-  case, otherwise they'll always be invoking)
 - test on the commbox (directly... maybe even with touchscreen?)
 - check that the audio files never get stuck/hang around
 - see if there's a way to make the audio vis more performant

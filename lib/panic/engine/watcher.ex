@@ -47,6 +47,11 @@ defmodule Panic.Engine.Installation.Watcher do
       constraints min: 0
     end
 
+    # Single/Vestaboard-specific attributes
+    attribute :show_invoking, :boolean do
+      default false
+    end
+
     # Vestaboard-specific attributes
     attribute :name, :atom do
       constraints one_of: [:panic_1, :panic_2, :panic_3, :panic_4]
@@ -60,7 +65,7 @@ defmodule Panic.Engine.Installation.Watcher do
   actions do
     create :create do
       primary? true
-      accept [:type, :rows, :columns, :stride, :offset, :name, :initial_prompt]
+      accept [:type, :rows, :columns, :stride, :offset, :show_invoking, :name, :initial_prompt]
     end
   end
 
@@ -97,6 +102,10 @@ defmodule Panic.Engine.Installation.Watcher do
     validate attribute_equals(:initial_prompt, false),
       where: attribute_does_not_equal(:type, :vestaboard),
       message: "initial_prompt can only be true for vestaboard type"
+
+    validate attribute_equals(:show_invoking, false),
+      where: attribute_equals(:type, :grid),
+      message: "show_invoking can only be set for single and vestaboard types"
 
     # Ensure offset is less than stride for single and vestaboard types
     validate Panic.Engine.Validations.OffsetLessThanStride

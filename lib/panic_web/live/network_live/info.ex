@@ -102,7 +102,7 @@ defmodule PanicWeb.NetworkLive.Info do
          socket
          |> assign(:page_title, "Network #{network_id} terminal")
          |> assign(:qr_text, qr_url)
-         |> InvocationWatcher.configure_invocation_stream(network, {:single, 0, 1})}
+         |> InvocationWatcher.configure_invocation_stream(network, {:single, 0, 1, false})}
 
       {:error, _error} ->
         {:noreply, push_navigate(socket, to: ~p"/404")}

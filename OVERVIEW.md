@@ -85,8 +85,11 @@ provides real-time invocation updates across LiveViews through Phoenix PubSub:
   whenever new invocations are created or existing ones change state
 - **Display modes**: Supports two rendering patterns:
   - `{:grid, rows, cols}` - Shows multiple invocations in a grid layout
-  - `{:single, offset, stride}` - Shows one invocation at a time, updating based
-    on sequence number matching (sequence % stride == offset)
+  - `{:single, offset, stride, show_invoking}` - Shows one invocation at a time,
+    updating based on sequence number matching (sequence % stride == offset).
+    The `show_invoking` boolean controls whether invocations in the `:invoking`
+    state are displayed (true) or filtered out (false). Backward compatibility
+    is maintained with 3-element tuples which default to `show_invoking: false`.
 - **Automatic handling**: Once mounted, LiveViews receive invocation broadcasts
   without any boilerplate - the watcher attaches a `handle_info` callback that
   processes updates

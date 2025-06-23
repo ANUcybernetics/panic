@@ -109,6 +109,75 @@ defmodule PanicWeb.InstallationLiveTest do
       |> assert_has("dd", text: "1")
     end
 
+    test "can add a single watcher with show_invoking enabled", %{conn: conn, user: user} do
+      # Create network and installation
+      {:ok, network} =
+        Network
+        |> Ash.Changeset.for_create(:create, %{name: "Test Network"}, actor: user)
+        |> Ash.create()
+
+      {:ok, installation} =
+        Installation
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            name: "Test Installation",
+            network_id: network.id,
+            watchers: []
+          },
+          actor: user
+        )
+        |> Ash.create()
+
+      conn
+      |> visit("/installations/#{installation.id}")
+      |> click_link("Add watcher")
+      |> select("Type", option: "Single - Show one invocation at a time")
+      |> fill_in("Stride", with: "2")
+      |> fill_in("Offset", with: "0")
+      |> check("Show Invoking State")
+      |> submit()
+      |> assert_has("h3", text: "Watcher 0: Single (stride: 2, offset: 0)")
+      |> assert_has("dt", text: "Show Invoking")
+      |> assert_has("dd", text: "Yes")
+
+      # Verify the watcher was created with show_invoking: true
+      updated_installation = Ash.reload!(installation, actor: user)
+      [watcher] = updated_installation.watchers
+      assert watcher.show_invoking == true
+    end
+
+    test "grid watcher form does not show show_invoking checkbox", %{conn: conn, user: user} do
+      # Create network and installation
+      {:ok, network} =
+        Network
+        |> Ash.Changeset.for_create(:create, %{name: "Test Network"}, actor: user)
+        |> Ash.create()
+
+      {:ok, installation} =
+        Installation
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            name: "Test Installation",
+            network_id: network.id,
+            watchers: []
+          },
+          actor: user
+        )
+        |> Ash.create()
+
+      conn
+      |> visit("/installations/#{installation.id}")
+      |> click_link("Add watcher")
+      |> select("Type", option: "Grid - Display invocations in a grid layout")
+      |> refute_has("input[name='form[watcher][show_invoking]']")
+      |> fill_in("Rows", with: "2")
+      |> fill_in("Columns", with: "3")
+      |> submit()
+      |> assert_has("h3", text: "Watcher 0: Grid (2×3)")
+    end
+
     test "can add a vestaboard watcher to an installation", %{conn: conn, user: user} do
       # Create network and installation
       {:ok, network} =

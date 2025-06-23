@@ -97,7 +97,7 @@ defmodule PanicWeb.PanicComponents do
 
   attr :display, :any,
     required: true,
-    doc: "the grid tuple: {:grid, row, col} or {:single, offset, stride}"
+    doc: "the grid tuple: {:grid, row, col} or {:single, offset, stride, show_invoking}"
 
   def display(assigns) do
     ~H"""
@@ -121,6 +121,7 @@ defmodule PanicWeb.PanicComponents do
 
   defp num_cols({:grid, _rows, cols}), do: cols
   defp num_cols({:single, _, _}), do: 1
+  defp num_cols({:single, _, _, _}), do: 1
 
   # individual components
 

@@ -31,7 +31,7 @@ defmodule PanicWeb.NetworkLive.StaticDisplay do
     invocation = Ash.get!(Panic.Engine.Invocation, invocation_id, authorize?: false)
 
     # TODO use the live action and params (and add a :grid router path) to make this work for grids too
-    display = {:single, 0, 1}
+    display = {:single, 0, 1, false}
 
     {:noreply,
      assign(socket,

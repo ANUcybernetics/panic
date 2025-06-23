@@ -91,14 +91,14 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
     {:grid, rows, columns}
   end
 
-  defp watcher_to_display_tuple(%{type: :single, offset: offset, stride: stride}) do
-    {:single, offset, stride}
+  defp watcher_to_display_tuple(%{type: :single, offset: offset, stride: stride, show_invoking: show_invoking}) do
+    {:single, offset, stride, show_invoking}
   end
 
-  defp watcher_to_display_tuple(%{type: :vestaboard, offset: offset, stride: stride}) do
+  defp watcher_to_display_tuple(%{type: :vestaboard, offset: offset, stride: stride, show_invoking: show_invoking}) do
     # For now, treat vestaboard as single display
     # TODO: Implement vestaboard-specific handling later
-    {:single, offset, stride}
+    {:single, offset, stride, show_invoking}
   end
 
   defp get_installation(id, assigns) do

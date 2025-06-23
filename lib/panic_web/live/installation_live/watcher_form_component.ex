@@ -44,6 +44,10 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
           <div :if={watcher_form[:type].value in [:single, :vestaboard]} class="space-y-4">
             <.input field={watcher_form[:stride]} type="number" label="Stride" min="1" />
             <.input field={watcher_form[:offset]} type="number" label="Offset" min="0" />
+            <.input field={watcher_form[:show_invoking]} type="checkbox" label="Show Invoking State" />
+            <p class="mt-1 text-sm text-gray-600">
+              When enabled, invocations in the 'invoking' state will be displayed. When disabled, only completed, ready, and failed states are shown.
+            </p>
           </div>
 
           <div :if={watcher_form[:type].value == :vestaboard} class="space-y-4">

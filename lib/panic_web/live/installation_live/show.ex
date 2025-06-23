@@ -56,6 +56,9 @@ defmodule PanicWeb.InstallationLive.Show do
               <:item :if={watcher.type in [:single, :vestaboard]} title="Offset">
                 {watcher.offset}
               </:item>
+              <:item :if={watcher.type in [:single, :vestaboard]} title="Show Invoking">
+                {if watcher.show_invoking, do: "Yes", else: "No"}
+              </:item>
               <:item :if={watcher.type == :vestaboard} title="Name">
                 {watcher.name}
               </:item>
