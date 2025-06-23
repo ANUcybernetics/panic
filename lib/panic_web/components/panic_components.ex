@@ -156,8 +156,10 @@ defmodule PanicWeb.PanicComponents do
   def invocation(%{invocation: %Invocation{state: :invoking}} = assigns) do
     ~H"""
     <.invocation_container id={@id}>
-      <div class="size-full grid place-items-center animate-breathe text-[300%] bg-rose-500">
-        <.shadowed_text>P!</.shadowed_text>
+      <div class="size-full grid place-items-center animate-breathe bg-rose-500 @container">
+        <div class="text-[25cqw]">
+          <.shadowed_text>P!</.shadowed_text>
+        </div>
       </div>
     </.invocation_container>
     """
