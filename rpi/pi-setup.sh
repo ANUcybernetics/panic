@@ -1,7 +1,7 @@
 #!/bin/bash
 # AIDEV-NOTE: Curl-pipe-to-bash setup script for Pi kiosk mode
 # Example usage (run on the Pi):
-# curl -sSL https://raw.githubusercontent.com/your-org/your-repo/main/panic/rpi/pi-setup.sh | bash -s -- "https://your-kiosk-url.com"
+# curl -sSL https://raw.githubusercontent.com/ANUcybernetics/panic/main/rpi/pi-setup.sh | bash -s -- "https://your-kiosk-url.com"
 
 set -e           # Exit on error
 set -u           # Exit on undefined variable
