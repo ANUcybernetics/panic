@@ -2,13 +2,9 @@
 
 ## NIME blockers
 
-- get the rpi ready for testing at SOAD
-- add "edit" button to watcher (and check that the pubsub works for that?)
-- create a new network with image and stuff
 - add the "restart on failure" back into the networkrunner
 - add vestaboard delays (move it inside the trigger invocation, and then use an
   async await on both?)
-- find one (or a few) good text audio networks to use at NIME
 - load it on to some RPis
 - set up real NIME installations
 - check the "back off over time logic" works with the fly settings re: putting
@@ -17,11 +13,9 @@
 
 ## network ideas
 
-- musicgen and gemini flash (even flash-lite for more crappiness and fun)
-- one of the ones with lyrics, plus whisper
+## quality-of-life
 
-## important/quality-of-life
-
+- add IDs for watchers (and make them editable... perhaps with pubsub updates)
 - check that time-based QR code -> terminal workflow works for non-logged-in
   users (perhaps only required for installations, and also requires real
   deployment to test properly)
