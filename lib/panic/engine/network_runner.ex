@@ -349,13 +349,6 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   defp handle_processing_completed(invocation, state) do
-    # Dispatch watchers for completed invocation output
-    # Only get user if there are watchers to dispatch to
-    if state.watchers != [] do
-      {_network, user} = get_network_and_user!(state.network_id)
-      maybe_dispatch_watchers(invocation, state.watchers, user)
-    end
-
     # In sync test mode, prevent infinite loops but preserve lockout behavior
     if Application.get_env(:panic, :sync_network_runner, false) do
       # For tests, stop creating new invocations after the first one completes
@@ -369,7 +362,7 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   defp handle_processing_completed_normal(invocation, state) do
-    {_network, user} = get_network_and_user!(state.network_id)
+    {network, user} = get_network_and_user!(state.network_id)
 
     case Engine.prepare_next(invocation, actor: user) do
       {:ok, next_invocation} ->
@@ -380,8 +373,12 @@ defmodule Panic.Engine.NetworkRunner do
           archive_invocation_async(invocation, next_invocation)
         end
 
-        # Calculate delay based on genesis invocation age
-        delay_ms = calculate_invocation_delay(state.genesis_invocation)
+        # Dispatch to Vestaboard watchers and check if any were dispatched
+        watchers = vestaboard_watchers(network)
+        vestaboard_dispatched = maybe_dispatch_watchers(invocation, watchers, user)
+
+        # Calculate delay incorporating both genesis timing and Vestaboard dispatch
+        delay_ms = calculate_combined_delay(state.genesis_invocation, vestaboard_dispatched)
 
         # Schedule delayed invocation
         Process.send_after(self(), {:delayed_invocation, next_invocation}, delay_ms)
@@ -540,7 +537,7 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   defp maybe_dispatch_watchers(%{sequence_number: seq} = inv, watchers, user) when is_list(watchers) do
-    Enum.each(watchers, fn watcher ->
+    Enum.any?(watchers, fn watcher ->
       %{stride: stride, offset: offset, name: name, initial_prompt: initial_prompt} = watcher
 
       should_dispatch =
@@ -567,17 +564,19 @@ defmodule Panic.Engine.NetworkRunner do
 
         case Vestaboard.send_text(content, token, board_name) do
           {:ok, _id} ->
-            :ok
+            true
 
           {:error, _reason} ->
             # error message has already been logged, so no need to re-log it
-            :ok
+            true
         end
+      else
+        false
       end
     end)
   end
 
-  defp maybe_dispatch_watchers(_inv, _watchers, _user), do: :ok
+  defp maybe_dispatch_watchers(_inv, _watchers, _user), do: false
 
   # AIDEV-NOTE: Lockout timer management for broadcasting countdown to clients
   defp start_lockout_timer(state, genesis_invocation, network) do
@@ -626,5 +625,13 @@ defmodule Panic.Engine.NetworkRunner do
       age_seconds < to_timeout(hour: 1) -> to_timeout(second: 30)
       true -> to_timeout(hour: 1)
     end
+  end
+
+  defp calculate_combined_delay(genesis_invocation, vestaboard_dispatched) do
+    genesis_delay = calculate_invocation_delay(genesis_invocation)
+    vestaboard_delay = if vestaboard_dispatched, do: 5000, else: 0
+
+    # Use the longer of the two delays
+    max(genesis_delay, vestaboard_delay)
   end
 end
