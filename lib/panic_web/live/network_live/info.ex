@@ -51,7 +51,7 @@ defmodule PanicWeb.NetworkLive.Info do
         for information about how PANIC! works.
       </p>
 
-      <h2>Last input</h2>
+      <h2>Last prompt</h2>
       <div>
         <%= if @genesis_invocation do %>
           {@genesis_invocation.input}

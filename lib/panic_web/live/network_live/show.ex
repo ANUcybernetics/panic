@@ -94,7 +94,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
     <section class="mt-16">
       <h2 class="font-semibold mb-8">
-        Last input <span :if={@genesis_invocation}>: {@genesis_invocation.input}</span>
+        Last prompt <span :if={@genesis_invocation}>: {@genesis_invocation.input}</span>
       </h2>
 
       <.display invocations={@streams.invocations} display={@display} />
