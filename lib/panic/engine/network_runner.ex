@@ -622,7 +622,7 @@ defmodule Panic.Engine.NetworkRunner do
 
     cond do
       age_seconds < to_timeout(minute: 10) -> to_timeout(second: 1)
-      age_seconds < to_timeout(hour: 1) -> to_timeout(second: 30)
+      age_seconds < to_timeout(hour: 1) -> to_timeout(second: 15)
       true -> to_timeout(hour: 1)
     end
   end
