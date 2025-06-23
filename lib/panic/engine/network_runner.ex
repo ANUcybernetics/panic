@@ -622,11 +622,8 @@ defmodule Panic.Engine.NetworkRunner do
     age_seconds = DateTime.diff(now, genesis_invocation.inserted_at, :second)
 
     cond do
-      # Less than 5 minutes old - no delay
-      age_seconds < 300 -> to_timeout(second: 1)
-      # Less than 1 hour old - 30 second delay
-      age_seconds < 3600 -> to_timeout(second: 30)
-      # More than 1 hour old - 1 hour delay
+      age_seconds < to_timeout(minute: 10) -> to_timeout(second: 1)
+      age_seconds < to_timeout(hour: 1) -> to_timeout(second: 30)
       true -> to_timeout(hour: 1)
     end
   end
