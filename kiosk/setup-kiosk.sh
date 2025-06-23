@@ -52,9 +52,43 @@ check_macos() {
 
 # Check required arguments
 check_arguments() {
+    AUTO_YES=false
+    CONFIGURE_ONLY=false
+
+    # Parse options
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --yes)
+                AUTO_YES=true
+                shift
+                ;;
+            --configure-only)
+                CONFIGURE_ONLY=true
+                shift
+                ;;
+            -*)
+                log_error "Unknown option: $1"
+                log_error "Usage: $0 [--yes] [--configure-only] <kiosk-url> <wifi-ssid> <wifi-username> <wifi-password>"
+                log_info "Options:"
+                log_info "  --yes             Skip interactive confirmations"
+                log_info "  --configure-only  Skip burning, only configure existing RPi OS SD card"
+                log_info "Example: $0 --yes https://cybernetics.anu.edu.au MyWiFi myuser mypass"
+                log_info "Example: $0 --configure-only https://cybernetics.anu.edu.au MyWiFi myuser mypass"
+                exit 1
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+
     if [ $# -ne 4 ]; then
-        log_error "Usage: $0 <kiosk-url> <wifi-ssid> <wifi-username> <wifi-password>"
-        log_info "Example: $0 https://cybernetics.anu.edu.au MyWiFi myuser mypass"
+        log_error "Usage: $0 [--yes] [--configure-only] <kiosk-url> <wifi-ssid> <wifi-username> <wifi-password>"
+        log_info "Options:"
+        log_info "  --yes             Skip interactive confirmations"
+        log_info "  --configure-only  Skip burning, only configure existing RPi OS SD card"
+        log_info "Example: $0 --yes https://cybernetics.anu.edu.au MyWiFi myuser mypass"
+        log_info "Example: $0 --configure-only https://cybernetics.anu.edu.au MyWiFi myuser mypass"
         exit 1
     fi
 
@@ -100,40 +134,34 @@ setup_workspace() {
     cd "$WORK_DIR"
 }
 
-# Create rpi-imager JSON configuration
-create_config_json() {
-    log_info "Creating rpi-imager configuration..."
+# Create boot partition configuration files
+create_boot_configs() {
+    log_info "Creating boot partition configuration files..."
 
-    # Create the JSON configuration file
-    cat > config.json << EOF
-{
-    "version": "1.7.5",
-    "hostname": "$HOSTNAME",
-    "ssh": {
-        "enabled": true,
-        "passwordAuthentication": true
-    },
-    "user": {
-        "name": "$USERNAME",
-        "password": "$DEFAULT_PASSWORD"
-    },
-    "wlan": {
-        "ssid": "$WIFI_SSID",
-        "username": "$WIFI_USERNAME",
-        "password": "$WIFI_PASSWORD",
-        "keyMgmt": "WPA-EAP",
-        "eapMethod": "PEAP",
-        "phase2Method": "MSCHAPV2"
-    },
-    "locale": {
-        "keyboard": "us",
-        "timezone": "America/New_York"
-    },
-    "firstRunScript": "firstrun.sh"
+    # Create SSH enable file
+    touch ssh
+
+    # Create user configuration file (username:encrypted_password)
+    # Default password is 'raspberry'
+    echo "${USERNAME}:\$6\$rounds=656000\$5dPCdSCNhEHk8F0v\$dXEGMQFPg.b9Wq8XzgvJjuaXd1c6lddSI2sO5i2qRvyEMhGrE5bFQZKhT0jEKaWYEyRu5rWNsZH7wVYIgOQPk1" > userconf.txt
+
+    # Create wpa_supplicant configuration for enterprise WiFi
+    cat > wpa_supplicant.conf << EOF
+country=US
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+network={
+    ssid="$WIFI_SSID"
+    key_mgmt=WPA-EAP
+    eap=PEAP
+    identity="$WIFI_USERNAME"
+    password="$WIFI_PASSWORD"
+    phase2="auth=MSCHAPV2"
 }
 EOF
 
-    log_success "Configuration JSON created"
+    log_success "Boot configuration files created"
 }
 
 # Create first-boot script for kiosk setup
@@ -340,8 +368,8 @@ find_sdcard() {
         local disk_info=$(diskutil info "$disk" 2>/dev/null || echo "")
 
         # Look for removable media that's likely an SD card
-        if echo "$disk_info" | grep -q "Removable Media.*Yes" &&
-           echo "$disk_info" | grep -qE "(SD|MMC|Generic|USB)"; then
+        if echo "$disk_info" | grep -q "Removable Media.*Removable" &&
+           echo "$disk_info" | grep -qE "(SD|MMC|Generic|USB|Secure Digital)"; then
             sdcard_found="$disk"
             break
         fi
@@ -361,41 +389,189 @@ find_sdcard() {
     # Show SD card info
     diskutil info "$SDCARD_DEVICE"
 
-    # Confirm with user
-    echo
-    log_warning "This will ERASE ALL DATA on $SDCARD_DEVICE"
-    read -p "Are you sure you want to continue? (yes/no): " -r
-    if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
-        log_info "Operation cancelled"
-        exit 0
+    # Confirm with user (skip if configure-only mode)
+    if [ "$CONFIGURE_ONLY" = false ]; then
+        echo
+        log_warning "This will ERASE ALL DATA on $SDCARD_DEVICE"
+        if [ "$AUTO_YES" = true ]; then
+            log_info "Auto-confirming due to --yes flag"
+        else
+            read -p "Are you sure you want to continue? (yes/no): " -r
+            if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
+                log_info "Operation cancelled"
+                exit 0
+            fi
+        fi
+    else
+        log_info "Configure-only mode: Will only modify boot partition configuration"
     fi
 }
 
-# Use rpi-imager to configure and burn the image
+# Use rpi-imager to burn base image, then configure boot partition
 burn_image() {
-    log_info "Using rpi-imager to configure and burn image..."
+    log_info "Using rpi-imager to burn base image..."
     log_info "This process may take several minutes..."
 
     # Unmount the SD card if mounted
     diskutil unmountDisk "$SDCARD_DEVICE" || true
 
-    # Use rpi-imager CLI to write the configured image
-    "$RPI_IMAGER_PATH" --cli \
-        --config config.json \
-        --first-run-script firstrun.sh \
-        "$OS_URL" \
-        "$SDCARD_DEVICE"
+    # Use rpi-imager CLI to write the base image
+    "$RPI_IMAGER_PATH" --cli "$OS_URL" "$SDCARD_DEVICE"
 
-    if [ $? -eq 0 ]; then
-        log_success "Image configured and burned successfully!"
-    else
+    if [ $? -ne 0 ]; then
         log_error "Failed to burn image with rpi-imager"
         exit 1
     fi
 
+    log_success "Base image burned successfully!"
+
+    # Wait for the system to recognize the new partitions and re-detect SD card
+    log_info "Waiting for SD card to be recognized with new partitions..."
+    detect_sdcard_after_burn
+
+    configure_boot_partition
+
     # Eject the SD card
     diskutil eject "$SDCARD_DEVICE"
     log_success "SD card ejected. Ready to use in Raspberry Pi!"
+}
+
+# Detect SD card after burn operation with retry logic
+detect_sdcard_after_burn() {
+    local max_attempts=10
+    local attempt=1
+
+    while [ $attempt -le $max_attempts ]; do
+        log_info "Attempt $attempt/$max_attempts: Looking for SD card with new partitions..."
+
+        # Re-run SD card detection
+        local disks=$(diskutil list | grep -E "^/dev/disk[0-9]+" | awk '{print $1}')
+        local sdcard_found=""
+
+        for disk in $disks; do
+            local disk_info=$(diskutil info "$disk" 2>/dev/null || echo "")
+
+            # Look for removable media that's likely an SD card
+            if echo "$disk_info" | grep -q "Removable Media.*Removable" &&
+               echo "$disk_info" | grep -qE "(SD|MMC|Generic|USB|Secure Digital)"; then
+                sdcard_found="$disk"
+                break
+            fi
+        done
+
+        if [ -n "$sdcard_found" ]; then
+            SDCARD_DEVICE="$sdcard_found"
+            log_success "SD card re-detected at: $SDCARD_DEVICE"
+            return 0
+        fi
+
+        if [ $attempt -eq 5 ]; then
+            log_warning "SD card not detected yet. It may have been auto-ejected."
+            if [ "$AUTO_YES" = true ]; then
+                log_info "Auto-continuing due to --yes flag (waiting longer for SD card detection)"
+                sleep 5
+            else
+                log_info "Please remove and reinsert the SD card, then press Enter to continue..."
+                read -r
+            fi
+        fi
+
+        sleep 2
+        ((attempt++))
+    done
+
+    log_error "Could not re-detect SD card after burning. Please:"
+    log_info "1. Remove and reinsert the SD card"
+    log_info "2. Run the script again to complete configuration"
+    log_info "3. Or manually configure the boot partition"
+    exit 1
+}
+
+# Configure the boot partition after image is burned
+configure_boot_partition() {
+    log_info "Configuring boot partition..."
+
+    # Find the correct boot partition by checking available partitions
+    local boot_partition=""
+    local boot_mount=""
+
+    # Check common boot partition locations
+    for suffix in s1 s2; do
+        local test_partition="${SDCARD_DEVICE}${suffix}"
+        if diskutil info "$test_partition" &>/dev/null; then
+            local partition_info=$(diskutil info "$test_partition")
+            # Look for FAT32 partition which is typically the boot partition
+            if echo "$partition_info" | grep -q "File System Personality.*FAT32\|MS-DOS FAT32"; then
+                boot_partition="$test_partition"
+                break
+            fi
+        fi
+    done
+
+    if [ -z "$boot_partition" ]; then
+        log_error "Could not find boot partition on $SDCARD_DEVICE"
+        log_info "Available partitions:"
+        diskutil list "$SDCARD_DEVICE"
+        exit 1
+    fi
+
+    log_info "Found boot partition: $boot_partition"
+
+    # Mount the boot partition
+    log_info "Mounting boot partition..."
+    if ! diskutil mount "$boot_partition"; then
+        log_error "Failed to mount boot partition $boot_partition"
+        exit 1
+    fi
+
+    # Wait for mount
+    sleep 2
+
+    # Find actual mount point
+    boot_mount=$(mount | grep "$boot_partition" | awk '{print $3}')
+    if [ -z "$boot_mount" ]; then
+        log_error "Could not determine boot partition mount point"
+        exit 1
+    fi
+
+    log_info "Boot partition mounted at: $boot_mount"
+
+    # Verify configuration files exist
+    for file in ssh userconf.txt wpa_supplicant.conf firstrun.sh; do
+        if [ ! -f "$file" ]; then
+            log_error "Configuration file $file not found in work directory"
+            diskutil unmount "$boot_partition"
+            exit 1
+        fi
+    done
+
+    # Copy configuration files to boot partition
+    log_info "Copying configuration files..."
+    cp ssh "$boot_mount/" || { log_error "Failed to copy ssh file"; exit 1; }
+    cp userconf.txt "$boot_mount/" || { log_error "Failed to copy userconf.txt"; exit 1; }
+    cp wpa_supplicant.conf "$boot_mount/" || { log_error "Failed to copy wpa_supplicant.conf"; exit 1; }
+    cp firstrun.sh "$boot_mount/" || { log_error "Failed to copy firstrun.sh"; exit 1; }
+
+    # Verify files were copied
+    log_info "Verifying configuration files..."
+    for file in ssh userconf.txt wpa_supplicant.conf firstrun.sh; do
+        if [ ! -f "$boot_mount/$file" ]; then
+            log_warning "File $file may not have been copied successfully"
+        fi
+    done
+
+    # Sync changes
+    log_info "Syncing changes to SD card..."
+    sync
+    sleep 2
+
+    # Unmount boot partition
+    log_info "Unmounting boot partition..."
+    if diskutil unmount "$boot_partition"; then
+        log_success "Boot partition configured and unmounted successfully!"
+    else
+        log_warning "Boot partition configured but unmount failed (this is usually OK)"
+    fi
 }
 
 # Cleanup function
@@ -417,10 +593,20 @@ main() {
     check_arguments "$@"
     check_dependencies
     setup_workspace
-    create_config_json
+    create_boot_configs
     create_firstrun_script
     find_sdcard
-    burn_image
+
+    if [ "$CONFIGURE_ONLY" = true ]; then
+        # Skip burning, go straight to configuration
+        SDCARD_DEVICE="/dev/disk4"  # Assume it's the detected SD card
+        configure_boot_partition
+        # Eject the SD card
+        diskutil eject "$SDCARD_DEVICE"
+        log_success "SD card configured and ejected. Ready to use in Raspberry Pi!"
+    else
+        burn_image
+    fi
 
     log_success "Setup completed successfully!"
     log_info ""
