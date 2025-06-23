@@ -3,6 +3,8 @@
 ## NIME blockers
 
 - get the rpi ready for testing at SOAD
+- add "edit" button to watcher (and check that the pubsub works for that?)
+- create a new network with image and stuff
 - add the "restart on failure" back into the networkrunner
 - add vestaboard delays (move it inside the trigger invocation, and then use an
   async await on both?)
