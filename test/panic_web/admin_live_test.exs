@@ -10,6 +10,13 @@ defmodule PanicWeb.AdminLiveTest do
   setup do
     # Clean up any existing NetworkRunner processes
     PanicWeb.Helpers.stop_all_network_runners()
+
+    # Patch archive_invocation_async to prevent actual archiving during tests
+    Repatch.patch(Panic.Engine.NetworkRunner, :archive_invocation_async, [mode: :global], fn _invocation,
+                                                                                             _next_invocation ->
+      :ok
+    end)
+
     :ok
   end
 
