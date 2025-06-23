@@ -3,13 +3,6 @@
 ## NIME blockers
 
 - set up real NIME installations
-- test on the commbox (directly... maybe even with touchscreen?)
-- check that the audio files never get stuck/hang around
-- see if there's a way to make the audio vis more performant
-
-## Installations
-
-- SoAD foyer (5x3 grid and single)
 
 ## quality-of-life
 
