@@ -2,16 +2,16 @@
 
 ## NIME blockers
 
-- add the "restart on failure" back into the networkrunner
-- add vestaboard delays (move it inside the trigger invocation, and then use an
-  async await on both?)
-- load it on to some RPis
 - set up real NIME installations
-- check the "back off over time logic" works with the fly settings re: putting
-  the machine to sleep
+- make single watchers with stride 1 / offset 0 ignore :invoking ones (special
+  case, otherwise they'll always be invoking)
+- test on the commbox (directly... maybe even with touchscreen?)
 - check that the audio files never get stuck/hang around
+- see if there's a way to make the audio vis more performant
 
-## network ideas
+## Installations
+
+- SoAD foyer (5x3 grid and single)
 
 ## quality-of-life
 
