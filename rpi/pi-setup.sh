@@ -26,6 +26,7 @@ echo "Current user: $CURRENT_USER"
 # AIDEV-NOTE: Core packages for kiosk mode - chromium and window management tools
 echo "Installing required packages..."
 sudo apt update
+sudo apt upgrade -y
 sudo apt install -y chromium-browser
 
 # Create systemd service file
