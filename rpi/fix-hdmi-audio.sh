@@ -8,8 +8,7 @@ set -u           # Exit on undefined variable
 set -o pipefail  # Exit on pipe failure
 
 readonly CURRENT_USER=$(whoami)
-readonly AUDIO_SERVICE_DIR="/home/$CURRENT_USER/.config/systemd/user"
-readonly AUDIO_SERVICE_FILE="$AUDIO_SERVICE_DIR/hdmi-audio-setup.service"
+readonly WIREPLUMBER_DROPDIR="/home/$CURRENT_USER/.config/systemd/user/wireplumber.service.d"
 
 echo "🔊 Fixing HDMI audio on Raspberry Pi..."
 echo "👤 Current user: $CURRENT_USER"
@@ -86,31 +85,28 @@ else
     echo "⚠️  Warning: Default sink is $CURRENT_SINK, expected $HDMI_SINK"
 fi
 
-# Create systemd user service directory
-echo "📁 Creating systemd user service directory..."
-mkdir -p "$AUDIO_SERVICE_DIR"
+# Create WirePlumber drop-in directory
+echo "📁 Creating WirePlumber drop-in directory..."
+mkdir -p "$WIREPLUMBER_DROPDIR"
 
-# Create persistent HDMI audio service
-echo "⚙️  Creating persistent HDMI audio service..."
-cat > "$AUDIO_SERVICE_FILE" << 'EOF'
-[Unit]
-Description=Setup HDMI Audio
-After=pipewire.service
-Wants=pipewire.service
-
+# Create WirePlumber drop-in configuration for HDMI audio
+echo "⚙️  Creating WirePlumber HDMI audio configuration..."
+cat > "$WIREPLUMBER_DROPDIR/hdmi-audio.conf" << 'EOF'
 [Service]
-Type=oneshot
-ExecStart=/bin/bash -c 'sleep 5 && pactl set-default-sink alsa_output.platform-107c701400.hdmi.hdmi-stereo'
-RemainAfterExit=yes
-
-[Install]
-WantedBy=default.target
+# When WirePlumber starts successfully, also configure HDMI audio
+ExecStartPost=/bin/bash -c '\
+  sleep 2; \
+  HDMI_SINK=$(pactl list short sinks | grep "hdmi.*stereo" | head -1 | cut -f2); \
+  if [ -n "$HDMI_SINK" ]; then \
+    pactl set-default-sink "$HDMI_SINK"; \
+    echo "HDMI audio auto-configured: $HDMI_SINK"; \
+  fi'
 EOF
 
-# Enable the service
-echo "🔧 Enabling HDMI audio service..."
+# Reload systemd and restart WirePlumber to apply the drop-in
+echo "🔧 Reloading systemd and applying HDMI audio configuration..."
 systemctl --user daemon-reload
-systemctl --user enable hdmi-audio-setup.service
+systemctl --user restart wireplumber.service
 
 # Test audio
 echo "🎵 Testing HDMI audio output..."
@@ -125,12 +121,12 @@ echo "🎉 HDMI audio configuration complete!"
 echo ""
 echo "📊 Current audio status:"
 echo "   Default sink: $(pactl info | grep "Default Sink:" | cut -d' ' -f3-)"
-echo "   Service status: $(systemctl --user is-enabled hdmi-audio-setup.service 2>/dev/null || echo "unknown")"
+echo "   WirePlumber drop-in: $([ -f "$WIREPLUMBER_DROPDIR/hdmi-audio.conf" ] && echo "configured" || echo "missing")"
 echo ""
 echo "🔍 Available audio sinks:"
 pactl list short sinks
 echo ""
 echo "✅ HDMI audio should work after reboot"
 echo "💡 To test audio manually: speaker-test -c2 -t wav -l 1"
-echo "🔧 To check service status: systemctl --user status hdmi-audio-setup.service"
-echo "📝 To view logs: journalctl --user -u hdmi-audio-setup.service"
+echo "🔧 To check WirePlumber status: systemctl --user status wireplumber.service"
+echo "📝 To view WirePlumber logs: journalctl --user -u wireplumber.service"
