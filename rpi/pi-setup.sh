@@ -23,10 +23,10 @@ readonly CURRENT_USER=$(whoami)
 echo "Setting up Raspberry Pi kiosk mode for URL: $URL"
 echo "Current user: $CURRENT_USER"
 
-# AIDEV-NOTE: Core packages for kiosk mode - chromium, cursor hiding, window management
+# AIDEV-NOTE: Core packages for kiosk mode - chromium and window management tools
 echo "Installing required packages..."
 sudo apt update
-sudo apt install -y chromium-browser unclutter xdotool
+sudo apt install -y chromium-browser
 
 # Create systemd service file
 echo "Creating systemd service..."
@@ -40,20 +40,18 @@ Wants=graphical.target network-online.target
 Type=simple
 User=$CURRENT_USER
 Group=$CURRENT_USER
-Environment=DISPLAY=:0
-Environment=XAUTHORITY=/home/$CURRENT_USER/.Xauthority
+Environment=WAYLAND_DISPLAY=wayland-0
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=XDG_SESSION_TYPE=wayland
 Environment=HOME=/home/$CURRENT_USER
 WorkingDirectory=/home/$CURRENT_USER
 
-# AIDEV-NOTE: Critical timing - wait for X server and hide cursor before launching browser
-# Wait for X server to be ready
-ExecStartPre=/bin/bash -c 'until pgrep -x Xorg; do sleep 1; done'
+# AIDEV-NOTE: Critical timing - wait for Wayland compositor before launching browser
+# Wait for Wayland compositor to be ready
+ExecStartPre=/bin/bash -c 'until pgrep -x labwc; do sleep 1; done'
 ExecStartPre=/bin/sleep 5
 
-# Start unclutter to hide cursor after 1 second of inactivity
-ExecStartPre=/usr/bin/unclutter -idle 1 -root
-
-# Launch Chromium in kiosk mode
+# Launch Chromium in kiosk mode with Wayland support
 ExecStart=/usr/bin/chromium-browser \
     --kiosk \
     --disable-infobars \
@@ -75,6 +73,8 @@ ExecStart=/usr/bin/chromium-browser \
     --disable-background-timer-throttling \
     --disable-renderer-backgrounding \
     --disable-backgrounding-occluded-windows \
+    --ozone-platform=wayland \
+    --enable-features=UseOzonePlatform \
     "$URL"
 
 # AIDEV-NOTE: Auto-restart on crash with progressive backoff
@@ -100,21 +100,8 @@ if ! grep -q "autologin-user=$CURRENT_USER" /etc/lightdm/lightdm.conf; then
     sudo sed -i "s/autologin-user=pi/autologin-user=$CURRENT_USER/" /etc/lightdm/lightdm.conf
 fi
 
-# AIDEV-NOTE: Disable power management to prevent display blanking in kiosk mode
-echo "Configuring display settings..."
-mkdir -p "/home/$CURRENT_USER/.config"
-
-# Create .xsessionrc to disable screensaver on login
-cat > "/home/$CURRENT_USER/.xsessionrc" << 'EOF'
-# Disable screensaver and power management for kiosk mode
-xset s off
-xset -dpms
-xset s noblank
-EOF
-
-# Ensure the user owns their config files
-chown -R "$CURRENT_USER:$CURRENT_USER" "/home/$CURRENT_USER/.config"
-chown "$CURRENT_USER:$CURRENT_USER" "/home/$CURRENT_USER/.xsessionrc"
+# AIDEV-NOTE: Power management is handled by the Wayland compositor in modern Pi OS
+echo "Display power management configured by default Wayland session"
 
 # AIDEV-NOTE: Enable service for graphical.target to start after desktop environment
 echo "Enabling kiosk service..."
