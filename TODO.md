@@ -89,3 +89,9 @@
 - riffusion warm & pretty quick
 - stable audio open not so warm, but quick
 - musicgen takes ages
+
+## install notes
+
+- soad foyer LH is using #0
+- soad foyer RH isn't on (but should have #1)
+- #2 requires wifi creds
