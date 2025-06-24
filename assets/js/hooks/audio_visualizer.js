@@ -55,11 +55,19 @@ const AudioVisualizer = {
         // Performance optimizations for low-powered hardware
         fftSize: 4096, // Reduced from default 8192 for better performance
         maxFPS: 30, // Limit frame rate to reduce CPU usage
-        loRes: window.devicePixelRatio > 1, // Enable low resolution mode only on high DPI displays
+        loRes: true, // Enable low resolution mode (halves pixel ratio)
         smoothing: 0.3, // Faster response, less CPU-intensive smoothing
         showPeaks: false, // Disable peaks to reduce rendering complexity
         reflexRatio: 0, // Disable reflection effects for better performance
       });
+
+      // Fix canvas sizing issue with loRes mode - ensure canvas fills container
+      if (this.analyzer && this.analyzer.canvas) {
+        const canvas = this.analyzer.canvas;
+        const containerRect = this.containerElement.getBoundingClientRect();
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+      }
     }
   },
 };
