@@ -109,6 +109,34 @@ echo "Enabling kiosk service..."
 sudo systemctl daemon-reload
 sudo systemctl enable "$SERVICE_NAME"
 
+# AIDEV-NOTE: Configure HDMI audio for Pi 5 with PipeWire
+echo "Configuring HDMI audio..."
+sudo -u $CURRENT_USER systemctl --user restart pipewire pipewire-pulse wireplumber
+sleep 3
+
+# Set HDMI as default audio output
+sudo -u $CURRENT_USER XDG_RUNTIME_DIR=/run/user/1000 pactl set-default-sink alsa_output.platform-107c701400.hdmi.hdmi-stereo 2>/dev/null || true
+
+# Create systemd user service for persistent HDMI audio
+sudo -u $CURRENT_USER mkdir -p /home/$CURRENT_USER/.config/systemd/user
+sudo -u $CURRENT_USER tee /home/$CURRENT_USER/.config/systemd/user/hdmi-audio-setup.service > /dev/null << 'AUDIO_EOF'
+[Unit]
+Description=Setup HDMI Audio
+After=pipewire.service
+Wants=pipewire.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'sleep 5 && pactl set-default-sink alsa_output.platform-107c701400.hdmi.hdmi-stereo'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target
+AUDIO_EOF
+
+# Enable the HDMI audio service
+sudo -u $CURRENT_USER XDG_RUNTIME_DIR=/run/user/1000 systemctl --user enable hdmi-audio-setup.service
+
 echo ""
 echo "✅ Kiosk service successfully installed and enabled!"
 echo "🌐 URL: $URL"
