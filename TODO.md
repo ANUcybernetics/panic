@@ -1,5 +1,9 @@
 # Panic TODO
 
+- check that the interaction of the "delay backoff" and "wait for vestaboards"
+  logic is correct... I think that having a :not_before timestamp for the next
+  invocation might be the best way?
+
 ## quality-of-life
 
 - have a QR code that points to the model's "about" page on all installation
