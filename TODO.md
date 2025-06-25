@@ -1,5 +1,8 @@
 # Panic TODO
 
+- NOTE: the `f05cf94dfb08200b1e473d7f6a3419b75d35980a` isn't live yet, and the
+  hidpi thing is fixed... so if it breaks again, revert that commit
+- add the "restart on error" logic (because it's better than the alternative)
 - check that the interaction of the "delay backoff" and "wait for vestaboards"
   logic is correct... I think that having a :not_before timestamp for the next
   invocation might be the best way?
@@ -8,8 +11,8 @@
 
 - have a QR code that points to the model's "about" page on all installation
   displays (bottom RH corner)
-- add IDs and names (or both) for watchers (and make them editable... perhaps
-  with pubsub updates)
+- named watchers, and use those as map keys rather than array position index
+  (and make them editable... perhaps with pubsub updates)
 - check that time-based QR code -> terminal workflow works for non-logged-in
   users (perhaps only required for installations, and also requires real
   deployment to test properly)
@@ -18,6 +21,9 @@
 - make sure vestaboards crashing doesn't bring down the whole thing
 - create a new `Display` domain or similar (because Installations and Watchers
   shouldn't really be in `Engine`)
+- add presence to network views so that it'll say how many people are watching a
+  particular network, presence for each installation watcher as well (which
+  would help with knowing if installed rpis go offline)
 
 ## thought bubbles
 
@@ -53,8 +59,6 @@
 - add cost/credit balance lookup stuff to the user UI
 - git cleanup: tidy up v2/v3 nomenclature (probably: v0 is prototype, v1 at
   AusCyber, v2 is Birch install)
-- add presence to network views so that it'll say how many people are watching a
-  particular network
 - add video support (maybe... need to figure out how to handle video inputs as
   well)
 
