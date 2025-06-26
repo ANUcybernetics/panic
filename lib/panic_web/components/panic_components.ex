@@ -210,7 +210,7 @@ defmodule PanicWeb.PanicComponents do
       phx-hook="AudioVisualizer"
       data-audio-src={@value}
     >
-      <div class="visualizer-container absolute inset-0 [&>canvas]:block [&>canvas]:w-full"></div>
+      <div class="visualizer-container absolute inset-0"></div>
     </div>
     """
   end

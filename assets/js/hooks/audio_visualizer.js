@@ -66,10 +66,12 @@ const AudioVisualizer = {
         reflexRatio: 0, // Disable reflection effects for better performance
       });
 
-      // Fix canvas sizing issue with loRes mode as per audiomotion-analyzer docs
+      // Fix canvas sizing issue with loRes mode - ensure canvas fills container
       if (this.analyzer && this.analyzer.canvas) {
-        this.analyzer.canvas.style.display = "block";
-        this.analyzer.canvas.style.width = "100%";
+        const canvas = this.analyzer.canvas;
+        const containerRect = this.containerElement.getBoundingClientRect();
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
       }
     }
   },
