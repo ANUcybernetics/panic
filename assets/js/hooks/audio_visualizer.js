@@ -39,6 +39,11 @@ const AudioVisualizer = {
   },
 
   initializeVisualizer() {
+    // Destroy existing analyzer to prevent memory leaks
+    if (this.analyzer) {
+      this.analyzer.destroy();
+    }
+
     if (this.sound && this.sound._sounds[0] && this.sound._sounds[0]._node) {
       this.analyzer = new AudioMotionAnalyzer(this.containerElement, {
         source: this.sound._sounds[0]._node,
