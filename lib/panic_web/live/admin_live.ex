@@ -2,6 +2,8 @@ defmodule PanicWeb.AdminLive do
   @moduledoc false
   use PanicWeb, :live_view
 
+  alias Phoenix.Socket.Broadcast
+
   @invocation_stream_limit 100
 
   @impl true
@@ -78,7 +80,13 @@ defmodule PanicWeb.AdminLive do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
+  def handle_info(%Broadcast{topic: "invocation:" <> _, event: "lockout_countdown"} = _message, socket) do
+    # Ignore lockout countdown messages in admin view
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(%Broadcast{topic: "invocation:" <> _} = message, socket) do
     invocation = message.payload.data
 
     {:noreply, stream_insert(socket, :invocations, invocation, at: 0, limit: @invocation_stream_limit)}
