@@ -1,7 +1,7 @@
 # Panic TODO
 
-- NOTE: the `f05cf94dfb08200b1e473d7f6a3419b75d35980a` isn't live yet, and the
-  hidpi thing is fixed... so if it breaks again, revert that commit
+- find out why sound cuts out after a couple of hours (basically, fix the rpi
+  scripts)
 - add the "restart on error" logic (because it's better than the alternative)
 - check that the interaction of the "delay backoff" and "wait for vestaboards"
   logic is correct... I think that having a :not_before timestamp for the next
@@ -24,6 +24,8 @@
 - add presence to network views so that it'll say how many people are watching a
   particular network, presence for each installation watcher as well (which
   would help with knowing if installed rpis go offline)
+- add an image->image flux model (and perhaps a way to still kick it off with
+  text)
 
 ## thought bubbles
 
@@ -66,3 +68,50 @@
 
 - soad foyer LH is #0, RH is #1
 - #2 is in kambri foyer (double-check this)
+
+## figure this out
+
+2025-06-27T07:11:49Z app[e78432edcd9248] syd [info]07:11:49.720 [error]
+GenServer #PID<0.197927.0> terminating 2025-06-27T07:11:49Z app[e78432edcd9248]
+syd [info]** (KeyError) key :data not found in: %{seconds_remaining: 30}
+2025-06-27T07:11:49Z app[e78432edcd9248] syd [info] (panic 3.0.0-beta.0)
+lib/panic_web/live/admin_live.ex:82: PanicWeb.AdminLive.handle_info/2
+2025-06-27T07:11:49Z app[e78432edcd9248] syd [info] (phoenix_live_view 1.0.17)
+lib/phoenix_live_view/channel.ex:360: Phoenix.LiveView.Channel.handle_info/2
+2025-06-27T07:11:49Z app[e78432edcd9248] syd [info] (stdlib 6.2.2)
+gen_server.erl:2345: :gen_server.try_handle_info/3 2025-06-27T07:11:49Z
+app[e78432edcd9248] syd [info] (stdlib 6.2.2) gen_server.erl:2433:
+:gen_server.handle_msg/6 2025-06-27T07:11:49Z app[e78432edcd9248] syd [info]
+(stdlib 6.2.2) proc_lib.erl:329: :proc_lib.init_p_do_apply/3
+2025-06-27T07:11:49Z app[e78432edcd9248] syd [info]Last message:
+%Phoenix.Socket.Broadcast{topic: "invocation:11", event: "lockout_countdown",
+payload: %{seconds_remaining: 30}} 2025-06-27T07:11:51Z app[e78432edcd9248] syd
+[info]07:11:51.724 [error] GenServer #PID<0.197961.0> terminating
+2025-06-27T07:11:51Z app[e78432edcd9248] syd [info]** (KeyError) key :data not
+found in: %{seconds_remaining: 28} 2025-06-27T07:11:51Z app[e78432edcd9248] syd
+[info] (panic 3.0.0-beta.0) lib/panic_web/live/admin_live.ex:82:
+PanicWeb.AdminLive.handle_info/2 2025-06-27T07:11:51Z app[e78432edcd9248] syd
+[info] (phoenix_live_view 1.0.17) lib/phoenix_live_view/channel.ex:360:
+Phoenix.LiveView.Channel.handle_info/2 2025-06-27T07:11:51Z app[e78432edcd9248]
+syd [info] (stdlib 6.2.2) gen_server.erl:2345: :gen_server.try_handle_info/3
+2025-06-27T07:11:51Z app[e78432edcd9248] syd [info] (stdlib 6.2.2)
+gen_server.erl:2433: :gen_server.handle_msg/6 2025-06-27T07:11:51Z
+app[e78432edcd9248] syd [info] (stdlib 6.2.2) proc_lib.erl:329:
+:proc_lib.init_p_do_apply/3 2025-06-27T07:11:51Z app[e78432edcd9248] syd
+[info]Last message: %Phoenix.Socket.Broadcast{topic: "invocation:11", event:
+"lockout_countdown", payload: %{seconds_remaining: 28}} 2025-06-27T07:11:53Z
+app[e78432edcd9248] syd [info]07:11:53.728 [error] GenServer #PID<0.197969.0>
+terminating 2025-06-27T07:11:53Z app[e78432edcd9248] syd [info]\*\* (KeyError)
+key :data not found in: %{seconds_remaining: 26} 2025-06-27T07:11:53Z
+app[e78432edcd9248] syd [info] (panic 3.0.0-beta.0)
+lib/panic_web/live/admin_live.ex:82: PanicWeb.AdminLive.handle_info/2
+2025-06-27T07:11:53Z app[e78432edcd9248] syd [info] (phoenix_live_view 1.0.17)
+lib/phoenix_live_view/channel.ex:360: Phoenix.LiveView.Channel.handle_info/2
+2025-06-27T07:11:53Z app[e78432edcd9248] syd [info] (stdlib 6.2.2)
+gen_server.erl:2345: :gen_server.try_handle_info/3 2025-06-27T07:11:53Z
+app[e78432edcd9248] syd [info] (stdlib 6.2.2) gen_server.erl:2433:
+:gen_server.handle_msg/6 2025-06-27T07:11:53Z app[e78432edcd9248] syd [info]
+(stdlib 6.2.2) proc_lib.erl:329: :proc_lib.init_p_do_apply/3
+2025-06-27T07:11:53Z app[e78432edcd9248] syd [info]Last message:
+%Phoenix.Socket.Broadcast{topic: "invocation:11", event: "lockout_countdown",
+payload: %{seconds_remaining: 26}}
