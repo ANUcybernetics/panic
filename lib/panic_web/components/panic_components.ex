@@ -11,6 +11,8 @@ defmodule PanicWeb.PanicComponents do
   alias Panic.Engine.Invocation
   alias Panic.Model
 
+  # AIDEV-NOTE: Simplified model_box component by removing actual_index - models are always appended in order
+
   @doc """
   Renders a model box.
 
@@ -18,7 +20,7 @@ defmodule PanicWeb.PanicComponents do
   component.
   """
   attr :model, :any, required: true, doc: "Panic.Model struct"
-  attr :actual_index, :integer, required: true, doc: "index of this model in the model list"
+
   slot :action, doc: "the slot for showing user actions in the model box"
 
   def model_box(assigns) do
@@ -36,12 +38,11 @@ defmodule PanicWeb.PanicComponents do
       ]}>
       </div>
       {render_slot(@action)}
-      <div class="absolute left-1/2 -translate-x-1/2 top-full mt-1 text-sm text-zinc-700">
-        {@actual_index}
-      </div>
     </div>
     """
   end
+
+  # AIDEV-NOTE: Fixed Enum.with_index tuple order - returns {element, index} not {index, element}
 
   @doc """
   Renders a list of models in a flexbox layout.
@@ -65,8 +66,8 @@ defmodule PanicWeb.PanicComponents do
         ]}>
         </div>
       </div>
-      <%= for {index, model} <- Enum.with_index(@models) do %>
-        <.model_box model={model} actual_index={index}>
+      <%= for {model, index} <- Enum.with_index(@models) do %>
+        <.model_box model={model}>
           <:action>
             <button
               phx-click="remove_model"

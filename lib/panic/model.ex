@@ -913,16 +913,6 @@ defmodule Panic.Model do
     "#dummy-platform"
   end
 
-  # Helper functions for dealing with the Network `:models` attribute, which is
-  # now a simple ordered list of model id strings.
-  def model_ids_to_model_list(model_ids) do
-    Enum.map(model_ids, &by_id!/1)
-  end
-
-  def model_list_to_model_ids(model_list) do
-    Enum.map(model_list, & &1.id)
-  end
-
   @doc """
   Transforms a list of models into a list of tuples containing model information with indices.
 

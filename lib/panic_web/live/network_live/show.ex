@@ -5,6 +5,7 @@ defmodule PanicWeb.NetworkLive.Show do
   import PanicWeb.PanicComponents
 
   alias PanicWeb.InvocationWatcher
+  alias PanicWeb.NetworkLive.ModelSelectComponent
 
   @impl true
   def render(assigns) do
@@ -147,7 +148,7 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   @impl true
-  def handle_info({PanicWeb.NetworkLive.ModelSelectComponent, {:models_updated, network}}, socket) do
+  def handle_info({ModelSelectComponent, {:models_updated, network}}, socket) do
     {:noreply, assign(socket, network: network)}
   end
 
@@ -164,6 +165,48 @@ defmodule PanicWeb.NetworkLive.Show do
   @impl true
   def handle_event("stop", _params, socket) do
     Panic.Engine.NetworkRunner.stop_run(socket.assigns.network.id)
+    {:noreply, socket}
+  end
+
+  # AIDEV-NOTE: AutocompleteInput events bubble to parent LiveView, must forward to ModelSelectComponent
+  # AutocompleteInput doesn't support phx-target, so we forward autocomplete-* events manually
+  @impl true
+  def handle_event("autocomplete-search", params, socket) do
+    send_update(ModelSelectComponent,
+      id: "model-select",
+      autocomplete_event: {"autocomplete-search", params}
+    )
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("autocomplete-commit", params, socket) do
+    send_update(ModelSelectComponent,
+      id: "model-select",
+      autocomplete_event: {"autocomplete-commit", params}
+    )
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("autocomplete-open", params, socket) do
+    send_update(ModelSelectComponent,
+      id: "model-select",
+      autocomplete_event: {"autocomplete-open", params}
+    )
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("autocomplete-close", params, socket) do
+    send_update(ModelSelectComponent,
+      id: "model-select",
+      autocomplete_event: {"autocomplete-close", params}
+    )
+
     {:noreply, socket}
   end
 

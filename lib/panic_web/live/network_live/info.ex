@@ -127,7 +127,7 @@ defmodule PanicWeb.NetworkLive.Info do
   end
 
   defp all_models(network) do
-    Panic.Model.model_ids_to_model_list(network.models)
+    Enum.map(network.models, &Panic.Model.by_id!/1)
   end
 
   # this is a hack - because these live actions indicate routes that are auth-optional

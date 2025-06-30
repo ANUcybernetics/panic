@@ -94,21 +94,6 @@ defmodule Panic.ModelTest do
       end
     end
 
-    test "model_ids_to_model_list/1 converts IDs to models" do
-      model_ids = ["dummy-t2t", "dummy-i2t"]
-      models = Model.model_ids_to_model_list(model_ids)
-
-      assert length(models) == 2
-      assert Enum.map(models, & &1.id) == model_ids
-    end
-
-    test "model_list_to_model_ids/1 converts models to IDs" do
-      models = [Model.by_id!("dummy-t2t"), Model.by_id!("dummy-i2t")]
-      model_ids = Model.model_list_to_model_ids(models)
-
-      assert model_ids == ["dummy-t2t", "dummy-i2t"]
-    end
-
     test "models_with_indices/1 adds indices to models" do
       models = [Model.by_id!("dummy-t2t"), Model.by_id!("dummy-i2t")]
       indexed_models = Model.models_with_indices(models)

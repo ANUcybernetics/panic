@@ -33,9 +33,21 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
     """
   end
 
+  # AIDEV-NOTE: AutocompleteInput events must be forwarded from parent LiveView since it doesn't support phx-target
+  @impl true
+  def update(%{autocomplete_event: {event, params}} = _assigns, socket) do
+    # Handle forwarded autocomplete events from parent LiveView
+    {action, updated_socket} = handle_event(event, params, socket)
+
+    case action do
+      :noreply -> {:ok, updated_socket}
+      _ -> {:ok, updated_socket}
+    end
+  end
+
   @impl true
   def update(assigns, socket) do
-    models = Model.model_ids_to_model_list(assigns.network.models)
+    models = Enum.map(assigns.network.models, &Model.by_id!/1)
     next_input = get_next_input_type(models)
     model_options = get_model_options("", next_input)
 
@@ -79,7 +91,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   @impl true
   def handle_event("save", _params, socket) do
     # Convert model structs to IDs before submission
-    model_ids = Model.model_list_to_model_ids(socket.assigns.models)
+    model_ids = Enum.map(socket.assigns.models, & &1.id)
 
     case AshPhoenix.Form.submit(socket.assigns.form, params: %{models: model_ids}) do
       {:ok, updated_network} ->
@@ -114,13 +126,14 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
     {:noreply, assign(socket, model_options: model_options)}
   end
 
+  # AIDEV-NOTE: Returns tuples {label, value} not maps %{label: ..., value: ...} for AutocompleteInput compatibility
   defp get_model_options(search_term, input_type) do
     [input_type: input_type]
     |> Model.all()
     |> Enum.filter(fn model ->
       String.downcase(model.name) =~ String.downcase(search_term)
     end)
-    |> Enum.map(fn model -> %{label: model.name, value: model.id} end)
+    |> Enum.map(fn model -> {model.name, model.id} end)
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
