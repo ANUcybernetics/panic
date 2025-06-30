@@ -1,5 +1,8 @@
 # Panic TODO
 
+- check if the autocomplete_input js lib needs to be installed (as per README)
+- check if the live_select is still needed (and why the FocusInput is there?)
+- alternatively to the last two... maybe go back to LiveSelect? idk
 - find out why sound cuts out after a couple of hours (basically, fix the rpi
   scripts)
 - add the "restart on error" logic (because it's better than the alternative)

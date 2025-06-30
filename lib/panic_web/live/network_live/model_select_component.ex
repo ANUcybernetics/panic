@@ -2,7 +2,6 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   @moduledoc false
   use PanicWeb, :live_component
 
-  import AutocompleteInput
   import PanicWeb.PanicComponents
 
   alias Panic.Model
@@ -14,21 +13,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   def render(assigns) do
     ~H"""
     <div>
-      <.model_list models={@models} phx_target={@myself} />
-
-      <.form class="mt-8" for={@form} phx-change="change" phx-submit="save" phx-target={@myself}>
-        <label for="network_model_autocomplete">Add model</label>
-        <.autocomplete_input
-          id="network_model_autocomplete"
-          name="model"
-          options={@model_options}
-          value=""
-          display_value="Search for a model to append"
-          min_length={1}
-        />
-
-        <.button class="mt-4" phx-disable-with="Updating models...">Update models</.button>
-      </.form>
+      <.model_list_with_add models={@models} model_options={@model_options} phx_target={@myself} />
     </div>
     """
   end
@@ -79,7 +64,21 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
     next_input = model.output_type
     model_options = get_model_options("", next_input)
 
-    {:noreply, assign(socket, models: updated_models, next_input: next_input, model_options: model_options)}
+    # Auto-save the updated models
+    model_ids = Enum.map(updated_models, & &1.id)
+
+    case AshPhoenix.Form.submit(socket.assigns.form, params: %{models: model_ids}) do
+      {:ok, updated_network} ->
+        notify_parent({:models_updated, updated_network})
+
+        {:noreply,
+         socket
+         |> assign(models: updated_models, next_input: next_input, model_options: model_options, network: updated_network)
+         |> assign_form()}
+
+      {:error, _form} ->
+        {:noreply, assign(socket, models: updated_models, next_input: next_input, model_options: model_options)}
+    end
   end
 
   @impl true
@@ -89,9 +88,13 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   end
 
   @impl true
-  def handle_event("save", _params, socket) do
-    # Convert model structs to IDs before submission
-    model_ids = Enum.map(socket.assigns.models, & &1.id)
+  def handle_event("remove_model", %{"index" => index}, socket) do
+    updated_models = List.delete_at(socket.assigns.models, String.to_integer(index))
+    next_input = get_next_input_type(updated_models)
+    model_options = get_model_options("", next_input)
+
+    # Auto-save the updated models
+    model_ids = Enum.map(updated_models, & &1.id)
 
     case AshPhoenix.Form.submit(socket.assigns.form, params: %{models: model_ids}) do
       {:ok, updated_network} ->
@@ -99,25 +102,12 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
 
         {:noreply,
          socket
-         |> put_flash(:info, "Models updated successfully")
-         |> assign(network: updated_network)
+         |> assign(models: updated_models, next_input: next_input, model_options: model_options, network: updated_network)
          |> assign_form()}
 
-      {:error, form} ->
-        {
-          :noreply,
-          assign(socket, form: form)
-          # |> put_flash(:error, "Failed to update models: #{error_messages(form)}")
-        }
+      {:error, _form} ->
+        {:noreply, assign(socket, models: updated_models, next_input: next_input, model_options: model_options)}
     end
-  end
-
-  @impl true
-  def handle_event("remove_model", %{"index" => index}, socket) do
-    updated_models = List.delete_at(socket.assigns.models, String.to_integer(index))
-    next_input = get_next_input_type(updated_models)
-    model_options = get_model_options("", next_input)
-    {:noreply, assign(socket, models: updated_models, next_input: next_input, model_options: model_options)}
   end
 
   @impl true

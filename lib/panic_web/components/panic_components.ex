@@ -8,6 +8,8 @@ defmodule PanicWeb.PanicComponents do
   """
   use Phoenix.Component
 
+  import AutocompleteInput
+
   alias Panic.Engine.Invocation
   alias Panic.Model
 
@@ -80,6 +82,68 @@ defmodule PanicWeb.PanicComponents do
           </:action>
         </.model_box>
       <% end %>
+    </div>
+    """
+  end
+
+  @doc """
+  Renders a list of models with integrated add functionality.
+
+  ## Examples
+
+      <.model_list_with_add models={@models} model_options={@model_options} phx_target={@myself} />
+  """
+  attr :models, :list, required: true, doc: "List of Panic.Model structs"
+  attr :model_options, :list, required: true, doc: "List of model options for autocomplete"
+  attr :phx_target, :any, default: nil
+
+  def model_list_with_add(assigns) do
+    ~H"""
+    <div class="flex items-center flex-wrap gap-6">
+      <div class="size-8 rounded-md grid place-content-center text-center text-xs relative bg-zinc-600 shadow-sm">
+        T
+        <div class={[
+          "size-6 absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 -z-10",
+          io_colour_mapper(:text)
+        ]}>
+        </div>
+      </div>
+      <%= for {model, index} <- Enum.with_index(@models) do %>
+        <.model_box model={model}>
+          <:action>
+            <button
+              phx-click="remove_model"
+              phx-value-index={index}
+              phx-target={@phx_target}
+              class="absolute size-4 top-0 right-0 text-xs text-gray-500 hover:text-gray-700"
+            >
+              ×
+            </button>
+          </:action>
+        </.model_box>
+      <% end %>
+      
+    <!-- Add model box -->
+      <div
+        id="add-model-box"
+        class="size-16 rounded-md grid place-content-center text-center text-xs relative bg-zinc-700 border-2 border-dashed border-zinc-500 hover:border-zinc-400 transition-colors cursor-pointer"
+        phx-hook="FocusInput"
+        data-input-id="network_model_autocomplete"
+      >
+        + Add
+      </div>
+    </div>
+
+    <!-- Full-width autocomplete input -->
+    <div class="mt-4">
+      <.autocomplete_input
+        id="network_model_autocomplete"
+        name="model"
+        options={@model_options}
+        value=""
+        display_value="Add model"
+        min_length={1}
+      />
     </div>
     """
   end

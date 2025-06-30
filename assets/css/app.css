@@ -7,3 +7,59 @@
 :root {
     font-size: 20px;
 }
+
+/* Autocomplete input styling to match dark theme */
+autocomplete-input {
+    --autocomplete-input-bg: #3f3f46;
+    --autocomplete-input-border: #71717a;
+    --autocomplete-input-text: #f4f4f5;
+    --autocomplete-input-placeholder: #a1a1aa;
+    --autocomplete-list-bg: #27272a;
+    --autocomplete-list-border: #52525b;
+    --autocomplete-option-hover-bg: #3f3f46;
+    --autocomplete-option-text: #f4f4f5;
+    --autocomplete-option-hover-text: #ffffff;
+}
+
+autocomplete-input input {
+    background: var(--autocomplete-input-bg) !important;
+    border: 1px solid var(--autocomplete-input-border) !important;
+    color: var(--autocomplete-input-text) !important;
+    font-size: 0.875rem !important;
+    border-radius: 0.375rem !important;
+    padding: 0.75rem !important;
+    width: 100% !important;
+    transition:
+        border-color 0.15s ease-in-out,
+        box-shadow 0.15s ease-in-out !important;
+}
+
+autocomplete-input input:focus {
+    outline: none !important;
+    border-color: #8b5cf6 !important;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1) !important;
+}
+
+autocomplete-input input::placeholder {
+    color: var(--autocomplete-input-placeholder) !important;
+}
+
+autocomplete-input [part="list"] {
+    background: var(--autocomplete-list-bg) !important;
+    border: 1px solid var(--autocomplete-list-border) !important;
+    border-radius: 0.375rem !important;
+    box-shadow:
+        0 10px 15px -3px rgb(0 0 0 / 0.1),
+        0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+}
+
+autocomplete-input [part="option"] {
+    color: var(--autocomplete-option-text) !important;
+    padding: 0.5rem !important;
+}
+
+autocomplete-input [part="option"]:hover,
+autocomplete-input [part="selected-option"] {
+    background: var(--autocomplete-option-hover-bg) !important;
+    color: var(--autocomplete-option-hover-text) !important;
+}
