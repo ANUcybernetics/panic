@@ -65,8 +65,8 @@ defmodule PanicWeb.PanicComponents do
         ]}>
         </div>
       </div>
-      <%= for {index, actual_index, model} <- Model.models_with_indices(@models) do %>
-        <.model_box model={model} actual_index={actual_index}>
+      <%= for {index, model} <- Enum.with_index(@models) do %>
+        <.model_box model={model} actual_index={index}>
           <:action>
             <button
               phx-click="remove_model"
@@ -227,16 +227,15 @@ defmodule PanicWeb.PanicComponents do
   #   """
   # end
 
-  defp parse_text_content(nil), do: ""
-  defp parse_text_content(""), do: ""
-
-  defp parse_text_content(text) do
+  defp parse_text_content(text) when is_binary(text) and text != "" do
     case MDEx.to_html(text) do
       {:ok, html} -> Phoenix.HTML.raw(html)
       # Fallback to raw text if parsing fails
       {:error, _} -> text
     end
   end
+
+  defp parse_text_content(_), do: ""
 
   # #581c87 is purple-900
   def shadowed_text(assigns) do
