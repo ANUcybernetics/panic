@@ -22,6 +22,8 @@ import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import topbar from "../vendor/topbar";
 import live_select from "live_select";
+import "@launchscout/autocomplete-input";
+import PhoenixCustomEventHook from "phoenix-custom-event-hook";
 
 // LiveView hooks
 
@@ -29,6 +31,7 @@ import AudioVisualizer from "./hooks/audio_visualizer";
 
 const hooks = {
   AudioVisualizer,
+  PhoenixCustomEventHook,
   ...live_select,
 };
 
