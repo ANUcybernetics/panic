@@ -25,7 +25,8 @@ defmodule Panic.Engine.NetworkRunner do
   - `current_invocation`: The invocation currently being processed (nil when idle)
   - `watchers`: List of active watchers for this network
   - `lockout_timer`: Timer reference for broadcasting lockout countdown (nil when not in lockout)
-  - `pending_delayed_invocation`: Invocation waiting for scheduled delay before processing (nil when no delay)
+  - `next_invocation`: The next invocation waiting to be processed (nil when no pending invocation)
+  - `next_invocation_time`: Absolute DateTime when the next invocation should be processed (nil when no delay)
 
   **Note**: User context is no longer stored in state but loaded dynamically from the network relationship using system actor privileges. This makes the NetworkRunner crash-resilient while maintaining proper authorization.
 
@@ -146,7 +147,8 @@ defmodule Panic.Engine.NetworkRunner do
       current_invocation: nil,
       watchers: [],
       lockout_timer: nil,
-      pending_delayed_invocation: nil
+      next_invocation: nil,
+      next_invocation_time: nil
     }
 
     {:ok, state}
@@ -185,7 +187,8 @@ defmodule Panic.Engine.NetworkRunner do
             state
             | genesis_invocation: nil,
               current_invocation: nil,
-              pending_delayed_invocation: nil
+              next_invocation: nil,
+              next_invocation_time: nil
           })
 
         {:reply, {:ok, :stopped}, new_state}
@@ -249,7 +252,7 @@ defmodule Panic.Engine.NetworkRunner do
   @impl true
   def handle_info({:delayed_invocation, invocation}, state) do
     # Process the delayed invocation
-    new_state = %{state | current_invocation: invocation, pending_delayed_invocation: nil}
+    new_state = %{state | current_invocation: invocation, next_invocation: nil, next_invocation_time: nil}
     trigger_invocation(invocation, new_state)
     {:noreply, new_state}
   end
@@ -279,7 +282,7 @@ defmodule Panic.Engine.NetworkRunner do
               | genesis_invocation: invocation,
                 current_invocation: invocation,
                 watchers: watchers,
-                pending_delayed_invocation: nil
+                next_invocation: nil
             },
             invocation,
             network
@@ -327,7 +330,7 @@ defmodule Panic.Engine.NetworkRunner do
               | genesis_invocation: invocation,
                 current_invocation: invocation,
                 watchers: watchers,
-                pending_delayed_invocation: nil
+                next_invocation: nil
             }
             |> stop_lockout_timer()
             |> start_lockout_timer(invocation, network)
@@ -377,12 +380,23 @@ defmodule Panic.Engine.NetworkRunner do
         watchers = vestaboard_watchers(network)
         vestaboard_dispatched = maybe_dispatch_watchers(invocation, watchers, user)
 
-        # Calculate delay incorporating both genesis timing and Vestaboard dispatch
-        delay_ms = calculate_combined_delay(state.genesis_invocation, vestaboard_dispatched)
+        # Calculate when the next invocation should happen
+        next_invocation_time = calculate_next_invocation_time(state.genesis_invocation, vestaboard_dispatched)
+
+        # Calculate delay from now until next invocation time
+        now = DateTime.utc_now()
+        delay_ms = max(0, DateTime.diff(next_invocation_time, now, :millisecond))
 
         # Schedule delayed invocation
         Process.send_after(self(), {:delayed_invocation, next_invocation}, delay_ms)
-        new_state = %{state | current_invocation: nil, pending_delayed_invocation: next_invocation}
+
+        new_state = %{
+          state
+          | current_invocation: nil,
+            next_invocation: next_invocation,
+            next_invocation_time: next_invocation_time
+        }
+
         {:noreply, new_state}
 
       {:error, error} ->
@@ -392,7 +406,8 @@ defmodule Panic.Engine.NetworkRunner do
           state
           | genesis_invocation: nil,
             current_invocation: nil,
-            pending_delayed_invocation: nil
+            next_invocation: nil,
+            next_invocation_time: nil
         }
 
         {:noreply, new_state}
@@ -406,7 +421,8 @@ defmodule Panic.Engine.NetworkRunner do
           state
           | genesis_invocation: nil,
             current_invocation: nil,
-            pending_delayed_invocation: nil
+            next_invocation: nil,
+            next_invocation_time: nil
         })
 
       {:noreply, new_state}
@@ -615,23 +631,27 @@ defmodule Panic.Engine.NetworkRunner do
     end
   end
 
-  # AIDEV-NOTE: Calculates delay between invocations based on genesis invocation age
-  defp calculate_invocation_delay(genesis_invocation) do
+  # AIDEV-NOTE: Calculates absolute time for next invocation based on genesis age & vestaboard dispatch
+  # This replaces the old calculate_invocation_delay/calculate_combined_delay approach for cleaner timing
+  defp calculate_next_invocation_time(genesis_invocation, vestaboard_dispatched) do
     now = DateTime.utc_now()
     age_seconds = DateTime.diff(now, genesis_invocation.inserted_at, :second)
 
-    cond do
-      age_seconds < to_timeout(minute: 10) -> to_timeout(second: 1)
-      age_seconds < to_timeout(hour: 1) -> to_timeout(second: 15)
-      true -> to_timeout(hour: 1)
-    end
-  end
+    # Calculate base delay based on genesis invocation age
+    base_delay_ms =
+      cond do
+        age_seconds < to_timeout(minute: 10) -> to_timeout(second: 1)
+        age_seconds < to_timeout(hour: 1) -> to_timeout(second: 15)
+        true -> to_timeout(hour: 1)
+      end
 
-  defp calculate_combined_delay(genesis_invocation, vestaboard_dispatched) do
-    genesis_delay = calculate_invocation_delay(genesis_invocation)
-    vestaboard_delay = if vestaboard_dispatched, do: 5000, else: 0
+    # Add additional delay if vestaboards were dispatched
+    vestaboard_delay_ms = if vestaboard_dispatched, do: 5000, else: 0
 
     # Use the longer of the two delays
-    max(genesis_delay, vestaboard_delay)
+    total_delay_ms = max(base_delay_ms, vestaboard_delay_ms)
+
+    # Return the absolute time when the next invocation should happen
+    DateTime.add(now, total_delay_ms, :millisecond)
   end
 end
