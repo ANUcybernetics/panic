@@ -441,7 +441,7 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   defp under_lockout?(genesis_invocation, network) do
-    lockout_seconds = network.lockout_seconds || 60
+    lockout_seconds = network.lockout_seconds
     lockout_ms = lockout_seconds * 1000
 
     case DateTime.compare(DateTime.utc_now(), DateTime.add(genesis_invocation.inserted_at, lockout_ms, :millisecond)) do
@@ -642,7 +642,7 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   defp calculate_lockout_remaining(genesis_invocation, network) do
-    lockout_seconds = network.lockout_seconds || 60
+    lockout_seconds = network.lockout_seconds
     lockout_end = DateTime.add(genesis_invocation.inserted_at, lockout_seconds, :second)
 
     case DateTime.compare(DateTime.utc_now(), lockout_end) do
