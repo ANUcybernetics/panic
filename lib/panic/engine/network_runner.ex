@@ -53,8 +53,8 @@ defmodule Panic.Engine.NetworkRunner do
   # AIDEV-NOTE: Task supervisor for async operations to prevent blocking GenServer
   @task_supervisor Panic.Engine.TaskSupervisor
 
-  # add 10s extra latency for vestabords to "catch up"
-  @vestaboard_delay 10_000
+  # add extra latency for vestabords to "catch up"
+  @vestaboard_delay 8_000
 
   @doc """
   Starts a NetworkRunner GenServer for the given network.
