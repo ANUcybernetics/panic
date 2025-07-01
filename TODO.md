@@ -1,14 +1,11 @@
 # Panic TODO
 
+- get autoscaling working again
 - check if the autocomplete_input js lib needs to be installed (as per README)
 - check if the live_select is still needed (and why the FocusInput is there?)
 - alternatively to the last two... maybe go back to LiveSelect? idk
-- find out why sound cuts out after a couple of hours (basically, fix the rpi
-  scripts)
+- long-running debug (w/sound) on the commbox
 - add the "restart on error" logic (because it's better than the alternative)
-- check that the interaction of the "delay backoff" and "wait for vestaboards"
-  logic is correct... I think that having a :not_before timestamp for the next
-  invocation might be the best way?
 
 ## quality-of-life
 
