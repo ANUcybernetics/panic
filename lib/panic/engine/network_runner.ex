@@ -53,6 +53,9 @@ defmodule Panic.Engine.NetworkRunner do
   # AIDEV-NOTE: Task supervisor for async operations to prevent blocking GenServer
   @task_supervisor Panic.Engine.TaskSupervisor
 
+  # add 10s extra latency for vestabords to "catch up"
+  @vestaboard_delay 10_000
+
   @doc """
   Starts a NetworkRunner GenServer for the given network.
 
@@ -288,8 +291,17 @@ defmodule Panic.Engine.NetworkRunner do
             network
           )
 
-        # Trigger async invocation processing
-        trigger_invocation(invocation, new_state)
+        # AIDEV-NOTE: initial_prompt watchers need delay between display and processing
+        # If there are initial_prompt vestaboard watchers, they display the genesis input
+        # immediately above, but we delay the actual invocation processing
+        # to give users time to read the prompt before it gets processed and replaced
+        # with the output. This matches the vestaboard delay used elsewhere.
+        if has_initial_prompt_watchers?(watchers) do
+          Process.send_after(self(), {:delayed_invocation, invocation}, @vestaboard_delay)
+        else
+          # Trigger async invocation processing immediately
+          trigger_invocation(invocation, new_state)
+        end
 
         {:reply, {:ok, invocation}, new_state}
 
@@ -530,6 +542,14 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   # AIDEV-NOTE: Helper to get network and user context - makes NetworkRunner crash-resilient
+  defp has_initial_prompt_watchers?(watchers) when is_list(watchers) do
+    Enum.any?(watchers, fn watcher ->
+      Map.get(watcher, :initial_prompt, false)
+    end)
+  end
+
+  defp has_initial_prompt_watchers?(_), do: false
+
   defp get_network_and_user!(network_id) do
     # Use authorize?: false to read network and user since NetworkRunner is a system service
     # This allows the process to survive restarts and still access the required user context
@@ -646,7 +666,7 @@ defmodule Panic.Engine.NetworkRunner do
       end
 
     # Add additional delay if vestaboards were dispatched
-    vestaboard_delay_ms = if vestaboard_dispatched, do: 5000, else: 0
+    vestaboard_delay_ms = if vestaboard_dispatched, do: @vestaboard_delay, else: 0
 
     # Use the longer of the two delays
     total_delay_ms = max(base_delay_ms, vestaboard_delay_ms)
