@@ -45,3 +45,32 @@ sudo journalctl -u kiosk -f
 sudo systemctl stop kiosk
 sudo systemctl start kiosk
 ```
+
+## Changing the kiosk URL
+
+To change the URL that the kiosk displays after installation:
+
+1. **Edit the service file** to update the URL:
+
+   ```bash
+   sudo sed -i 's|http://old-url|http://new-url|g' /etc/systemd/system/kiosk.service
+   ```
+
+2. **Reload systemd** to pick up the changes:
+
+   ```bash
+   sudo systemctl daemon-reload
+   ```
+
+3. **Restart the kiosk service**:
+   ```bash
+   sudo systemctl restart kiosk
+   ```
+
+**Example** - Change to a specific panic URL:
+
+```bash
+sudo sed -i 's|https://panic.fly.dev|http://panic.fly.dev/i/3/0|g' /etc/systemd/system/kiosk.service
+sudo systemctl daemon-reload
+sudo systemctl restart kiosk
+```
