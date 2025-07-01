@@ -109,30 +109,7 @@ echo "Enabling kiosk service..."
 sudo systemctl daemon-reload
 sudo systemctl enable "$SERVICE_NAME"
 
-# AIDEV-NOTE: Configure HDMI audio for Pi 5 with PipeWire using WirePlumber drop-in
-echo "Configuring HDMI audio..."
-sudo -u $CURRENT_USER systemctl --user restart pipewire pipewire-pulse wireplumber
-sleep 3
 
-# Set HDMI as default audio output
-sudo -u $CURRENT_USER XDG_RUNTIME_DIR=/run/user/1000 pactl set-default-sink alsa_output.platform-107c701400.hdmi.hdmi-stereo 2>/dev/null || true
-
-# Create WirePlumber drop-in directory for persistent HDMI audio
-sudo -u $CURRENT_USER mkdir -p /home/$CURRENT_USER/.config/systemd/user/wireplumber.service.d
-sudo -u $CURRENT_USER tee /home/$CURRENT_USER/.config/systemd/user/wireplumber.service.d/hdmi-audio.conf > /dev/null << 'AUDIO_EOF'
-[Service]
-# When WirePlumber starts successfully, also configure HDMI audio
-ExecStartPost=/bin/bash -c '\
-  sleep 2; \
-  HDMI_SINK=$(pactl list short sinks | grep "hdmi.*stereo" | head -1 | cut -f2); \
-  if [ -n "$HDMI_SINK" ]; then \
-    pactl set-default-sink "$HDMI_SINK"; \
-    echo "HDMI audio auto-configured: $HDMI_SINK"; \
-  fi'
-AUDIO_EOF
-
-# Reload systemd to apply the WirePlumber drop-in
-sudo -u $CURRENT_USER XDG_RUNTIME_DIR=/run/user/1000 systemctl --user daemon-reload
 
 echo ""
 echo "✅ Kiosk service successfully installed and enabled!"
