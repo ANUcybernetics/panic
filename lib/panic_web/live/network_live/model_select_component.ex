@@ -22,12 +22,8 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   @impl true
   def update(%{autocomplete_event: {event, params}} = _assigns, socket) do
     # Handle forwarded autocomplete events from parent LiveView
-    {action, updated_socket} = handle_event(event, params, socket)
-
-    case action do
-      :noreply -> {:ok, updated_socket}
-      _ -> {:ok, updated_socket}
-    end
+    {:noreply, updated_socket} = handle_event(event, params, socket)
+    {:ok, updated_socket}
   end
 
   @impl true

@@ -548,8 +548,6 @@ defmodule Panic.Engine.NetworkRunner do
     end)
   end
 
-  defp has_initial_prompt_watchers?(_), do: false
-
   defp get_network_and_user!(network_id) do
     # Use authorize?: false to read network and user since NetworkRunner is a system service
     # This allows the process to survive restarts and still access the required user context
