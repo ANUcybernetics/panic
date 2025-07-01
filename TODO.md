@@ -1,6 +1,7 @@
 # Panic TODO
 
 - get autoscaling working again
+- update deps (maybe a PR for phoenix_test/floki?)
 - check if the autocomplete_input js lib needs to be installed (as per README)
 - check if the live_select is still needed (and why the FocusInput is there?)
 - alternatively to the last two... maybe go back to LiveSelect? idk
