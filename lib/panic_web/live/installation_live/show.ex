@@ -15,10 +15,7 @@ defmodule PanicWeb.InstallationLive.Show do
       {@installation.name}
       <:subtitle>
         Network:
-        <.link
-          navigate={~p"/networks/#{@installation.network}"}
-          class="text-blue-600 hover:text-blue-800 underline"
-        >
+        <.link navigate={~p"/networks/#{@installation.network}"}>
           {@installation.network.name}
         </.link>
       </:subtitle>
