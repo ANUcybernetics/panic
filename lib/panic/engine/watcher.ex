@@ -6,18 +6,20 @@ defmodule Panic.Engine.Installation.Watcher do
 
   * `:grid` - Displays invocations in a grid layout with specified rows and columns
   * `:single` - Shows a single invocation based on stride and offset
-  * `:vestaboard` - Similar to single but for Vestaboard displays with a specific name
+  * `:vestaboard` - Similar to single but for Vestaboard displays with a specific vestaboard name
+
+  All watchers require a unique name within an installation for URL routing.
 
   ## Examples
 
       # Grid watcher
-      %Watcher{type: :grid, rows: 2, columns: 3}
+      %Watcher{type: :grid, name: "main-grid", rows: 2, columns: 3}
 
       # Single watcher showing every 3rd invocation starting from offset 1
-      %Watcher{type: :single, stride: 3, offset: 1}
+      %Watcher{type: :single, name: "spotlight", stride: 3, offset: 1}
 
       # Vestaboard watcher showing every 3rd invocation and initial prompt
-      %Watcher{type: :vestaboard, stride: 3, offset: 0, name: :panic_1, initial_prompt: true}
+      %Watcher{type: :vestaboard, name: "board-1", stride: 3, offset: 0, vestaboard_name: :panic_1, initial_prompt: true}
   """
 
   use Ash.Resource,
@@ -27,6 +29,12 @@ defmodule Panic.Engine.Installation.Watcher do
     attribute :type, :atom do
       allow_nil? false
       constraints one_of: [:grid, :single, :vestaboard]
+    end
+
+    # Name for all watcher types - human-readable, alphanumeric + hyphens
+    attribute :name, :string do
+      allow_nil? false
+      constraints match: ~r/^[a-zA-Z0-9-]+$/
     end
 
     # Grid-specific attributes
@@ -53,7 +61,7 @@ defmodule Panic.Engine.Installation.Watcher do
     end
 
     # Vestaboard-specific attributes
-    attribute :name, :atom do
+    attribute :vestaboard_name, :atom do
       constraints one_of: [:panic_1, :panic_2, :panic_3, :panic_4]
     end
 
@@ -65,35 +73,35 @@ defmodule Panic.Engine.Installation.Watcher do
   actions do
     create :create do
       primary? true
-      accept [:type, :rows, :columns, :stride, :offset, :show_invoking, :name, :initial_prompt]
+      accept [:type, :name, :rows, :columns, :stride, :offset, :show_invoking, :vestaboard_name, :initial_prompt]
     end
   end
 
   validations do
-    validate present([:type]), message: "type is required"
+    validate present([:type, :name]), message: "type and name are required"
 
     # Grid validations
     validate present([:rows, :columns]),
       where: attribute_equals(:type, :grid),
       message: "rows and columns are required for grid type"
 
-    validate absent([:stride, :offset, :name]),
+    validate absent([:stride, :offset, :vestaboard_name]),
       where: attribute_equals(:type, :grid),
-      message: "stride, offset, and name are not allowed for grid type"
+      message: "stride, offset, and vestaboard_name are not allowed for grid type"
 
     # Single validations
     validate present([:stride, :offset]),
       where: attribute_equals(:type, :single),
       message: "stride and offset are required for single type"
 
-    validate absent([:rows, :columns, :name]),
+    validate absent([:rows, :columns, :vestaboard_name]),
       where: attribute_equals(:type, :single),
-      message: "rows, columns, and name are not allowed for single type"
+      message: "rows, columns, and vestaboard_name are not allowed for single type"
 
     # Vestaboard validations
-    validate present([:stride, :offset, :name]),
+    validate present([:stride, :offset, :vestaboard_name]),
       where: attribute_equals(:type, :vestaboard),
-      message: "stride, offset, and name are required for vestaboard type"
+      message: "stride, offset, and vestaboard_name are required for vestaboard type"
 
     validate absent([:rows, :columns]),
       where: attribute_equals(:type, :vestaboard),

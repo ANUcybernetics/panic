@@ -33,8 +33,8 @@ defmodule Panic.InstallationTest do
                    name: "Test Installation",
                    network_id: network.id,
                    watchers: [
-                     %{type: :grid, rows: 2, columns: 3},
-                     %{type: :single, stride: 3, offset: 1}
+                     %{type: :grid, name: "test-grid", rows: 2, columns: 3},
+                     %{type: :single, name: "test-single", stride: 3, offset: 1}
                    ]
                  },
                  actor: user
@@ -119,7 +119,7 @@ defmodule Panic.InstallationTest do
                |> Ash.Changeset.for_update(
                  :add_watcher,
                  %{
-                   watcher: %{type: :grid, rows: 2, columns: 3}
+                   watcher: %{type: :grid, name: "added-grid", rows: 2, columns: 3}
                  },
                  actor: user
                )
@@ -141,8 +141,8 @@ defmodule Panic.InstallationTest do
             name: "Test Installation",
             network_id: network.id,
             watchers: [
-              %{type: :grid, rows: 2, columns: 3},
-              %{type: :single, stride: 3, offset: 1}
+              %{type: :grid, name: "grid-to-remove", rows: 2, columns: 3},
+              %{type: :single, name: "single-to-keep", stride: 3, offset: 1}
             ]
           },
           actor: user
@@ -160,9 +160,9 @@ defmodule Panic.InstallationTest do
     end
 
     test "reorders watchers", %{user: user, network: network} do
-      watcher1 = %{type: :grid, rows: 2, columns: 3}
-      watcher2 = %{type: :single, stride: 3, offset: 1}
-      watcher3 = %{type: :vestaboard, stride: 1, offset: 0, name: :panic_1}
+      watcher1 = %{type: :grid, name: "reorder-grid", rows: 2, columns: 3}
+      watcher2 = %{type: :single, name: "reorder-single", stride: 3, offset: 1}
+      watcher3 = %{type: :vestaboard, name: "reorder-board", stride: 1, offset: 0, vestaboard_name: :panic_1}
 
       {:ok, installation} =
         Installation
@@ -189,7 +189,7 @@ defmodule Panic.InstallationTest do
       actual_watchers =
         Enum.map(updated.watchers, fn watcher ->
           watcher
-          |> Map.take([:type, :rows, :columns, :stride, :offset, :name])
+          |> Map.take([:type, :name, :rows, :columns, :stride, :offset, :vestaboard_name])
           |> Enum.reject(fn {_k, v} -> is_nil(v) end)
           |> Map.new()
         end)
@@ -217,7 +217,7 @@ defmodule Panic.InstallationTest do
                  :add_watcher,
                  %{
                    # Missing required rows/columns
-                   watcher: %{type: :grid}
+                   watcher: %{type: :grid, name: "invalid-grid"}
                  },
                  actor: user
                )
@@ -233,7 +233,7 @@ defmodule Panic.InstallationTest do
             name: "Test Installation",
             network_id: network.id,
             watchers: [
-              %{type: :grid, rows: 2, columns: 3}
+              %{type: :grid, name: "single-grid", rows: 2, columns: 3}
             ]
           },
           actor: user
@@ -288,7 +288,7 @@ defmodule Panic.InstallationTest do
                  %{
                    name: "Test Installation",
                    network_id: network.id,
-                   watchers: [%{type: :grid}]
+                   watchers: [%{type: :grid, name: "missing-rows-cols"}]
                  },
                  actor: user
                )
@@ -302,7 +302,7 @@ defmodule Panic.InstallationTest do
                  %{
                    name: "Test Installation",
                    network_id: network.id,
-                   watchers: [%{type: :single}]
+                   watchers: [%{type: :single, name: "missing-stride-offset"}]
                  },
                  actor: user
                )
@@ -316,7 +316,7 @@ defmodule Panic.InstallationTest do
                  %{
                    name: "Test Installation",
                    network_id: network.id,
-                   watchers: [%{type: :vestaboard, stride: 1, offset: 0}]
+                   watchers: [%{type: :vestaboard, name: "missing-vestaboard-name", stride: 1, offset: 0}]
                  },
                  actor: user
                )
@@ -330,7 +330,7 @@ defmodule Panic.InstallationTest do
                  %{
                    name: "Test Installation",
                    network_id: network.id,
-                   watchers: [%{type: :single, stride: 2, offset: 2}]
+                   watchers: [%{type: :single, name: "invalid-offset", stride: 2, offset: 2}]
                  },
                  actor: user
                )

@@ -43,7 +43,7 @@ defmodule PanicWeb.InstallationLive.Show do
         >
           <div class="pr-10">
             <h3 class="text-base font-semibold leading-7 text-zinc-900 dark:text-zinc-100">
-              {watcher_title(watcher, index)}
+              {watcher.name} ({watcher.type})
             </h3>
             <.list>
               <:item title="Type">{watcher.type}</:item>
@@ -59,8 +59,8 @@ defmodule PanicWeb.InstallationLive.Show do
               <:item :if={watcher.type in [:single, :vestaboard]} title="Show Invoking">
                 {if watcher.show_invoking, do: "Yes", else: "No"}
               </:item>
-              <:item :if={watcher.type == :vestaboard} title="Name">
-                {watcher.name}
+              <:item :if={watcher.type == :vestaboard} title="Vestaboard Name">
+                {watcher.vestaboard_name}
               </:item>
               <:item :if={watcher.type == :vestaboard} title="Initial Prompt">
                 {if watcher.initial_prompt, do: "Yes", else: "No"}
@@ -68,10 +68,10 @@ defmodule PanicWeb.InstallationLive.Show do
             </.list>
             <div class="mt-4">
               <.link
-                navigate={~p"/i/#{@installation.id}/#{index}"}
+                navigate={~p"/i/#{@installation.id}/#{watcher.name}"}
                 class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700 dark:text-zinc-100 dark:hover:text-zinc-300"
               >
-                View watcher at /i/{@installation.id}/{index} →
+                View watcher at /i/{@installation.id}/{watcher.name} →
               </.link>
             </div>
           </div>
@@ -183,19 +183,6 @@ defmodule PanicWeb.InstallationLive.Show do
   defp page_title(:edit), do: "Edit Installation"
   defp page_title(:add_watcher), do: "Add Watcher"
 
-  defp watcher_title(%{type: :grid} = watcher, index) do
-    "Watcher #{index}: Grid (#{watcher.rows}×#{watcher.columns})"
-  end
-
-  defp watcher_title(%{type: :single} = watcher, index) do
-    "Watcher #{index}: Single (stride: #{watcher.stride}, offset: #{watcher.offset})"
-  end
-
-  defp watcher_title(%{type: :vestaboard} = watcher, index) do
-    prompt_indicator = if watcher.initial_prompt, do: ", initial prompt", else: ""
-
-    "Watcher #{index}: Vestaboard #{watcher.name} (stride: #{watcher.stride}, offset: #{watcher.offset}#{prompt_indicator})"
-  end
 
   defp list_networks(user) do
     Ash.read!(Panic.Engine.Network, actor: user)

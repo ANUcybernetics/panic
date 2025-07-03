@@ -3,7 +3,8 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
   LiveView for displaying invocations through an installation's watcher configuration.
 
   This module bridges between the Installation's Watcher structs and the existing
-  InvocationWatcher display logic.
+  InvocationWatcher display logic. Watchers are accessed by their unique name within
+  the installation.
   """
   use PanicWeb, :live_view
 
@@ -39,39 +40,33 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
   end
 
   @impl true
-  def mount(%{"id" => id, "index" => index} = _params, _session, socket) do
-    case {parse_index(index), get_installation(id, socket.assigns)} do
-      {{:ok, index}, {:ok, installation}} ->
-        case get_watcher_at_index(installation, index) do
+  def mount(%{"id" => id, "watcher_name" => watcher_name} = _params, _session, socket) do
+    case get_installation(id, socket.assigns) do
+      {:ok, installation} ->
+        case get_watcher_by_name(installation, watcher_name) do
           {:ok, watcher} ->
             display = watcher_to_display_tuple(watcher)
             network = installation.network
 
             {:ok,
              socket
-             |> assign(:page_title, "#{installation.name} - Watcher #{index}")
+             |> assign(:page_title, "#{installation.name} - #{watcher.name}")
              |> assign(:installation, installation)
              |> assign(:watcher, watcher)
-             |> assign(:watcher_index, index)
+             |> assign(:watcher_name, watcher.name)
              |> InvocationWatcher.configure_invocation_stream(network, display), layout: {PanicWeb.Layouts, :display}}
 
           {:error, :not_found} ->
             {:ok,
              socket
-             |> put_flash(:error, "Watcher not found at index #{index}")
+             |> put_flash(:error, "Watcher '#{watcher_name}' not found")
              |> push_navigate(to: ~p"/installations/#{installation}"), layout: {PanicWeb.Layouts, :app}}
         end
 
-      {_, {:error, _}} ->
+      {:error, _} ->
         {:ok,
          socket
          |> put_flash(:error, "Installation not found")
-         |> push_navigate(to: ~p"/"), layout: {PanicWeb.Layouts, :app}}
-
-      {{:error, :invalid_index}, _} ->
-        {:ok,
-         socket
-         |> put_flash(:error, "Invalid watcher index")
          |> push_navigate(to: ~p"/"), layout: {PanicWeb.Layouts, :app}}
     end
   end
@@ -110,17 +105,10 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
     )
   end
 
-  defp get_watcher_at_index(installation, index) do
-    case Enum.at(installation.watchers, index) do
+  defp get_watcher_by_name(installation, name) do
+    case Enum.find(installation.watchers, fn w -> w.name == name end) do
       nil -> {:error, :not_found}
       watcher -> {:ok, watcher}
-    end
-  end
-
-  defp parse_index(index) when is_binary(index) do
-    case Integer.parse(index) do
-      {n, ""} when n >= 0 -> {:ok, n}
-      _ -> {:error, :invalid_index}
     end
   end
 end

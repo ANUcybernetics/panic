@@ -11,8 +11,6 @@
 
 - have a QR code that points to the model's "about" page on all installation
   displays (bottom RH corner)
-- named watchers, and use those as map keys rather than array position index
-  (and make them editable... perhaps with pubsub updates)
 - check that time-based QR code -> terminal workflow works for non-logged-in
   users (perhaps only required for installations, and also requires real
   deployment to test properly)

@@ -28,7 +28,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :grid, rows: 2, columns: 3}]
+                   watchers: [%{type: :grid, name: "test-grid", rows: 2, columns: 3}]
                  },
                  actor: user
                )
@@ -48,7 +48,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :grid, columns: 3}]
+                   watchers: [%{type: :grid, name: "missing-rows", columns: 3}]
                  },
                  actor: user
                )
@@ -67,7 +67,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :grid, rows: 2}]
+                   watchers: [%{type: :grid, name: "missing-columns", rows: 2}]
                  },
                  actor: user
                )
@@ -86,7 +86,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :grid, rows: 2, columns: 3, stride: 1}]
+                   watchers: [%{type: :grid, name: "grid-with-stride", rows: 2, columns: 3, stride: 1}]
                  },
                  actor: user
                )
@@ -105,7 +105,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :grid, rows: -1, columns: 2}]
+                   watchers: [%{type: :grid, name: "negative-dimensions", rows: -1, columns: 2}]
                  },
                  actor: user
                )
@@ -120,7 +120,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :grid, rows: 2, columns: 3, show_invoking: true}]
+                   watchers: [%{type: :grid, name: "grid-with-show-invoking", rows: 2, columns: 3, show_invoking: true}]
                  },
                  actor: user
                )
@@ -137,7 +137,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :single, stride: 3, offset: 1}]
+                   watchers: [%{type: :single, name: "test-single", stride: 3, offset: 1}]
                  },
                  actor: user
                )
@@ -157,7 +157,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test Genesis Single",
                    network_id: network.id,
-                   watchers: [%{type: :single, stride: 3, offset: 0}]
+                   watchers: [%{type: :single, name: "genesis-single", stride: 3, offset: 0}]
                  },
                  actor: user
                )
@@ -177,7 +177,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test Single Show Invoking",
                    network_id: network.id,
-                   watchers: [%{type: :single, stride: 2, offset: 1, show_invoking: true}]
+                   watchers: [%{type: :single, name: "single-show-invoking", stride: 2, offset: 1, show_invoking: true}]
                  },
                  actor: user
                )
@@ -198,7 +198,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test Single No Invoking",
                    network_id: network.id,
-                   watchers: [%{type: :single, stride: 1, offset: 0, show_invoking: false}]
+                   watchers: [%{type: :single, name: "single-no-invoking", stride: 1, offset: 0, show_invoking: false}]
                  },
                  actor: user
                )
@@ -219,7 +219,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :single, offset: 1}]
+                   watchers: [%{type: :single, name: "missing-stride", offset: 1}]
                  },
                  actor: user
                )
@@ -238,7 +238,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :single, stride: 3}]
+                   watchers: [%{type: :single, name: "missing-offset", stride: 3}]
                  },
                  actor: user
                )
@@ -257,7 +257,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :single, stride: 3, offset: 1, rows: 2}]
+                   watchers: [%{type: :single, name: "single-with-rows", stride: 3, offset: 1, rows: 2}]
                  },
                  actor: user
                )
@@ -276,7 +276,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :single, stride: 2, offset: 2}]
+                   watchers: [%{type: :single, name: "invalid-offset", stride: 2, offset: 2}]
                  },
                  actor: user
                )
@@ -295,7 +295,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :single, stride: 0, offset: 0}]
+                   watchers: [%{type: :single, name: "zero-stride", stride: 0, offset: 0}]
                  },
                  actor: user
                )
@@ -314,7 +314,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :single, stride: 1, offset: -1}]
+                   watchers: [%{type: :single, name: "negative-offset", stride: 1, offset: -1}]
                  },
                  actor: user
                )
@@ -336,7 +336,7 @@ defmodule Panic.WatcherTest do
                    %{
                      name: "Test #{name}",
                      network_id: network.id,
-                     watchers: [%{type: :vestaboard, stride: 2, offset: 0, name: name}]
+                     watchers: [%{type: :vestaboard, name: "test-board-#{Atom.to_string(name) |> String.replace("_", "-")}", stride: 2, offset: 0, vestaboard_name: name}]
                    },
                    actor: user
                  )
@@ -346,7 +346,7 @@ defmodule Panic.WatcherTest do
         assert watcher.type == :vestaboard
         assert watcher.stride == 2
         assert watcher.offset == 0
-        assert watcher.name == name
+        assert watcher.vestaboard_name == name
       end
     end
 
@@ -358,7 +358,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :vestaboard, stride: 2, offset: 1, name: :panic_1, initial_prompt: true}]
+                   watchers: [%{type: :vestaboard, name: "board-with-prompt", stride: 2, offset: 1, vestaboard_name: :panic_1, initial_prompt: true}]
                  },
                  actor: user
                )
@@ -368,7 +368,7 @@ defmodule Panic.WatcherTest do
       assert watcher.type == :vestaboard
       assert watcher.stride == 2
       assert watcher.offset == 1
-      assert watcher.name == :panic_1
+      assert watcher.vestaboard_name == :panic_1
       assert watcher.initial_prompt == true
     end
 
@@ -380,7 +380,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :vestaboard, stride: 3, offset: 0, name: :panic_2, show_invoking: true}]
+                   watchers: [%{type: :vestaboard, name: "board-show-invoking", stride: 3, offset: 0, vestaboard_name: :panic_2, show_invoking: true}]
                  },
                  actor: user
                )
@@ -390,11 +390,11 @@ defmodule Panic.WatcherTest do
       assert watcher.type == :vestaboard
       assert watcher.stride == 3
       assert watcher.offset == 0
-      assert watcher.name == :panic_2
+      assert watcher.vestaboard_name == :panic_2
       assert watcher.show_invoking == true
     end
 
-    test "rejects vestaboard watcher without name", %{user: user, network: network} do
+    test "rejects vestaboard watcher without vestaboard_name", %{user: user, network: network} do
       assert {:error, changeset} =
                Installation
                |> Ash.Changeset.for_create(
@@ -402,7 +402,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :vestaboard, stride: 1, offset: 0}]
+                   watchers: [%{type: :vestaboard, name: "missing-vestaboard-name", stride: 1, offset: 0}]
                  },
                  actor: user
                )
@@ -410,7 +410,7 @@ defmodule Panic.WatcherTest do
 
       errors = errors_on(changeset)
       assert %{watchers: [watcher_errors]} = errors
-      assert watcher_errors[:name]
+      assert watcher_errors[:vestaboard_name]
     end
 
     test "rejects vestaboard watcher with invalid name", %{user: user, network: network} do
@@ -421,7 +421,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :vestaboard, stride: 1, offset: 0, name: :invalid_name}]
+                   watchers: [%{type: :vestaboard, name: "invalid-board", stride: 1, offset: 0, vestaboard_name: :invalid_name}]
                  },
                  actor: user
                )
@@ -429,7 +429,7 @@ defmodule Panic.WatcherTest do
 
       errors = errors_on(changeset)
       assert %{watchers: [watcher_errors]} = errors
-      assert watcher_errors[:name]
+      assert watcher_errors[:vestaboard_name]
     end
 
     test "rejects vestaboard watcher without stride/offset", %{user: user, network: network} do
@@ -440,7 +440,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :vestaboard, name: :panic_1}]
+                   watchers: [%{type: :vestaboard, name: "missing-stride-offset", vestaboard_name: :panic_1}]
                  },
                  actor: user
                )
@@ -459,7 +459,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :vestaboard, stride: 1, offset: 0, name: :panic_1, rows: 2}]
+                   watchers: [%{type: :vestaboard, name: "board-with-rows", stride: 1, offset: 0, vestaboard_name: :panic_1, rows: 2}]
                  },
                  actor: user
                )
@@ -478,7 +478,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :vestaboard, stride: 2, offset: 2, name: :panic_1}]
+                   watchers: [%{type: :vestaboard, name: "board-invalid-offset", stride: 2, offset: 2, vestaboard_name: :panic_1}]
                  },
                  actor: user
                )
@@ -497,7 +497,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :single, stride: 1, offset: 0, initial_prompt: true}]
+                   watchers: [%{type: :single, name: "single-with-prompt", stride: 1, offset: 0, initial_prompt: true}]
                  },
                  actor: user
                )
@@ -519,9 +519,9 @@ defmodule Panic.WatcherTest do
                    name: "Test",
                    network_id: network.id,
                    watchers: [
-                     %{type: :grid, rows: 2, columns: 3},
-                     %{type: :single, stride: 3, offset: 1},
-                     %{type: :vestaboard, stride: 1, offset: 0, name: :panic_1}
+                     %{type: :grid, name: "multi-grid", rows: 2, columns: 3},
+                     %{type: :single, name: "multi-single", stride: 3, offset: 1},
+                     %{type: :vestaboard, name: "multi-board", stride: 1, offset: 0, vestaboard_name: :panic_1}
                    ]
                  },
                  actor: user
@@ -545,11 +545,11 @@ defmodule Panic.WatcherTest do
                    network_id: network.id,
                    watchers: [
                      # Valid
-                     %{type: :grid, rows: 2, columns: 3},
+                     %{type: :grid, name: "valid-grid", rows: 2, columns: 3},
                      # Invalid: offset >= stride
-                     %{type: :single, stride: 2, offset: 2},
-                     # Invalid: missing name
-                     %{type: :vestaboard, stride: 1, offset: 0}
+                     %{type: :single, name: "invalid-single", stride: 2, offset: 2},
+                     # Invalid: missing vestaboard_name
+                     %{type: :vestaboard, name: "invalid-board", stride: 1, offset: 0}
                    ]
                  },
                  actor: user
@@ -558,8 +558,8 @@ defmodule Panic.WatcherTest do
 
       errors = errors_on(changeset)
       assert %{watchers: [watcher_errors]} = errors
-      # Should have errors for both offset and the missing name
-      assert watcher_errors[:offset] || watcher_errors[:name]
+      # Should have errors for both offset and the missing vestaboard_name
+      assert watcher_errors[:offset] || watcher_errors[:vestaboard_name]
     end
   end
 
@@ -572,7 +572,7 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :invalid_type}]
+                   watchers: [%{type: :invalid_type, name: "invalid-type"}]
                  },
                  actor: user
                )

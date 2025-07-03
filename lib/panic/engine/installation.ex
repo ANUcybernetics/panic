@@ -90,7 +90,12 @@ defmodule Panic.Engine.Installation do
 
     update :reorder_watchers do
       accept [:watchers]
+      require_atomic? false
     end
+  end
+
+  validations do
+    validate Panic.Engine.Validations.UniqueWatcherNames
   end
 
   policies do

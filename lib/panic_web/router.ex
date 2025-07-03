@@ -102,7 +102,7 @@ defmodule PanicWeb.Router do
       live "/display/static/:invocation_id", NetworkLive.StaticDisplay, :single
 
       # Installation watcher routes
-      live "/i/:id/:index", InstallationLive.WatcherDisplay, :display
+      live "/i/:id/:watcher_name", InstallationLive.WatcherDisplay, :display
     end
 
     # "static" pages (still liveviews, though)

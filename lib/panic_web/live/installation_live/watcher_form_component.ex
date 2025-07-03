@@ -35,6 +35,15 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
               {"Vestaboard - Display for Vestaboard device", :vestaboard}
             ]}
           />
+          
+          <.input 
+            field={watcher_form[:name]} 
+            type="text" 
+            label="Name" 
+            placeholder="e.g. main-display"
+            pattern="[a-zA-Z0-9-]+"
+            title="Only letters, numbers, and hyphens allowed"
+          />
 
           <div :if={watcher_form[:type].value == :grid} class="space-y-4">
             <.input field={watcher_form[:rows]} type="number" label="Rows" min="1" />
@@ -52,7 +61,7 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
 
           <div :if={watcher_form[:type].value == :vestaboard} class="space-y-4">
             <.input
-              field={watcher_form[:name]}
+              field={watcher_form[:vestaboard_name]}
               type="select"
               label="Vestaboard Name"
               options={[
@@ -81,7 +90,7 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
   def update(assigns, socket) do
     form =
       AshPhoenix.Form.for_update(assigns.installation, :add_watcher,
-        params: %{watcher: %{type: :grid}},
+        params: %{watcher: %{type: :grid, name: ""}},
         actor: assigns.current_user,
         forms: [watcher: [resource: Watcher, create_action: :create]]
       )
