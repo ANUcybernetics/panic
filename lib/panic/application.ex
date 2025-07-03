@@ -20,6 +20,8 @@ defmodule Panic.Application do
       {AshAuthentication.Supervisor, otp_app: :panic},
       {DNSCluster, query: Application.get_env(:panic, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Panic.PubSub},
+      # Start the Presence supervisor
+      PanicWeb.Presence,
       # Start the Finch HTTP client for sending emails
       {Finch, name: Panic.Finch},
       # Start a worker by calling: Panic.Worker.start_link(arg)

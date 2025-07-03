@@ -1,12 +1,13 @@
 defmodule PanicWeb.InvocationWatcher do
   @moduledoc ~S"""
   Helper for subscribing to and managing a stream of `%Invocation{}` structs
-  inside Phoenix LiveViews.
+  inside Phoenix LiveViews using Phoenix Presence.
 
   It offers three public facets:
 
     * `on_mount/1` – a LiveView mount hook that automatically:
         • subscribes to `"invocation:<network_id>"` pub-sub topic
+        • tracks the LiveView's presence for the network
         • configures the `:invocations` stream
         • attaches a `handle_info` hook so the LiveView itself needs **no**
           boilerplate for invocation broadcasts
@@ -15,6 +16,14 @@ defmodule PanicWeb.InvocationWatcher do
       backwards-compatibility)
     * `handle_invocation_message/2` – processes a broadcast and updates the
       stream / genesis invocation as required
+
+  ## Phoenix Presence Integration
+
+  This module now uses Phoenix Presence to track which LiveViews are watching
+  which networks. Presence information includes:
+  - Display mode (grid/single)
+  - User information (if authenticated)
+  - Installation ID (if viewing through an installation)
 
   ## Usage
 
@@ -46,6 +55,7 @@ defmodule PanicWeb.InvocationWatcher do
   alias Panic.Engine.Network
   alias Phoenix.Component
   alias Phoenix.LiveView
+  alias PanicWeb.Presence
 
   # ---------------------------------------------------------------------------
   # on_mount hook
@@ -78,7 +88,7 @@ defmodule PanicWeb.InvocationWatcher do
           socket
           |> maybe_subscribe(network, installation_id)
           |> attach_invocation_hook()
-          |> Component.assign(installation_id: installation_id)
+          |> Component.assign(installation_id: installation_id, network_id: network.id)
 
         {:cont, socket}
 
@@ -96,6 +106,7 @@ defmodule PanicWeb.InvocationWatcher do
   Configure the `:invocations` stream on `socket`.
 
   Idempotent – if the stream is already configured it does nothing.
+  Also tracks presence for this LiveView.
   """
   def configure_invocation_stream(socket, %Network{} = network, display) do
     configured? =
@@ -108,12 +119,19 @@ defmodule PanicWeb.InvocationWatcher do
 
     if configured? do
       # Stream already configured – nothing to (re)configure, just keep assigns fresh
+      # But update presence metadata if display mode changed
+      if socket.assigns[:display] != display do
+        update_presence(socket, network.id, display)
+      end
       Component.assign(socket, display: display)
     else
+      # Track presence for this LiveView
+      track_presence(socket, network.id, display)
+      
       socket
       |> LiveView.stream_configure(:invocations, dom_id: &dom_id(&1, display))
       |> LiveView.stream(:invocations, [])
-      |> Component.assign(network: network, display: display, genesis_invocation: nil, lockout_seconds_remaining: 0)
+      |> Component.assign(network: network, display: display, genesis_invocation: nil, lockout_seconds_remaining: 0, network_id: network.id)
     end
   end
 
@@ -123,27 +141,34 @@ defmodule PanicWeb.InvocationWatcher do
   Returns `{:noreply, socket}` so callers can simply `handle_invocation_message/2`.
   """
   def handle_invocation_message(message, socket) do
-    # Check if invocation stream is configured - if not, ignore the message
-    configured? =
-      socket.assigns
-      |> Map.get(:streams)
-      |> case do
-        nil -> false
-        streams -> Map.has_key?(streams, :invocations)
-      end
-
-    if configured? do
-      display = socket.assigns.display
-      invocation = message.payload.data
-
-      # Filter out invocations with archive URLs
-      if should_filter_archive_url?(invocation) do
+    # Skip presence_diff events
+    case message.event do
+      "presence_diff" ->
         {:noreply, socket}
-      else
-        handle_filtered_invocation_message(invocation, socket, display)
-      end
-    else
-      {:noreply, socket}
+        
+      _ ->
+        # Check if invocation stream is configured - if not, ignore the message
+        configured? =
+          socket.assigns
+          |> Map.get(:streams)
+          |> case do
+            nil -> false
+            streams -> Map.has_key?(streams, :invocations)
+          end
+
+        if configured? do
+          display = socket.assigns.display
+          invocation = message.payload.data
+
+          # Filter out invocations with archive URLs
+          if should_filter_archive_url?(invocation) do
+            {:noreply, socket}
+          else
+            handle_filtered_invocation_message(invocation, socket, display)
+          end
+        else
+          {:noreply, socket}
+        end
     end
   end
 
@@ -217,6 +242,17 @@ defmodule PanicWeb.InvocationWatcher do
   end
 
   @doc """
+  Get the list of current viewers for a network.
+  
+  Returns a list of presence entries with metadata about each viewer.
+  """
+  def list_viewers(network_id) do
+    Presence.list("invocation:#{network_id}")
+    |> Enum.map(fn {_id, %{metas: metas}} -> List.first(metas) end)
+    |> Enum.filter(&(&1))
+  end
+
+  @doc """
   Handle an installation update broadcast and switch to the new network if needed.
 
   Returns `{:noreply, socket}` so callers can simply use it in handle_info hooks.
@@ -232,14 +268,26 @@ defmodule PanicWeb.InvocationWatcher do
         {:ok, new_network} ->
           # Unsubscribe from old network, subscribe to new
           if LiveView.connected?(socket) do
+            # Untrack presence from old network
+            Presence.untrack(
+              self(),
+              "invocation:#{current_network.id}",
+              socket.id
+            )
+            
             PanicWeb.Endpoint.unsubscribe("invocation:#{current_network.id}")
             PanicWeb.Endpoint.subscribe("invocation:#{new_network.id}")
+            
+            # Track presence for new network if display is configured
+            if socket.assigns[:display] do
+              track_presence(socket, new_network.id, socket.assigns.display)
+            end
           end
 
           # Update network assignment and reset stream if configured
           socket =
             socket
-            |> Component.assign(network: new_network)
+            |> Component.assign(network: new_network, network_id: new_network.id)
             |> maybe_reset_stream_for_network_change()
 
           {:noreply, socket}
@@ -271,6 +319,50 @@ defmodule PanicWeb.InvocationWatcher do
     socket
   end
 
+  defp track_presence(socket, network_id, display) do
+    if LiveView.connected?(socket) do
+      user = socket.assigns[:current_user]
+      installation_id = socket.assigns[:installation_id]
+      
+      metadata = %{
+        display: display,
+        user_id: user && user.id,
+        user_email: user && user.email,
+        installation_id: installation_id,
+        joined_at: DateTime.utc_now()
+      }
+      
+      Presence.track(
+        self(),
+        "invocation:#{network_id}",
+        socket.id,
+        metadata
+      )
+    end
+  end
+
+  defp update_presence(socket, network_id, display) do
+    if LiveView.connected?(socket) do
+      user = socket.assigns[:current_user]
+      installation_id = socket.assigns[:installation_id]
+      
+      metadata = %{
+        display: display,
+        user_id: user && user.id,
+        user_email: user && user.email,
+        installation_id: installation_id,
+        joined_at: DateTime.utc_now()
+      }
+      
+      Presence.update(
+        self(),
+        "invocation:#{network_id}",
+        socket.id,
+        metadata
+      )
+    end
+  end
+
   defp attach_invocation_hook(socket) do
     LiveView.attach_hook(
       socket,
@@ -280,6 +372,10 @@ defmodule PanicWeb.InvocationWatcher do
         %Broadcast{topic: "invocation:" <> _, event: "lockout_countdown"} = msg, socket ->
           {:noreply, new_socket} = handle_lockout_countdown_message(msg, socket)
           {:halt, new_socket}
+
+        # Skip presence_diff events
+        %Broadcast{topic: "invocation:" <> _, event: "presence_diff"}, socket ->
+          {:cont, socket}
 
         %Broadcast{topic: "invocation:" <> _} = msg, socket ->
           {:noreply, new_socket} = handle_invocation_message(msg, socket)

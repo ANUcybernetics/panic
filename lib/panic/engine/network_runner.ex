@@ -225,10 +225,14 @@ defmodule Panic.Engine.NetworkRunner do
         remaining_seconds = calculate_lockout_remaining(genesis, network)
 
         if remaining_seconds >= 0 do
-          # Broadcast the countdown
-          PanicWeb.Endpoint.broadcast("invocation:#{state.network_id}", "lockout_countdown", %{
-            seconds_remaining: remaining_seconds
-          })
+          # Only broadcast if there are viewers watching
+          viewers = PanicWeb.InvocationWatcher.list_viewers(state.network_id)
+          
+          if length(viewers) > 0 do
+            PanicWeb.Endpoint.broadcast("invocation:#{state.network_id}", "lockout_countdown", %{
+              seconds_remaining: remaining_seconds
+            })
+          end
 
           if remaining_seconds > 0 do
             # Schedule next tick
@@ -620,10 +624,14 @@ defmodule Panic.Engine.NetworkRunner do
     remaining_seconds = calculate_lockout_remaining(genesis_invocation, network)
 
     if remaining_seconds > 0 do
-      # Start broadcasting countdown immediately, then every second
-      PanicWeb.Endpoint.broadcast("invocation:#{state.network_id}", "lockout_countdown", %{
-        seconds_remaining: remaining_seconds
-      })
+      # Only broadcast if there are viewers watching
+      viewers = PanicWeb.InvocationWatcher.list_viewers(state.network_id)
+      
+      if length(viewers) > 0 do
+        PanicWeb.Endpoint.broadcast("invocation:#{state.network_id}", "lockout_countdown", %{
+          seconds_remaining: remaining_seconds
+        })
+      end
 
       timer_ref = Process.send_after(self(), :lockout_tick, 1000)
       %{state | lockout_timer: timer_ref}
