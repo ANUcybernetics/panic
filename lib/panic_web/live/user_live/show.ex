@@ -35,22 +35,32 @@ defmodule PanicWeb.UserLive.Show do
     <section>
       <div class="flex justify-between items-center mt-16">
         <h2 class="font-semibold">API Tokens</h2>
-        <.link patch={~p"/users/#{@user}/update-tokens"} phx-click={JS.push_focus()}>
-          <.button>Update API Tokens</.button>
+        <.link navigate={~p"/api_tokens"} phx-click={JS.push_focus()}>
+          <.button>Manage API Tokens</.button>
         </.link>
       </div>
 
-      <div id="token-list">
-        <.list>
-          <:item title="Replicate">{@user.replicate_token}</:item>
-          <:item title="OpenAI">{@user.openai_token}</:item>
-          <:item title="Gemini">{@user.gemini_token}</:item>
-          <:item title="Vestaboard 1">{@user.vestaboard_panic_1_token}</:item>
-          <:item title="Vestaboard 2">{@user.vestaboard_panic_2_token}</:item>
-          <:item title="Vestaboard 3">{@user.vestaboard_panic_3_token}</:item>
-          <:item title="Vestaboard 4">{@user.vestaboard_panic_4_token}</:item>
-        </.list>
-      </div>
+      <%= if @api_tokens != [] do %>
+        <.table id="api-token-list" rows={@api_tokens}>
+          <:col :let={token} label="Name">
+            <.link href={~p"/api_tokens/#{token}"} phx-click={JS.push_focus()}>
+              {token.name}
+            </.link>
+          </:col>
+          <:col :let={token} label="Platforms">
+            <div class="flex gap-2">
+              <span :if={token.openai_token} class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">OpenAI</span>
+              <span :if={token.replicate_token} class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Replicate</span>
+              <span :if={token.gemini_token} class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Gemini</span>
+            </div>
+          </:col>
+          <:col :let={token} label="Anonymous Access">
+            {if token.allow_anonymous_use, do: "Yes", else: "No"}
+          </:col>
+        </.table>
+      <% else %>
+        <p class="mt-8">No API tokens configured. <.link navigate={~p"/api_tokens/new"} class="text-blue-600 hover:text-blue-500">Create one</.link> to start using the platform.</p>
+      <% end %>
     </section>
 
     <.back navigate={~p"/users"}>Back to users</.back>
@@ -101,11 +111,15 @@ defmodule PanicWeb.UserLive.Show do
     case Ash.get(Panic.Accounts.User, id, actor: socket.assigns.current_user) do
       {:ok, user} ->
         networks = Ash.read!(Panic.Engine.Network, actor: socket.assigns.current_user)
+        
+        # Load user's API tokens
+        user_with_tokens = Ash.load!(user, :api_tokens, actor: socket.assigns.current_user)
+        api_tokens = user_with_tokens.api_tokens
 
         {:noreply,
          socket
          |> assign(:page_title, page_title(socket.assigns.live_action))
-         |> assign(user: user, networks: networks)}
+         |> assign(user: user, networks: networks, api_tokens: api_tokens)}
 
       {:error, _error} ->
         {:noreply, push_navigate(socket, to: ~p"/404")}

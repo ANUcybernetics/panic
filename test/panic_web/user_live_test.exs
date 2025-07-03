@@ -33,18 +33,22 @@ defmodule PanicWeb.UserLiveTest do
       |> click_link("#users-#{user.id} > td:nth-child(1)", Integer.to_string(user.id))
     end
 
-    test "and can visit their user page and add an API token", %{
+    test "and can visit their user page and manage API tokens", %{
       conn: conn,
       user: user
     } do
+      token_name = "My Test Tokens"
       token_value = ";laskdfjhnlkjlkj"
 
       conn
       |> visit("/users/#{user.id}")
-      |> click_link("Update API Tokens")
+      |> click_link("Manage API Tokens")
+      |> click_link("New Token Set")
+      |> fill_in("Name", with: token_name)
       |> fill_in("Replicate API Token", with: token_value)
       |> submit()
-      |> assert_has("#token-list", text: token_value)
+      |> assert_has("h1", text: "API Tokens")
+      |> assert_has("#api_tokens", text: token_name)
     end
 
     test "and can visit their user page and create a network", %{

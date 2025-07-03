@@ -1,6 +1,5 @@
 # Panic TODO
 
-- update deps (maybe a PR for phoenix_test/floki?)
 - check if the autocomplete_input js lib needs to be installed (as per README)
 - check if the live_select is still needed (and why the FocusInput is there?)
 - alternatively to the last two... maybe go back to LiveSelect? idk
@@ -9,6 +8,8 @@
 
 ## quality-of-life
 
+- refactor the way that fixtures are created (because the LLMs seem to
+  consistently look in the wrong places?)
 - have a QR code that points to the model's "about" page on all installation
   displays (bottom RH corner)
 - check that time-based QR code -> terminal workflow works for non-logged-in

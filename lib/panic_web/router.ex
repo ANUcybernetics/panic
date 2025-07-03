@@ -65,6 +65,16 @@ defmodule PanicWeb.Router do
       end
 
       live "/admin", AdminLive, :index
+      
+      # API Token management
+      scope "/api_tokens" do
+        live "/", APITokenLive.Index, :index
+        live "/new", APITokenLive.Index, :new
+        live "/:id/edit", APITokenLive.Index, :edit
+
+        live "/:id", APITokenLive.Show, :show
+        live "/:id/show/edit", APITokenLive.Show, :edit
+      end
     end
 
     # Routes that need InvocationWatcher (authenticated)

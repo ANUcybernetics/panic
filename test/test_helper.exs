@@ -100,12 +100,22 @@ defmodule Panic.Generators do
         raise "API keys required for this test. Set OPENAI_API_KEY, REPLICATE_API_KEY, and GOOGLE_AI_STUDIO_TOKEN environment variables."
       end
 
-      # Set the tokens from environment variables
-      user
-      |> Panic.Accounts.set_token!(:openai_token, openai_key, actor: user)
-      |> Panic.Accounts.set_token!(:replicate_token, replicate_key, actor: user)
-      |> Panic.Accounts.set_token!(:gemini_token, gemini_key, actor: user)
-      |> then(fn user -> Ash.get!(User, user.id, actor: user) end)
+      # Create an APIToken with real tokens
+      {:ok, api_token} = Ash.create(Panic.Accounts.APIToken, %{
+        name: "Test Token with Real Keys",
+        openai_token: openai_key,
+        replicate_token: replicate_key,
+        gemini_token: gemini_key
+      }, authorize?: false)
+      
+      # Associate with user
+      {:ok, _} = Ash.create(Panic.Accounts.UserAPIToken, %{
+        user_id: user.id,
+        api_token_id: api_token.id
+      }, authorize?: false)
+      
+      # Return user with loaded tokens
+      Ash.load!(user, :api_tokens, authorize?: false)
     end
   end
 

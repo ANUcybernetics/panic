@@ -17,16 +17,6 @@ defmodule Panic.Accounts.User do
     # attribute :role, :atom do
     #   constraints one_of: [:user, :admin]
     # end
-
-    # API tokens... this could (should?) be a map? oh well, easy to change later
-    attribute :replicate_token, :string, sensitive?: true
-    attribute :openai_token, :string, sensitive?: true
-    # AIDEV-NOTE: gemini_token completes platform integration; now works like OpenAI/Replicate
-    attribute :gemini_token, :string, sensitive?: true
-    attribute :vestaboard_panic_1_token, :string, sensitive?: true
-    attribute :vestaboard_panic_2_token, :string, sensitive?: true
-    attribute :vestaboard_panic_3_token, :string, sensitive?: true
-    attribute :vestaboard_panic_4_token, :string, sensitive?: true
   end
 
   actions do
@@ -34,40 +24,6 @@ defmodule Panic.Accounts.User do
 
     update :change_email do
       accept [:email]
-    end
-
-    update :update_tokens do
-      accept [
-        :replicate_token,
-        :openai_token,
-        :gemini_token,
-        :vestaboard_panic_1_token,
-        :vestaboard_panic_2_token,
-        :vestaboard_panic_3_token,
-        :vestaboard_panic_4_token
-      ]
-    end
-
-    update :set_token do
-      argument :token_name, :atom do
-        constraints one_of: [
-                      :replicate_token,
-                      :openai_token,
-                      :gemini_token,
-                      :vestaboard_panic_1_token,
-                      :vestaboard_panic_2_token,
-                      :vestaboard_panic_3_token,
-                      :vestaboard_panic_4_token
-                    ]
-
-        allow_nil? false
-      end
-
-      argument :token_value, :string, allow_nil?: false, sensitive?: true
-
-      # just a convenience for the fact that there are several tokens, and
-      # it's a pain to have an action for setting each one
-      change Panic.Accounts.Changes.SetToken
     end
   end
 
@@ -87,6 +43,14 @@ defmodule Panic.Accounts.User do
 
   identities do
     identity :unique_email, [:email]
+  end
+
+  relationships do
+    many_to_many :api_tokens, Panic.Accounts.APIToken do
+      through Panic.Accounts.UserAPIToken
+      source_attribute :id
+      destination_attribute :id
+    end
   end
 
   policies do

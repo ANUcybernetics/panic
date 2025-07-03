@@ -273,11 +273,14 @@ defmodule Panic.Engine.NetworkRunner do
   defp handle_start_run_idle(prompt, user, state) do
     network = Ash.get!(Engine.Network, state.network_id, authorize?: false)
     watchers = vestaboard_watchers(network)
+    
+    # Set anonymous context if user is nil
+    opts = if user, do: [actor: user], else: [actor: nil, context: %{anonymous: true}]
 
-    case Engine.prepare_first(network, prompt, actor: user) do
+    case Engine.prepare_first(network, prompt, opts) do
       {:ok, invocation} ->
         # Make the genesis visible immediately via about_to_invoke
-        invocation = Engine.about_to_invoke!(invocation, actor: user)
+        invocation = Engine.about_to_invoke!(invocation, opts)
 
         # Dispatch watchers for the genesis invocation immediately (synchronous)
         maybe_dispatch_watchers(invocation, watchers, user)
@@ -327,15 +330,20 @@ defmodule Panic.Engine.NetworkRunner do
     else
       # Cancel current run and start new one
       if state.current_invocation && state.current_invocation.state == :invoking do
-        Engine.mark_as_failed!(state.current_invocation, actor: user)
+        # Set anonymous context if user is nil
+        opts = if user, do: [actor: user], else: [actor: nil, context: %{anonymous: true}]
+        Engine.mark_as_failed!(state.current_invocation, opts)
       end
 
       watchers = vestaboard_watchers(network)
+      
+      # Set anonymous context if user is nil
+      opts = if user, do: [actor: user], else: [actor: nil, context: %{anonymous: true}]
 
-      case Engine.prepare_first(network, prompt, actor: user) do
+      case Engine.prepare_first(network, prompt, opts) do
         {:ok, invocation} ->
           # Make the genesis visible immediately via about_to_invoke
-          invocation = Engine.about_to_invoke!(invocation, actor: user)
+          invocation = Engine.about_to_invoke!(invocation, opts)
 
           # Dispatch watchers for the genesis invocation immediately (synchronous)
           maybe_dispatch_watchers(invocation, watchers, user)
@@ -382,8 +390,11 @@ defmodule Panic.Engine.NetworkRunner do
 
   defp handle_processing_completed_normal(invocation, state) do
     {network, user} = get_network_and_user!(state.network_id)
+    
+    # Set anonymous context if user is nil
+    opts = if user, do: [actor: user], else: [actor: nil, context: %{anonymous: true}]
 
-    case Engine.prepare_next(invocation, actor: user) do
+    case Engine.prepare_next(invocation, opts) do
       {:ok, next_invocation} ->
         # Archive if needed (async)
         model = Panic.Model.by_id!(invocation.model)
@@ -457,19 +468,22 @@ defmodule Panic.Engine.NetworkRunner do
   defp trigger_invocation(invocation, state) do
     # Get user dynamically - NetworkRunner is now crash-resilient
     {_network, user} = get_network_and_user!(state.network_id)
+    
+    # Set anonymous context if user is nil
+    opts = if user, do: [actor: user], else: [actor: nil, context: %{anonymous: true}]
 
     if Application.get_env(:panic, :sync_network_runner, false) do
       # Synchronous mode for tests - send message to self but process immediately
       try do
         # Make the invocation visible with pending state first
-        invocation = Engine.about_to_invoke!(invocation, actor: user)
-        processed_invocation = Engine.invoke!(invocation, actor: user)
+        invocation = Engine.about_to_invoke!(invocation, opts)
+        processed_invocation = Engine.invoke!(invocation, opts)
         send(self(), {:processing_completed, processed_invocation})
       rescue
         e ->
           # Mark invocation as failed before logging error
           try do
-            Engine.mark_as_failed!(invocation, actor: user)
+            Engine.mark_as_failed!(invocation, opts)
           rescue
             # If marking as failed fails, just continue
             _mark_error -> nil
@@ -487,9 +501,9 @@ defmodule Panic.Engine.NetworkRunner do
         Task.Supervisor.start_child(@task_supervisor, fn ->
           try do
             # Make the invocation visible with pending state first
-            invocation = Engine.about_to_invoke!(invocation, actor: user)
+            invocation = Engine.about_to_invoke!(invocation, opts)
             # Process the invocation
-            processed_invocation = Engine.invoke!(invocation, actor: user)
+            processed_invocation = Engine.invoke!(invocation, opts)
 
             # Notify completion to the GenServer
             send(genserver_pid, {:processing_completed, processed_invocation})
@@ -497,7 +511,7 @@ defmodule Panic.Engine.NetworkRunner do
             e ->
               # Mark invocation as failed before logging error
               try do
-                Engine.mark_as_failed!(invocation, actor: user)
+                Engine.mark_as_failed!(invocation, opts)
               rescue
                 # If marking as failed fails, just continue
                 _mark_error -> nil
