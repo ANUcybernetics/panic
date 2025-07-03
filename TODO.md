@@ -1,6 +1,5 @@
 # Panic TODO
 
-- get autoscaling working again
 - update deps (maybe a PR for phoenix_test/floki?)
 - check if the autocomplete_input js lib needs to be installed (as per README)
 - check if the live_select is still needed (and why the FocusInput is there?)
@@ -17,14 +16,9 @@
 - check that time-based QR code -> terminal workflow works for non-logged-in
   users (perhaps only required for installations, and also requires real
   deployment to test properly)
-- maybe rename PanicWeb.InvocationWatcher (now that there's a Watcher module) to
-  WatcherLive or something similar
 - make sure vestaboards crashing doesn't bring down the whole thing
 - create a new `Display` domain or similar (because Installations and Watchers
   shouldn't really be in `Engine`)
-- add presence to network views so that it'll say how many people are watching a
-  particular network, presence for each installation watcher as well (which
-  would help with knowing if installed rpis go offline)
 - add an image->image flux model (and perhaps a way to still kick it off with
   text)
 
