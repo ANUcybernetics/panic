@@ -9,57 +9,137 @@
 }
 
 /* Autocomplete input styling to match dark theme */
+/* Style the autocomplete-input web component using ::part() selectors */
 autocomplete-input {
-    --autocomplete-input-bg: #3f3f46;
-    --autocomplete-input-border: #71717a;
-    --autocomplete-input-text: #f4f4f5;
-    --autocomplete-input-placeholder: #a1a1aa;
-    --autocomplete-list-bg: #27272a;
-    --autocomplete-list-border: #52525b;
-    --autocomplete-option-hover-bg: #3f3f46;
-    --autocomplete-option-text: #f4f4f5;
-    --autocomplete-option-hover-text: #ffffff;
+    display: block;
+    width: 100%;
+    /* Try CSS custom properties that might work */
+    --input-background: #27272a;
+    --input-border-color: #3f3f46;
+    --input-text-color: #f4f4f5;
+    --input-placeholder-color: #71717a;
+    --list-background: #18181b;
+    --option-hover-background: #3f3f46;
+    /* Common web component variable names */
+    --background: #27272a;
+    --color: #f4f4f5;
+    --border-color: #3f3f46;
 }
 
-autocomplete-input input {
-    background: var(--autocomplete-input-bg) !important;
-    border: 1px solid var(--autocomplete-input-border) !important;
-    color: var(--autocomplete-input-text) !important;
+/* Try ::part() selector for input */
+autocomplete-input::part(input) {
+    background-color: #27272a !important;
+    border: 1px solid #3f3f46 !important;
+    color: #f4f4f5 !important;
+    font-size: 0.875rem !important;
+    border-radius: 0.375rem !important;
+    padding: 0.75rem !important;
+}
+
+autocomplete-input::part(base) {
+    background-color: #27272a !important;
+}
+
+/* Style the input field itself - try multiple selectors */
+autocomplete-input input,
+.autocomplete-wrapper input,
+#network_model_autocomplete input,
+input[type="text"],
+input[type="search"] {
+    background-color: #27272a !important;
+    border: 1px solid #3f3f46 !important;
+    color: #f4f4f5 !important;
     font-size: 0.875rem !important;
     border-radius: 0.375rem !important;
     padding: 0.75rem !important;
     width: 100% !important;
-    transition:
-        border-color 0.15s ease-in-out,
-        box-shadow 0.15s ease-in-out !important;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
 }
 
-autocomplete-input input:focus {
+autocomplete-input input:focus,
+.autocomplete-wrapper input:focus,
+#network_model_autocomplete input:focus,
+input[type="text"]:focus,
+input[type="search"]:focus {
     outline: none !important;
     border-color: #8b5cf6 !important;
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1) !important;
+    background-color: #27272a !important;
 }
 
-autocomplete-input input::placeholder {
-    color: var(--autocomplete-input-placeholder) !important;
+autocomplete-input input::placeholder,
+.autocomplete-wrapper input::placeholder,
+#network_model_autocomplete input::placeholder,
+input[type="text"]::placeholder,
+input[type="search"]::placeholder {
+    color: #71717a !important;
+    opacity: 1 !important;
 }
 
-autocomplete-input [part="list"] {
-    background: var(--autocomplete-list-bg) !important;
-    border: 1px solid var(--autocomplete-list-border) !important;
+/* Force dark background on all inputs in the autocomplete wrapper */
+.autocomplete-wrapper * {
+    background-color: transparent !important;
+}
+
+.autocomplete-wrapper input[type="text"],
+.autocomplete-wrapper input[type="search"],
+.autocomplete-wrapper input:not([type]) {
+    background-color: #27272a !important;
+}
+
+/* Style the dropdown list */
+autocomplete-input::part(list) {
+    background-color: #18181b !important;
+    border: 1px solid #3f3f46 !important;
     border-radius: 0.375rem !important;
-    box-shadow:
-        0 10px 15px -3px rgb(0 0 0 / 0.1),
-        0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+    margin-top: 0.25rem !important;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+    max-height: 16rem !important;
+    overflow-y: auto !important;
 }
 
-autocomplete-input [part="option"] {
-    color: var(--autocomplete-option-text) !important;
-    padding: 0.5rem !important;
+/* Style the options */
+autocomplete-input::part(option) {
+    color: #f4f4f5 !important;
+    padding: 0.5rem 0.75rem !important;
+    cursor: pointer !important;
+    transition: background-color 0.15s ease !important;
 }
 
-autocomplete-input [part="option"]:hover,
-autocomplete-input [part="selected-option"] {
-    background: var(--autocomplete-option-hover-bg) !important;
-    color: var(--autocomplete-option-hover-text) !important;
+/* Style the selected/hovered option */
+autocomplete-input::part(selected-option) {
+    background-color: #3f3f46 !important;
+    background: #3f3f46 !important;
+    color: #ffffff !important;
+}
+
+/* Override any default selected option styles */
+autocomplete-input [aria-selected="true"],
+autocomplete-input li:hover,
+autocomplete-input li.selected,
+autocomplete-input::part(option):hover {
+    background-color: #3f3f46 !important;
+    background: #3f3f46 !important;
+    color: #ffffff !important;
+}
+
+/* Ultra-specific selectors for the input */
+body .autocomplete-wrapper autocomplete-input input,
+body #network_model_autocomplete input,
+body autocomplete-input > input,
+body autocomplete-input input[type="text"] {
+    background-color: #27272a !important;
+    background: #27272a !important;
+    border: 1px solid #3f3f46 !important;
+    color: #f4f4f5 !important;
+}
+
+/* Target any input that might be dynamically inserted */
+body input {
+    background-color: #27272a !important;
+    color: #f4f4f5 !important;
+    border-color: #3f3f46 !important;
 }
