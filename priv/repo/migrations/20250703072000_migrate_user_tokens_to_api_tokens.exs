@@ -72,8 +72,8 @@ defmodule Panic.Repo.Migrations.MigrateUserTokensToApiTokens do
             user.vestaboard_panic_2_token,
             user.vestaboard_panic_3_token,
             user.vestaboard_panic_4_token,
-            # allow_anonymous_use
-            false,
+            # allow_anonymous_use - SQLite expects 0 for false
+            0,
             DateTime.utc_now(),
             DateTime.utc_now()
           ]
