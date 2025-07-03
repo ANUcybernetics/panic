@@ -50,7 +50,14 @@ defmodule Panic.Engine.Network do
   end
 
   actions do
-    defaults [:read, :destroy, update: [:name, :description, :lockout_seconds]]
+    defaults [:read, update: [:name, :description, :lockout_seconds]]
+    
+    destroy :destroy do
+      primary? true
+      # Use before-action hooks to delete children before parent (required for FK constraints)
+      change cascade_destroy(:invocations, after_action?: false)
+      change cascade_destroy(:installations, after_action?: false)
+    end
 
     create :create do
       accept [:name, :description, :lockout_seconds]

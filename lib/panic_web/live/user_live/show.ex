@@ -26,6 +26,15 @@ defmodule PanicWeb.UserLive.Show do
           </:col>
           <:col :let={network} label="Length">{length(network.models)}</:col>
           <:col :let={network} label="Description">{network.description}</:col>
+          <:action :let={network}>
+            <.link
+              phx-click={JS.push("delete_network", value: %{id: network.id})}
+              data-confirm="Are you sure you want to delete this network?"
+              class="text-red-600 hover:text-red-900"
+            >
+              Delete
+            </.link>
+          </:action>
         </.table>
       <% else %>
         <p class="mt-8">User has no networks.</p>
@@ -135,6 +144,17 @@ defmodule PanicWeb.UserLive.Show do
   def handle_info({PanicWeb.NetworkLive.FormComponent, {:saved, _network}}, socket) do
     # do nothing, because it re-triggers a handle_params, where we just read all the networks from the db
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("delete_network", %{"id" => id}, socket) do
+    network = Ash.get!(Panic.Engine.Network, id, actor: socket.assigns.current_user)
+    Ash.destroy!(network, actor: socket.assigns.current_user)
+    
+    # Reload networks after deletion
+    networks = Ash.read!(Panic.Engine.Network, actor: socket.assigns.current_user)
+    
+    {:noreply, assign(socket, :networks, networks)}
   end
 
   defp page_title(:show), do: "Show User"

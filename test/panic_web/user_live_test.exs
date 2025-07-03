@@ -67,6 +67,61 @@ defmodule PanicWeb.UserLiveTest do
       |> assert_has("#network-list", text: network_name)
       |> assert_has("#network-list", text: network_description)
     end
+
+    test "and can delete a network from their user page", %{
+      conn: conn,
+      user: user
+    } do
+      import Phoenix.LiveViewTest
+      
+      # Create a network first
+      network = Panic.Fixtures.network_with_dummy_models(user)
+      
+      # Since PhoenixTest doesn't support JavaScript confirmations, 
+      # we'll use Phoenix.LiveViewTest directly for this test
+      {:ok, view, _html} = live(conn, ~p"/users/#{user.id}")
+      
+      # Verify the network is displayed
+      assert render(view) =~ network.name
+      
+      # Trigger the delete event directly (bypassing the JavaScript confirmation)
+      render_click(view, "delete_network", %{"id" => network.id})
+      
+      # Verify the network is no longer displayed
+      refute render(view) =~ network.name
+    end
+
+    test "network delete with related data shows proper error", %{
+      conn: conn,
+      user: user
+    } do
+      import Phoenix.LiveViewTest
+      
+      # Create a network with related data
+      network = Panic.Fixtures.network_with_dummy_models(user)
+      
+      # Create an installation for this network (this is enough to trigger FK constraint)
+      installation = 
+        Panic.Engine.Installation
+        |> Ash.Changeset.for_create(:create, %{network_id: network.id, name: "Test Installation", watchers: []}, actor: user)
+        |> Ash.create!()
+      
+      # Visit the user page
+      {:ok, view, _html} = live(conn, ~p"/users/#{user.id}")
+      
+      # Verify the network is displayed
+      assert render(view) =~ network.name
+      
+      # Trigger the delete event - this should work now with cascade_destroy
+      render_click(view, "delete_network", %{"id" => network.id})
+      
+      # Verify the network is no longer displayed
+      refute render(view) =~ network.name
+      
+      # Verify all related records are deleted
+      assert {:error, _} = Ash.get(Panic.Engine.Network, network.id, actor: user)
+      assert {:error, _} = Ash.get(Panic.Engine.Installation, installation.id, actor: user)
+    end
   end
 
   describe "user is NOT logged in" do
