@@ -53,6 +53,28 @@ defmodule PanicWeb.NetworkLiveTest do
 
       visit(conn, "/networks/#{network.id}/terminal")
     end
+
+    test "can edit a network", %{conn: conn, user: user} do
+      network = user |> Panic.Generators.network_with_dummy_models() |> pick()
+
+      conn
+      |> visit("/networks/#{network.id}")
+      |> click_link("Edit network")
+      |> fill_in("Name", with: "Updated network name")
+      |> fill_in("Description", with: "Updated description")
+      |> submit()
+      |> assert_has("h1", text: "Updated network name")
+    end
+
+    test "can view network info all view", %{conn: conn, user: user} do
+      network = user |> Panic.Generators.network_with_dummy_models() |> pick()
+
+      {:ok, view, html} = live(conn, ~p"/networks/#{network.id}/info/all")
+      
+      # The "all" view shows a list of QR codes
+      assert html =~ "QR codes"
+      assert has_element?(view, "div.prose")
+    end
   end
 
   describe "QR code functionality - authenticated user" do
