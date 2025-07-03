@@ -51,7 +51,7 @@ defmodule Panic.Engine.Network do
 
   actions do
     defaults [:read, update: [:name, :description, :lockout_seconds]]
-    
+
     destroy :destroy do
       primary? true
       # Use before-action hooks to delete children before parent (required for FK constraints)

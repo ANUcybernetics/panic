@@ -70,7 +70,7 @@ defmodule PanicWeb.NetworkLiveTest do
       network = user |> Panic.Generators.network_with_dummy_models() |> pick()
 
       {:ok, view, html} = live(conn, ~p"/networks/#{network.id}/info/all")
-      
+
       # The "all" view shows a list of QR codes
       assert html =~ "QR codes"
       assert has_element?(view, "div.prose")

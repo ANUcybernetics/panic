@@ -183,7 +183,6 @@ defmodule PanicWeb.InstallationLive.Show do
   defp page_title(:edit), do: "Edit Installation"
   defp page_title(:add_watcher), do: "Add Watcher"
 
-
   defp list_networks(user) do
     Ash.read!(Panic.Engine.Network, actor: user)
   end

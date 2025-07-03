@@ -1,11 +1,11 @@
 defmodule Panic.Accounts.APIToken do
   @moduledoc """
   Represents a set of API tokens for various platforms.
-  
+
   Tokens can be owned by multiple users (many-to-many relationship) and
   can optionally be marked to allow anonymous use for public installations.
   """
-  
+
   use Ash.Resource,
     otp_app: :panic,
     domain: Panic.Accounts,
@@ -16,7 +16,7 @@ defmodule Panic.Accounts.APIToken do
   pub_sub do
     module PanicWeb.Endpoint
     prefix "api_token"
-    
+
     publish_all :create, ["created"]
     publish_all :update, ["updated"]
     publish_all :destroy, ["destroyed"]
@@ -32,18 +32,34 @@ defmodule Panic.Accounts.APIToken do
 
     create :create do
       primary? true
-      accept [:name, :replicate_token, :openai_token, :gemini_token,
-              :vestaboard_panic_1_token, :vestaboard_panic_2_token,
-              :vestaboard_panic_3_token, :vestaboard_panic_4_token,
-              :allow_anonymous_use]
+
+      accept [
+        :name,
+        :replicate_token,
+        :openai_token,
+        :gemini_token,
+        :vestaboard_panic_1_token,
+        :vestaboard_panic_2_token,
+        :vestaboard_panic_3_token,
+        :vestaboard_panic_4_token,
+        :allow_anonymous_use
+      ]
     end
 
     update :update do
       primary? true
-      accept [:name, :replicate_token, :openai_token, :gemini_token,
-              :vestaboard_panic_1_token, :vestaboard_panic_2_token,
-              :vestaboard_panic_3_token, :vestaboard_panic_4_token,
-              :allow_anonymous_use]
+
+      accept [
+        :name,
+        :replicate_token,
+        :openai_token,
+        :gemini_token,
+        :vestaboard_panic_1_token,
+        :vestaboard_panic_2_token,
+        :vestaboard_panic_3_token,
+        :vestaboard_panic_4_token,
+        :allow_anonymous_use
+      ]
     end
 
     destroy :destroy do

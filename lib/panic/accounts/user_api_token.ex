@@ -2,7 +2,7 @@ defmodule Panic.Accounts.UserAPIToken do
   @moduledoc """
   Join table for the many-to-many relationship between Users and APITokens.
   """
-  
+
   use Ash.Resource,
     otp_app: :panic,
     domain: Panic.Accounts,
@@ -15,7 +15,7 @@ defmodule Panic.Accounts.UserAPIToken do
 
   actions do
     defaults [:read, :destroy]
-    
+
     create :create do
       primary? true
       upsert? true

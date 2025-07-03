@@ -2,7 +2,7 @@ defmodule Panic.Repo.Migrations.RemoveTokenFieldsFromUsers do
   @moduledoc """
   Removes the old token fields from the users table after migration to APIToken resource.
   """
-  
+
   use Ecto.Migration
 
   def change do

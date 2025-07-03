@@ -30,7 +30,7 @@ defmodule Panic.Engine.Changes.InvokeModel do
         %{data: %{model: model_id, input: input}} ->
           # Pass the context which may contain actor or anonymous flag
           perform_invocation(changeset, model_id, input, context)
-          
+
         _ ->
           Ash.Changeset.add_error(changeset, "Invalid invocation data")
       end
@@ -57,10 +57,11 @@ defmodule Panic.Engine.Changes.InvokeModel do
     %Panic.Model{path: _path, invoke: invoke_fn, platform: platform} = model
 
     # Resolve token using the new TokenResolver
-    token_result = TokenResolver.resolve_token(platform, 
-      actor: context.actor,
-      anonymous: Map.get(context, :anonymous, false)
-    )
+    token_result =
+      TokenResolver.resolve_token(platform,
+        actor: context.actor,
+        anonymous: Map.get(context, :anonymous, false)
+      )
 
     case token_result do
       {:ok, token} ->
@@ -83,7 +84,7 @@ defmodule Panic.Engine.Changes.InvokeModel do
             |> Ash.Changeset.add_error(message)
             |> Ash.Changeset.put_context(:invocation_success, false)
         end
-        
+
       {:error, reason} ->
         changeset
         |> Ash.Changeset.add_error(reason)

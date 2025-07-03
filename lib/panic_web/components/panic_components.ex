@@ -125,8 +125,8 @@ defmodule PanicWeb.PanicComponents do
           </.model_box>
         <% end %>
       </div>
-
-      <!-- Autocomplete input -->
+      
+    <!-- Autocomplete input -->
       <div class="autocomplete-wrapper [&_input]:bg-zinc-800 [&_input]:border-zinc-600 [&_input]:text-zinc-100 [&_input]:placeholder-zinc-500">
         <.autocomplete_input
           id="network_model_autocomplete"

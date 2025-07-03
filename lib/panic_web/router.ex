@@ -65,7 +65,7 @@ defmodule PanicWeb.Router do
       end
 
       live "/admin", AdminLive, :index
-      
+
       # API Token management
       scope "/api_tokens" do
         live "/", APITokenLive.Index, :index

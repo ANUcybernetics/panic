@@ -53,9 +53,9 @@ defmodule PanicWeb.InvocationWatcher do
 
   alias Panic.Engine.Invocation
   alias Panic.Engine.Network
+  alias PanicWeb.Presence
   alias Phoenix.Component
   alias Phoenix.LiveView
-  alias PanicWeb.Presence
 
   # ---------------------------------------------------------------------------
   # on_mount hook
@@ -123,15 +123,22 @@ defmodule PanicWeb.InvocationWatcher do
       if socket.assigns[:display] != display do
         update_presence(socket, network.id, display)
       end
+
       Component.assign(socket, display: display)
     else
       # Track presence for this LiveView
       track_presence(socket, network.id, display)
-      
+
       socket
       |> LiveView.stream_configure(:invocations, dom_id: &dom_id(&1, display))
       |> LiveView.stream(:invocations, [])
-      |> Component.assign(network: network, display: display, genesis_invocation: nil, lockout_seconds_remaining: 0, network_id: network.id)
+      |> Component.assign(
+        network: network,
+        display: display,
+        genesis_invocation: nil,
+        lockout_seconds_remaining: 0,
+        network_id: network.id
+      )
     end
   end
 
@@ -145,7 +152,7 @@ defmodule PanicWeb.InvocationWatcher do
     case message.event do
       "presence_diff" ->
         {:noreply, socket}
-        
+
       _ ->
         # Check if invocation stream is configured - if not, ignore the message
         configured? =
@@ -243,13 +250,14 @@ defmodule PanicWeb.InvocationWatcher do
 
   @doc """
   Get the list of current viewers for a network.
-  
+
   Returns a list of presence entries with metadata about each viewer.
   """
   def list_viewers(network_id) do
-    Presence.list("invocation:#{network_id}")
+    "invocation:#{network_id}"
+    |> Presence.list()
     |> Enum.map(fn {_id, %{metas: metas}} -> List.first(metas) end)
-    |> Enum.filter(&(&1))
+    |> Enum.filter(& &1)
   end
 
   @doc """
@@ -274,10 +282,10 @@ defmodule PanicWeb.InvocationWatcher do
               "invocation:#{current_network.id}",
               socket.id
             )
-            
+
             PanicWeb.Endpoint.unsubscribe("invocation:#{current_network.id}")
             PanicWeb.Endpoint.subscribe("invocation:#{new_network.id}")
-            
+
             # Track presence for new network if display is configured
             if socket.assigns[:display] do
               track_presence(socket, new_network.id, socket.assigns.display)
@@ -323,7 +331,7 @@ defmodule PanicWeb.InvocationWatcher do
     if LiveView.connected?(socket) do
       user = socket.assigns[:current_user]
       installation_id = socket.assigns[:installation_id]
-      
+
       metadata = %{
         display: display,
         user_id: user && user.id,
@@ -331,7 +339,7 @@ defmodule PanicWeb.InvocationWatcher do
         installation_id: installation_id,
         joined_at: DateTime.utc_now()
       }
-      
+
       Presence.track(
         self(),
         "invocation:#{network_id}",
@@ -345,7 +353,7 @@ defmodule PanicWeb.InvocationWatcher do
     if LiveView.connected?(socket) do
       user = socket.assigns[:current_user]
       installation_id = socket.assigns[:installation_id]
-      
+
       metadata = %{
         display: display,
         user_id: user && user.id,
@@ -353,7 +361,7 @@ defmodule PanicWeb.InvocationWatcher do
         installation_id: installation_id,
         joined_at: DateTime.utc_now()
       }
-      
+
       Presence.update(
         self(),
         "invocation:#{network_id}",

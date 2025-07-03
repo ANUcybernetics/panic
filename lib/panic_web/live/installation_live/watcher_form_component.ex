@@ -35,11 +35,11 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
               {"Vestaboard - Display for Vestaboard device", :vestaboard}
             ]}
           />
-          
-          <.input 
-            field={watcher_form[:name]} 
-            type="text" 
-            label="Name" 
+
+          <.input
+            field={watcher_form[:name]}
+            type="text"
+            label="Name"
             placeholder="e.g. main-display"
             pattern="[a-zA-Z0-9-]+"
             title="Only letters, numbers, and hyphens allowed"

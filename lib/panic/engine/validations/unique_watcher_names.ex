@@ -23,8 +23,7 @@ defmodule Panic.Engine.Validations.UniqueWatcherNames do
             names
             |> Enum.frequencies()
             |> Enum.filter(fn {_name, count} -> count > 1 end)
-            |> Enum.map(&elem(&1, 0))
-            |> Enum.join(", ")
+            |> Enum.map_join(", ", &elem(&1, 0))
 
           {:error, field: :watchers, message: "Watcher names must be unique. Duplicates found: #{duplicate_names}"}
         end

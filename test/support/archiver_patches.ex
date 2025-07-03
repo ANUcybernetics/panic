@@ -5,16 +5,18 @@ defmodule Panic.Test.ArchiverPatches do
   These patches are automatically applied in test_helper.exs.
   """
 
+  alias Panic.Engine.Archiver
+
   def apply_patches do
-    Repatch.patch(Panic.Engine.Archiver, :download_file, fn _url ->
+    Repatch.patch(Archiver, :download_file, fn _url ->
       {:ok, "/tmp/dummy_file.webp"}
     end)
 
-    Repatch.patch(Panic.Engine.Archiver, :convert_file, fn filename, _dest_rootname ->
+    Repatch.patch(Archiver, :convert_file, fn filename, _dest_rootname ->
       {:ok, filename}
     end)
 
-    Repatch.patch(Panic.Engine.Archiver, :upload_to_s3, fn _file_path ->
+    Repatch.patch(Archiver, :upload_to_s3, fn _file_path ->
       {:ok, "https://dummy-s3-url.com/test-file.webp"}
     end)
   end

@@ -23,7 +23,7 @@ defmodule PanicWeb.APITokenLive.FormComponent do
         phx-submit="save"
       >
         <.input field={@form[:name]} type="text" label="Name" placeholder="My API Tokens" />
-        
+
         <div class="space-y-4 border-t border-gray-200 pt-4">
           <h3 class="text-sm font-medium text-gray-900">Platform Tokens</h3>
           <.input field={@form[:openai_token]} type="password" label="OpenAI API Token" />
@@ -40,12 +40,10 @@ defmodule PanicWeb.APITokenLive.FormComponent do
         </div>
 
         <div class="space-y-4 border-t border-gray-200 pt-4">
-          <.input 
-            field={@form[:allow_anonymous_use]} 
-            type="checkbox" 
-            label="Allow anonymous use"
-          />
-          <p class="text-sm text-gray-500">Enable this to allow QR code terminals to use these tokens without authentication</p>
+          <.input field={@form[:allow_anonymous_use]} type="checkbox" label="Allow anonymous use" />
+          <p class="text-sm text-gray-500">
+            Enable this to allow QR code terminals to use these tokens without authentication
+          </p>
         </div>
 
         <:actions>
@@ -102,11 +100,11 @@ defmodule PanicWeb.APITokenLive.FormComponent do
              socket
              |> put_flash(:info, "API token created successfully")
              |> push_patch(to: socket.assigns.patch)}
-          
+
           {:error, _} ->
             # Clean up the token if association fails
             Ash.destroy!(api_token, actor: socket.assigns.current_user, authorize?: false)
-            
+
             {:noreply,
              socket
              |> put_flash(:error, "Failed to associate token with user")
@@ -120,31 +118,37 @@ defmodule PanicWeb.APITokenLive.FormComponent do
 
   defp associate_token_with_user(api_token, user) do
     # Create the join table entry
-    case Ash.create(Panic.Accounts.UserAPIToken, %{
-      user_id: user.id,
-      api_token_id: api_token.id
-    }, authorize?: false) do
+    case Ash.create(
+           Panic.Accounts.UserAPIToken,
+           %{
+             user_id: user.id,
+             api_token_id: api_token.id
+           },
+           authorize?: false
+         ) do
       {:ok, _} -> :ok
       error -> error
     end
   end
 
   defp assign_form(socket, api_token, action) do
-    form = 
+    case_result =
       case action do
         :new ->
           AshPhoenix.Form.for_create(APIToken, :create,
             as: "api_token",
             actor: socket.assigns.current_user
           )
+
         :edit ->
           AshPhoenix.Form.for_update(api_token, :update,
             as: "api_token",
             actor: socket.assigns.current_user
           )
       end
-      |> to_form()
-    
+
+    form = to_form(case_result)
+
     assign(socket, form: form)
   end
 

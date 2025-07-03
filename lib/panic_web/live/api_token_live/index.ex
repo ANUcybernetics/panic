@@ -3,9 +3,9 @@ defmodule PanicWeb.APITokenLive.Index do
   LiveView for managing API tokens.
   """
   use PanicWeb, :live_view
-  
+
   alias Panic.Accounts.APIToken
-  
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -26,16 +26,43 @@ defmodule PanicWeb.APITokenLive.Index do
       <:col :let={{_id, api_token}} label="Name">{api_token.name}</:col>
       <:col :let={{_id, api_token}} label="Platforms">
         <div class="flex gap-2">
-          <span :if={api_token.openai_token} class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">OpenAI</span>
-          <span :if={api_token.replicate_token} class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Replicate</span>
-          <span :if={api_token.gemini_token} class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Gemini</span>
+          <span
+            :if={api_token.openai_token}
+            class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
+          >
+            OpenAI
+          </span>
+          <span
+            :if={api_token.replicate_token}
+            class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
+          >
+            Replicate
+          </span>
+          <span
+            :if={api_token.gemini_token}
+            class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
+          >
+            Gemini
+          </span>
         </div>
       </:col>
       <:col :let={{_id, api_token}} label="Anonymous Access">
-        <span :if={api_token.allow_anonymous_use} class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">Yes</span>
-        <span :if={!api_token.allow_anonymous_use} class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">No</span>
+        <span
+          :if={api_token.allow_anonymous_use}
+          class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10"
+        >
+          Yes
+        </span>
+        <span
+          :if={!api_token.allow_anonymous_use}
+          class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10"
+        >
+          No
+        </span>
       </:col>
-      <:col :let={{_id, api_token}} label="Updated">{Calendar.strftime(api_token.updated_at, "%b %d, %Y")}</:col>
+      <:col :let={{_id, api_token}} label="Updated">
+        {Calendar.strftime(api_token.updated_at, "%b %d, %Y")}
+      </:col>
       <:action :let={{_id, api_token}}>
         <div class="sr-only">
           <.link navigate={~p"/api_tokens/#{api_token}"}>Show</.link>
@@ -52,7 +79,12 @@ defmodule PanicWeb.APITokenLive.Index do
       </:action>
     </.table>
 
-    <.modal :if={@live_action in [:new, :edit]} id="api_token-modal" show on_cancel={JS.patch(~p"/api_tokens")}>
+    <.modal
+      :if={@live_action in [:new, :edit]}
+      id="api_token-modal"
+      show
+      on_cancel={JS.patch(~p"/api_tokens")}
+    >
       <.live_component
         module={PanicWeb.APITokenLive.FormComponent}
         id={@api_token.id || :new}
@@ -111,12 +143,10 @@ defmodule PanicWeb.APITokenLive.Index do
   end
 
   defp list_api_tokens(actor) do
-    APIToken
-    |> Ash.read!(actor: actor)
+    Ash.read!(APIToken, actor: actor)
   end
 
   defp get_api_token!(id, actor) do
-    APIToken
-    |> Ash.get!(id, actor: actor)
+    Ash.get!(APIToken, id, actor: actor)
   end
 end

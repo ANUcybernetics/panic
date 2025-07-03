@@ -2,28 +2,29 @@ defmodule PanicWeb.AuthControllerTest do
   use PanicWeb.ConnCase, async: true
   use ExUnitProperties
 
-  import Phoenix.LiveViewTest
   import PanicWeb.Helpers
-  
+  import Phoenix.LiveViewTest
+
   alias Panic.Fixtures
 
   describe "authentication flows with PhoenixTest" do
     test "user can sign in with valid credentials", %{conn: conn} do
       password = "password123"
       user = Fixtures.user(password)
-      
+
       conn
       |> visit("/sign-in")
       |> fill_in("Email", with: user.email)
       |> fill_in("Password", with: password)
       |> submit()
-      |> assert_has("a", text: "About")  # After login, user sees home page with About link
+      # After login, user sees home page with About link
+      |> assert_has("a", text: "About")
     end
 
     test "user sees 404 with invalid credentials", %{conn: conn} do
       password = "password123"
       user = Fixtures.user(password)
-      
+
       conn
       |> visit("/sign-in")
       |> fill_in("Email", with: user.email)
@@ -35,21 +36,22 @@ defmodule PanicWeb.AuthControllerTest do
 
     test "user can sign out", %{conn: conn} do
       %{conn: conn} = create_and_sign_in_user(%{conn: conn})
-      
+
       # The home page doesn't have a "Sign out" link, it's on the user or network pages
       {:ok, _view, _html} = live(conn, "/")
-      
+
       # Verify we're logged in by checking we can access a protected page
       conn
       |> visit("/users")
       |> assert_has("h1", text: "Listing Users")
-      
+
       # Sign out by visiting the sign-out URL directly
       conn = get(conn, "/sign-out")
       assert redirected_to(conn) == "/"
-      
+
       # Verify we're logged out by trying to access protected page
       conn = Phoenix.ConnTest.build_conn()
+
       conn
       |> visit("/users")
       |> assert_has("button", text: "Sign in")
@@ -58,7 +60,7 @@ defmodule PanicWeb.AuthControllerTest do
     test "sign in redirects to originally requested page", %{conn: conn} do
       password = "password123"
       user = Fixtures.user(password)
-      
+
       # Try to access protected page
       conn
       |> visit("/users")
@@ -77,7 +79,7 @@ defmodule PanicWeb.AuthControllerTest do
       # The reset route requires a token parameter
       # Use a dummy token to see the reset form
       token = Phoenix.Token.sign(PanicWeb.Endpoint, "reset_token", %{})
-      
+
       {:ok, _view, html} = live(conn, ~p"/password-reset/#{token}")
       # Reset page should show reset form or error
       # The page should exist and have some content
@@ -92,7 +94,7 @@ defmodule PanicWeb.AuthControllerTest do
 
     test "authenticated user can access protected routes", %{conn: conn} do
       %{conn: conn} = create_and_sign_in_user(%{conn: conn})
-      
+
       conn
       |> visit("/users")
       |> assert_has("h1", text: "Listing Users")

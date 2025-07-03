@@ -336,7 +336,15 @@ defmodule Panic.WatcherTest do
                    %{
                      name: "Test #{name}",
                      network_id: network.id,
-                     watchers: [%{type: :vestaboard, name: "test-board-#{Atom.to_string(name) |> String.replace("_", "-")}", stride: 2, offset: 0, vestaboard_name: name}]
+                     watchers: [
+                       %{
+                         type: :vestaboard,
+                         name: "test-board-#{name |> Atom.to_string() |> String.replace("_", "-")}",
+                         stride: 2,
+                         offset: 0,
+                         vestaboard_name: name
+                       }
+                     ]
                    },
                    actor: user
                  )
@@ -358,7 +366,16 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :vestaboard, name: "board-with-prompt", stride: 2, offset: 1, vestaboard_name: :panic_1, initial_prompt: true}]
+                   watchers: [
+                     %{
+                       type: :vestaboard,
+                       name: "board-with-prompt",
+                       stride: 2,
+                       offset: 1,
+                       vestaboard_name: :panic_1,
+                       initial_prompt: true
+                     }
+                   ]
                  },
                  actor: user
                )
@@ -380,7 +397,16 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :vestaboard, name: "board-show-invoking", stride: 3, offset: 0, vestaboard_name: :panic_2, show_invoking: true}]
+                   watchers: [
+                     %{
+                       type: :vestaboard,
+                       name: "board-show-invoking",
+                       stride: 3,
+                       offset: 0,
+                       vestaboard_name: :panic_2,
+                       show_invoking: true
+                     }
+                   ]
                  },
                  actor: user
                )
@@ -421,7 +447,9 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :vestaboard, name: "invalid-board", stride: 1, offset: 0, vestaboard_name: :invalid_name}]
+                   watchers: [
+                     %{type: :vestaboard, name: "invalid-board", stride: 1, offset: 0, vestaboard_name: :invalid_name}
+                   ]
                  },
                  actor: user
                )
@@ -459,7 +487,16 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :vestaboard, name: "board-with-rows", stride: 1, offset: 0, vestaboard_name: :panic_1, rows: 2}]
+                   watchers: [
+                     %{
+                       type: :vestaboard,
+                       name: "board-with-rows",
+                       stride: 1,
+                       offset: 0,
+                       vestaboard_name: :panic_1,
+                       rows: 2
+                     }
+                   ]
                  },
                  actor: user
                )
@@ -478,7 +515,9 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :vestaboard, name: "board-invalid-offset", stride: 2, offset: 2, vestaboard_name: :panic_1}]
+                   watchers: [
+                     %{type: :vestaboard, name: "board-invalid-offset", stride: 2, offset: 2, vestaboard_name: :panic_1}
+                   ]
                  },
                  actor: user
                )

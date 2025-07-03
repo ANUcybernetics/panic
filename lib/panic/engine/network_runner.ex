@@ -227,7 +227,7 @@ defmodule Panic.Engine.NetworkRunner do
         if remaining_seconds >= 0 do
           # Only broadcast if there are viewers watching
           viewers = PanicWeb.InvocationWatcher.list_viewers(state.network_id)
-          
+
           if length(viewers) > 0 do
             PanicWeb.Endpoint.broadcast("invocation:#{state.network_id}", "lockout_countdown", %{
               seconds_remaining: remaining_seconds
@@ -273,7 +273,7 @@ defmodule Panic.Engine.NetworkRunner do
   defp handle_start_run_idle(prompt, user, state) do
     network = Ash.get!(Engine.Network, state.network_id, authorize?: false)
     watchers = vestaboard_watchers(network)
-    
+
     # Set anonymous context if user is nil
     opts = if user, do: [actor: user], else: [actor: nil, context: %{anonymous: true}]
 
@@ -336,7 +336,7 @@ defmodule Panic.Engine.NetworkRunner do
       end
 
       watchers = vestaboard_watchers(network)
-      
+
       # Set anonymous context if user is nil
       opts = if user, do: [actor: user], else: [actor: nil, context: %{anonymous: true}]
 
@@ -390,7 +390,7 @@ defmodule Panic.Engine.NetworkRunner do
 
   defp handle_processing_completed_normal(invocation, state) do
     {network, user} = get_network_and_user!(state.network_id)
-    
+
     # Set anonymous context if user is nil
     opts = if user, do: [actor: user], else: [actor: nil, context: %{anonymous: true}]
 
@@ -468,7 +468,7 @@ defmodule Panic.Engine.NetworkRunner do
   defp trigger_invocation(invocation, state) do
     # Get user dynamically - NetworkRunner is now crash-resilient
     {_network, user} = get_network_and_user!(state.network_id)
-    
+
     # Set anonymous context if user is nil
     opts = if user, do: [actor: user], else: [actor: nil, context: %{anonymous: true}]
 
@@ -640,7 +640,7 @@ defmodule Panic.Engine.NetworkRunner do
     if remaining_seconds > 0 do
       # Only broadcast if there are viewers watching
       viewers = PanicWeb.InvocationWatcher.list_viewers(state.network_id)
-      
+
       if length(viewers) > 0 do
         PanicWeb.Endpoint.broadcast("invocation:#{state.network_id}", "lockout_countdown", %{
           seconds_remaining: remaining_seconds

@@ -2,6 +2,8 @@ defmodule PanicWeb.UserLive.Show do
   @moduledoc false
   use PanicWeb, :live_view
 
+  alias Panic.Engine.Network
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -58,9 +60,24 @@ defmodule PanicWeb.UserLive.Show do
           </:col>
           <:col :let={token} label="Platforms">
             <div class="flex gap-2">
-              <span :if={token.openai_token} class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">OpenAI</span>
-              <span :if={token.replicate_token} class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Replicate</span>
-              <span :if={token.gemini_token} class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Gemini</span>
+              <span
+                :if={token.openai_token}
+                class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
+              >
+                OpenAI
+              </span>
+              <span
+                :if={token.replicate_token}
+                class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
+              >
+                Replicate
+              </span>
+              <span
+                :if={token.gemini_token}
+                class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
+              >
+                Gemini
+              </span>
             </div>
           </:col>
           <:col :let={token} label="Anonymous Access">
@@ -68,7 +85,13 @@ defmodule PanicWeb.UserLive.Show do
           </:col>
         </.table>
       <% else %>
-        <p class="mt-8">No API tokens configured. <.link navigate={~p"/api_tokens/new"} class="text-blue-600 hover:text-blue-500">Create one</.link> to start using the platform.</p>
+        <p class="mt-8">
+          No API tokens configured.
+          <.link navigate={~p"/api_tokens/new"} class="text-blue-600 hover:text-blue-500">
+            Create one
+          </.link>
+          to start using the platform.
+        </p>
       <% end %>
     </section>
 
@@ -119,8 +142,8 @@ defmodule PanicWeb.UserLive.Show do
   def handle_params(%{"user_id" => id}, _, socket) do
     case Ash.get(Panic.Accounts.User, id, actor: socket.assigns.current_user) do
       {:ok, user} ->
-        networks = Ash.read!(Panic.Engine.Network, actor: socket.assigns.current_user)
-        
+        networks = Ash.read!(Network, actor: socket.assigns.current_user)
+
         # Load user's API tokens
         user_with_tokens = Ash.load!(user, :api_tokens, actor: socket.assigns.current_user)
         api_tokens = user_with_tokens.api_tokens
@@ -148,12 +171,12 @@ defmodule PanicWeb.UserLive.Show do
 
   @impl true
   def handle_event("delete_network", %{"id" => id}, socket) do
-    network = Ash.get!(Panic.Engine.Network, id, actor: socket.assigns.current_user)
+    network = Ash.get!(Network, id, actor: socket.assigns.current_user)
     Ash.destroy!(network, actor: socket.assigns.current_user)
-    
+
     # Reload networks after deletion
-    networks = Ash.read!(Panic.Engine.Network, actor: socket.assigns.current_user)
-    
+    networks = Ash.read!(Network, actor: socket.assigns.current_user)
+
     {:noreply, assign(socket, :networks, networks)}
   end
 
