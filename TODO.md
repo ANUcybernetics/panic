@@ -4,9 +4,7 @@
 - test the anon QR UX
 - long-running debug (w/sound) on the commbox
 - add the "restart on error" logic (because it's better than the alternative)
-
-## quality-of-life
-
+- there's still something funky going on with Network deletion (and cascades)
 - refactor the way that fixtures are created (because the LLMs seem to
   consistently look in the wrong places?)
 - have a QR code that points to the model's "about" page on all installation
