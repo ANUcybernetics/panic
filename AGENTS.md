@@ -1,3 +1,5 @@
+@~/.claude/elixir-ash/CLAUDE.md
+
 <-- usage-rules-start -->
 <-- ash_phoenix-start -->
 ## ash_phoenix usage
