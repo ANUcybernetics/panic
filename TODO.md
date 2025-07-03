@@ -1,6 +1,7 @@
 # Panic TODO
 
 - display watcher count (presence-based) in installation view
+- test the anon QR UX
 - long-running debug (w/sound) on the commbox
 - add the "restart on error" logic (because it's better than the alternative)
 
@@ -18,6 +19,9 @@
   shouldn't really be in `Engine`)
 - add an image->image flux model (and perhaps a way to still kick it off with
   text)
+- the model select component is still a bit messy... could go back to
+  LiveSelect, or even just a small phx-hook with a regular input (plus thinking
+  about the validation of last->first looping)
 
 ## thought bubbles
 
