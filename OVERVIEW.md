@@ -72,15 +72,20 @@ Key LiveViews include:
 - Various display modes for viewing invocation outputs
 - Installation management for configuring external displays
 
-## Real-time Updates with InvocationWatcher
+## Real-time Updates with InvocationWatcher and Phoenix Presence
 
 The **InvocationWatcher** module
 ([`lib/panic_web/live/invocation_watcher.ex`](lib/panic_web/live/invocation_watcher.ex))
-provides real-time invocation updates across LiveViews through Phoenix PubSub:
+provides real-time invocation updates across LiveViews through Phoenix PubSub and tracks connected viewers using Phoenix Presence:
 
+- **Phoenix Presence tracking**: Uses the **PanicWeb.Presence** module
+  ([`lib/panic_web/presence.ex`](lib/panic_web/presence.ex)) to track who is watching each network
+  - Viewers are tracked on the `"invocation:<network_id>"` topic when LiveViews mount
+  - Presence metadata includes display mode, user information, installation ID, and join timestamp
+  - Presence is updated when display modes change and untracked when switching networks
 - **on_mount hook**: Configured in the router for authenticated and optional
   authentication sessions, automatically subscribes LiveViews to the
-  `"invocation:<network_id>"` topic
+  `"invocation:<network_id>"` topic and tracks presence
 - **Stream management**: Maintains an `:invocations` stream that updates
   whenever new invocations are created or existing ones change state
 - **Display modes**: Supports two rendering patterns:
@@ -93,6 +98,9 @@ provides real-time invocation updates across LiveViews through Phoenix PubSub:
 - **Automatic handling**: Once mounted, LiveViews receive invocation broadcasts
   without any boilerplate - the watcher attaches a `handle_info` callback that
   processes updates
+- **Viewer awareness**: NetworkRunner processes check for active viewers via
+  `list_viewers/1` to optimize broadcasts, only sending lockout countdown messages
+  when someone is watching
 
 In practice, this enables features like:
 
