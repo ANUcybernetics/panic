@@ -129,3 +129,21 @@ The test suite employs several patterns:
 While the codebase mentions property-based testing with ExUnitProperties and
 Ash.Generator, the current implementation primarily uses traditional
 example-based tests.
+
+### Test Parallelization
+
+The test suite uses SQLite with Ecto's SQL Sandbox for test isolation. Due to
+SQLite's single-writer limitation, many tests run with `async: false` to prevent
+database lock conflicts. Tests that interact with NetworkRunner GenServers
+(which use a global registry) must run synchronously to avoid shared state
+issues.
+
+To optimize test performance:
+- SQLite's `busy_timeout` is increased to 5000ms to reduce lock conflicts
+- Tests that don't interact with NetworkRunner or perform only read operations
+  can safely use `async: true`
+- ~54% of test files currently run asynchronously
+
+Note: Switching to in-memory databases or other isolation strategies would break
+the SQL Sandbox pattern that many tests rely on for proper database transaction
+isolation.
