@@ -2,7 +2,7 @@ defmodule Panic.InstallationTest do
   @moduledoc """
   Tests for the Installation resource.
   """
-  use Panic.DataCase, async: true
+  use Panic.DataCase, async: false
   use PanicWeb.Helpers.DatabasePatches
 
   alias Ash.Error.Invalid

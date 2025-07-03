@@ -1,5 +1,5 @@
 defmodule PanicWeb.ErrorLive.NotFoundTest do
-  use PanicWeb.ConnCase, async: true
+  use PanicWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
   import PanicWeb.Helpers
