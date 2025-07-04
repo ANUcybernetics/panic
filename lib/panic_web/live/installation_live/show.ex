@@ -216,7 +216,7 @@ defmodule PanicWeb.InstallationLive.Show do
 
   defp count_viewers_for_watcher(installation, watcher) do
     viewers = InvocationWatcher.list_viewers(installation.network_id)
-    
+
     # Count viewers that are viewing this specific watcher
     Enum.count(viewers, fn viewer ->
       viewer[:installation_id] == to_string(installation.id) && viewer[:watcher_name] == watcher.name
@@ -227,14 +227,15 @@ defmodule PanicWeb.InstallationLive.Show do
     case watcher.type do
       :grid ->
         "#{watcher.rows} × #{watcher.columns} grid"
-      
+
       :single ->
         show_invoking = if watcher.show_invoking, do: " (shows invoking)", else: ""
         "Shows every #{ordinalize(watcher.stride)} invocation, offset #{watcher.offset}#{show_invoking}"
-      
+
       :vestaboard ->
         show_invoking = if watcher.show_invoking, do: " (shows invoking)", else: ""
         initial = if watcher.initial_prompt, do: ", shows initial prompt", else: ""
+
         "#{String.capitalize(String.replace(to_string(watcher.vestaboard_name), "_", " "))} - every #{ordinalize(watcher.stride)}, offset #{watcher.offset}#{show_invoking}#{initial}"
     end
   end

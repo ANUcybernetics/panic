@@ -308,11 +308,12 @@ defmodule PanicWeb.PanicComponents do
   Renders a modal containing a QR code.
   """
   attr :text, :string, required: true, doc: "the text data to encode in the QR code"
+  attr :title, :string, default: "wtf is this?", doc: "the title to display above the QR code"
 
   def qr_code(assigns) do
     ~H"""
     <div class="flex flex-col items-center">
-      <h2 class="text-4xl font-semibold mb-8">wtf is this?</h2>
+      <h2 class="text-4xl font-semibold mb-8">{@title}</h2>
       <div>
         {@text
         |> QRCode.create(:high)

@@ -7,7 +7,7 @@ defmodule Panic.Engine.NetworkRunner do
   - **running**: Actively processing a run with a genesis invocation
 
   ## Key Features
-  - **Crash-resilient**: User context is loaded dynamically from the network relationship using system context, allowing the process to survive restarts without losing authorization context
+  - **Crash-resilient**: User context is loaded dynamically from the network relationship, allowing the process to survive restarts without losing authorization context
   - Manages invocation lifecycle from creation to completion
   - Enforces network lockout periods between runs
   - Implements gradual backoff delays between invocations based on run age:
@@ -274,8 +274,7 @@ defmodule Panic.Engine.NetworkRunner do
     network = Ash.get!(Engine.Network, state.network_id, authorize?: false)
     watchers = vestaboard_watchers(network)
 
-    # Set anonymous context if user is nil
-    opts = if user, do: [actor: user], else: [actor: nil, context: %{anonymous: true}]
+    opts = [actor: user]
 
     case Engine.prepare_first(network, prompt, opts) do
       {:ok, invocation} ->
@@ -330,15 +329,12 @@ defmodule Panic.Engine.NetworkRunner do
     else
       # Cancel current run and start new one
       if state.current_invocation && state.current_invocation.state == :invoking do
-        # Set anonymous context if user is nil
-        opts = if user, do: [actor: user], else: [actor: nil, context: %{anonymous: true}]
-        Engine.mark_as_failed!(state.current_invocation, opts)
+        Engine.mark_as_failed!(state.current_invocation, actor: user)
       end
 
       watchers = vestaboard_watchers(network)
 
-      # Set anonymous context if user is nil
-      opts = if user, do: [actor: user], else: [actor: nil, context: %{anonymous: true}]
+      opts = [actor: user]
 
       case Engine.prepare_first(network, prompt, opts) do
         {:ok, invocation} ->
@@ -391,8 +387,7 @@ defmodule Panic.Engine.NetworkRunner do
   defp handle_processing_completed_normal(invocation, state) do
     {network, user} = get_network_and_user!(state.network_id)
 
-    # Set anonymous context if user is nil
-    opts = if user, do: [actor: user], else: [actor: nil, context: %{anonymous: true}]
+    opts = [actor: user]
 
     case Engine.prepare_next(invocation, opts) do
       {:ok, next_invocation} ->
@@ -469,8 +464,7 @@ defmodule Panic.Engine.NetworkRunner do
     # Get user dynamically - NetworkRunner is now crash-resilient
     {_network, user} = get_network_and_user!(state.network_id)
 
-    # Set anonymous context if user is nil
-    opts = if user, do: [actor: user], else: [actor: nil, context: %{anonymous: true}]
+    opts = [actor: user]
 
     if Application.get_env(:panic, :sync_network_runner, false) do
       # Synchronous mode for tests - send message to self but process immediately

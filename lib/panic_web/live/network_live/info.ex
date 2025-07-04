@@ -72,7 +72,7 @@ defmodule PanicWeb.NetworkLive.Info do
       id="qr-modal"
       on_cancel={JS.patch(~p"/networks/#{@network.id}/info/")}
     >
-      <.qr_code text={@qr_text} />
+      <.qr_code text={@qr_text} title="scan to prompt" />
     </.modal>
     """
   end

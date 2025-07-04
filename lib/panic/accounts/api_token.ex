@@ -2,8 +2,7 @@ defmodule Panic.Accounts.APIToken do
   @moduledoc """
   Represents a set of API tokens for various platforms.
 
-  Tokens can be owned by multiple users (many-to-many relationship) and
-  can optionally be marked to allow anonymous use for public installations.
+  Tokens can be owned by multiple users (many-to-many relationship).
   """
 
   use Ash.Resource,
@@ -41,8 +40,7 @@ defmodule Panic.Accounts.APIToken do
         :vestaboard_panic_1_token,
         :vestaboard_panic_2_token,
         :vestaboard_panic_3_token,
-        :vestaboard_panic_4_token,
-        :allow_anonymous_use
+        :vestaboard_panic_4_token
       ]
     end
 
@@ -57,8 +55,7 @@ defmodule Panic.Accounts.APIToken do
         :vestaboard_panic_1_token,
         :vestaboard_panic_2_token,
         :vestaboard_panic_3_token,
-        :vestaboard_panic_4_token,
-        :allow_anonymous_use
+        :vestaboard_panic_4_token
       ]
     end
 
@@ -118,12 +115,6 @@ defmodule Panic.Accounts.APIToken do
       sensitive? true
       public? true
       description "API token for Vestaboard display #4"
-    end
-
-    attribute :allow_anonymous_use, :boolean do
-      default false
-      public? true
-      description "Whether this token can be used for anonymous/public access"
     end
 
     timestamps()

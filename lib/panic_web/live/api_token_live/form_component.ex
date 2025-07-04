@@ -39,13 +39,6 @@ defmodule PanicWeb.APITokenLive.FormComponent do
           <.input field={@form[:vestaboard_panic_4_token]} type="password" label="Vestaboard Panic 4" />
         </div>
 
-        <div class="space-y-4 border-t border-gray-200 pt-4">
-          <.input field={@form[:allow_anonymous_use]} type="checkbox" label="Allow anonymous use" />
-          <p class="text-sm text-gray-500">
-            Enable this to allow QR code terminals to use these tokens without authentication
-          </p>
-        </div>
-
         <:actions>
           <.button phx-disable-with="Saving...">Save API Token</.button>
         </:actions>

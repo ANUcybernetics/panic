@@ -68,44 +68,6 @@ defmodule Panic.UsersTest do
       assert hd(user.api_tokens).gemini_token == "test_gemini_token_123"
     end
 
-    test "creates APIToken with allow_anonymous_use flag" do
-      user = Panic.Fixtures.user()
-
-      # Create an API token with anonymous access
-      {:ok, api_token} =
-        Ash.create(
-          APIToken,
-          %{
-            name: "Anonymous Token",
-            openai_token: "test_openai_key",
-            allow_anonymous_use: true
-          },
-          authorize?: false
-        )
-
-      # Associate with user
-      {:ok, _} =
-        Ash.create(
-          UserAPIToken,
-          %{
-            user_id: user.id,
-            api_token_id: api_token.id
-          },
-          authorize?: false
-        )
-
-      assert api_token.allow_anonymous_use == true
-
-      # Test anonymous resolution
-      {:ok, resolved_token} =
-        Panic.Accounts.TokenResolver.resolve_token(
-          Panic.Platforms.OpenAI,
-          anonymous: true
-        )
-
-      assert resolved_token == "test_openai_key"
-    end
-
     property "creates APITokens with various platform tokens" do
       token_fields = [
         :replicate_token,

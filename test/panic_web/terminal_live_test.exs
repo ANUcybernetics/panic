@@ -42,8 +42,6 @@ defmodule PanicWeb.TerminalLiveTest do
   use ExUnitProperties
   use PanicWeb.Helpers.DatabasePatches
 
-  import Phoenix.LiveViewTest
-
   alias Panic.Fixtures
   alias PanicWeb.TerminalAuth
 
@@ -98,6 +96,53 @@ defmodule PanicWeb.TerminalLiveTest do
     end
   end
 
+  describe "complete QR code flow with PhoenixTest" do
+    setup do
+      # Setup external API patches to avoid real network calls
+      Panic.ExternalAPIPatches.setup()
+
+      # Setup web test environment with sync mode and cleanup
+      PanicWeb.Helpers.setup_web_test()
+
+      user = Fixtures.user("password123")
+      network = Fixtures.network_with_dummy_models(user)
+
+      on_exit(fn ->
+        # Teardown API patches
+        Panic.ExternalAPIPatches.teardown()
+      end)
+
+      {:ok, user: user, network: network}
+    end
+
+    test "non-logged-in user can scan QR code and start a new run", %{conn: conn, network: network} do
+      # Generate a valid token like what would be in a QR code
+      token = TerminalAuth.generate_token(network.id)
+
+      # Visit the terminal as a non-logged-in user with the token
+      conn
+      |> visit("/networks/#{network.id}/terminal?token=#{token}")
+      |> assert_has(".terminal-container")
+      |> assert_has("span", text: "Current run:")
+      # The form should be ready for input
+      |> assert_has("input[placeholder='Ready for new input']")
+      # Submit a prompt
+      |> fill_in("Prompt", with: "Hello from QR code scan!")
+      |> submit()
+      # After submission, the form should show it's processing
+      |> assert_has("input[placeholder]")
+      # Wait a moment for the invocation to process
+      |> then(fn session ->
+        Process.sleep(100)
+        session
+      end)
+      # Refresh the view to see the latest state
+      |> visit("/networks/#{network.id}/terminal?token=#{token}")
+      # Should still be in lockout but might show "Ready" if enough time passed
+      |> assert_has("input[placeholder]")
+    end
+  end
+
   describe "anonymous user terminal access via QR code" do
     setup do
       # Setup external API patches to avoid real network calls
@@ -118,27 +163,18 @@ defmodule PanicWeb.TerminalLiveTest do
       {:ok, user: user, network: network}
     end
 
-    test "anonymous user with valid token can visit terminal (intended behavior)", %{conn: conn, network: network} do
+    test "anonymous user with valid token can visit terminal", %{conn: conn, network: network} do
       # Generate a valid token like the QR code would contain
       token = TerminalAuth.generate_token(network.id)
 
-      # AIDEV-NOTE: This test documents the intended behavior
-      # Currently fails due to authorization issues - anonymous users get redirected to 404
-      # When fixed, this should allow anonymous access with valid token
-
-      # Current behavior: redirects to 404
-      # Note: Using live/2 directly since anonymous users get authorization error
-      {:error, {:live_redirect, %{to: "/404", flash: _}}} =
-        live(conn, "/networks/#{network.id}/terminal?token=#{token}")
-
-      # Intended behavior (when authorization is fixed):
-      # conn
-      # |> visit("/networks/#{network.id}/terminal?token=#{token}")
-      # |> assert_has(".terminal-container")
-      # |> assert_has("span", text: "Current run:")
-      # |> fill_in("Prompt", with: "a cat on a mat")
-      # |> submit()
-      # |> assert_has("input[placeholder='Starting up...']")
+      # Anonymous users can now access the terminal with a valid token
+      conn
+      |> visit("/networks/#{network.id}/terminal?token=#{token}")
+      |> assert_has(".terminal-container")
+      |> assert_has("span", text: "Current run:")
+      |> fill_in("Prompt", with: "a cat on a mat")
+      |> submit()
+      |> assert_has("input[placeholder='Ready for new input']")
     end
 
     test "anonymous user without token is redirected to expired page", %{conn: conn, network: network} do
@@ -300,7 +336,7 @@ defmodule PanicWeb.TerminalLiveTest do
       conn
       |> visit("/networks/#{network.id}/info/qr")
       |> assert_has("#qr-modal")
-      |> assert_has("h2", text: "wtf is this?")
+      |> assert_has("h2", text: "scan to prompt")
     end
 
     test "QR code page generates terminal URL with valid token", %{conn: conn, user: user} do

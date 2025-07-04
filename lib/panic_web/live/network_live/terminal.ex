@@ -27,7 +27,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
         module={PanicWeb.NetworkLive.TerminalComponent}
         network={@network}
         genesis_invocation={@genesis_invocation}
-        current_user={@current_user}
+        current_user={@network_user}
         lockout_seconds_remaining={@lockout_seconds_remaining}
         id={@network.id}
       />
@@ -55,11 +55,13 @@ defmodule PanicWeb.NetworkLive.Terminal do
 
   @impl true
   def handle_params(%{"network_id" => network_id}, _, socket) do
-    case Ash.get(Panic.Engine.Network, network_id, actor: socket.assigns.current_user) do
+    # Load network with its user relationship (no actor needed for read)
+    case Ash.get(Panic.Engine.Network, network_id, authorize?: false, load: [:user]) do
       {:ok, network} ->
         {:noreply,
          socket
          |> assign(:page_title, "Network #{network_id} terminal")
+         |> assign(:network_user, network.user)
          |> InvocationWatcher.configure_invocation_stream(network, {:single, 0, 1, false})}
 
       {:error, _error} ->

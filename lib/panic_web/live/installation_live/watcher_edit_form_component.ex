@@ -89,7 +89,7 @@ defmodule PanicWeb.InstallationLive.WatcherEditFormComponent do
   @impl true
   def update(assigns, socket) do
     current_watcher = Enum.at(assigns.installation.watchers, assigns.index)
-    
+
     form =
       AshPhoenix.Form.for_update(assigns.installation, :update_watcher,
         params: %{watcher: Map.from_struct(current_watcher), index: assigns.index},

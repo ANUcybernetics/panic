@@ -89,7 +89,7 @@ defmodule PanicWeb.NetworkLiveTest do
       {:ok, _view, html} = live(conn, ~p"/networks/#{network.id}/info/qr")
 
       # The QR modal should be shown with its characteristic text
-      assert html =~ "wtf is this?"
+      assert html =~ "scan to prompt"
       assert html =~ network.name
       # The page should have the qr-modal element
       assert html =~ "qr-modal"
@@ -100,7 +100,7 @@ defmodule PanicWeb.NetworkLiveTest do
 
       # The QR modal should be shown
       assert html =~ "qr-modal"
-      assert html =~ "wtf is this?"
+      assert html =~ "scan to prompt"
 
       # The core functionality we're testing: the QR generation includes a token
       # This is verified by the TerminalAuth module tests already
@@ -120,7 +120,7 @@ defmodule PanicWeb.NetworkLiveTest do
       # Verify the view is still rendering correctly after refresh
       new_html = render(view)
       assert new_html =~ "qr-modal"
-      assert new_html =~ "wtf is this?"
+      assert new_html =~ "scan to prompt"
     end
 
     test "only refreshes QR when showing QR modal", %{conn: conn, network: network} do
@@ -239,17 +239,15 @@ defmodule PanicWeb.NetworkLiveTest do
       {:ok, user: user, network: network, token: token}
     end
 
-    test "unauthenticated user with valid token gets redirected to 404 (current behavior)", %{
+    test "unauthenticated user with valid token can access terminal", %{
       conn: conn,
       network: network,
       token: token
     } do
-      # AIDEV-NOTE: Currently, the terminal doesn't bypass authorization for token-based access
-      # This results in a 404 when unauthenticated users try to access even with a valid token
-      # This test documents the current behavior - ideally this should be fixed to allow access
-      {:error, {:live_redirect, %{to: path}}} = live(conn, ~p"/networks/#{network.id}/terminal?token=#{token}")
-
-      assert path == "/404"
+      # Unauthenticated users can now access the terminal with a valid token
+      {:ok, _view, html} = live(conn, ~p"/networks/#{network.id}/terminal?token=#{token}")
+      assert html =~ "terminal-container"
+      assert html =~ "Current run:"
     end
 
     test "unauthenticated user cannot access terminal without token", %{conn: conn, network: network} do
@@ -296,16 +294,20 @@ defmodule PanicWeb.NetworkLiveTest do
       assert path == "/networks/#{network.id}/terminal/expired"
     end
 
-    test "unauthenticated user with valid token cannot submit prompts (current behavior)", %{
+    test "unauthenticated user with valid token can submit prompts", %{
       conn: conn,
       network: network,
       token: token
     } do
-      # AIDEV-NOTE: Since unauthenticated users get redirected to 404 even with valid tokens,
-      # they cannot submit prompts. This test documents the current limitation.
-      {:error, {:live_redirect, %{to: path}}} = live(conn, ~p"/networks/#{network.id}/terminal?token=#{token}")
+      # Unauthenticated users can now access the terminal and submit prompts with valid tokens
+      {:ok, view, _html} = live(conn, ~p"/networks/#{network.id}/terminal?token=#{token}")
 
-      assert path == "/404"
+      # Submit a prompt
+      form = form(view, "form", invocation: %{input: "Test prompt"})
+      render_submit(form)
+
+      # Check that the prompt was submitted
+      assert render(view) =~ "Ready for new input"
     end
   end
 
@@ -521,7 +523,7 @@ defmodule PanicWeb.NetworkLiveTest do
 
       # Step 2: Authenticated user visits QR code page
       {:ok, _view, html} = live(conn, ~p"/networks/#{network.id}/info/qr")
-      assert html =~ "wtf is this?"
+      assert html =~ "scan to prompt"
       assert html =~ "qr-modal"
 
       # Step 3: QR code contains terminal URL with token
@@ -535,16 +537,17 @@ defmodule PanicWeb.NetworkLiveTest do
       # Generate a valid token like the QR code would contain
       token = TerminalAuth.generate_token(network.id)
 
-      # Step 5: INTENDED BEHAVIOR - Unauthenticated user accesses terminal with token
-      # Currently this redirects to 404 due to authorization issues
-      # Ideally, this should work:
-      # {:ok, view, html} = live(unauthenticated_conn, ~p"/networks/#{network.id}/terminal?token=#{token}")
-      # assert html =~ "Current run:"
-      # assert html =~ "terminal-container"
+      # Step 5: Unauthenticated user accesses terminal with token
+      {:ok, view, html} = live(unauthenticated_conn, ~p"/networks/#{network.id}/terminal?token=#{token}")
+      assert html =~ "Current run:"
+      assert html =~ "terminal-container"
 
-      # ACTUAL BEHAVIOR - Gets redirected to 404
-      {:error, {:live_redirect, %{to: "/404", flash: _}}} =
-        live(unauthenticated_conn, ~p"/networks/#{network.id}/terminal?token=#{token}")
+      # Step 6: Unauthenticated user can submit prompts
+      form = form(view, "form", invocation: %{input: "Hello from QR code!"})
+      render_submit(form)
+
+      # Verify the prompt was accepted
+      assert render(view) =~ "Ready for new input"
 
       # Step 6: Token expiration handling works correctly
       expired_token =
