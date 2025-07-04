@@ -28,7 +28,7 @@ defmodule Panic.Engine.Changes.InvokeModel do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
       case changeset do
         %{data: %{model: model_id, input: input}} ->
-          # Pass the context which may contain actor or anonymous flag
+          # Pass the context which contains the actor
           perform_invocation(changeset, model_id, input, context)
 
         _ ->
@@ -57,7 +57,7 @@ defmodule Panic.Engine.Changes.InvokeModel do
     %Panic.Model{path: _path, invoke: invoke_fn, platform: platform} = model
 
     # Resolve token using the TokenResolver
-    token_result = TokenResolver.resolve_token(platform, actor: context.actor)
+    token_result = TokenResolver.resolve_token(platform, context.actor)
 
     case token_result do
       {:ok, token} ->

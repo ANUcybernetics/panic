@@ -2,7 +2,8 @@ defmodule Panic.Accounts.TokenResolver do
   @moduledoc """
   Resolves API tokens for model invocations.
 
-  Uses tokens from the user's api_tokens.
+  Tokens are always resolved from the authenticated user's api_tokens,
+  except for the Dummy platform which returns a static token for testing.
   """
 
   alias Panic.Platforms.Dummy
@@ -12,25 +13,18 @@ defmodule Panic.Accounts.TokenResolver do
 
   ## Parameters
     - platform: The platform module (OpenAI, Replicate, Gemini, etc.)
-    - opts: Options including:
-      - actor: The authenticated user (required unless Dummy platform)
+    - user: The authenticated user (required unless Dummy platform)
       
   ## Returns
     - {:ok, token_string} if a valid token is found
     - {:error, reason} if no token is available
   """
-  def resolve_token(platform, opts \\ []) do
+  def resolve_token(platform, user) do
     # Dummy platform always returns a dummy token
     if platform == Dummy do
       {:ok, "dummy_token"}
     else
-      actor = Keyword.get(opts, :actor)
-
-      if actor do
-        resolve_user_token(platform, actor)
-      else
-        {:error, "No user provided for token resolution"}
-      end
+      resolve_user_token(platform, user)
     end
   end
 
@@ -67,14 +61,10 @@ defmodule Panic.Accounts.TokenResolver do
     |> List.first()
   end
 
-  defp platform_field(platform) do
-    case platform do
-      Panic.Platforms.OpenAI -> :openai_token
-      Panic.Platforms.Replicate -> :replicate_token
-      Panic.Platforms.Gemini -> :gemini_token
-      # Dummy platform doesn't need a real token
-      Dummy -> nil
-      _ -> raise "Unknown platform: #{inspect(platform)}"
-    end
-  end
+  # Maps platform modules to their corresponding token field in ApiToken
+  defp platform_field(Panic.Platforms.OpenAI), do: :openai_token
+  defp platform_field(Panic.Platforms.Replicate), do: :replicate_token
+  defp platform_field(Panic.Platforms.Gemini), do: :gemini_token
+  defp platform_field(Dummy), do: nil
+  defp platform_field(platform), do: raise("Unknown platform: #{inspect(platform)}")
 end
