@@ -67,11 +67,9 @@ defmodule PanicWeb.InstallationLiveTest do
       |> fill_in("Rows", with: "2")
       |> fill_in("Columns", with: "3")
       |> submit()
-      |> assert_has("h3", text: "main-grid (grid)")
-      |> assert_has("dt", text: "Type")
-      |> assert_has("dd", text: "grid")
-      |> assert_has("dt", text: "Dimensions")
-      |> assert_has("dd", text: "2 × 3")
+      |> assert_has("h3", text: "main-grid")
+      |> assert_has("span", text: "grid")
+      |> assert_has("div", text: "2 × 3 grid")
     end
 
     test "can add a single watcher to an installation", %{conn: conn, user: user} do
@@ -102,13 +100,9 @@ defmodule PanicWeb.InstallationLiveTest do
       |> fill_in("Stride", with: "3")
       |> fill_in("Offset", with: "1")
       |> submit()
-      |> assert_has("h3", text: "spotlight (single)")
-      |> assert_has("dt", text: "Type")
-      |> assert_has("dd", text: "single")
-      |> assert_has("dt", text: "Stride")
-      |> assert_has("dd", text: "3")
-      |> assert_has("dt", text: "Offset")
-      |> assert_has("dd", text: "1")
+      |> assert_has("h3", text: "spotlight")
+      |> assert_has("span", text: "single")
+      |> assert_has("div", text: "Shows every 3rd invocation, offset 1")
     end
 
     test "can add a single watcher with show_invoking enabled", %{conn: conn, user: user} do
@@ -140,9 +134,9 @@ defmodule PanicWeb.InstallationLiveTest do
       |> fill_in("Offset", with: "0")
       |> check("Show Invoking State")
       |> submit()
-      |> assert_has("h3", text: "live-view (single)")
-      |> assert_has("dt", text: "Show Invoking")
-      |> assert_has("dd", text: "Yes")
+      |> assert_has("h3", text: "live-view")
+      |> assert_has("span", text: "single")
+      |> assert_has("div", text: "Shows every 2nd invocation, offset 0 (shows invoking)")
 
       # Verify the watcher was created with show_invoking: true
       updated_installation = Ash.reload!(installation, actor: user)
@@ -179,7 +173,7 @@ defmodule PanicWeb.InstallationLiveTest do
       |> fill_in("Rows", with: "2")
       |> fill_in("Columns", with: "3")
       |> submit()
-      |> assert_has("h3", text: "test-grid (grid)")
+      |> assert_has("h3", text: "test-grid")
     end
 
     test "can add a vestaboard watcher to an installation", %{conn: conn, user: user} do
@@ -211,11 +205,43 @@ defmodule PanicWeb.InstallationLiveTest do
       |> fill_in("Offset", with: "0")
       |> select("Vestaboard Name", option: "Panic 1")
       |> submit()
-      |> assert_has("h3", text: "board-1 (vestaboard)")
-      |> assert_has("dt", text: "Type")
-      |> assert_has("dd", text: "vestaboard")
-      |> assert_has("dt", text: "Vestaboard Name")
-      |> assert_has("dd", text: "panic_1")
+      |> assert_has("h3", text: "board-1")
+      |> assert_has("span", text: "vestaboard")
+      |> assert_has("div", text: "Panic 1 - every 2nd, offset 0")
+    end
+
+    test "can edit a watcher in an installation", %{conn: conn, user: user} do
+      # Create network and installation with a watcher
+      {:ok, network} =
+        Network
+        |> Ash.Changeset.for_create(:create, %{name: "Test Network"}, actor: user)
+        |> Ash.create()
+
+      {:ok, installation} =
+        Installation
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            name: "Test Installation",
+            network_id: network.id,
+            watchers: [%{type: :grid, name: "edit-test", rows: 2, columns: 3}]
+          },
+          actor: user
+        )
+        |> Ash.create()
+
+      conn
+      |> visit("/installations/#{installation.id}")
+      |> assert_has("h3", text: "edit-test")
+      |> assert_has("span", text: "grid")
+      |> assert_has("div", text: "2 × 3 grid")
+      |> click_link(".relative.rounded-lg.border a", "Edit")
+      |> fill_in("Name", with: "updated-grid")
+      |> fill_in("Rows", with: "3")
+      |> fill_in("Columns", with: "4")
+      |> submit()
+      |> assert_has("h3", text: "updated-grid")
+      |> assert_has("div", text: "3 × 4 grid")
     end
 
     test "can remove a watcher from an installation", %{conn: conn, user: user} do
@@ -240,9 +266,35 @@ defmodule PanicWeb.InstallationLiveTest do
 
       conn
       |> visit("/installations/#{installation.id}")
-      |> assert_has("h3", text: "delete-test (grid)")
+      |> assert_has("h3", text: "delete-test")
       |> click_link("Delete")
       |> assert_has("div", text: "No watchers configured")
+    end
+
+    test "shows viewer count for watchers", %{conn: conn, user: user} do
+      # Create network and installation with a watcher
+      {:ok, network} =
+        Network
+        |> Ash.Changeset.for_create(:create, %{name: "Test Network"}, actor: user)
+        |> Ash.create()
+
+      {:ok, installation} =
+        Installation
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            name: "Test Installation",
+            network_id: network.id,
+            watchers: [%{type: :grid, name: "viewer-test", rows: 2, columns: 3}]
+          },
+          actor: user
+        )
+        |> Ash.create()
+
+      conn
+      |> visit("/installations/#{installation.id}")
+      |> assert_has("h3", text: "viewer-test")
+      |> assert_has("span", text: "0 viewers")
     end
 
     test "can edit an installation", %{conn: conn, user: user} do
@@ -295,7 +347,7 @@ defmodule PanicWeb.InstallationLiveTest do
 
       conn
       |> visit("/installations/#{installation.id}")
-      |> click_link("View watcher at /i/#{installation.id}/display-grid →")
+      |> click_link("View display →")
       |> assert_has("title", text: "Test Installation - display-grid")
     end
 

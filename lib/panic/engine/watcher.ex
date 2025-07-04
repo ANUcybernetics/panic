@@ -75,6 +75,11 @@ defmodule Panic.Engine.Installation.Watcher do
       primary? true
       accept [:type, :name, :rows, :columns, :stride, :offset, :show_invoking, :vestaboard_name, :initial_prompt]
     end
+
+    update :update do
+      primary? true
+      accept [:type, :name, :rows, :columns, :stride, :offset, :show_invoking, :vestaboard_name, :initial_prompt]
+    end
   end
 
   validations do

@@ -62,6 +62,7 @@ defmodule PanicWeb.Router do
         live "/:id", InstallationLive.Show, :show
         live "/:id/show/edit", InstallationLive.Show, :edit
         live "/:id/show/add_watcher", InstallationLive.Show, :add_watcher
+        live "/:id/show/edit_watcher/:index", InstallationLive.Show, :edit_watcher
       end
 
       live "/admin", AdminLive, :index

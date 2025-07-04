@@ -5,6 +5,7 @@ defmodule PanicWeb.InstallationLive.Show do
   use PanicWeb, :live_view
 
   alias Panic.Engine.Installation
+  alias PanicWeb.InvocationWatcher
 
   @impl true
   def render(assigns) do
@@ -30,7 +31,7 @@ defmodule PanicWeb.InstallationLive.Show do
       <h2 class="text-lg font-semibold leading-8 text-zinc-800 dark:text-zinc-100">
         Watchers
       </h2>
-      <div class="mt-4 space-y-6">
+      <div class="mt-4 space-y-4">
         <div :if={@installation.watchers == []} class="text-sm text-zinc-600 dark:text-zinc-400">
           No watchers configured. Add one to start displaying invocations.
         </div>
@@ -38,48 +39,49 @@ defmodule PanicWeb.InstallationLive.Show do
           :for={{watcher, index} <- Enum.with_index(@installation.watchers)}
           class="relative rounded-lg border border-zinc-200 dark:border-zinc-700 p-4"
         >
-          <div class="pr-10">
-            <h3 class="text-base font-semibold leading-7 text-zinc-900 dark:text-zinc-100">
-              {watcher.name} ({watcher.type})
-            </h3>
-            <.list>
-              <:item title="Type">{watcher.type}</:item>
-              <:item :if={watcher.type == :grid} title="Dimensions">
-                {watcher.rows} × {watcher.columns}
-              </:item>
-              <:item :if={watcher.type in [:single, :vestaboard]} title="Stride">
-                {watcher.stride}
-              </:item>
-              <:item :if={watcher.type in [:single, :vestaboard]} title="Offset">
-                {watcher.offset}
-              </:item>
-              <:item :if={watcher.type in [:single, :vestaboard]} title="Show Invoking">
-                {if watcher.show_invoking, do: "Yes", else: "No"}
-              </:item>
-              <:item :if={watcher.type == :vestaboard} title="Vestaboard Name">
-                {watcher.vestaboard_name}
-              </:item>
-              <:item :if={watcher.type == :vestaboard} title="Initial Prompt">
-                {if watcher.initial_prompt, do: "Yes", else: "No"}
-              </:item>
-            </.list>
-            <div class="mt-4">
+          <div class="flex justify-between items-start">
+            <div class="flex-grow">
+              <div class="flex items-center gap-3">
+                <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                  {watcher.name}
+                </h3>
+                <span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                  {watcher.type}
+                </span>
+                <span class="inline-flex items-center rounded-md bg-green-100 dark:bg-green-900 px-2 py-1 text-xs font-medium text-green-800 dark:text-green-200">
+                  <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 8 8">
+                    <circle cx="4" cy="4" r="3" />
+                  </svg>
+                  {count_viewers_for_watcher(@installation, watcher)} viewers
+                </span>
+              </div>
+              <div class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                {watcher_summary(watcher)}
+              </div>
+              <div class="mt-2">
+                <.link
+                  navigate={~p"/i/#{@installation.id}/#{watcher.name}"}
+                  class="text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                >
+                  View display →
+                </.link>
+              </div>
+            </div>
+            <div class="flex gap-2">
               <.link
-                navigate={~p"/i/#{@installation.id}/#{watcher.name}"}
-                class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700 dark:text-zinc-100 dark:hover:text-zinc-300"
+                patch={~p"/installations/#{@installation}/show/edit_watcher/#{index}"}
+                class="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
               >
-                View watcher at /i/{@installation.id}/{watcher.name} →
+                Edit
+              </.link>
+              <.link
+                phx-click={JS.push("delete_watcher", value: %{index: index})}
+                data-confirm="Are you sure you want to delete this watcher?"
+                class="text-sm text-red-600 hover:text-red-500"
+              >
+                Delete
               </.link>
             </div>
-          </div>
-          <div class="absolute right-2 top-2">
-            <.link
-              phx-click={JS.push("delete_watcher", value: %{index: index})}
-              data-confirm="Are you sure you want to delete this watcher?"
-              class="text-sm text-red-600 hover:text-red-500"
-            >
-              Delete
-            </.link>
           </div>
         </div>
       </div>
@@ -123,6 +125,23 @@ defmodule PanicWeb.InstallationLive.Show do
         patch={~p"/installations/#{@installation}"}
       />
     </.modal>
+
+    <.modal
+      :if={@live_action == :edit_watcher}
+      id="watcher-edit-modal"
+      show
+      on_cancel={JS.patch(~p"/installations/#{@installation}")}
+    >
+      <.live_component
+        module={PanicWeb.InstallationLive.WatcherEditFormComponent}
+        id={@watcher_index}
+        title="Edit Watcher"
+        installation={@installation}
+        index={@watcher_index}
+        current_user={@current_user}
+        patch={~p"/installations/#{@installation}"}
+      />
+    </.modal>
     """
   end
 
@@ -154,6 +173,11 @@ defmodule PanicWeb.InstallationLive.Show do
     socket
   end
 
+  defp apply_action(socket, :edit_watcher, %{"index" => index}) do
+    index = String.to_integer(index)
+    assign(socket, :watcher_index, index)
+  end
+
   @impl true
   def handle_event("delete_watcher", %{"index" => index}, socket) do
     index = if is_binary(index), do: String.to_integer(index), else: index
@@ -176,11 +200,52 @@ defmodule PanicWeb.InstallationLive.Show do
     {:noreply, assign(socket, :installation, installation)}
   end
 
+  @impl true
+  def handle_info({PanicWeb.InstallationLive.WatcherEditFormComponent, {:saved, installation}}, socket) do
+    {:noreply, assign(socket, :installation, installation)}
+  end
+
   defp page_title(:show), do: "Show Installation"
   defp page_title(:edit), do: "Edit Installation"
   defp page_title(:add_watcher), do: "Add Watcher"
+  defp page_title(:edit_watcher), do: "Edit Watcher"
 
   defp list_networks(user) do
     Ash.read!(Panic.Engine.Network, actor: user)
   end
+
+  defp count_viewers_for_watcher(installation, _watcher) do
+    viewers = InvocationWatcher.list_viewers(installation.network_id)
+    
+    # Count viewers that are viewing this installation
+    # We can't match specific watchers without tracking more metadata in presence
+    Enum.count(viewers, fn viewer ->
+      viewer[:installation_id] == to_string(installation.id)
+    end)
+  end
+
+  defp watcher_summary(watcher) do
+    case watcher.type do
+      :grid ->
+        "#{watcher.rows} × #{watcher.columns} grid"
+      
+      :single ->
+        show_invoking = if watcher.show_invoking, do: " (shows invoking)", else: ""
+        "Shows every #{ordinalize(watcher.stride)} invocation, offset #{watcher.offset}#{show_invoking}"
+      
+      :vestaboard ->
+        show_invoking = if watcher.show_invoking, do: " (shows invoking)", else: ""
+        initial = if watcher.initial_prompt, do: ", shows initial prompt", else: ""
+        "#{String.capitalize(String.replace(to_string(watcher.vestaboard_name), "_", " "))} - every #{ordinalize(watcher.stride)}, offset #{watcher.offset}#{show_invoking}#{initial}"
+    end
+  end
+
+  defp ordinalize(1), do: "1st"
+  defp ordinalize(2), do: "2nd"
+  defp ordinalize(3), do: "3rd"
+  defp ordinalize(n) when n in 11..13, do: "#{n}th"
+  defp ordinalize(n) when rem(n, 10) == 1, do: "#{n}st"
+  defp ordinalize(n) when rem(n, 10) == 2, do: "#{n}nd"
+  defp ordinalize(n) when rem(n, 10) == 3, do: "#{n}rd"
+  defp ordinalize(n), do: "#{n}th"
 end

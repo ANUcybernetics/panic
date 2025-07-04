@@ -88,6 +88,14 @@ defmodule Panic.Engine.Installation do
       change Panic.Engine.Changes.RemoveWatcher
     end
 
+    update :update_watcher do
+      argument :index, :integer, allow_nil?: false
+      argument :watcher, Watcher, allow_nil?: false
+      require_atomic? false
+
+      change Panic.Engine.Changes.UpdateWatcher
+    end
+
     update :reorder_watchers do
       accept [:watchers]
       require_atomic? false
