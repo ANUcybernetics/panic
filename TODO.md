@@ -1,7 +1,6 @@
 # Panic TODO
 
 - see why the viewers are being double-counted
-- test the anon QR UX
 - script as much of the rpi setup stuff as possible (e.g. use rpi-imager)
 - long-running debug (w/sound) on the commbox
 - add the "restart on error" logic (because it's better than the alternative)
