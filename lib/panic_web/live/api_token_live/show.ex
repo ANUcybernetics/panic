@@ -21,20 +21,6 @@ defmodule PanicWeb.APITokenLive.Show do
 
     <.list>
       <:item title="Name">{@api_token.name}</:item>
-      <:item title="Anonymous Access">
-        <span
-          :if={@api_token.allow_anonymous_use}
-          class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10"
-        >
-          Enabled
-        </span>
-        <span
-          :if={!@api_token.allow_anonymous_use}
-          class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10"
-        >
-          Disabled
-        </span>
-      </:item>
       <:item title="Created">
         {Calendar.strftime(@api_token.inserted_at, "%B %d, %Y at %I:%M %p")}
       </:item>

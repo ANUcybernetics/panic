@@ -56,12 +56,8 @@ defmodule Panic.Engine.Changes.InvokeModel do
     model = Panic.Model.by_id!(model_id)
     %Panic.Model{path: _path, invoke: invoke_fn, platform: platform} = model
 
-    # Resolve token using the new TokenResolver
-    token_result =
-      TokenResolver.resolve_token(platform,
-        actor: context.actor,
-        anonymous: Map.get(context, :anonymous, false)
-      )
+    # Resolve token using the TokenResolver
+    token_result = TokenResolver.resolve_token(platform, actor: context.actor)
 
     case token_result do
       {:ok, token} ->

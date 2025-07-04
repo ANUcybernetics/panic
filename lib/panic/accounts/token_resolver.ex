@@ -2,13 +2,9 @@ defmodule Panic.Accounts.TokenResolver do
   @moduledoc """
   Resolves API tokens for model invocations.
 
-  For authenticated requests, uses tokens from the user's api_tokens.
-  For anonymous requests, finds any token marked with allow_anonymous_use: true.
+  Uses tokens from the user's api_tokens.
   """
 
-  import Ash.Query
-
-  alias Panic.Accounts.APIToken
   alias Panic.Platforms.Dummy
 
   @doc """
@@ -17,8 +13,7 @@ defmodule Panic.Accounts.TokenResolver do
   ## Parameters
     - platform: The platform module (OpenAI, Replicate, Gemini, etc.)
     - opts: Options including:
-      - actor: The authenticated user (optional)
-      - anonymous: Boolean indicating anonymous access (optional)
+      - actor: The authenticated user (required unless Dummy platform)
       
   ## Returns
     - {:ok, token_string} if a valid token is found
@@ -30,20 +25,11 @@ defmodule Panic.Accounts.TokenResolver do
       {:ok, "dummy_token"}
     else
       actor = Keyword.get(opts, :actor)
-      anonymous = Keyword.get(opts, :anonymous, false)
 
-      cond do
-        # Authenticated user - use their tokens
-        actor && !anonymous ->
-          resolve_user_token(platform, actor)
-
-        # Anonymous access - find any token with allow_anonymous_use
-        anonymous || is_nil(actor) ->
-          resolve_anonymous_token(platform)
-
-        # Should not reach here
-        true ->
-          {:error, "Invalid token resolution state"}
+      if actor do
+        resolve_user_token(platform, actor)
+      else
+        {:error, "No user provided for token resolution"}
       end
     end
   end
@@ -58,28 +44,6 @@ defmodule Panic.Accounts.TokenResolver do
 
       token ->
         {:ok, token}
-    end
-  end
-
-  defp resolve_anonymous_token(platform) do
-    # Query for tokens that allow anonymous use
-    query =
-      APIToken
-      |> filter(allow_anonymous_use == true)
-      |> filter(not is_nil(^platform_field(platform)))
-      |> sort(updated_at: :desc)
-      |> limit(1)
-
-    case Ash.read_one(query, authorize?: false) do
-      {:ok, nil} ->
-        {:error, "No anonymous token available for #{platform}"}
-
-      {:ok, api_token} ->
-        token_value = Map.get(api_token, platform_field(platform))
-        {:ok, token_value}
-
-      {:error, error} ->
-        {:error, "Failed to query anonymous tokens: #{inspect(error)}"}
     end
   end
 

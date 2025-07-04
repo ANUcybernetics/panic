@@ -80,9 +80,6 @@ defmodule PanicWeb.UserLive.Show do
               </span>
             </div>
           </:col>
-          <:col :let={token} label="Anonymous Access">
-            {if token.allow_anonymous_use, do: "Yes", else: "No"}
-          </:col>
         </.table>
       <% else %>
         <p class="mt-8">
