@@ -347,7 +347,7 @@ defmodule PanicWeb.InstallationLiveTest do
 
       conn
       |> visit("/installations/#{installation.id}")
-      |> click_link("View display →")
+      |> click_link("View display (/i/#{installation.id}/display-grid) →")
       |> assert_has("title", text: "Test Installation - display-grid")
     end
 
