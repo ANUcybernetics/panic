@@ -1,6 +1,5 @@
 # Panic TODO
 
-- display watcher count (presence-based) in installation view
 - test the anon QR UX
 - long-running debug (w/sound) on the commbox
 - add the "restart on error" logic (because it's better than the alternative)
