@@ -214,13 +214,12 @@ defmodule PanicWeb.InstallationLive.Show do
     Ash.read!(Panic.Engine.Network, actor: user)
   end
 
-  defp count_viewers_for_watcher(installation, _watcher) do
+  defp count_viewers_for_watcher(installation, watcher) do
     viewers = InvocationWatcher.list_viewers(installation.network_id)
     
-    # Count viewers that are viewing this installation
-    # We can't match specific watchers without tracking more metadata in presence
+    # Count viewers that are viewing this specific watcher
     Enum.count(viewers, fn viewer ->
-      viewer[:installation_id] == to_string(installation.id)
+      viewer[:installation_id] == to_string(installation.id) && viewer[:watcher_name] == watcher.name
     end)
   end
 

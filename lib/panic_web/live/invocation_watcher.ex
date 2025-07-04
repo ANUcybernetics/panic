@@ -331,12 +331,14 @@ defmodule PanicWeb.InvocationWatcher do
     if LiveView.connected?(socket) do
       user = socket.assigns[:current_user]
       installation_id = socket.assigns[:installation_id]
+      watcher_name = socket.assigns[:watcher_name]
 
       metadata = %{
         display: display,
         user_id: user && user.id,
         user_email: user && user.email,
         installation_id: installation_id,
+        watcher_name: watcher_name,
         joined_at: DateTime.utc_now()
       }
 
@@ -353,12 +355,14 @@ defmodule PanicWeb.InvocationWatcher do
     if LiveView.connected?(socket) do
       user = socket.assigns[:current_user]
       installation_id = socket.assigns[:installation_id]
+      watcher_name = socket.assigns[:watcher_name]
 
       metadata = %{
         display: display,
         user_id: user && user.id,
         user_email: user && user.email,
         installation_id: installation_id,
+        watcher_name: watcher_name,
         joined_at: DateTime.utc_now()
       }
 
