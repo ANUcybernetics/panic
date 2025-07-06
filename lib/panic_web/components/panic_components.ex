@@ -165,7 +165,19 @@ defmodule PanicWeb.PanicComponents do
       phx-update="stream"
     >
       <div id="display-info" class="p-4 text-2xl text-purple-300/50 only:block hidden">
-        {"#{elem(@display, 1)}/#{elem(@display, 2)}"}
+        <span class="flex items-center gap-4">
+          <span>{"#{elem(@display, 1)}/#{elem(@display, 2)}"}</span>
+          <span class="text-lg">
+            <%= case @display do %>
+              <% {:grid, _, _} -> %>
+                <span title="Grid view">⊞</span>
+              <% {:single, _, _} -> %>
+                <span title="Single view">□</span>
+              <% {:single, _, _, _} -> %>
+                <span title="Single view">□</span>
+            <% end %>
+          </span>
+        </span>
       </div>
       <.invocation
         :for={{id, invocation} <- @invocations}
