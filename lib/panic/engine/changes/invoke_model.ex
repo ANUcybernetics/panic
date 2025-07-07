@@ -77,12 +77,20 @@ defmodule Panic.Engine.Changes.InvokeModel do
             |> Ash.Changeset.put_context(:invocation_success, true)
 
           {:error, :nsfw} ->
-            changeset
-            |> Ash.Changeset.put_context(
-              :invocation_output,
-              "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-placeholder.webp"
-            )
-            |> Ash.Changeset.put_context(:invocation_success, true)
+            # NSFW error - retry with sanitized prompt
+            retry_input = nsfw_retry_prompt(input)
+
+            case invoke_fn.(model, retry_input, token) do
+              {:ok, output} ->
+                changeset
+                |> Ash.Changeset.put_context(:invocation_output, output)
+                |> Ash.Changeset.put_context(:invocation_success, true)
+
+              {:error, message} ->
+                changeset
+                |> Ash.Changeset.add_error(message)
+                |> Ash.Changeset.put_context(:invocation_success, false)
+            end
 
           {:error, message} ->
             changeset
@@ -95,5 +103,9 @@ defmodule Panic.Engine.Changes.InvokeModel do
         |> Ash.Changeset.add_error(reason)
         |> Ash.Changeset.put_context(:invocation_success, false)
     end
+  end
+
+  defp nsfw_retry_prompt(_original_prompt) do
+    "a wombat holding a sign that says 'whoops!'"
   end
 end

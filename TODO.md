@@ -2,8 +2,6 @@
 
 - make sure that terminal (including anon) shows the lockout timer
 - test rpi automated setup script (and maybe rename it?)
-- Hide mouse cursor
-- do the watchers stop it from sleeping? can we scale down the VM at least?
 
 - long-running debug (w/sound) on the commbox
 - add the "restart on error" logic (because it's better than the alternative)
@@ -24,9 +22,6 @@
   few different [styles](https://audiomotion.dev/demo/))
 - update to tailwind 4.0, and use the text shadow stuff (actually this might
   happen with Phoenix 1.8)
-- honestly, it's looking less likely that this will be a "multi-user SaaS thing"
-  and more like I'll always be tweaking it and making bespoke changes for our
-  specific purposes... so perhaps remove the auth/policy stuff in general
 - add the ability to specify multiple offsets for single screen view
 - show multiple invocations in info view
 - why aren't <p>s geting margins in prose blocks in info view?
@@ -39,7 +34,6 @@
   for changing machines)
 - have a "pre-warm all network models" option, which would fire off an API call
   for all models at startup
-- for nsfw, dynamically generate the replacement image
 - add an indicator to the model select component to say a) if the network has
   been saved b) if it's runnable c) if it's currently running
 - add a "restart from invocation" UI option
