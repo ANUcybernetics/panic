@@ -17,11 +17,10 @@ defmodule Panic.ExternalAPIPatches do
   - Replicate model invocations
   - OpenAI model invocations
   - Gemini model invocations
-  
+
   Note: Vestaboard API calls are disabled via config in test.exs
   Note: Archiver operations are patched separately in ArchiverPatches
   """
-
 
   @doc """
   Sets up all external API patches for testing.
@@ -65,7 +64,6 @@ defmodule Panic.ExternalAPIPatches do
       {:ok, generate_mock_output()}
     end)
   end
-
 
   defp generate_mock_output do
     # Generate different types of mock output based on randomness

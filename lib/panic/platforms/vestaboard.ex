@@ -54,23 +54,25 @@ defmodule Panic.Platforms.Vestaboard do
       "mock-vestaboard-token"
     else
       # Ensure user has api_tokens loaded
-      user = if Ash.Resource.loaded?(user, :api_tokens) do
-        user
-      else
-        case Ash.load(user, :api_tokens, authorize?: false) do
-          {:ok, loaded_user} -> loaded_user
-          _ -> user
+      user =
+        if Ash.Resource.loaded?(user, :api_tokens) do
+          user
+        else
+          case Ash.load(user, :api_tokens, authorize?: false) do
+            {:ok, loaded_user} -> loaded_user
+            _ -> user
+          end
         end
-      end
-      
+
       field = :"vestaboard_#{board_name}_token"
-      
+
       # Look for the token in api_tokens
-      token = user.api_tokens
-      |> Enum.map(fn api_token -> Map.get(api_token, field) end)
-      |> Enum.reject(&is_nil/1)
-      |> List.first()
-      
+      token =
+        user.api_tokens
+        |> Enum.map(fn api_token -> Map.get(api_token, field) end)
+        |> Enum.reject(&is_nil/1)
+        |> List.first()
+
       if token do
         token
       else

@@ -42,7 +42,6 @@ defmodule Panic.NetworkRunnerTest do
 
       # Disable synchronous mode
       NetworkRunnerTestHelpers.disable_sync_mode()
-
     end)
 
     {:ok, user: user, network: network}

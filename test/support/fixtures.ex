@@ -46,9 +46,9 @@ defmodule Panic.Fixtures do
 
   def user_with_vestaboard_tokens do
     user = user()
-    
+
     # Create API token with vestaboard tokens
-    {:ok, api_token} = 
+    {:ok, api_token} =
       Ash.create(
         Panic.Accounts.APIToken,
         %{
@@ -61,7 +61,7 @@ defmodule Panic.Fixtures do
         },
         authorize?: false
       )
-    
+
     # Associate with user
     {:ok, _} =
       Ash.create(
@@ -72,7 +72,7 @@ defmodule Panic.Fixtures do
         },
         authorize?: false
       )
-    
+
     # Reload user with tokens
     Ash.load!(user, :api_tokens, authorize?: false)
   end

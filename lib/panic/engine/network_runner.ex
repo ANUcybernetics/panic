@@ -279,7 +279,7 @@ defmodule Panic.Engine.NetworkRunner do
   defp handle_start_run_idle(prompt, state) do
     {network, network_owner} = get_network_and_user!(state.network_id)
     watchers = vestaboard_watchers(network)
-    
+
     opts = [actor: network_owner]
 
     case Engine.prepare_first(network, prompt, opts) do

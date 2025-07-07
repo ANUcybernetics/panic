@@ -30,6 +30,9 @@ config :panic, PanicWeb.Endpoint,
   secret_key_base: "6fMtFbo7K5GsdxuA9hk6X1hEn80aqXOJ37byZ//ba4YknWXTQDDJinMCdbXRj1aR",
   server: false
 
+# Disable vestaboard API calls in tests
+config :panic, :disable_vestaboard, true
+
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
 
@@ -37,15 +40,12 @@ config :phoenix_live_view,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true
 
-config :phoenix_test, :endpoint, PanicWeb.Endpoint
-
 # useful for debugging authorization policy issues
 # config :ash, :policies, log_policy_breakdowns: :error
 
+config :phoenix_test, :endpoint, PanicWeb.Endpoint
+
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
-
-# Disable vestaboard API calls in tests
-config :panic, :disable_vestaboard, true
 
 import_config "secrets.exs"

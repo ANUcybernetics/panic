@@ -28,7 +28,9 @@ defmodule PanicWeb.NetworkLive.Terminal do
     <div class="terminal-container p-4 sm:p-8 text-purple-100 font-bold">
       <p class="min-h-8 sm:min-h-12 text-sm sm:text-base">
         <span>Current run:</span>
-        <span :if={@genesis_invocation} class="block sm:inline mt-1 sm:mt-0">{@genesis_invocation.input}</span>
+        <span :if={@genesis_invocation} class="block sm:inline mt-1 sm:mt-0">
+          {@genesis_invocation.input}
+        </span>
       </p>
       <.live_component
         class="text-purple-100 mt-4 sm:mt-8"
