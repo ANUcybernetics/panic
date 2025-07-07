@@ -7,6 +7,24 @@ set -e           # Exit on error
 set -u           # Exit on undefined variable
 set -o pipefail  # Exit on pipe failure
 
+# Download and source shared configuration
+CONFIG_URL="https://raw.githubusercontent.com/ANUcybernetics/panic/main/rpi/kiosk-config.sh"
+if ! curl -sSL "$CONFIG_URL" -o /tmp/kiosk-config.sh; then
+    echo "Warning: Failed to download shared config, using embedded defaults" >&2
+    # Fallback to embedded configuration
+    readonly KIOSK_PACKAGES="chromium-browser unclutter"
+    readonly UNCLUTTER_FLAGS="-idle 0.1 -root"
+    get_chromium_command() {
+        local url="$1"
+        echo "/usr/bin/chromium-browser --kiosk --disable-infobars --disable-session-crashed-bubble --disable-translate --disable-features=TranslateUI --no-first-run --disable-default-apps --disable-popup-blocking --disable-prompt-on-repost --no-message-box --autoplay-policy=no-user-gesture-required --disable-hang-monitor --window-position=0,0 --start-fullscreen --user-data-dir=/tmp/chromium-kiosk --disable-dev-shm-usage --no-sandbox --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --ozone-platform=wayland --enable-features=UseOzonePlatform --app=\"$url\""
+    }
+    get_unclutter_command() {
+        echo "/usr/bin/unclutter $UNCLUTTER_FLAGS &"
+    }
+else
+    source /tmp/kiosk-config.sh
+fi
+
 # Check for URL argument
 if [ $# -eq 0 ]; then
     echo "Error: URL argument required" >&2
@@ -27,7 +45,7 @@ echo "Current user: $CURRENT_USER"
 echo "Installing required packages..."
 sudo apt update
 sudo apt upgrade -y
-sudo apt install -y chromium-browser
+sudo apt install -y $KIOSK_PACKAGES
 
 # Create systemd service file
 echo "Creating systemd service..."
@@ -52,37 +70,17 @@ WorkingDirectory=/home/$CURRENT_USER
 ExecStartPre=/bin/bash -c 'until pgrep -x labwc; do sleep 1; done'
 ExecStartPre=/bin/sleep 5
 
+# Hide mouse cursor
+ExecStartPre=/bin/bash -c '$(get_unclutter_command)'
+
 # Launch Chromium in kiosk mode with Wayland support
-ExecStart=/usr/bin/chromium-browser \
-    --kiosk \
-    --disable-infobars \
-    --disable-session-crashed-bubble \
-    --disable-translate \
-    --disable-features=TranslateUI \
-    --no-first-run \
-    --disable-default-apps \
-    --disable-popup-blocking \
-    --disable-prompt-on-repost \
-    --no-message-box \
-    --autoplay-policy=no-user-gesture-required \
-    --disable-hang-monitor \
-    --window-position=0,0 \
-    --start-fullscreen \
-    --user-data-dir=/tmp/chromium-kiosk \
-    --disable-dev-shm-usage \
-    --no-sandbox \
-    --disable-background-timer-throttling \
-    --disable-renderer-backgrounding \
-    --disable-backgrounding-occluded-windows \
-    --ozone-platform=wayland \
-    --enable-features=UseOzonePlatform \
-    "$URL"
+ExecStart=$(get_chromium_command "$URL")
 
 # AIDEV-NOTE: Auto-restart on crash with progressive backoff
 Restart=always
-RestartSec=10
-StartLimitInterval=300
-StartLimitBurst=5
+RestartSec=${SERVICE_RESTART_SEC:-10}
+StartLimitInterval=${SERVICE_START_LIMIT_INTERVAL:-300}
+StartLimitBurst=${SERVICE_START_LIMIT_BURST:-5}
 KillMode=mixed
 
 # Logging
