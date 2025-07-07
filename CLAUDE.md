@@ -30,6 +30,7 @@ This is an Elixir app powered by Ash & Phoenix LiveView.
 - never attempt to start or stop a phoenix application as your tidewave tools
   work by being connected to the running application, and starting or stopping
   it can cause issues
+- do not ever call Mix.env() in application code, because Mix is not available in prod and this will cause a crash
 
 For an overview of the app's architecture, see @OVERVIEW.md
 

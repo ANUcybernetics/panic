@@ -591,7 +591,7 @@ defmodule Panic.Engine.NetworkRunner do
 
   defp maybe_dispatch_watchers(%{sequence_number: seq} = inv, watchers, user) when is_list(watchers) do
     Enum.any?(watchers, fn watcher ->
-      %{stride: stride, offset: offset, name: name, initial_prompt: initial_prompt} = watcher
+      %{stride: stride, offset: offset, initial_prompt: initial_prompt} = watcher
 
       should_dispatch =
         cond do
@@ -609,7 +609,9 @@ defmodule Panic.Engine.NetworkRunner do
         end
 
       if should_dispatch do
-        board_name = Atom.to_string(name)
+        # Use vestaboard_name (atom) not name (string) for token lookup
+        vestaboard_name = Map.get(watcher, :vestaboard_name)
+        board_name = Atom.to_string(vestaboard_name)
         token = Vestaboard.token_for_board!(board_name, user)
 
         # For genesis (seq 0), display input; otherwise display output

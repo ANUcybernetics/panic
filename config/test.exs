@@ -45,4 +45,7 @@ config :phoenix_test, :endpoint, PanicWeb.Endpoint
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
 
+# Disable vestaboard API calls in tests
+config :panic, :disable_vestaboard, true
+
 import_config "secrets.exs"

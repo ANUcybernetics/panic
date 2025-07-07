@@ -43,4 +43,37 @@ defmodule Panic.Fixtures do
     |> Panic.Generators.network_with_real_models()
     |> pick()
   end
+
+  def user_with_vestaboard_tokens do
+    user = user()
+    
+    # Create API token with vestaboard tokens
+    {:ok, api_token} = 
+      Ash.create(
+        Panic.Accounts.APIToken,
+        %{
+          name: "Test tokens with Vestaboard",
+          openai_token: "test_openai_token",
+          vestaboard_panic_1_token: "test_vestaboard_1",
+          vestaboard_panic_2_token: "test_vestaboard_2",
+          vestaboard_panic_3_token: "test_vestaboard_3",
+          vestaboard_panic_4_token: "test_vestaboard_4"
+        },
+        authorize?: false
+      )
+    
+    # Associate with user
+    {:ok, _} =
+      Ash.create(
+        Panic.Accounts.UserAPIToken,
+        %{
+          user_id: user.id,
+          api_token_id: api_token.id
+        },
+        authorize?: false
+      )
+    
+    # Reload user with tokens
+    Ash.load!(user, :api_tokens, authorize?: false)
+  end
 end

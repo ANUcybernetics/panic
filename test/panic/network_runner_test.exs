@@ -8,7 +8,6 @@ defmodule Panic.NetworkRunnerTest do
   alias Panic.Engine
   alias Panic.Engine.NetworkRegistry
   alias Panic.Engine.NetworkRunner
-  alias Panic.ExternalAPIPatches
   alias Panic.NetworkRunnerTestHelpers
 
   require Ash.Query
@@ -16,9 +15,6 @@ defmodule Panic.NetworkRunnerTest do
   @moduletag :capture_log
 
   setup do
-    # Setup external API patches to avoid real network calls
-    ExternalAPIPatches.setup()
-
     # Stop all network runners to ensure clean state
     PanicWeb.Helpers.stop_all_network_runners()
 
@@ -47,8 +43,6 @@ defmodule Panic.NetworkRunnerTest do
       # Disable synchronous mode
       NetworkRunnerTestHelpers.disable_sync_mode()
 
-      # Teardown API patches
-      ExternalAPIPatches.teardown()
     end)
 
     {:ok, user: user, network: network}

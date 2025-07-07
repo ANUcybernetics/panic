@@ -14,15 +14,14 @@ defmodule Panic.ExternalAPIPatches do
 
   ## Patched APIs
 
-  - Vestaboard API calls
   - Replicate model invocations
   - OpenAI model invocations
   - Gemini model invocations
-  - Archiver operations (file downloads, conversions, S3 uploads)
+  
+  Note: Vestaboard API calls are disabled via config in test.exs
+  Note: Archiver operations are patched separately in ArchiverPatches
   """
 
-  alias Panic.Engine.Archiver
-  alias Panic.Platforms.Vestaboard
 
   @doc """
   Sets up all external API patches for testing.
@@ -31,9 +30,9 @@ defmodule Panic.ExternalAPIPatches do
   doesn't make real external API calls during tests.
   """
   def setup do
-    setup_vestaboard_patches()
     setup_model_patches()
-    setup_archiver_patches()
+    # Archiver patches are already applied in test_helper.exs via ArchiverPatches module
+    # Vestaboard is disabled via config :disable_vestaboard in test.exs
     :ok
   end
 
@@ -49,18 +48,6 @@ defmodule Panic.ExternalAPIPatches do
   end
 
   # Private functions
-
-  defp setup_vestaboard_patches do
-    # Patch Vestaboard.send_text to avoid actual API calls
-    Repatch.patch(Vestaboard, :send_text, fn _text, _token, _board_name ->
-      {:ok, "mock-vestaboard-id-#{:rand.uniform(10_000)}"}
-    end)
-
-    # Patch token retrieval if needed
-    Repatch.patch(Vestaboard, :token_for_board!, fn _board_name, _user ->
-      "mock-vestaboard-token"
-    end)
-  end
 
   defp setup_model_patches do
     # Patch Replicate API calls
@@ -79,31 +66,6 @@ defmodule Panic.ExternalAPIPatches do
     end)
   end
 
-  defp setup_archiver_patches do
-    # These are already patched in test_helper.exs, but we include them
-    # here for completeness and to avoid any potential issues
-
-    Repatch.patch(Archiver, :download_file, fn _url ->
-      {:ok, "/tmp/mock_file_#{:rand.uniform(10_000)}.webp"}
-    end)
-
-    Repatch.patch(Archiver, :convert_file, fn filename, _dest_rootname ->
-      {:ok, filename}
-    end)
-
-    Repatch.patch(Archiver, :upload_to_s3, fn _file_path ->
-      {:ok, "https://mock-s3-url.com/test-file-#{:rand.uniform(10_000)}.webp"}
-    end)
-
-    Repatch.patch(Archiver, :archive_invocation, fn _invocation, _next_invocation ->
-      :ok
-    end)
-
-    # Patch NetworkRunner.archive_invocation_async to avoid Task.Supervisor calls in tests
-    Repatch.patch(Panic.Engine.NetworkRunner, :archive_invocation_async, fn _invocation, _next_invocation ->
-      :ok
-    end)
-  end
 
   defp generate_mock_output do
     # Generate different types of mock output based on randomness
