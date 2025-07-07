@@ -51,3 +51,27 @@ get_chromium_command() {
 get_unclutter_command() {
     echo "/usr/bin/unclutter $UNCLUTTER_FLAGS &"
 }
+
+# Function to create wait-for-display helper for Raspberry Pi OS Wayland
+create_wait_for_display_script() {
+    cat << 'WAIT_SCRIPT'
+#!/bin/bash
+# Wait for Wayland compositor (labwc) to be ready on Raspberry Pi OS
+MAX_WAIT=30
+elapsed=0
+
+# On Raspberry Pi OS Bookworm, check for:
+# 1. labwc process running
+# 2. Wayland socket exists
+while [ $elapsed -lt $MAX_WAIT ]; do
+    if pgrep -x labwc >/dev/null && [ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]; then
+        # Give it a moment to fully initialize
+        sleep 2
+        exit 0
+    fi
+    sleep 1
+    elapsed=$((elapsed + 1))
+done
+exit 1
+WAIT_SCRIPT
+}

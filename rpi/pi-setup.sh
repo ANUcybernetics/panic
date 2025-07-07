@@ -49,39 +49,66 @@ sudo apt install -y $KIOSK_PACKAGES
 
 # Create systemd service file
 echo "Creating systemd service..."
+
+# First, create a proper systemd user service directory if it doesn't exist
+sudo mkdir -p /etc/systemd/user
+
+# Create the main kiosk service
 sudo tee "$SERVICE_FILE" > /dev/null << EOF
 [Unit]
-Description=Kiosk Mode Browser
-After=graphical.target network-online.target
-Wants=graphical.target network-online.target
+Description=Kiosk Mode Browser for Raspberry Pi OS
+Documentation=https://github.com/ANUcybernetics/panic
+
+# For Raspberry Pi OS Bookworm with LightDM + labwc
+After=multi-user.target
+After=lightdm.service
+After=systemd-user-sessions.service
+Requires=lightdm.service
+
+# Network dependency for web-based kiosks
+After=network-online.target
+Wants=network-online.target
+
+# Part of the graphical session
+PartOf=graphical-session.target
 
 [Service]
 Type=simple
 User=$CURRENT_USER
 Group=$CURRENT_USER
-Environment=WAYLAND_DISPLAY=wayland-0
-Environment=XDG_RUNTIME_DIR=/run/user/1000
-Environment=XDG_SESSION_TYPE=wayland
-Environment=HOME=/home/$CURRENT_USER
+
+# Raspberry Pi OS Bookworm Wayland environment
+Environment="WAYLAND_DISPLAY=wayland-0"
+Environment="XDG_RUNTIME_DIR=/run/user/$(id -u $CURRENT_USER)"
+Environment="XDG_SESSION_TYPE=wayland"
+Environment="HOME=/home/$CURRENT_USER"
 WorkingDirectory=/home/$CURRENT_USER
 
-# AIDEV-NOTE: Critical timing - wait for Wayland compositor before launching browser
-# Wait for Wayland compositor to be ready
-ExecStartPre=/bin/bash -c 'until pgrep -x labwc; do sleep 1; done'
-ExecStartPre=/bin/sleep 5
+# Use PAMName for proper session setup
+PAMName=login
 
-# Hide mouse cursor
-ExecStartPre=/bin/bash -c '$(get_unclutter_command)'
-
-# Launch Chromium in kiosk mode with Wayland support
-ExecStart=$(get_chromium_command "$URL")
-
-# AIDEV-NOTE: Auto-restart on crash with progressive backoff
-Restart=always
+# Restart configuration
 RestartSec=${SERVICE_RESTART_SEC:-10}
+Restart=on-failure
 StartLimitInterval=${SERVICE_START_LIMIT_INTERVAL:-300}
 StartLimitBurst=${SERVICE_START_LIMIT_BURST:-5}
+
+# Better process management
 KillMode=mixed
+TimeoutStartSec=90s
+TimeoutStopSec=10s
+
+# Start unclutter to hide mouse cursor (check if already running first)
+ExecStartPre=/bin/bash -c 'pgrep unclutter || nohup /usr/bin/unclutter -idle 0.1 -root >/dev/null 2>&1 &'
+
+# Wait for labwc compositor with timeout and proper escaping
+ExecStartPre=/bin/bash -c 'timeout 30s bash -c "until pgrep -x labwc && [ -S /run/user/$(id -u $CURRENT_USER)/wayland-0 ]; do sleep 1; done"'
+
+# Brief delay for compositor stabilization
+ExecStartPre=/bin/sleep 3
+
+# Launch Chromium in kiosk mode
+ExecStart=$(get_chromium_command "$URL")
 
 # Logging
 StandardOutput=journal
@@ -89,6 +116,7 @@ StandardError=journal
 SyslogIdentifier=kiosk
 
 [Install]
+# Start with the graphical target on Raspberry Pi OS
 WantedBy=graphical.target
 EOF
 
