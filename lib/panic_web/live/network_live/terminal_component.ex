@@ -62,11 +62,32 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
 
         {:noreply, socket}
 
-      {:error, form} ->
+      {:error, error} ->
+        # Handle both form errors and exceptions
+        {error_message, form_to_assign} = 
+          case error do
+            %AshPhoenix.Form{} = form ->
+              # It's a form with validation errors
+              {AshPhoenix.Form.errors(form), form}
+              
+            %Phoenix.HTML.Form{source: %AshPhoenix.Form{}} = form ->
+              # It's a Phoenix form wrapping an Ash form
+              {AshPhoenix.Form.errors(form), form}
+              
+            exception when is_exception(exception) ->
+              # It's an exception (e.g., from missing API tokens)
+              message = Exception.message(exception)
+              {message, socket.assigns.form}
+              
+            _ ->
+              # Unknown error type
+              {"An error occurred while starting the run", socket.assigns.form}
+          end
+
         socket =
           socket
-          |> put_flash(:error, AshPhoenix.Form.errors(form))
-          |> assign(form: form)
+          |> put_flash(:error, error_message)
+          |> assign(form: form_to_assign)
 
         {:noreply, socket}
     end
