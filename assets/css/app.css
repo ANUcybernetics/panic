@@ -8,6 +8,12 @@
     font-size: 20px;
 }
 
+@media (max-width: 640px) {
+    :root {
+        font-size: 16px;
+    }
+}
+
 /* Autocomplete input styling to match dark theme */
 /* Style the autocomplete-input web component using ::part() selectors */
 autocomplete-input {

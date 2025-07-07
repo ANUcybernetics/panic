@@ -9,6 +9,26 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   def render(assigns) do
     ~H"""
     <div class={assigns[:class]}>
+      <style>
+        #<%= "#{@id}-form" %> .mt-10 {
+          margin-top: 1rem;
+        }
+        #<%= "#{@id}-form" %> .space-y-8 {
+          gap: 1rem;
+        }
+        @media (max-width: 640px) {
+          #<%= "#{@id}-form" %> input[type="text"] {
+            font-size: 1rem !important;
+            padding: 0.5rem !important;
+          }
+          #<%= "#{@id}-form" %> label {
+            font-size: 0.875rem;
+          }
+          #<%= "#{@id}-form" %> .mt-2 {
+            margin-top: 0.5rem;
+          }
+        }
+      </style>
       <.simple_form
         for={@form}
         id={"#{@id}-form"}
