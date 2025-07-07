@@ -13,7 +13,6 @@
 - check that time-based QR code -> terminal workflow works for non-logged-in
   users (perhaps only required for installations, and also requires real
   deployment to test properly)
-- make sure vestaboards crashing doesn't bring down the whole thing
 - create a new `Display` domain or similar (because Installations and Watchers
   shouldn't really be in `Engine`)
 - add an image->image flux model (and perhaps a way to still kick it off with
