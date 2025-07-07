@@ -96,7 +96,7 @@ defmodule Panic.NetworkRunnerTestHelpers do
   ## Usage
 
       # After starting a network runner
-      {:ok, _invocation} = NetworkRunner.start_run(network.id, "test prompt", user)
+      {:ok, _invocation} = NetworkRunner.start_run(network.id, "test prompt")
       NetworkRunnerTestHelpers.allow_network_runner_db_access(network.id)
   """
   def allow_network_runner_db_access(network_id) do
@@ -138,22 +138,17 @@ defmodule Panic.NetworkRunnerTestHelpers do
 
   ## Parameters
   - `network_id` - The network ID to check
-  - `expected_user` - Optional user that should be associated with the run
 
   ## Usage
 
-      NetworkRunnerTestHelpers.assert_runner_running(network.id, user)
+      NetworkRunnerTestHelpers.assert_runner_running(network.id)
   """
-  def assert_runner_running(network_id, expected_user \\ nil) do
+  def assert_runner_running(network_id) do
     case Registry.lookup(NetworkRegistry, network_id) do
       [{pid, _}] ->
         state = :sys.get_state(pid)
         assert state.genesis_invocation != nil
         assert state.current_invocation != nil
-
-        if expected_user do
-          assert state.user.id == expected_user.id
-        end
 
         state
 
@@ -199,7 +194,7 @@ defmodule Panic.NetworkRunnerTestHelpers do
 
   ## Usage
 
-      NetworkRunner.start_run(network.id, "test", user)
+      NetworkRunner.start_run(network.id, "test")
       NetworkRunnerTestHelpers.wait_for_sync_completion(network.id)
       # Now safe to make assertions about the final state
   """

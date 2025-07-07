@@ -421,18 +421,18 @@ defmodule PanicWeb.NetworkLiveTest do
     end
 
     test "creates genesis immediately when starting new run while another is active", %{
-      user: user,
+      user: _user,
       network: network
     } do
       # Start an initial run
-      {:ok, first_genesis} = NetworkRunner.start_run(network.id, "first prompt", user)
+      {:ok, first_genesis} = NetworkRunner.start_run(network.id, "first prompt")
 
       # Subscribe to the network's invocation topic to verify broadcast
       PanicWeb.Endpoint.subscribe("invocation:#{network.id}")
 
       # Start a new run while the first is still processing
       # This should return a new genesis immediately
-      {:ok, second_genesis} = NetworkRunner.start_run(network.id, "second prompt", user)
+      {:ok, second_genesis} = NetworkRunner.start_run(network.id, "second prompt")
 
       # Should be different invocations
       assert first_genesis.id != second_genesis.id
@@ -453,17 +453,17 @@ defmodule PanicWeb.NetworkLiveTest do
 
     test "shows immediate feedback in LiveView when new run starts", %{
       conn: conn,
-      user: user,
+      user: _user,
       network: network
     } do
       # Start an initial run
-      {:ok, _genesis} = NetworkRunner.start_run(network.id, "first prompt", user)
+      {:ok, _genesis} = NetworkRunner.start_run(network.id, "first prompt")
 
       # Open the live view
       {:ok, view, _html} = live(conn, ~p"/networks/#{network}")
 
       # Start a new run - should create genesis immediately
-      {:ok, _second_genesis} = NetworkRunner.start_run(network.id, "second prompt", user)
+      {:ok, _second_genesis} = NetworkRunner.start_run(network.id, "second prompt")
 
       # Give the view a moment to process the broadcast
       Process.sleep(10)
@@ -475,9 +475,9 @@ defmodule PanicWeb.NetworkLiveTest do
       NetworkRunner.stop_run(network.id)
     end
 
-    test "terminal component handles immediate genesis creation", %{conn: conn, user: user, network: network} do
+    test "terminal component handles immediate genesis creation", %{conn: conn, user: _user, network: network} do
       # Start an initial run
-      {:ok, _genesis} = NetworkRunner.start_run(network.id, "first prompt", user)
+      {:ok, _genesis} = NetworkRunner.start_run(network.id, "first prompt")
 
       # Open the live view
       {:ok, view, _html} = live(conn, ~p"/networks/#{network}")

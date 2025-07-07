@@ -68,7 +68,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   def handle_event("start-run", %{"invocation" => invocation_params}, socket) do
     prompt = invocation_params["input"] || ""
 
-    case NetworkRunner.start_run(socket.assigns.network.id, prompt, socket.assigns.current_user) do
+    case NetworkRunner.start_run(socket.assigns.network.id, prompt) do
       {:ok, genesis_invocation} ->
         notify_parent({:genesis_invocation, genesis_invocation})
         socket = assign(socket, :genesis_invocation, genesis_invocation)

@@ -30,10 +30,10 @@ defmodule PanicWeb.AdminLiveTest do
   end
 
   describe "stop_all_jobs" do
-    test "stops all running NetworkRunner jobs", %{conn: conn, user: user, network1: network1, network2: network2} do
+    test "stops all running NetworkRunner jobs", %{conn: conn, user: _user, network1: network1, network2: network2} do
       # Start some NetworkRunner processes
-      {:ok, _} = NetworkRunner.start_run(network1.id, "test prompt 1", user)
-      {:ok, _} = NetworkRunner.start_run(network2.id, "test prompt 2", user)
+      {:ok, _} = NetworkRunner.start_run(network1.id, "test prompt 1")
+      {:ok, _} = NetworkRunner.start_run(network2.id, "test prompt 2")
 
       # Verify they're running
       assert [{_, _}] = Registry.lookup(NetworkRegistry, network1.id)
@@ -71,9 +71,9 @@ defmodule PanicWeb.AdminLiveTest do
       assert view |> element("#flash-info") |> render() =~ "No running jobs found to stop"
     end
 
-    test "shows correct message for single job", %{conn: conn, user: user, network1: network1} do
+    test "shows correct message for single job", %{conn: conn, user: _user, network1: network1} do
       # Start one NetworkRunner process
-      {:ok, _} = NetworkRunner.start_run(network1.id, "test prompt", user)
+      {:ok, _} = NetworkRunner.start_run(network1.id, "test prompt")
 
       # Verify it's running
       assert [{_, _}] = Registry.lookup(NetworkRegistry, network1.id)

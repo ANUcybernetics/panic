@@ -7,6 +7,10 @@ defmodule Panic.Engine.Changes.InvokeModel do
   2. Handles different platform authentication tokens
   3. Manages invocation success/failure states
   4. Sets the output and state based on the invocation result
+  
+  Important: API tokens are ALWAYS resolved from the network owner, not the current user.
+  This ensures consistent token access regardless of who initiates the invocation
+  (e.g., anonymous users accessing via QR code tokens).
   """
   use Ash.Resource.Change
 
@@ -52,12 +56,17 @@ defmodule Panic.Engine.Changes.InvokeModel do
     end)
   end
 
-  defp perform_invocation(changeset, model_id, input, context) do
+  defp perform_invocation(changeset, model_id, input, _context) do
     model = Panic.Model.by_id!(model_id)
     %Panic.Model{path: _path, invoke: invoke_fn, platform: platform} = model
 
-    # Resolve token using the TokenResolver
-    token_result = TokenResolver.resolve_token(platform, context.actor)
+    # Always use the network owner's tokens, not the current actor's
+    # Load the network and its owner
+    invocation = Ash.load!(changeset.data, [network: :user], authorize?: false)
+    network_owner = invocation.network.user
+    
+    # Resolve token using the network owner
+    token_result = TokenResolver.resolve_token(platform, network_owner)
 
     case token_result do
       {:ok, token} ->

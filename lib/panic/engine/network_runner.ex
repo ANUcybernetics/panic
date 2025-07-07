@@ -83,7 +83,13 @@ defmodule Panic.Engine.NetworkRunner do
   ## Parameters
   - `network_id` - The ID of the network to run
   - `prompt` - The initial prompt text
-  - `user` - The user starting the run
+
+  ## Authorization and Token Resolution
+  The NetworkRunner always acts on behalf of the network owner. All Ash operations
+  use the network owner as the actor, and all API tokens (for models and Vestaboards)
+  are resolved from the network owner's credentials. This provides a consistent
+  execution model regardless of who initiates the run (authenticated users or
+  anonymous users via QR codes).
 
   ## Returns
   - `{:ok, invocation}` - Successfully started, returns the genesis invocation
@@ -91,17 +97,17 @@ defmodule Panic.Engine.NetworkRunner do
 
   ## Examples
       # Start a new run
-      iex> NetworkRunner.start_run(1, "Hello world", user)
+      iex> NetworkRunner.start_run(1, "Hello world")
       {:ok, %Invocation{...}}
 
       # Too soon after previous run
-      iex> NetworkRunner.start_run(1, "Another prompt", user)
+      iex> NetworkRunner.start_run(1, "Another prompt")
       {:lockout, %Invocation{...}}
   """
-  def start_run(network_id, prompt, user) do
+  def start_run(network_id, prompt) do
     case Registry.lookup(NetworkRegistry, network_id) do
       [{pid, _}] ->
-        GenServer.call(pid, {:start_run, prompt, user})
+        GenServer.call(pid, {:start_run, prompt})
 
       [] ->
         # Start the NetworkRunner if it doesn't exist
@@ -110,10 +116,10 @@ defmodule Panic.Engine.NetworkRunner do
                {__MODULE__, network_id: network_id}
              ) do
           {:ok, pid} ->
-            GenServer.call(pid, {:start_run, prompt, user})
+            GenServer.call(pid, {:start_run, prompt})
 
           {:error, {:already_started, pid}} ->
-            GenServer.call(pid, {:start_run, prompt, user})
+            GenServer.call(pid, {:start_run, prompt})
 
           error ->
             error
@@ -158,15 +164,15 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   @impl true
-  def handle_call({:start_run, prompt, user}, _from, state) do
+  def handle_call({:start_run, prompt}, _from, state) do
     case state do
       %{genesis_invocation: nil} ->
         # Idle state - start new run
-        handle_start_run_idle(prompt, user, state)
+        handle_start_run_idle(prompt, state)
 
       %{genesis_invocation: genesis} ->
         # Running state - check lockout
-        handle_start_run_running(prompt, user, genesis, state)
+        handle_start_run_running(prompt, genesis, state)
     end
   end
 
@@ -270,11 +276,11 @@ defmodule Panic.Engine.NetworkRunner do
 
   # Private functions
 
-  defp handle_start_run_idle(prompt, user, state) do
-    network = Ash.get!(Engine.Network, state.network_id, authorize?: false)
+  defp handle_start_run_idle(prompt, state) do
+    {network, network_owner} = get_network_and_user!(state.network_id)
     watchers = vestaboard_watchers(network)
-
-    opts = [actor: user]
+    
+    opts = [actor: network_owner]
 
     case Engine.prepare_first(network, prompt, opts) do
       {:ok, invocation} ->
@@ -282,7 +288,7 @@ defmodule Panic.Engine.NetworkRunner do
         invocation = Engine.about_to_invoke!(invocation, opts)
 
         # Dispatch watchers for the genesis invocation immediately (synchronous)
-        maybe_dispatch_watchers(invocation, watchers, user)
+        maybe_dispatch_watchers(invocation, watchers, network_owner)
 
         new_state =
           start_lockout_timer(
@@ -321,20 +327,20 @@ defmodule Panic.Engine.NetworkRunner do
       {:reply, {:error, e}, state}
   end
 
-  defp handle_start_run_running(prompt, user, genesis, state) do
-    network = Ash.get!(Engine.Network, state.network_id, authorize?: false)
+  defp handle_start_run_running(prompt, genesis, state) do
+    {network, network_owner} = get_network_and_user!(state.network_id)
 
     if under_lockout?(genesis, network) do
       {:reply, {:lockout, genesis}, state}
     else
       # Cancel current run and start new one
       if state.current_invocation && state.current_invocation.state == :invoking do
-        Engine.mark_as_failed!(state.current_invocation, actor: user)
+        Engine.mark_as_failed!(state.current_invocation, actor: network_owner)
       end
 
       watchers = vestaboard_watchers(network)
 
-      opts = [actor: user]
+      opts = [actor: network_owner]
 
       case Engine.prepare_first(network, prompt, opts) do
         {:ok, invocation} ->
@@ -342,7 +348,7 @@ defmodule Panic.Engine.NetworkRunner do
           invocation = Engine.about_to_invoke!(invocation, opts)
 
           # Dispatch watchers for the genesis invocation immediately (synchronous)
-          maybe_dispatch_watchers(invocation, watchers, user)
+          maybe_dispatch_watchers(invocation, watchers, network_owner)
 
           new_state =
             %{
@@ -385,9 +391,9 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   defp handle_processing_completed_normal(invocation, state) do
-    {network, user} = get_network_and_user!(state.network_id)
+    {network, network_owner} = get_network_and_user!(state.network_id)
 
-    opts = [actor: user]
+    opts = [actor: network_owner]
 
     case Engine.prepare_next(invocation, opts) do
       {:ok, next_invocation} ->
@@ -400,7 +406,8 @@ defmodule Panic.Engine.NetworkRunner do
 
         # Dispatch to Vestaboard watchers and check if any were dispatched
         watchers = vestaboard_watchers(network)
-        vestaboard_dispatched = maybe_dispatch_watchers(invocation, watchers, user)
+        # Always use network owner for Vestaboard tokens
+        vestaboard_dispatched = maybe_dispatch_watchers(invocation, watchers, network_owner)
 
         # Calculate when the next invocation should happen
         next_invocation_time = calculate_next_invocation_time(state.genesis_invocation, vestaboard_dispatched)
@@ -461,10 +468,10 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   defp trigger_invocation(invocation, state) do
-    # Get user dynamically - NetworkRunner is now crash-resilient
-    {_network, user} = get_network_and_user!(state.network_id)
+    # Always use network owner as actor - NetworkRunner acts on behalf of the network owner
+    {_network, network_owner} = get_network_and_user!(state.network_id)
 
-    opts = [actor: user]
+    opts = [actor: network_owner]
 
     if Application.get_env(:panic, :sync_network_runner, false) do
       # Synchronous mode for tests - send message to self but process immediately
