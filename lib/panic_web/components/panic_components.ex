@@ -127,7 +127,7 @@ defmodule PanicWeb.PanicComponents do
       </div>
       
     <!-- Autocomplete input -->
-      <div class="autocomplete-wrapper [&_input]:bg-zinc-800 [&_input]:border-zinc-600 [&_input]:text-zinc-100 [&_input]:placeholder-zinc-500">
+      <div class="autocomplete-wrapper [&_input]:bg-zinc-800 [&_input]:border [&_input]:border-zinc-600 [&_input]:text-zinc-100 [&_input]:placeholder-zinc-500 [&_input]:text-sm [&_input]:rounded-md [&_input]:p-3 [&_input]:w-full [&_input]:transition-all [&_input]:duration-150 [&_input]:ease-in-out [&_input]:appearance-none [&_input:focus]:outline-none [&_input:focus]:border-violet-500 [&_input:focus]:ring-3 [&_input:focus]:ring-violet-500/10">
         <.autocomplete_input
           id="network_model_autocomplete"
           name="model"
