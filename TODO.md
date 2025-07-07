@@ -1,5 +1,6 @@
 # Panic TODO
 
+- make sure that terminal (including anon) shows the lockout timer
 - Hide mouse cursor
 - Create rpi image (run in QEMU?)
 - do the watchers stop it from sleeping? can we scale down the VM at least?
