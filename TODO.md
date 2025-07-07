@@ -1,12 +1,13 @@
 # Panic TODO
 
-- see why the viewers are being double-counted
+- Hide mouse cursor
+- Create rpi image (run in QEMU?)
+- do the watchers stop it from sleeping? can we scale down the VM at least?
+
 - script as much of the rpi setup stuff as possible (e.g. use rpi-imager)
 - long-running debug (w/sound) on the commbox
 - add the "restart on error" logic (because it's better than the alternative)
 - there's still something funky going on with Network deletion (and cascades)
-- refactor the way that fixtures are created (because the LLMs seem to
-  consistently look in the wrong places?)
 - have a QR code that points to the model's "about" page on all installation
   displays (bottom RH corner)
 - check that time-based QR code -> terminal workflow works for non-logged-in
