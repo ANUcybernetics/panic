@@ -1,6 +1,6 @@
 [tools]
 elixir = "latest"
-erlang = "27"
+erlang = "latest"
 node = "latest"
 sqlite = "latest"
 bun = "latest"
