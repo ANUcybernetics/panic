@@ -6,6 +6,7 @@ assignee: []
 created_date: "2025-07-08"
 labels:
   - devops
+  - awaiting hardware test
 dependencies: []
 ---
 
@@ -26,3 +27,28 @@ However, that browser window
 
 If I close the browser window (with alt + F4) then the text terminal that I see
 _is_ full-screen on the display.
+
+## Requirements
+
+- The solution must work with different native display resolutions automatically
+- Do not hardcode display resolutions
+- Must detect and use the actual connected display's native resolution
+
+## Progress
+
+### Fixed Issues:
+
+1. **URL not loading**: Changed from using `\$KIOSK_URL` variable to directly
+   embedding `$url` in the chromium command
+2. **Display resolution**: Added dynamic resolution detection using xrandr to
+   get native display resolution
+   - Extracts actual display dimensions from connected display
+   - Falls back to 1920x1080 only if detection fails
+   - Uses detected resolution for both --window-size and fullscreen mode
+
+### Changes Made:
+
+- Modified `/home/dietpi/.config/openbox/autostart` generation in the custom
+  script
+- Added xrandr resolution detection before launching Chromium
+- Updated Chromium launch parameters to use detected native resolution

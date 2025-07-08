@@ -291,11 +291,24 @@ xset s off
 xset -dpms
 xset s noblank
 
+# Get native display resolution
+DISPLAY_INFO=\$(xrandr 2>/dev/null | grep ' connected' | head -n1)
+if [ -n "\$DISPLAY_INFO" ]; then
+    # Extract resolution (e.g., "1920x1080" from "HDMI-1 connected 1920x1080+0+0")
+    RESOLUTION=\$(echo "\$DISPLAY_INFO" | grep -oE '[0-9]+x[0-9]+' | head -n1)
+    WIDTH=\$(echo "\$RESOLUTION" | cut -d'x' -f1)
+    HEIGHT=\$(echo "\$RESOLUTION" | cut -d'x' -f2)
+else
+    # Fallback if xrandr fails
+    WIDTH=1920
+    HEIGHT=1080
+fi
+
 # Hide mouse cursor after 0.5 seconds of inactivity
 unclutter -idle 0.5 &
 
-# Start Chromium in kiosk mode with explicit URL
-chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --fast --fast-start --disable-features=TranslateUI --disk-cache-dir=/tmp/chromium-cache --disable-pinch --overscroll-history-navigation=disabled --disable-features=OverscrollHistoryNavigation "\$KIOSK_URL" &
+# Start Chromium in kiosk mode with native resolution
+chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --fast --fast-start --disable-features=TranslateUI --disk-cache-dir=/tmp/chromium-cache --disable-pinch --overscroll-history-navigation=disabled --disable-features=OverscrollHistoryNavigation --start-fullscreen --window-size=\${WIDTH},\${HEIGHT} --window-position=0,0 "$url" &
 EOF
 
 # Set permissions
