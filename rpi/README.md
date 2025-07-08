@@ -29,6 +29,7 @@ We use DietPi instead of Raspberry Pi OS because:
 - ✅ Boots directly to kiosk mode (no desktop visible)
 - ✅ Supports both regular and enterprise WiFi
 - ✅ SSH access with key authentication
+- ✅ Tailscale integration for remote access
 - ✅ Automatic security updates
 - ✅ Mouse cursor auto-hide
 - ✅ Screen blanking disabled
@@ -63,6 +64,7 @@ The automation uses DietPi's built-in features:
 - `--wifi-enterprise-pass <pass>` - Enterprise WiFi password
 - `--hostname <name>` - Device hostname (default: DietPi)
 - `--password <pass>` - Password for dietpi user (default: dietpi)
+- `--tailscale-authkey <key>` - Tailscale auth key for automatic network join
 - `--list-cache` - Show cached images
 - `--clear-cache` - Clear cached images
 
@@ -106,6 +108,16 @@ for i in {1..5}; do
 done
 ```
 
+**With Tailscale for Remote Access:**
+```bash
+./automate-pi-setup.sh \
+  --url "https://panic.fly.dev" \
+  --wifi-ssid "MyNetwork" \
+  --wifi-password "MyPassword" \
+  --hostname "panic-kiosk" \
+  --tailscale-authkey "tskey-auth-xxxxx"
+```
+
 ## SSH Access
 
 After setup, you can SSH into the Pi:
@@ -122,6 +134,28 @@ The script automatically:
 - Generates an SSH key at `~/.ssh/panic_rpi_ssh`
 - Installs the public key on the Pi
 - Updates your `~/.ssh/config` for easy access
+
+### Tailscale SSH Access
+
+If you provided a Tailscale auth key during setup:
+
+```bash
+# SSH from anywhere on your tailnet
+ssh dietpi@<hostname>
+
+# No port forwarding or VPN required!
+```
+
+To get a Tailscale auth key:
+1. Visit https://login.tailscale.com/admin/settings/keys
+2. Generate an auth key (consider a reusable key for multiple devices)
+3. Use the key with `--tailscale-authkey` during setup
+
+Benefits of Tailscale:
+- Access your Pi from anywhere without port forwarding
+- Automatic encrypted connections
+- Works behind NAT/firewalls
+- No manual VPN configuration needed
 
 ## Maintenance
 

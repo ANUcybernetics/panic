@@ -141,6 +141,7 @@ configure_dietpi() {
     local username="$8"
     local password="$9"
     local ssh_pubkey="${10}"
+    local tailscale_authkey="${11}"
     
     echo -e "${YELLOW}Configuring DietPi automation...${NC}"
     
@@ -237,6 +238,12 @@ EOF
     mkdir -p "$boot_mount/dietpi_userdata"
     echo "$ssh_pubkey" > "$boot_mount/dietpi_userdata/ssh_pubkey"
     
+    # Add Tailscale auth key if provided
+    if [ -n "$tailscale_authkey" ]; then
+        echo "$tailscale_authkey" > "$boot_mount/dietpi_userdata/tailscale_authkey"
+        echo -e "${GREEN}✓ Tailscale auth key configured${NC}"
+    fi
+    
     # Create custom automation script for kiosk setup
     cat > "$boot_mount/Automation_Custom_Script.sh" << CUSTOM_SCRIPT
 #!/bin/bash
@@ -257,6 +264,23 @@ if [ -f /boot/dietpi_userdata/ssh_pubkey ]; then
     chmod 700 /home/dietpi/.ssh
     chmod 600 /home/dietpi/.ssh/authorized_keys
     chown -R dietpi:dietpi /home/dietpi/.ssh
+fi
+
+# Install and configure Tailscale if auth key provided
+if [ -f /boot/dietpi_userdata/tailscale_authkey ]; then
+    echo "Installing Tailscale..."
+    
+    # Install Tailscale
+    curl -fsSL https://tailscale.com/install.sh | sh
+    
+    # Read the auth key
+    TAILSCALE_AUTHKEY=\$(cat /boot/dietpi_userdata/tailscale_authkey)
+    
+    # Start tailscale and authenticate
+    tailscale up --authkey="\$TAILSCALE_AUTHKEY" --ssh --hostname="$hostname"
+    
+    # Enable SSH access via Tailscale
+    echo "Tailscale installed and connected"
 fi
 
 # Configure Chromium for kiosk mode
@@ -302,6 +326,7 @@ main() {
     local hostname="DietPi"
     local username="dietpi"
     local password="dietpi"
+    local tailscale_authkey=""
     
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -335,6 +360,10 @@ main() {
                 ;;
             --password)
                 password="$2"
+                shift 2
+                ;;
+            --tailscale-authkey)
+                tailscale_authkey="$2"
                 shift 2
                 ;;
             --list-cache)
@@ -372,6 +401,7 @@ Options:
     --hostname <name>            Custom hostname (default: DietPi)
     --username <user>            Username (default: dietpi)
     --password <pass>            Password (default: dietpi)
+    --tailscale-authkey <key>    Tailscale auth key for automatic join
     --list-cache                 List cached DietPi images
     --clear-cache                Clear all cached images
     --help                       Show this help message
@@ -388,6 +418,9 @@ Examples:
 
 After setup, you can SSH to the Pi using:
     ssh -i ~/.ssh/panic_rpi_ssh dietpi@<hostname>.local
+    
+With Tailscale:
+    ssh dietpi@<hostname>  (using Tailscale hostname)
 
 Cache Management:
     Images are cached in: $CACHE_DIR
@@ -487,7 +520,8 @@ EOF
     # Configure DietPi
     configure_dietpi "$boot_mount" "$wifi_ssid" "$wifi_password" \
                     "$wifi_enterprise_user" "$wifi_enterprise_pass" \
-                    "$url" "$hostname" "$username" "$password" "$ssh_pubkey"
+                    "$url" "$hostname" "$username" "$password" "$ssh_pubkey" \
+                    "$tailscale_authkey"
     
     # Update SSH config
     if ! grep -q "Host $hostname" ~/.ssh/config 2>/dev/null; then
@@ -519,6 +553,12 @@ EOF
     echo
     echo "SSH access (after ~5-10 minutes for initial setup):"
     echo "   ssh $hostname"
+    if [ -n "$tailscale_authkey" ]; then
+        echo
+        echo "Tailscale access:"
+        echo "   ssh dietpi@$hostname  (via Tailscale network)"
+        echo "   No need for port forwarding or VPN!"
+    fi
     echo
     echo "Note: First boot takes 5-10 minutes for automated setup"
 }
