@@ -45,10 +45,9 @@ COPY priv priv
 
 COPY lib lib
 
-# install npm packages with pnpm
-RUN wget -qO- https://get.pnpm.io/install.sh | ENV="$HOME/.bashrc" SHELL="$(which bash)" bash -
+# install npm packages
 COPY assets assets
-RUN . /root/.bashrc && cd assets && pnpm install
+RUN cd assets && npm ci --loglevel verbose
 
 # compile assets
 RUN mix assets.deploy
