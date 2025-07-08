@@ -1,76 +1,232 @@
-# Raspberry Pi Kiosk Setup Script
+# Raspberry Pi Kiosk Setup
 
-This script automatically configures a Raspberry Pi to run in kiosk mode,
-displaying a full-screen web browser pointed at a specified URL.
+This directory contains scripts to set up Raspberry Pi devices as browser kiosks using DietPi OS. The kiosks boot directly into fullscreen Chromium displaying a specified URL.
 
-## Prerequisites
+## Quick Start
 
-Before running this setup script, you'll need to:
-
-1. **Flash the Raspberry Pi OS** using the separate `rpi-imager` tool
-2. **Boot your Pi** and ensure it has network connectivity
-3. **Have the target URL** ready that you want to display in kiosk mode
-
-## Usage
-
-Run this command directly on your Raspberry Pi (via SSH or local terminal):
+1. Insert an SD card into your Mac
+2. Run the automated setup script:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/ANUcybernetics/panic/main/rpi/pi-setup.sh | bash -s -- "https://panic.fly.dev"
+./automate-pi-setup.sh --url "https://example.com" --wifi-ssid "YourNetwork" --wifi-password "YourPassword" --hostname "kiosk1"
 ```
 
-Replace `https://panic.fly.dev` with your desired URL.
+3. Insert the SD card into your Pi and power on
+4. Wait ~5-10 minutes for initial setup
+5. The Pi will boot directly into kiosk mode
 
-## What the script does
+## Why DietPi?
 
-- Installs Chromium browser and required packages
-- Creates a systemd service that launches Chromium in kiosk mode
-- Configures auto-login for the current user
-- Sets up the browser to run full-screen with kiosk optimizations
-- Enables auto-restart on crashes (checking every 10s)
-- Automatically reboots the system to start kiosk mode
+We use DietPi instead of Raspberry Pi OS because:
+- **Fully automated setup** - No first-boot configuration wizards
+- **Minimal footprint** - ~400MB vs 5GB for Raspberry Pi OS
+- **Faster boot times** - Optimized for single-purpose use
+- **Better automation** - Built-in support for unattended installation
 
-## After installation
+## Features
 
-The Pi will automatically boot into kiosk mode. To manage the service:
+- ✅ Fully automated setup via SD card
+- ✅ Boots directly to kiosk mode (no desktop visible)
+- ✅ Supports both regular and enterprise WiFi
+- ✅ SSH access with key authentication
+- ✅ Automatic security updates
+- ✅ Mouse cursor auto-hide
+- ✅ Screen blanking disabled
+- ✅ Cached image downloads for faster subsequent setups
+
+## How It Works
+
+The `automate-pi-setup.sh` script provides a fully automated workflow:
+
+1. **Downloads DietPi image** (with caching for faster subsequent runs)
+2. **Writes image to SD card** 
+3. **Configures unattended installation** via DietPi's automation system
+4. **Sets up WiFi** (including enterprise WPA2-EAP)
+5. **Configures kiosk mode** with Chromium
+6. **Enables SSH access** with key authentication
+
+The automation uses DietPi's built-in features:
+
+- **dietpi.txt** - Main automation config that specifies software to install, network settings, locale/timezone, and auto-login
+- **dietpi-wifi.txt** - WiFi configuration including enterprise support
+- **Automation_Custom_Script.sh** - Post-install script that configures Chromium kiosk mode
+
+## Script Options
+
+### `automate-pi-setup.sh`
+
+**Options:**
+- `--url <url>` - The URL to display in kiosk mode (required)
+- `--wifi-ssid <ssid>` - WiFi network name
+- `--wifi-password <pass>` - WiFi password (for WPA2-PSK)
+- `--wifi-enterprise-user <user>` - Enterprise WiFi username
+- `--wifi-enterprise-pass <pass>` - Enterprise WiFi password
+- `--hostname <name>` - Device hostname (default: DietPi)
+- `--password <pass>` - Password for dietpi user (default: dietpi)
+- `--list-cache` - Show cached images
+- `--clear-cache` - Clear cached images
+
+### Configuration Examples
+
+**Regular home/office WiFi:**
+```bash
+./automate-pi-setup.sh \
+  --url "https://panic.fly.dev" \
+  --wifi-ssid "MyNetwork" \
+  --wifi-password "MyPassword" \
+  --hostname "panic-kiosk"
+```
+
+**Enterprise WiFi (WPA2-EAP/PEAP):**
+```bash
+./automate-pi-setup.sh \
+  --url "https://panic.fly.dev/display/1" \
+  --wifi-ssid "CorpNetwork" \
+  --wifi-enterprise-user "username@domain.com" \
+  --wifi-enterprise-pass "password" \
+  --hostname "display1"
+```
+
+**Ethernet Only:**
+```bash
+./automate-pi-setup.sh \
+  --url "https://example.com" \
+  --hostname "wired-kiosk"
+```
+
+**Multiple Displays:**
+```bash
+for i in {1..5}; do
+  ./automate-pi-setup.sh \
+    --url "https://panic.fly.dev/i/$i/grid" \
+    --hostname "panic$i" \
+    --wifi-ssid "ANU-Secure" \
+    --wifi-enterprise-user "SOCY2" \
+    --wifi-enterprise-pass "pass"
+done
+```
+
+## SSH Access
+
+After setup, you can SSH into the Pi:
 
 ```bash
-# Check service status
-sudo systemctl status kiosk
+# Using the hostname
+ssh dietpi@<hostname>.local
 
-# View logs
-sudo journalctl -u kiosk -f
-
-# Stop/start the service
-sudo systemctl stop kiosk
-sudo systemctl start kiosk
+# Or with the SSH config entry created by the script
+ssh <hostname>
 ```
 
-## Changing the kiosk URL
+The script automatically:
+- Generates an SSH key at `~/.ssh/panic_rpi_ssh`
+- Installs the public key on the Pi
+- Updates your `~/.ssh/config` for easy access
 
-To change the URL that the kiosk displays after installation:
+## Maintenance
 
-1. **Edit the service file** to update the URL:
+### Updating the Display URL
 
-   ```bash
-   sudo sed -i 's|http://old-url|http://new-url|g' /etc/systemd/system/kiosk.service
-   ```
+SSH into the Pi and edit the autostart file:
+```bash
+sudo nano /home/dietpi/.config/openbox/autostart
+```
 
-2. **Reload systemd** to pick up the changes:
+Change the URL in the chromium line and reboot.
 
-   ```bash
-   sudo systemctl daemon-reload
-   ```
-
-3. **Restart the kiosk service**:
-   ```bash
-   sudo systemctl restart kiosk
-   ```
-
-**Example** - Change to a specific panic URL:
+### Viewing Logs
 
 ```bash
-sudo sed -i 's|https://panic.fly.dev|http://panic.fly.dev/i/3/0|g' /etc/systemd/system/kiosk.service
-sudo systemctl daemon-reload
-sudo systemctl restart kiosk
+# System logs
+sudo journalctl -f
+
+# X session errors
+cat /home/dietpi/.xsession-errors
 ```
+
+### Manual Control
+
+```bash
+# Stop kiosk
+sudo systemctl stop lightdm
+
+# Start kiosk
+sudo systemctl start lightdm
+
+# Restart kiosk
+sudo systemctl restart lightdm
+```
+
+### Monitoring Setup Progress
+
+To watch the initial setup progress:
+1. Connect Pi to screen during first boot
+2. You'll see DietPi's automation progress
+3. Or SSH in after ~5 minutes and check logs: `sudo journalctl -f`
+
+## Troubleshooting
+
+### SD Card Not Found
+- Ensure SD card is inserted in built-in reader
+- Script expects SD card at `/dev/disk4` on Mac
+- Check with `diskutil list`
+
+### Black Screen
+- Check if Chromium is running: `ps aux | grep chromium`
+- Check X session errors: `cat ~/.xsession-errors`
+- Verify URL is accessible: `curl -I <your-url>`
+
+### WiFi Not Connecting
+- Check WiFi config: `sudo nano /boot/dietpi-wifi.txt`
+- For enterprise WiFi, ensure phase1="peaplabel=0" is set
+- Restart networking: `sudo systemctl restart networking`
+
+### Kiosk Not Starting
+- SSH in and check: `sudo systemctl status lightdm`
+- View logs: `cat /home/dietpi/.xsession-errors`
+- Verify Chromium installed: `which chromium`
+
+### Display Issues
+- Adjust GPU memory split: `sudo dietpi-config` > Display Options
+- Check HDMI config: `sudo nano /boot/config.txt`
+
+## Advanced Usage
+
+### Custom DietPi Configuration
+
+Edit the `dietpi.txt` section in the script to customize:
+- Different software packages
+- Alternative desktop environments  
+- Network settings
+- Performance tuning
+
+## Cache Management
+
+The script caches downloaded images for 30 days:
+
+```bash
+# List cached images
+./automate-pi-setup.sh --list-cache
+
+# Clear cache
+./automate-pi-setup.sh --clear-cache
+```
+
+Images are stored in `~/.cache/dietpi-images/`
+
+## Security Notes
+
+- Default user is `dietpi` (not changeable via automation)
+- Set a strong password with `--password`
+- SSH key authentication is configured automatically
+- Consider disabling password auth after setup
+- DietPi includes automatic security updates
+
+## Hardware Requirements
+
+- Raspberry Pi 3, 4, or 5
+- 8GB+ SD card
+- Stable power supply
+- HDMI display
+- Network connection (WiFi or Ethernet)
+- macOS with SD card reader (for running the setup script)
