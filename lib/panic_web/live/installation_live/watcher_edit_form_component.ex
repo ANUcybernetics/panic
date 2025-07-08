@@ -4,7 +4,7 @@ defmodule PanicWeb.InstallationLive.WatcherEditFormComponent do
   """
   use PanicWeb, :live_component
 
-  alias Panic.Engine.Installation.Watcher
+  alias Panic.Watcher.Installation.Config
 
   @impl true
   def render(assigns) do
@@ -24,7 +24,7 @@ defmodule PanicWeb.InstallationLive.WatcherEditFormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.inputs_for :let={watcher_form} field={@form[:watcher]}>
+        <.inputs_for :let={watcher_form} field={@form[:updated_watcher]}>
           <.input
             field={watcher_form[:type]}
             type="select"
@@ -88,13 +88,13 @@ defmodule PanicWeb.InstallationLive.WatcherEditFormComponent do
 
   @impl true
   def update(assigns, socket) do
-    current_watcher = Enum.at(assigns.installation.watchers, assigns.index)
+    current_watcher = Enum.find(assigns.installation.watchers, &(&1.name == assigns.watcher_name))
 
     form =
       AshPhoenix.Form.for_update(assigns.installation, :update_watcher,
-        params: %{watcher: Map.from_struct(current_watcher), index: assigns.index},
+        params: %{updated_watcher: Map.from_struct(current_watcher), watcher_name: assigns.watcher_name},
         actor: assigns.current_user,
-        forms: [watcher: [resource: Watcher, create_action: :create]]
+        forms: [updated_watcher: [resource: Config, create_action: :create]]
       )
 
     {:ok,
@@ -108,11 +108,11 @@ defmodule PanicWeb.InstallationLive.WatcherEditFormComponent do
     form =
       socket.assigns.installation
       |> AshPhoenix.Form.for_update(:update_watcher,
-        params: Map.put(params, "index", socket.assigns.index),
+        params: Map.put(params, "watcher_name", socket.assigns.watcher_name),
         actor: socket.assigns.current_user,
         forms: [
-          watcher: [
-            resource: Watcher,
+          updated_watcher: [
+            resource: Config,
             create_action: :create
           ]
         ]
@@ -125,16 +125,16 @@ defmodule PanicWeb.InstallationLive.WatcherEditFormComponent do
   def handle_event("save", %{"form" => params}, socket) do
     case socket.assigns.installation
          |> AshPhoenix.Form.for_update(:update_watcher,
-           params: Map.put(params, "index", socket.assigns.index),
+           params: Map.put(params, "watcher_name", socket.assigns.watcher_name),
            actor: socket.assigns.current_user,
            forms: [
-             watcher: [
-               resource: Watcher,
+             updated_watcher: [
+               resource: Config,
                create_action: :create
              ]
            ]
          )
-         |> AshPhoenix.Form.submit(params: Map.put(params, "index", socket.assigns.index)) do
+         |> AshPhoenix.Form.submit(params: Map.put(params, "watcher_name", socket.assigns.watcher_name)) do
       {:ok, installation} ->
         installation = Ash.load!(installation, [:network], actor: socket.assigns.current_user)
         notify_parent({:saved, installation})

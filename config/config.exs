@@ -49,7 +49,7 @@ config :panic, PanicWeb.Endpoint,
   pubsub_server: Panic.PubSub,
   live_view: [signing_salt: "aVE1mUTr"]
 
-config :panic, :ash_domains, [Panic.Engine, Panic.Accounts]
+config :panic, :ash_domains, [Panic.Engine, Panic.Accounts, Panic.Watcher]
 
 config :panic,
   ecto_repos: [Panic.Repo],

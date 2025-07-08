@@ -1,8 +1,8 @@
-defmodule Panic.Engine.Validations.OffsetLessThanStride do
+defmodule Panic.Watcher.Validations.OffsetLessThanStride do
   @moduledoc """
-  Validation module for ensuring that offset is less than stride for single and vestaboard watcher types.
+  Validation module for ensuring that offset is less than stride for single and vestaboard config types.
 
-  This validation checks that for watcher types :single and :vestaboard, the offset value
+  This validation checks that for config types :single and :vestaboard, the offset value
   must be less than the stride value to ensure proper cycling behavior.
   """
   use Ash.Resource.Validation

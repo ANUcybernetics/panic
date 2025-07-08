@@ -4,8 +4,8 @@ defmodule PanicWeb.InstallationLive.Show do
   """
   use PanicWeb, :live_view
 
-  alias Panic.Engine.Installation
-  alias PanicWeb.InvocationWatcher
+  alias Panic.Watcher.Installation
+  alias PanicWeb.WatcherSubscriber
 
   @impl true
   def render(assigns) do
@@ -36,7 +36,7 @@ defmodule PanicWeb.InstallationLive.Show do
           No watchers configured. Add one to start displaying invocations.
         </div>
         <div
-          :for={{watcher, index} <- Enum.with_index(@installation.watchers)}
+          :for={{watcher, _index} <- Enum.with_index(@installation.watchers)}
           class="relative rounded-lg border border-zinc-200 dark:border-zinc-700 p-4"
         >
           <div class="flex justify-between items-start">
@@ -69,13 +69,13 @@ defmodule PanicWeb.InstallationLive.Show do
             </div>
             <div class="flex gap-2">
               <.link
-                patch={~p"/installations/#{@installation}/show/edit_watcher/#{index}"}
+                patch={~p"/installations/#{@installation}/show/edit_watcher/#{watcher.name}"}
                 class="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
               >
                 Edit
               </.link>
               <.link
-                phx-click={JS.push("delete_watcher", value: %{index: index})}
+                phx-click={JS.push("delete_watcher", value: %{name: watcher.name})}
                 data-confirm="Are you sure you want to delete this watcher?"
                 class="text-sm text-red-600 hover:text-red-500"
               >
@@ -134,10 +134,10 @@ defmodule PanicWeb.InstallationLive.Show do
     >
       <.live_component
         module={PanicWeb.InstallationLive.WatcherEditFormComponent}
-        id={@watcher_index}
+        id={@watcher_name}
         title="Edit Watcher"
         installation={@installation}
-        index={@watcher_index}
+        watcher_name={@watcher_name}
         current_user={@current_user}
         patch={~p"/installations/#{@installation}"}
       />
@@ -173,18 +173,15 @@ defmodule PanicWeb.InstallationLive.Show do
     socket
   end
 
-  defp apply_action(socket, :edit_watcher, %{"index" => index}) do
-    index = String.to_integer(index)
-    assign(socket, :watcher_index, index)
+  defp apply_action(socket, :edit_watcher, %{"name" => name}) do
+    assign(socket, :watcher_name, name)
   end
 
   @impl true
-  def handle_event("delete_watcher", %{"index" => index}, socket) do
-    index = if is_binary(index), do: String.to_integer(index), else: index
-
+  def handle_event("delete_watcher", %{"name" => name}, socket) do
     {:ok, installation} =
       socket.assigns.installation
-      |> Ash.Changeset.for_update(:remove_watcher, %{index: index}, actor: socket.assigns.current_user)
+      |> Ash.Changeset.for_update(:remove_watcher, %{watcher_name: name}, actor: socket.assigns.current_user)
       |> Ash.update()
 
     {:noreply, assign(socket, :installation, installation)}
@@ -215,7 +212,7 @@ defmodule PanicWeb.InstallationLive.Show do
   end
 
   defp count_viewers_for_watcher(installation, watcher) do
-    viewers = InvocationWatcher.list_viewers(installation.network_id)
+    viewers = WatcherSubscriber.list_viewers(installation.network_id)
 
     # Count viewers that are viewing this specific watcher
     Enum.count(viewers, fn viewer ->

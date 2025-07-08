@@ -72,10 +72,10 @@ Key LiveViews include:
 - Various display modes for viewing invocation outputs
 - Installation management for configuring external displays
 
-## Real-time Updates with InvocationWatcher and Phoenix Presence
+## Real-time Updates with WatcherSubscriber and Phoenix Presence
 
-The **InvocationWatcher** module
-([`lib/panic_web/live/invocation_watcher.ex`](lib/panic_web/live/invocation_watcher.ex))
+The **WatcherSubscriber** module
+([`lib/panic_web/live/watcher_subscriber.ex`](lib/panic_web/live/watcher_subscriber.ex))
 provides real-time invocation updates across LiveViews through Phoenix PubSub and tracks connected viewers using Phoenix Presence:
 
 - **Phoenix Presence tracking**: Uses the **PanicWeb.Presence** module

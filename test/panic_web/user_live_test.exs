@@ -8,7 +8,7 @@ defmodule PanicWeb.UserLiveTest do
   """
   use PanicWeb.ConnCase, async: false
   # import Phoenix.LiveViewTest
-  alias Panic.Engine.Installation
+  alias Panic.Watcher.Installation
 
   describe "user IS logged in" do
     setup do

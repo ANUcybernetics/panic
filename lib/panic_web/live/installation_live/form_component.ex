@@ -4,7 +4,7 @@ defmodule PanicWeb.InstallationLive.FormComponent do
   """
   use PanicWeb, :live_component
 
-  alias Panic.Engine.Installation
+  alias Panic.Watcher.Installation
 
   @impl true
   def render(assigns) do

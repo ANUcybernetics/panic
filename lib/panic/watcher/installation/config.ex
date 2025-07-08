@@ -1,25 +1,25 @@
-defmodule Panic.Engine.Installation.Watcher do
+defmodule Panic.Watcher.Installation.Config do
   @moduledoc """
-  Embedded schema representing a watcher configuration for an Installation.
+  Embedded schema representing a display configuration for an Installation.
 
-  A watcher defines how invocations should be displayed. There are three types:
+  A config defines how invocations should be displayed. There are three types:
 
   * `:grid` - Displays invocations in a grid layout with specified rows and columns
   * `:single` - Shows a single invocation based on stride and offset
   * `:vestaboard` - Similar to single but for Vestaboard displays with a specific vestaboard name
 
-  All watchers require a unique name within an installation for URL routing.
+  All configs require a unique name within an installation for URL routing.
 
   ## Examples
 
-      # Grid watcher
-      %Watcher{type: :grid, name: "main-grid", rows: 2, columns: 3}
+      # Grid config
+      %Config{type: :grid, name: "main-grid", rows: 2, columns: 3}
 
-      # Single watcher showing every 3rd invocation starting from offset 1
-      %Watcher{type: :single, name: "spotlight", stride: 3, offset: 1}
+      # Single config showing every 3rd invocation starting from offset 1
+      %Config{type: :single, name: "spotlight", stride: 3, offset: 1}
 
-      # Vestaboard watcher showing every 3rd invocation and initial prompt
-      %Watcher{type: :vestaboard, name: "board-1", stride: 3, offset: 0, vestaboard_name: :panic_1, initial_prompt: true}
+      # Vestaboard config showing every 3rd invocation and initial prompt
+      %Config{type: :vestaboard, name: "board-1", stride: 3, offset: 0, vestaboard_name: :panic_1, initial_prompt: true}
   """
 
   use Ash.Resource,
@@ -31,7 +31,7 @@ defmodule Panic.Engine.Installation.Watcher do
       constraints one_of: [:grid, :single, :vestaboard]
     end
 
-    # Name for all watcher types - human-readable, alphanumeric + hyphens
+    # Name for all config types - human-readable, alphanumeric + hyphens
     attribute :name, :string do
       allow_nil? false
       constraints match: ~r/^[a-zA-Z0-9-]+$/
@@ -121,6 +121,6 @@ defmodule Panic.Engine.Installation.Watcher do
       message: "show_invoking can only be set for single and vestaboard types"
 
     # Ensure offset is less than stride for single and vestaboard types
-    validate Panic.Engine.Validations.OffsetLessThanStride
+    validate Panic.Watcher.Validations.OffsetLessThanStride
   end
 end

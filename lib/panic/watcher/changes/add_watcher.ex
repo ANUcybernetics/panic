@@ -1,6 +1,6 @@
-defmodule Panic.Engine.Changes.AddWatcher do
+defmodule Panic.Watcher.Changes.AddWatcher do
   @moduledoc """
-  Change module for adding a watcher to an installation's watchers array.
+  Change module for adding a config to an installation's watchers array.
 
   This change takes a watcher argument and appends it to the current watchers list.
   """

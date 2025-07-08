@@ -4,7 +4,7 @@ defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
   import Panic.Fixtures
   import Phoenix.LiveViewTest
 
-  alias Panic.Engine.Installation
+  alias Panic.Watcher.Installation
   alias Panic.Engine.Network
   alias PanicWeb.TerminalAuth
 

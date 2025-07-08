@@ -7,7 +7,7 @@ defmodule Panic.InstallationTest do
 
   alias Ash.Error.Invalid
   alias Ash.Error.Query.NotFound
-  alias Panic.Engine.Installation
+  alias Panic.Watcher.Installation
   alias Panic.Engine.Network
 
   describe "Installation resource" do
@@ -151,7 +151,7 @@ defmodule Panic.InstallationTest do
 
       assert {:ok, updated} =
                installation
-               |> Ash.Changeset.for_update(:remove_watcher, %{index: 0}, actor: user)
+               |> Ash.Changeset.for_update(:remove_watcher, %{watcher_name: "grid-to-remove"}, actor: user)
                |> Ash.update()
 
       assert length(updated.watchers) == 1
@@ -224,7 +224,7 @@ defmodule Panic.InstallationTest do
                |> Ash.update()
     end
 
-    test "handles invalid index when removing watcher", %{user: user, network: network} do
+    test "handles invalid name when removing watcher", %{user: user, network: network} do
       {:ok, installation} =
         Installation
         |> Ash.Changeset.for_create(
@@ -240,21 +240,13 @@ defmodule Panic.InstallationTest do
         )
         |> Ash.create()
 
-      # Test negative index
+      # Test non-existent watcher name
       assert {:error, changeset} =
                installation
-               |> Ash.Changeset.for_update(:remove_watcher, %{index: -1}, actor: user)
+               |> Ash.Changeset.for_update(:remove_watcher, %{watcher_name: "non-existent"}, actor: user)
                |> Ash.update()
 
-      assert %{index: ["index is out of bounds"]} = errors_on(changeset)
-
-      # Test index that's too high
-      assert {:error, changeset} =
-               installation
-               |> Ash.Changeset.for_update(:remove_watcher, %{index: 10}, actor: user)
-               |> Ash.update()
-
-      assert %{index: ["index is out of bounds"]} = errors_on(changeset)
+      assert %{watcher_name: ["watcher with name 'non-existent' not found"]} = errors_on(changeset)
     end
 
     test "handles empty watchers list when removing", %{user: user, network: network} do
@@ -273,10 +265,10 @@ defmodule Panic.InstallationTest do
 
       assert {:error, changeset} =
                installation
-               |> Ash.Changeset.for_update(:remove_watcher, %{index: 0}, actor: user)
+               |> Ash.Changeset.for_update(:remove_watcher, %{watcher_name: "any-name"}, actor: user)
                |> Ash.update()
 
-      assert %{index: ["index is out of bounds"]} = errors_on(changeset)
+      assert %{watcher_name: ["watcher with name 'any-name' not found"]} = errors_on(changeset)
     end
 
     test "validates watcher with invalid attributes", %{user: user, network: network} do

@@ -232,7 +232,7 @@ defmodule Panic.Engine.NetworkRunner do
 
         if remaining_seconds >= 0 do
           # Only broadcast if there are viewers watching
-          viewers = PanicWeb.InvocationWatcher.list_viewers(state.network_id)
+          viewers = PanicWeb.WatcherSubscriber.list_viewers(state.network_id)
 
           if length(viewers) > 0 do
             PanicWeb.Endpoint.broadcast("invocation:#{state.network_id}", "lockout_countdown", %{
@@ -642,7 +642,7 @@ defmodule Panic.Engine.NetworkRunner do
 
     if remaining_seconds > 0 do
       # Only broadcast if there are viewers watching
-      viewers = PanicWeb.InvocationWatcher.list_viewers(state.network_id)
+      viewers = PanicWeb.WatcherSubscriber.list_viewers(state.network_id)
 
       if length(viewers) > 0 do
         PanicWeb.Endpoint.broadcast("invocation:#{state.network_id}", "lockout_countdown", %{

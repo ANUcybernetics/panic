@@ -4,7 +4,7 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
   """
   use PanicWeb, :live_component
 
-  alias Panic.Engine.Installation.Watcher
+  alias Panic.Watcher.Installation.Config
 
   @impl true
   def render(assigns) do
@@ -92,7 +92,7 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
       AshPhoenix.Form.for_update(assigns.installation, :add_watcher,
         params: %{watcher: %{type: :grid, name: ""}},
         actor: assigns.current_user,
-        forms: [watcher: [resource: Watcher, create_action: :create]]
+        forms: [watcher: [resource: Config, create_action: :create]]
       )
 
     {:ok,
@@ -110,7 +110,7 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
         actor: socket.assigns.current_user,
         forms: [
           watcher: [
-            resource: Watcher,
+            resource: Config,
             create_action: :create
           ]
         ]
@@ -127,7 +127,7 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
            actor: socket.assigns.current_user,
            forms: [
              watcher: [
-               resource: Watcher,
+               resource: Config,
                create_action: :create
              ]
            ]

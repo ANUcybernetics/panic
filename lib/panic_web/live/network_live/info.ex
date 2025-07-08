@@ -5,7 +5,7 @@ defmodule PanicWeb.NetworkLive.Info do
   import PanicWeb.PanicComponents
 
   alias Panic.Engine.Network
-  alias PanicWeb.InvocationWatcher
+  alias PanicWeb.WatcherSubscriber
   alias PanicWeb.TerminalAuth
 
   @impl true
@@ -102,7 +102,7 @@ defmodule PanicWeb.NetworkLive.Info do
          socket
          |> assign(:page_title, "Network #{network_id} terminal")
          |> assign(:qr_text, qr_url)
-         |> InvocationWatcher.configure_invocation_stream(network, {:single, 0, 1, false})}
+         |> WatcherSubscriber.configure_invocation_stream(network, {:single, 0, 1, false})}
 
       {:error, _error} ->
         {:noreply, push_navigate(socket, to: ~p"/404")}
@@ -111,7 +111,7 @@ defmodule PanicWeb.NetworkLive.Info do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
-    InvocationWatcher.handle_invocation_message(message, socket)
+    WatcherSubscriber.handle_invocation_message(message, socket)
   end
 
   @impl true

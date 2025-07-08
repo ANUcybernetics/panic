@@ -4,7 +4,7 @@ defmodule PanicWeb.InstallationLive.Index do
   """
   use PanicWeb, :live_view
 
-  alias Panic.Engine.Installation
+  alias Panic.Watcher.Installation
 
   @impl true
   def render(assigns) do

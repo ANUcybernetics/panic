@@ -1,6 +1,6 @@
-defmodule Panic.Engine.Validations.UniqueWatcherNames do
+defmodule Panic.Watcher.Validations.UniqueWatcherNames do
   @moduledoc """
-  Validates that all watcher names within an installation are unique.
+  Validates that all config names within an installation are unique.
   """
   use Ash.Resource.Validation
 
@@ -25,7 +25,7 @@ defmodule Panic.Engine.Validations.UniqueWatcherNames do
             |> Enum.filter(fn {_name, count} -> count > 1 end)
             |> Enum.map_join(", ", &elem(&1, 0))
 
-          {:error, field: :watchers, message: "Watcher names must be unique. Duplicates found: #{duplicate_names}"}
+          {:error, field: :watchers, message: "Config names must be unique. Duplicates found: #{duplicate_names}"}
         end
 
       _ ->

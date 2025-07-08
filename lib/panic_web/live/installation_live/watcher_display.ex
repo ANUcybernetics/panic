@@ -3,15 +3,15 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
   LiveView for displaying invocations through an installation's watcher configuration.
 
   This module bridges between the Installation's Watcher structs and the existing
-  InvocationWatcher display logic. Watchers are accessed by their unique name within
+  WatcherSubscriber display logic. Watchers are accessed by their unique name within
   the installation.
   """
   use PanicWeb, :live_view
 
   import PanicWeb.PanicComponents
 
-  alias Panic.Engine.Installation
-  alias PanicWeb.InvocationWatcher
+  alias Panic.Watcher.Installation
+  alias PanicWeb.WatcherSubscriber
 
   @impl true
   def render(assigns) do
@@ -54,7 +54,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
              |> assign(:installation, installation)
              |> assign(:watcher, watcher)
              |> assign(:watcher_name, watcher.name)
-             |> InvocationWatcher.configure_invocation_stream(network, display), layout: {PanicWeb.Layouts, :display}}
+             |> WatcherSubscriber.configure_invocation_stream(network, display), layout: {PanicWeb.Layouts, :display}}
 
           {:error, :not_found} ->
             {:ok,
@@ -73,7 +73,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
-    InvocationWatcher.handle_invocation_message(message, socket)
+    WatcherSubscriber.handle_invocation_message(message, socket)
   end
 
   @impl true
@@ -81,7 +81,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
     {:noreply, assign(socket, :genesis_invocation, genesis_invocation)}
   end
 
-  # Convert watcher struct to display tuple format expected by InvocationWatcher
+  # Convert watcher struct to display tuple format expected by WatcherSubscriber
   defp watcher_to_display_tuple(%{type: :grid, rows: rows, columns: columns}) do
     {:grid, rows, columns}
   end

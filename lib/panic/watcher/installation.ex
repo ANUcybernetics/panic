@@ -1,36 +1,36 @@
-defmodule Panic.Engine.Installation do
+defmodule Panic.Watcher.Installation do
   @moduledoc """
-  An Installation represents a collection of watchers that display invocations from a network.
+  An Installation represents a collection of display configurations that observe invocations from a network.
 
-  Each installation belongs to a network and contains an array of watchers that define
+  Each installation belongs to a network and contains an array of configs that define
   how invocations should be displayed (grid, single, or vestaboard format).
 
   ## Examples
 
-      # Create an installation with a grid watcher
+      # Create an installation with a grid config
       Ash.create!(Installation, %{
         name: "Main Display",
         network_id: network.id,
-        watchers: [
+        configs: [
           %{type: :grid, rows: 2, columns: 3}
         ]
       })
 
-      # Add a single watcher to an existing installation
+      # Add a single config to an existing installation
       installation
-      |> Ash.Changeset.for_update(:add_watcher, %{
-        watcher: %{type: :single, stride: 3, offset: 0}
+      |> Ash.Changeset.for_update(:add_config, %{
+        config: %{type: :single, stride: 3, offset: 0}
       })
       |> Ash.update!()
   """
   use Ash.Resource,
     otp_app: :panic,
-    domain: Panic.Engine,
+    domain: Panic.Watcher,
     data_layer: AshSqlite.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub]
 
-  alias Panic.Engine.Installation.Watcher
+  alias Panic.Watcher.Installation.Config
   alias Panic.Engine.Network
 
   attributes do
@@ -40,7 +40,7 @@ defmodule Panic.Engine.Installation do
       allow_nil? false
     end
 
-    attribute :watchers, {:array, Watcher} do
+    attribute :watchers, {:array, Config} do
       default []
       allow_nil? false
     end
@@ -75,25 +75,25 @@ defmodule Panic.Engine.Installation do
     end
 
     update :add_watcher do
-      argument :watcher, Watcher, allow_nil?: false
+      argument :watcher, Config, allow_nil?: false
       require_atomic? false
 
-      change Panic.Engine.Changes.AddWatcher
+      change Panic.Watcher.Changes.AddWatcher
     end
 
     update :remove_watcher do
-      argument :index, :integer, allow_nil?: false
+      argument :watcher_name, :string, allow_nil?: false
       require_atomic? false
 
-      change Panic.Engine.Changes.RemoveWatcher
+      change Panic.Watcher.Changes.RemoveWatcher
     end
 
     update :update_watcher do
-      argument :index, :integer, allow_nil?: false
-      argument :watcher, Watcher, allow_nil?: false
+      argument :watcher_name, :string, allow_nil?: false
+      argument :updated_watcher, Config, allow_nil?: false
       require_atomic? false
 
-      change Panic.Engine.Changes.UpdateWatcher
+      change Panic.Watcher.Changes.UpdateWatcher
     end
 
     update :reorder_watchers do
@@ -103,7 +103,7 @@ defmodule Panic.Engine.Installation do
   end
 
   validations do
-    validate Panic.Engine.Validations.UniqueWatcherNames
+    validate Panic.Watcher.Validations.UniqueWatcherNames
   end
 
   policies do

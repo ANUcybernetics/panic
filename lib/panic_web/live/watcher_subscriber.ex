@@ -1,4 +1,4 @@
-defmodule PanicWeb.InvocationWatcher do
+defmodule PanicWeb.WatcherSubscriber do
   @moduledoc ~S"""
   Helper for subscribing to and managing a stream of `%Invocation{}` structs
   inside Phoenix LiveViews using Phoenix Presence.
@@ -31,7 +31,7 @@ defmodule PanicWeb.InvocationWatcher do
 
       defmodule MyAppWeb.SomeLive do
         use MyAppWeb, :live_view
-        on_mount {PanicWeb.InvocationWatcher, :auto}
+        on_mount {PanicWeb.WatcherSubscriber, :auto}
         ...
       end
 
@@ -433,7 +433,7 @@ defmodule PanicWeb.InvocationWatcher do
   defp fetch_network_from_installation(installation_id, assigns) do
     actor = Map.get(assigns, :current_user)
 
-    case Ash.get(Panic.Engine.Installation, installation_id, actor: actor, authorize?: false, load: [:network]) do
+    case Ash.get(Panic.Watcher.Installation, installation_id, actor: actor, authorize?: false, load: [:network]) do
       {:ok, installation} -> {:ok, installation.network}
       {:error, _} = err -> err
     end

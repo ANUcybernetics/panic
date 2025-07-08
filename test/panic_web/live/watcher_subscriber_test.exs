@@ -1,4 +1,4 @@
-defmodule PanicWeb.InvocationWatcherTest do
+defmodule PanicWeb.WatcherSubscriberTest do
   use PanicWeb.ConnCase
   use ExUnitProperties
 
@@ -473,7 +473,7 @@ defmodule PanicWeb.InvocationWatcherTest do
   end
 
   # Helper functions that extract the core business logic
-  # These mirror the logic in the actual InvocationWatcher module
+  # These mirror the logic in the actual WatcherSubscriber module
 
   defp invocation_should_be_processed?(%Invocation{sequence_number: 0}, _genesis) do
     # Genesis invocations should always be processed
@@ -515,13 +515,13 @@ defmodule PanicWeb.InvocationWatcherTest do
   end
 
   defp should_filter_archive_url?(%Invocation{input: input, output: output}) do
-    # Helper function that mirrors the logic in InvocationWatcher
+    # Helper function that mirrors the logic in WatcherSubscriber
     archive_prefix = "https://fly.storage.tigris.dev/"
     String.starts_with?(input || "", archive_prefix) or String.starts_with?(output || "", archive_prefix)
   end
 
   defp should_show_invocation_for_display?(state, sequence_number, display) do
-    # Helper function that mirrors the logic in InvocationWatcher
+    # Helper function that mirrors the logic in WatcherSubscriber
     case display do
       {:grid, _rows, _cols} ->
         true
