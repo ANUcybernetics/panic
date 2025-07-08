@@ -4,4 +4,7 @@ erlang = "27"
 pnpm = "latest"
 sqlite = "latest"
 
+# for backlog.md
+bun = "latest"
+
 # local dev login: ben@benswift.me / cybernetics1
