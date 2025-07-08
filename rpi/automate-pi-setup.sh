@@ -10,7 +10,6 @@ set -o pipefail
 readonly DIETPI_IMAGE_URL="https://dietpi.com/downloads/images/DietPi_RPi5-ARMv8-Bookworm.img.xz"
 readonly DEFAULT_URL="https://panic.fly.dev"
 readonly CACHE_DIR="$HOME/.cache/dietpi-images"
-readonly SSH_KEY_PATH="$HOME/.ssh/panic_rpi_ssh"
 
 # Colors for output
 readonly RED='\033[0;31m'
@@ -89,24 +88,6 @@ download_dietpi() {
     echo -e "${GREEN}✓ Image cached for future use${NC}"
 }
 
-# Function to generate or use SSH key
-setup_ssh_key() {
-    if [ ! -f "$SSH_KEY_PATH" ]; then
-        echo -e "${YELLOW}Generating SSH key for Raspberry Pi access...${NC}" >&2
-        ssh-keygen -t ed25519 -f "$SSH_KEY_PATH" -N "" -C "panic-rpi-access"
-        echo -e "${GREEN}✓ SSH key generated at $SSH_KEY_PATH${NC}" >&2
-    else
-        echo -e "${GREEN}✓ Using existing SSH key at $SSH_KEY_PATH${NC}" >&2
-    fi
-    
-    # Get the public key
-    if [ -f "${SSH_KEY_PATH}.pub" ]; then
-        cat "${SSH_KEY_PATH}.pub"
-    else
-        echo -e "${RED}Error: Public key not found at ${SSH_KEY_PATH}.pub${NC}" >&2
-        exit 1
-    fi
-}
 
 # Function to write image to SD card
 write_image_to_sd() {
@@ -140,8 +121,7 @@ configure_dietpi() {
     local hostname="$7"
     local username="$8"
     local password="$9"
-    local ssh_pubkey="${10}"
-    local tailscale_authkey="${11}"
+    local tailscale_authkey="${10}"
     
     echo -e "${YELLOW}Configuring DietPi automation...${NC}"
     
@@ -234,9 +214,8 @@ EOF
         echo -e "${GREEN}✓ WiFi configured${NC}"
     fi
     
-    # Add SSH key
+    # Create dietpi_userdata directory if needed
     mkdir -p "$boot_mount/dietpi_userdata"
-    echo "$ssh_pubkey" > "$boot_mount/dietpi_userdata/ssh_pubkey"
     
     # Add Tailscale auth key if provided
     if [ -n "$tailscale_authkey" ]; then
@@ -256,15 +235,6 @@ KIOSK_URL="$url"
 while ! ping -c 1 google.com > /dev/null 2>&1; do
     sleep 2
 done
-
-# Install SSH key
-if [ -f /boot/dietpi_userdata/ssh_pubkey ]; then
-    mkdir -p /home/dietpi/.ssh
-    cat /boot/dietpi_userdata/ssh_pubkey >> /home/dietpi/.ssh/authorized_keys
-    chmod 700 /home/dietpi/.ssh
-    chmod 600 /home/dietpi/.ssh/authorized_keys
-    chown -R dietpi:dietpi /home/dietpi/.ssh
-fi
 
 # Install and configure Tailscale if auth key provided
 if [ -f /boot/dietpi_userdata/tailscale_authkey ]; then
@@ -429,10 +399,7 @@ Examples:
        --wifi-enterprise-pass "password" \\
        --hostname "kiosk-display"
 
-After setup, you can SSH to the Pi using:
-    ssh -i ~/.ssh/panic_rpi_ssh dietpi@<hostname>.local
-    
-With Tailscale:
+After setup with Tailscale, you can SSH to the Pi using:
     ssh dietpi@<hostname>  (using Tailscale hostname)
 
 Cache Management:
@@ -448,8 +415,6 @@ EOF
         esac
     done
     
-    # Setup SSH key
-    local ssh_pubkey=$(setup_ssh_key)
     
     # Find SD card
     sd_device=$(find_sd_card)
@@ -533,19 +498,9 @@ EOF
     # Configure DietPi
     configure_dietpi "$boot_mount" "$wifi_ssid" "$wifi_password" \
                     "$wifi_enterprise_user" "$wifi_enterprise_pass" \
-                    "$url" "$hostname" "$username" "$password" "$ssh_pubkey" \
+                    "$url" "$hostname" "$username" "$password" \
                     "$tailscale_authkey"
     
-    # Update SSH config
-    if ! grep -q "Host $hostname" ~/.ssh/config 2>/dev/null; then
-        echo -e "\n# DietPi Kiosk Pi" >> ~/.ssh/config
-        echo "Host $hostname" >> ~/.ssh/config
-        echo "    HostName $hostname.local" >> ~/.ssh/config
-        echo "    User dietpi" >> ~/.ssh/config
-        echo "    IdentityFile $SSH_KEY_PATH" >> ~/.ssh/config
-        echo "    StrictHostKeyChecking no" >> ~/.ssh/config
-        echo -e "${GREEN}✓ SSH config updated${NC}"
-    fi
     
     # Sync and eject SD card
     echo -e "${YELLOW}Syncing and ejecting SD card...${NC}"
@@ -564,8 +519,6 @@ EOF
     echo "   - Configure kiosk mode"
     echo "   - Reboot into kiosk mode displaying: $url"
     echo
-    echo "SSH access (after ~5-10 minutes for initial setup):"
-    echo "   ssh $hostname"
     if [ -n "$tailscale_authkey" ]; then
         echo
         echo "Tailscale access:"

@@ -28,7 +28,6 @@ We use DietPi instead of Raspberry Pi OS because:
 - ✅ Fully automated setup via SD card
 - ✅ Boots directly to kiosk mode (no desktop visible)
 - ✅ Supports both regular and enterprise WiFi
-- ✅ SSH access with key authentication
 - ✅ Tailscale integration for remote access
 - ✅ Automatic security updates
 - ✅ Mouse cursor auto-hide
@@ -44,7 +43,6 @@ The `automate-pi-setup.sh` script provides a fully automated workflow:
 3. **Configures unattended installation** via DietPi's automation system
 4. **Sets up WiFi** (including enterprise WPA2-EAP)
 5. **Configures kiosk mode** with Chromium
-6. **Enables SSH access** with key authentication
 
 The automation uses DietPi's built-in features:
 
@@ -120,30 +118,25 @@ done
 
 ## SSH Access
 
-After setup, you can SSH into the Pi:
-
-```bash
-# Using the hostname
-ssh dietpi@<hostname>.local
-
-# Or with the SSH config entry created by the script
-ssh <hostname>
-```
-
-The script automatically:
-- Generates an SSH key at `~/.ssh/panic_rpi_ssh`
-- Installs the public key on the Pi
-- Updates your `~/.ssh/config` for easy access
-
 ### Tailscale SSH Access
 
-If you provided a Tailscale auth key during setup:
+If you provided a Tailscale auth key during setup, you can SSH into the Pi from anywhere on your tailnet:
 
 ```bash
 # SSH from anywhere on your tailnet
 ssh dietpi@<hostname>
 
 # No port forwarding or VPN required!
+```
+
+### Local Network Access
+
+Without Tailscale, you'll need to use password authentication:
+
+```bash
+# Using the hostname on local network
+ssh dietpi@<hostname>.local
+# Default password: dietpi (or what you specified with --password)
 ```
 
 To get a Tailscale auth key:
@@ -252,8 +245,8 @@ Images are stored in `~/.cache/dietpi-images/`
 
 - Default user is `dietpi` (not changeable via automation)
 - Set a strong password with `--password`
-- SSH key authentication is configured automatically
-- Consider disabling password auth after setup
+- With Tailscale, SSH is secured through the tailnet
+- Without Tailscale, password authentication is used
 - DietPi includes automatic security updates
 
 ## Hardware Requirements
