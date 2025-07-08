@@ -1,7 +1,7 @@
-# Panic TODO
+# TODO
 
-- make sure that terminal (including anon) shows the lockout timer
-- test rpi automated setup script (and maybe rename it?)
+- get dietpi script fully working
+- make sure that terminal shows the lockout timer for non-logged-in users
 
 - long-running debug (w/sound) on the commbox
 - add the "restart on error" logic (because it's better than the alternative)
@@ -16,7 +16,7 @@
   LiveSelect, or even just a small phx-hook with a regular input (plus thinking
   about the validation of last->first looping)
 
-## thought bubbles
+## Thought Bubbles
 
 - write the vis in webgl (or use the current package, but randomize between a
   few different [styles](https://audiomotion.dev/demo/))
