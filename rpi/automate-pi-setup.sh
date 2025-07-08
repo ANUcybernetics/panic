@@ -198,9 +198,6 @@ CONFIG_ENABLE_IPV6=0
 
 # Custom script to run after installation
 AUTO_SETUP_CUSTOM_SCRIPT_EXEC=/boot/Automation_Custom_Script.sh
-
-# Browser URL for kiosk mode (exported for custom script)
-export KIOSK_URL=$url
 EOF
 
     # Configure WiFi
@@ -241,9 +238,12 @@ EOF
     echo "$ssh_pubkey" > "$boot_mount/dietpi_userdata/ssh_pubkey"
     
     # Create custom automation script for kiosk setup
-    cat > "$boot_mount/Automation_Custom_Script.sh" << 'CUSTOM_SCRIPT'
+    cat > "$boot_mount/Automation_Custom_Script.sh" << CUSTOM_SCRIPT
 #!/bin/bash
 # DietPi custom automation script for kiosk mode
+
+# Set the kiosk URL
+KIOSK_URL="$url"
 
 # Wait for network
 while ! ping -c 1 google.com > /dev/null 2>&1; do
@@ -270,8 +270,8 @@ xset s noblank
 # Hide mouse cursor after 0.5 seconds of inactivity
 unclutter -idle 0.5 &
 
-# Start Chromium in kiosk mode
-chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --fast --fast-start --disable-features=TranslateUI --disk-cache-dir=/tmp/chromium-cache --disable-pinch --overscroll-history-navigation=disabled --disable-features=OverscrollHistoryNavigation "${KIOSK_URL:-https://panic.fly.dev}"
+# Start Chromium in kiosk mode with explicit URL
+chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --fast --fast-start --disable-features=TranslateUI --disk-cache-dir=/tmp/chromium-cache --disable-pinch --overscroll-history-navigation=disabled --disable-features=OverscrollHistoryNavigation "\$KIOSK_URL" &
 EOF
 
 # Set permissions
@@ -280,7 +280,7 @@ chown -R dietpi:dietpi /home/dietpi/.config
 # Enable auto-login for LXDE
 /boot/dietpi/dietpi-autostart 11
 
-echo "Kiosk setup complete!"
+echo "Kiosk setup complete with URL: \$KIOSK_URL"
 CUSTOM_SCRIPT
     
     chmod +x "$boot_mount/Automation_Custom_Script.sh"
