@@ -23,35 +23,34 @@ if [[ "$OSTYPE" != "darwin"* ]]; then
     exit 1
 fi
 
-# Function to find SD card device (hardcoded to /dev/disk4 for your Mac)
+# Function to find SD card device (dynamically finds the built-in SDXC reader)
 find_sd_card() {
     echo -e "${YELLOW}Checking for SD card in built-in reader...${NC}" >&2
     
-    # Check if /dev/disk4 exists and is the SD card reader
-    if [ -e "/dev/disk4" ]; then
-        # Verify it's the built-in SDXC reader
-        local device_info=$(diskutil info /dev/disk4 2>/dev/null | grep "Device / Media Name:")
-        if echo "$device_info" | grep -q "Built In SDXC Reader"; then
-            # Check if it's removable media (i.e., has an SD card inserted)
-            if diskutil info /dev/disk4 2>/dev/null | grep -q "Removable Media:.*Removable"; then
-                echo -e "${GREEN}✓ Found SD card in built-in reader${NC}" >&2
-                echo "/dev/disk4"
-                return 0
-            else
-                echo -e "${RED}Error: Built-in SD card reader found but no SD card inserted${NC}" >&2
-                echo -e "${YELLOW}Please insert an SD card and run the script again${NC}" >&2
-                return 1
+    # Look through all disks to find the built-in SDXC reader
+    for disk in /dev/disk*; do
+        # Skip partition identifiers (e.g., disk1s1)
+        if [[ "$disk" =~ ^/dev/disk[0-9]+$ ]]; then
+            # Check if it's the built-in SDXC reader
+            local device_info=$(diskutil info "$disk" 2>/dev/null | grep "Device / Media Name:")
+            if echo "$device_info" | grep -q "Built In SDXC Reader"; then
+                # Check if it's removable media (i.e., has an SD card inserted)
+                if diskutil info "$disk" 2>/dev/null | grep -q "Removable Media:.*Removable"; then
+                    echo -e "${GREEN}✓ Found SD card in built-in reader at $disk${NC}" >&2
+                    echo "$disk"
+                    return 0
+                else
+                    echo -e "${RED}Error: Built-in SD card reader found at $disk but no SD card inserted${NC}" >&2
+                    echo -e "${YELLOW}Please insert an SD card and run the script again${NC}" >&2
+                    return 1
+                fi
             fi
-        else
-            echo -e "${RED}Error: /dev/disk4 exists but is not the built-in SD card reader${NC}" >&2
-            echo -e "${YELLOW}Found: $device_info${NC}" >&2
-            return 1
         fi
-    else
-        echo -e "${RED}Error: /dev/disk4 not found${NC}" >&2
-        echo -e "${YELLOW}This script expects the built-in SD card reader to be at /dev/disk4${NC}" >&2
-        return 1
-    fi
+    done
+    
+    echo -e "${RED}Error: Built-in SD card reader not found${NC}" >&2
+    echo -e "${YELLOW}Please ensure your Mac has a built-in SD card reader${NC}" >&2
+    return 1
 }
 
 # Function to download DietPi image with caching
