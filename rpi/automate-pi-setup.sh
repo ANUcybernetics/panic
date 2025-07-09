@@ -371,8 +371,10 @@ chmod +x /usr/local/bin/kiosk-url
 echo "Kiosk setup complete with enhanced features"
 CUSTOM_SCRIPT
     
-    # Replace placeholders in the script
-    sed -i "s|HOSTNAME_PLACEHOLDER|$hostname|g" "$boot_mount/Automation_Custom_Script.sh"
+    # Replace placeholders in the script (handle spaces in path)
+    # macOS sed doesn't handle -i well with spaces in paths, so use a temp file
+    sed "s|HOSTNAME_PLACEHOLDER|$hostname|g" "$boot_mount/Automation_Custom_Script.sh" > "$boot_mount/Automation_Custom_Script.sh.tmp"
+    mv "$boot_mount/Automation_Custom_Script.sh.tmp" "$boot_mount/Automation_Custom_Script.sh"
     
     chmod +x "$boot_mount/Automation_Custom_Script.sh"
     
