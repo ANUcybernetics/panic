@@ -30,7 +30,7 @@ We use DietPi instead of Raspberry Pi OS because:
 
 - ✅ Fully automated setup via SD card
 - ✅ Boots directly to kiosk mode (no desktop visible)
-- ✅ Auto-detects native display resolution
+- ✅ Auto-detects native display resolution (including 4K/UHD)
 - ✅ Supports both regular and enterprise WiFi
 - ✅ SSH server pre-installed for remote access
 - ✅ Tailscale integration for secure remote access
@@ -39,6 +39,7 @@ We use DietPi instead of Raspberry Pi OS because:
 - ✅ Easy URL changes with `kiosk-url` command
 - ✅ Comprehensive kiosk flags (no pinch, no navigation, etc.)
 - ✅ Cached image downloads for faster subsequent setups
+- ✅ Optimized for high-resolution displays (4K/UHD)
 
 ## How It Works
 
@@ -271,16 +272,24 @@ To watch the initial setup progress:
 - Verify URL is accessible: `curl -I <your-url>`
 - View logs: `sudo journalctl -u getty@tty1 -n 50`
 
-### Wrong Resolution
+### Wrong Resolution / 4K Display Issues
 
-- The script auto-detects native resolution
+- The script auto-detects native resolution with improved 4K support
 - Check detected resolution in process list: `ps aux | grep window-size`
+- Check logs: `cat /var/log/chromium-kiosk.log`
+- For 4K displays, the script automatically:
+  - Increases GPU memory to 256MB
+  - Adds optimization flags for high-resolution rendering
+  - Retries resolution detection multiple times
 - Force a specific resolution by editing `/boot/dietpi.txt`:
   ```bash
-  SOFTWARE_CHROMIUM_RES_X=1920
-  SOFTWARE_CHROMIUM_RES_Y=1080
+  SOFTWARE_CHROMIUM_RES_X=3840
+  SOFTWARE_CHROMIUM_RES_Y=2160
   ```
 - Then restart: `sudo systemctl restart getty@tty1`
+- If display goes black on 4K:
+  - SSH into the Pi and check `xrandr` output
+  - Look for HDMI negotiation issues in `dmesg | grep -i hdmi`
 
 ### Mouse Cursor Visible
 

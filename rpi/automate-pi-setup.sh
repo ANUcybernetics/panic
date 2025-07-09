@@ -167,8 +167,8 @@ AUTO_SETUP_TIMEZONE=Australia/Sydney
 # Disable swap
 CONFIG_SWAP_SIZE=0
 
-# GPU memory split
-CONFIG_GPU_MEM_SPLIT=128
+# GPU memory split (256MB for better 4K support)
+CONFIG_GPU_MEM_SPLIT=256
 
 # Disable Bluetooth
 CONFIG_BLUETOOTH_DISABLE=1
@@ -300,22 +300,35 @@ RES_Y=$(sed -n '/^[[:blank:]]*SOFTWARE_CHROMIUM_RES_Y=/{s/^[^=]*=//p;q}' "$DIETP
 
 # If resolution not set or set to 0, try to auto-detect
 if [ -z "$RES_X" ] || [ -z "$RES_Y" ] || [ "$RES_X" = "0" ] || [ "$RES_Y" = "0" ]; then
-    # Wait a moment for display to be ready
-    sleep 2
-    # Try to get resolution from xrandr
-    if command -v xrandr >/dev/null 2>&1; then
-        RESOLUTION=$(xrandr 2>/dev/null | grep ' connected' | head -1 | grep -oE '[0-9]+x[0-9]+' | head -1)
-        if [ -n "$RESOLUTION" ]; then
-            RES_X=$(echo "$RESOLUTION" | cut -d'x' -f1)
-            RES_Y=$(echo "$RESOLUTION" | cut -d'x' -f2)
-            echo "Auto-detected resolution: ${RES_X}x${RES_Y}"
+    # Wait longer for display to be ready (especially for 4K displays)
+    sleep 5
+    
+    # Export DISPLAY if not set
+    export DISPLAY=:0
+    
+    # Try to get resolution from xrandr with multiple attempts
+    for attempt in 1 2 3; do
+        if command -v xrandr >/dev/null 2>&1; then
+            # Get the primary display or first connected display
+            RESOLUTION=$(xrandr 2>/dev/null | grep ' connected' | head -1 | grep -oE '[0-9]+x[0-9]+' | head -1)
+            if [ -n "$RESOLUTION" ]; then
+                RES_X=$(echo "$RESOLUTION" | cut -d'x' -f1)
+                RES_Y=$(echo "$RESOLUTION" | cut -d'x' -f2)
+                echo "Auto-detected resolution (attempt $attempt): ${RES_X}x${RES_Y}"
+                break
+            fi
         fi
-    fi
+        # Wait before retry
+        sleep 2
+    done
 fi
 
 # Default to 1920x1080 if still not set
 RES_X=${RES_X:-1920}
 RES_Y=${RES_Y:-1080}
+
+# Log the resolution being used
+echo "Using resolution: ${RES_X}x${RES_Y}" | tee /var/log/chromium-kiosk.log
 
 # Command line switches with comprehensive kiosk flags
 CHROMIUM_OPTS="--kiosk --window-size=${RES_X},${RES_Y} --window-position=0,0"
@@ -333,6 +346,21 @@ CHROMIUM_OPTS="$CHROMIUM_OPTS --disable-features=Translate"
 CHROMIUM_OPTS="$CHROMIUM_OPTS --disk-cache-dir=/tmp/chromium-cache"
 CHROMIUM_OPTS="$CHROMIUM_OPTS --enable-features=OverlayScrollbar"
 CHROMIUM_OPTS="$CHROMIUM_OPTS --disable-touch-drag-drop"
+
+# Additional flags for better 4K/high-res display support
+CHROMIUM_OPTS="$CHROMIUM_OPTS --force-device-scale-factor=1"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --disable-gpu-vsync"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --disable-smooth-scrolling"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --disable-features=UseModernMediaControls"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --enable-gpu-rasterization"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --enable-accelerated-2d-canvas"
+
+# For 4K displays, use larger memory limits
+if [ "$RES_X" -gt 2560 ] || [ "$RES_Y" -gt 1440 ]; then
+    echo "Detected high resolution display, applying optimizations..."
+    CHROMIUM_OPTS="$CHROMIUM_OPTS --max-old-space-size=4096"
+    CHROMIUM_OPTS="$CHROMIUM_OPTS --memory-pressure-off"
+fi
 
 # Home page URL
 URL=$(sed -n '/^[[:blank:]]*SOFTWARE_CHROMIUM_AUTOSTART_URL=/{s/^[^=]*=//p;q}' "$DIETPI_TXT")
@@ -357,6 +385,19 @@ xset s noblank
 # Hide cursor multiple ways
 xsetroot -cursor_name none
 unclutter --hide-on-touch --start-hidden --timeout 0 &
+
+# For high-resolution displays, ensure proper mode is set
+if command -v xrandr >/dev/null 2>&1; then
+    # Get the best available mode
+    BEST_MODE=\$(xrandr 2>/dev/null | grep -A1 ' connected' | tail -1 | awk '{print \$1}')
+    if [ -n "\$BEST_MODE" ]; then
+        echo "Setting display mode to: \$BEST_MODE"
+        xrandr --output \$(xrandr | grep ' connected' | head -1 | awk '{print \$1}') --mode \$BEST_MODE --rate 60 2>/dev/null || true
+    fi
+fi
+
+# Small delay to ensure display is ready
+sleep 1
 
 # Launch Chromium
 exec "$FP_CHROMIUM" $CHROMIUM_OPTS "${URL:-https://dietpi.com/}"
