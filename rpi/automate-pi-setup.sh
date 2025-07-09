@@ -240,14 +240,22 @@ while ! ping -c 1 google.com > /dev/null 2>&1; do
 done
 
 # Install and configure Tailscale if auth key provided
-if [ -f /boot/dietpi_userdata/tailscale_authkey ]; then
+# Check both possible locations for the auth key
+AUTHKEY_PATH=""
+if [ -f /boot/firmware/dietpi_userdata/tailscale_authkey ]; then
+    AUTHKEY_PATH="/boot/firmware/dietpi_userdata/tailscale_authkey"
+elif [ -f /boot/dietpi_userdata/tailscale_authkey ]; then
+    AUTHKEY_PATH="/boot/dietpi_userdata/tailscale_authkey"
+fi
+
+if [ -n "$AUTHKEY_PATH" ]; then
     echo "Installing Tailscale..."
     
     # Install Tailscale
     curl -fsSL https://tailscale.com/install.sh | sh
     
     # Read the auth key
-    TAILSCALE_AUTHKEY=$(cat /boot/dietpi_userdata/tailscale_authkey)
+    TAILSCALE_AUTHKEY=$(cat "$AUTHKEY_PATH")
     
     # Start tailscale and authenticate
     tailscale up --authkey="$TAILSCALE_AUTHKEY" --ssh --hostname="HOSTNAME_PLACEHOLDER"
@@ -256,13 +264,13 @@ if [ -f /boot/dietpi_userdata/tailscale_authkey ]; then
     echo "Tailscale installed and connected"
     
     # Remove the auth key file for security
-    rm -f /boot/dietpi_userdata/tailscale_authkey
+    rm -f "$AUTHKEY_PATH"
 fi
 
-# Install unclutter for hiding mouse cursor
+# Install unclutter-xfixes for hiding mouse cursor (works better than classic unclutter)
 echo "Installing unclutter for cursor hiding..."
 apt-get update
-apt-get install -y unclutter
+apt-get install -y unclutter-xfixes
 
 # Backup original chromium autostart script
 if [ -f /var/lib/dietpi/dietpi-software/installed/chromium-autostart.sh ]; then
@@ -275,12 +283,20 @@ cat > /var/lib/dietpi/dietpi-software/installed/chromium-autostart.sh << 'EOF'
 #!/bin/dash
 # Enhanced autostart script for kiosk mode with auto-resolution detection
 
-# Start unclutter to hide mouse cursor
-unclutter -idle 0.1 -root &
+# Hide mouse cursor using multiple methods for reliability
+# Method 1: unclutter-xfixes (most reliable)
+unclutter --hide-on-touch --start-hidden --timeout 0 &
+
+# Method 2: Set cursor to invisible theme as backup
+xsetroot -cursor_name none 2>/dev/null || true
+
+# Find dietpi.txt location
+DIETPI_TXT="/boot/dietpi.txt"
+[ -f "/boot/firmware/dietpi.txt" ] && DIETPI_TXT="/boot/firmware/dietpi.txt"
 
 # Resolution to use for kiosk mode
-RES_X=$(sed -n '/^[[:blank:]]*SOFTWARE_CHROMIUM_RES_X=/{s/^[^=]*=//p;q}' /boot/dietpi.txt)
-RES_Y=$(sed -n '/^[[:blank:]]*SOFTWARE_CHROMIUM_RES_Y=/{s/^[^=]*=//p;q}' /boot/dietpi.txt)
+RES_X=$(sed -n '/^[[:blank:]]*SOFTWARE_CHROMIUM_RES_X=/{s/^[^=]*=//p;q}' "$DIETPI_TXT")
+RES_Y=$(sed -n '/^[[:blank:]]*SOFTWARE_CHROMIUM_RES_Y=/{s/^[^=]*=//p;q}' "$DIETPI_TXT")
 
 # If resolution not set or set to 0, try to auto-detect
 if [ -z "$RES_X" ] || [ -z "$RES_Y" ] || [ "$RES_X" = "0" ] || [ "$RES_Y" = "0" ]; then
@@ -315,9 +331,11 @@ CHROMIUM_OPTS="$CHROMIUM_OPTS --no-first-run"
 CHROMIUM_OPTS="$CHROMIUM_OPTS --fast --fast-start"
 CHROMIUM_OPTS="$CHROMIUM_OPTS --disable-features=Translate"
 CHROMIUM_OPTS="$CHROMIUM_OPTS --disk-cache-dir=/tmp/chromium-cache"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --enable-features=OverlayScrollbar"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --disable-touch-drag-drop"
 
 # Home page URL
-URL=$(sed -n '/^[[:blank:]]*SOFTWARE_CHROMIUM_AUTOSTART_URL=/{s/^[^=]*=//p;q}' /boot/dietpi.txt)
+URL=$(sed -n '/^[[:blank:]]*SOFTWARE_CHROMIUM_AUTOSTART_URL=/{s/^[^=]*=//p;q}' "$DIETPI_TXT")
 
 # RPi or Debian Chromium package
 FP_CHROMIUM=$(command -v chromium-browser)
@@ -327,12 +345,26 @@ FP_CHROMIUM=$(command -v chromium-browser)
 STARTX='xinit'
 [ "$USER" = 'root' ] || STARTX='startx'
 
-# Disable screen blanking
-xset -dpms 2>/dev/null || true
-xset s off 2>/dev/null || true
-xset s noblank 2>/dev/null || true
+# Create a temporary xinitrc to ensure cursor hiding and screen settings
+XINITRC_TMP="/tmp/chromium-xinitrc-$$"
+cat > "$XINITRC_TMP" << XINITRC_EOF
+#!/bin/sh
+# Disable screen blanking and power management
+xset -dpms
+xset s off
+xset s noblank
 
-exec "$STARTX" "$FP_CHROMIUM" $CHROMIUM_OPTS "${URL:-https://dietpi.com/}"
+# Hide cursor multiple ways
+xsetroot -cursor_name none
+unclutter --hide-on-touch --start-hidden --timeout 0 &
+
+# Launch Chromium
+exec "$FP_CHROMIUM" $CHROMIUM_OPTS "${URL:-https://dietpi.com/}"
+XINITRC_EOF
+chmod +x "$XINITRC_TMP"
+
+# Start X with our custom xinitrc
+XINITRC="$XINITRC_TMP" exec "$STARTX"
 EOF
 
 # Make the script executable
@@ -343,9 +375,13 @@ cat > /usr/local/bin/kiosk-url << 'EOF'
 #!/bin/bash
 # Simple script to change the kiosk URL
 
+# Find dietpi.txt location
+DIETPI_TXT="/boot/dietpi.txt"
+[ -f "/boot/firmware/dietpi.txt" ] && DIETPI_TXT="/boot/firmware/dietpi.txt"
+
 if [ $# -eq 0 ]; then
     echo "Current kiosk URL:"
-    grep "^SOFTWARE_CHROMIUM_AUTOSTART_URL=" /boot/dietpi.txt | cut -d= -f2
+    grep "^SOFTWARE_CHROMIUM_AUTOSTART_URL=" "$DIETPI_TXT" | cut -d= -f2
     echo ""
     echo "Usage: kiosk-url <new-url>"
     echo "Example: kiosk-url https://example.com"
@@ -355,7 +391,7 @@ fi
 NEW_URL="$1"
 
 # Update the URL in dietpi.txt
-sudo sed -i "s|^SOFTWARE_CHROMIUM_AUTOSTART_URL=.*|SOFTWARE_CHROMIUM_AUTOSTART_URL=$NEW_URL|" /boot/dietpi.txt
+sudo sed -i "s|^SOFTWARE_CHROMIUM_AUTOSTART_URL=.*|SOFTWARE_CHROMIUM_AUTOSTART_URL=$NEW_URL|" "$DIETPI_TXT"
 
 echo "Kiosk URL changed to: $NEW_URL"
 echo "Restarting kiosk..."

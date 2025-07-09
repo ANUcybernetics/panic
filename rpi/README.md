@@ -1,6 +1,8 @@
 # Raspberry Pi Kiosk Setup
 
-This directory contains scripts to set up Raspberry Pi devices as browser kiosks using DietPi OS. The kiosks boot directly into fullscreen Chromium displaying a specified URL.
+This directory contains scripts to set up Raspberry Pi devices as browser kiosks
+using DietPi OS. The kiosks boot directly into fullscreen Chromium displaying a
+specified URL.
 
 ## Quick Start
 
@@ -18,6 +20,7 @@ This directory contains scripts to set up Raspberry Pi devices as browser kiosks
 ## Why DietPi?
 
 We use DietPi instead of Raspberry Pi OS because:
+
 - **Fully automated setup** - No first-boot configuration wizards
 - **Minimal footprint** - ~400MB vs 5GB for Raspberry Pi OS
 - **Faster boot times** - Optimized for single-purpose use
@@ -42,22 +45,25 @@ We use DietPi instead of Raspberry Pi OS because:
 The `automate-pi-setup.sh` script provides a fully automated workflow:
 
 1. **Downloads DietPi image** (with caching for faster subsequent runs)
-2. **Writes image to SD card** 
+2. **Writes image to SD card**
 3. **Configures unattended installation** via DietPi's automation system
 4. **Sets up WiFi** (including enterprise WPA2-EAP)
 5. **Configures kiosk mode** with Chromium
 
 The automation uses DietPi's built-in features:
 
-- **dietpi.txt** - Main automation config that specifies software to install, network settings, locale/timezone, and auto-login
+- **dietpi.txt** - Main automation config that specifies software to install,
+  network settings, locale/timezone, and auto-login
 - **dietpi-wifi.txt** - WiFi configuration including enterprise support
-- **Automation_Custom_Script.sh** - Post-install script that configures Chromium kiosk mode
+- **Automation_Custom_Script.sh** - Post-install script that configures Chromium
+  kiosk mode
 
 ## Script Options
 
 ### `automate-pi-setup.sh`
 
 **Options:**
+
 - `--url <url>` - The URL to display in kiosk mode (required)
 - `--wifi-ssid <ssid>` - WiFi network name
 - `--wifi-password <pass>` - WiFi password (for WPA2-PSK)
@@ -72,6 +78,7 @@ The automation uses DietPi's built-in features:
 ### Configuration Examples
 
 **Regular home/office WiFi:**
+
 ```bash
 ./automate-pi-setup.sh \
   --url "https://panic.fly.dev" \
@@ -81,6 +88,7 @@ The automation uses DietPi's built-in features:
 ```
 
 **Enterprise WiFi (WPA2-EAP/PEAP):**
+
 ```bash
 ./automate-pi-setup.sh \
   --url "https://panic.fly.dev/display/1" \
@@ -91,6 +99,7 @@ The automation uses DietPi's built-in features:
 ```
 
 **Ethernet Only:**
+
 ```bash
 ./automate-pi-setup.sh \
   --url "https://example.com" \
@@ -98,6 +107,7 @@ The automation uses DietPi's built-in features:
 ```
 
 **Multiple Displays:**
+
 ```bash
 for i in {1..5}; do
   ./automate-pi-setup.sh \
@@ -110,6 +120,7 @@ done
 ```
 
 **With Tailscale for Remote Access:**
+
 ```bash
 ./automate-pi-setup.sh \
   --url "https://panic.fly.dev" \
@@ -121,11 +132,13 @@ done
 
 ## SSH Access
 
-SSH server (OpenSSH) is automatically installed on all kiosks for remote management.
+SSH server (OpenSSH) is automatically installed on all kiosks for remote
+management.
 
 ### Tailscale SSH Access (Recommended)
 
-If you provided a Tailscale auth key during setup, you can SSH into the Pi from anywhere on your tailnet:
+If you provided a Tailscale auth key during setup, you can SSH into the Pi from
+anywhere on your tailnet:
 
 ```bash
 # SSH from anywhere on your tailnet
@@ -148,7 +161,7 @@ ssh dietpi@<hostname>
     {
       "action": "accept",
       "src": ["your-email@domain.com"],
-      "dst": ["tag:your-tag"],  // or specific hostnames
+      "dst": ["tag:your-tag"], // or specific hostnames
       "users": ["dietpi", "root"]
     }
   ]
@@ -177,6 +190,7 @@ ssh dietpi@<hostname>.local
 4. Use the key with `--tailscale-authkey` during setup
 
 Benefits of Tailscale:
+
 - Access your Pi from anywhere without port forwarding
 - Automatic encrypted connections
 - Works behind NAT/firewalls
@@ -187,7 +201,8 @@ Benefits of Tailscale:
 
 ### Updating the Display URL
 
-The easiest way to change the kiosk URL is using the built-in `kiosk-url` command:
+The easiest way to change the kiosk URL is using the built-in `kiosk-url`
+command:
 
 ```bash
 # Check current URL
@@ -235,6 +250,7 @@ sudo reboot
 ### Monitoring Setup Progress
 
 To watch the initial setup progress:
+
 1. Connect Pi to screen during first boot
 2. You'll see DietPi's automation progress
 3. Or SSH in after ~5 minutes and check logs: `sudo journalctl -f`
@@ -242,18 +258,21 @@ To watch the initial setup progress:
 ## Troubleshooting
 
 ### SD Card Not Found
+
 - Ensure SD card is inserted in Mac's built-in SD card reader
 - Script automatically finds the SD card reader (no longer hardcoded)
 - Check with `diskutil list` to see all disks
 - Look for "Built In SDXC Reader" in disk info
 
 ### Black Screen / No Display
+
 - Check if Chromium is running: `ps aux | grep chromium`
 - Check current resolution: `ps aux | grep -oE "window-size=[0-9]+,[0-9]+"`
 - Verify URL is accessible: `curl -I <your-url>`
 - View logs: `sudo journalctl -u getty@tty1 -n 50`
 
 ### Wrong Resolution
+
 - The script auto-detects native resolution
 - Check detected resolution in process list: `ps aux | grep window-size`
 - Force a specific resolution by editing `/boot/dietpi.txt`:
@@ -264,24 +283,29 @@ To watch the initial setup progress:
 - Then restart: `sudo systemctl restart getty@tty1`
 
 ### Mouse Cursor Visible
+
 - Check if unclutter is running: `ps aux | grep unclutter`
 - Manually hide cursor: `DISPLAY=:0 unclutter -idle 0.1 -root &`
 
 ### WiFi Not Connecting
+
 - Check WiFi config: `sudo nano /boot/dietpi-wifi.txt`
 - For enterprise WiFi, verify all PEAP settings are correct
 - View network status: `ip addr` and `iwconfig`
 - Check logs: `sudo journalctl -u networking -n 50`
 
 ### SSH Access Issues
+
 - Verify SSH is running: `sudo systemctl status ssh`
 - For Tailscale SSH, check ACL configuration
 - For local SSH, ensure you're on the same network
 - Default credentials: username `dietpi`, password as set during setup
 
 ### Kiosk Not Starting After Boot
+
 - Check service status: `sudo systemctl status getty@tty1`
-- Verify autostart mode: `cat /boot/dietpi/.dietpi-autostart_index` (should be 11)
+- Verify autostart mode: `cat /boot/dietpi/.dietpi-autostart_index` (should
+  be 11)
 - Check if X server started: `ps aux | grep xinit`
 - Verify Chromium installed: `which chromium`
 
@@ -290,8 +314,9 @@ To watch the initial setup progress:
 ### Custom DietPi Configuration
 
 Edit the `dietpi.txt` section in the script to customize:
+
 - Different software packages
-- Alternative desktop environments  
+- Alternative desktop environments
 - Network settings
 - Performance tuning
 
