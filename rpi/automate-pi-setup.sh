@@ -144,8 +144,8 @@ AUTO_SETUP_AUTOMATED=1
 # Global password for dietpi user
 AUTO_SETUP_GLOBAL_PASSWORD=$password
 
-# Software to install (113 = Chromium, 173 = LXDE desktop)
-AUTO_SETUP_INSTALL_SOFTWARE_ID=173,113
+# Software to install (105 = OpenSSH Server, 113 = Chromium, 173 = LXDE desktop)
+AUTO_SETUP_INSTALL_SOFTWARE_ID=105,173,113
 
 # Enable auto-login
 AUTO_SETUP_AUTOSTART_TARGET_INDEX=11
@@ -178,6 +178,12 @@ CONFIG_ENABLE_IPV6=0
 
 # Custom script to run after installation
 AUTO_SETUP_CUSTOM_SCRIPT_EXEC=/boot/Automation_Custom_Script.sh
+
+##### Chromium Kiosk Settings #####
+# Set the kiosk URL
+SOFTWARE_CHROMIUM_AUTOSTART_URL=$url
+
+# Don't set resolution in dietpi.txt - let our custom script auto-detect it
 EOF
 
     # Configure WiFi
@@ -223,14 +229,12 @@ EOF
     fi
     
     # Create custom automation script for kiosk setup
-    cat > "$boot_mount/Automation_Custom_Script.sh" << CUSTOM_SCRIPT
+    cat > "$boot_mount/Automation_Custom_Script.sh" << 'CUSTOM_SCRIPT'
 #!/bin/bash
 # DietPi custom automation script for kiosk mode
 
-# Set the kiosk URL
-KIOSK_URL="$url"
-
 # Wait for network
+echo "Waiting for network connectivity..."
 while ! ping -c 1 google.com > /dev/null 2>&1; do
     sleep 2
 done
@@ -243,51 +247,132 @@ if [ -f /boot/dietpi_userdata/tailscale_authkey ]; then
     curl -fsSL https://tailscale.com/install.sh | sh
     
     # Read the auth key
-    TAILSCALE_AUTHKEY=\$(cat /boot/dietpi_userdata/tailscale_authkey)
+    TAILSCALE_AUTHKEY=$(cat /boot/dietpi_userdata/tailscale_authkey)
     
     # Start tailscale and authenticate
-    tailscale up --authkey="\$TAILSCALE_AUTHKEY" --ssh --hostname="$hostname"
+    tailscale up --authkey="$TAILSCALE_AUTHKEY" --ssh --hostname="HOSTNAME_PLACEHOLDER"
     
     # Enable SSH access via Tailscale
     echo "Tailscale installed and connected"
+    
+    # Remove the auth key file for security
+    rm -f /boot/dietpi_userdata/tailscale_authkey
 fi
 
-# Configure Chromium for kiosk mode
-mkdir -p /home/dietpi/.config/openbox
-cat > /home/dietpi/.config/openbox/autostart << EOF
+# Install unclutter for hiding mouse cursor
+echo "Installing unclutter for cursor hiding..."
+apt-get update
+apt-get install -y unclutter
+
+# Backup original chromium autostart script
+if [ -f /var/lib/dietpi/dietpi-software/installed/chromium-autostart.sh ]; then
+    cp /var/lib/dietpi/dietpi-software/installed/chromium-autostart.sh \
+       /var/lib/dietpi/dietpi-software/installed/chromium-autostart.sh.orig
+fi
+
+# Create enhanced chromium autostart script with all our improvements
+cat > /var/lib/dietpi/dietpi-software/installed/chromium-autostart.sh << 'EOF'
+#!/bin/dash
+# Enhanced autostart script for kiosk mode with auto-resolution detection
+
+# Start unclutter to hide mouse cursor
+unclutter -idle 0.1 -root &
+
+# Resolution to use for kiosk mode
+RES_X=$(sed -n '/^[[:blank:]]*SOFTWARE_CHROMIUM_RES_X=/{s/^[^=]*=//p;q}' /boot/dietpi.txt)
+RES_Y=$(sed -n '/^[[:blank:]]*SOFTWARE_CHROMIUM_RES_Y=/{s/^[^=]*=//p;q}' /boot/dietpi.txt)
+
+# If resolution not set or set to 0, try to auto-detect
+if [ -z "$RES_X" ] || [ -z "$RES_Y" ] || [ "$RES_X" = "0" ] || [ "$RES_Y" = "0" ]; then
+    # Wait a moment for display to be ready
+    sleep 2
+    # Try to get resolution from xrandr
+    if command -v xrandr >/dev/null 2>&1; then
+        RESOLUTION=$(xrandr 2>/dev/null | grep ' connected' | head -1 | grep -oE '[0-9]+x[0-9]+' | head -1)
+        if [ -n "$RESOLUTION" ]; then
+            RES_X=$(echo "$RESOLUTION" | cut -d'x' -f1)
+            RES_Y=$(echo "$RESOLUTION" | cut -d'x' -f2)
+            echo "Auto-detected resolution: ${RES_X}x${RES_Y}"
+        fi
+    fi
+fi
+
+# Default to 1920x1080 if still not set
+RES_X=${RES_X:-1920}
+RES_Y=${RES_Y:-1080}
+
+# Command line switches with comprehensive kiosk flags
+CHROMIUM_OPTS="--kiosk --window-size=${RES_X},${RES_Y} --window-position=0,0"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --disable-infobars --disable-session-crashed-bubble"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --disable-features=TranslateUI"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --check-for-update-interval=31536000"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --disable-component-update"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --autoplay-policy=no-user-gesture-required"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --disable-features=OverscrollHistoryNavigation"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --disable-pinch"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --noerrdialogs"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --no-first-run"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --fast --fast-start"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --disable-features=Translate"
+CHROMIUM_OPTS="$CHROMIUM_OPTS --disk-cache-dir=/tmp/chromium-cache"
+
+# Home page URL
+URL=$(sed -n '/^[[:blank:]]*SOFTWARE_CHROMIUM_AUTOSTART_URL=/{s/^[^=]*=//p;q}' /boot/dietpi.txt)
+
+# RPi or Debian Chromium package
+FP_CHROMIUM=$(command -v chromium-browser)
+[ "$FP_CHROMIUM" ] || FP_CHROMIUM=$(command -v chromium)
+
+# Use "startx" as non-root user to get required permissions
+STARTX='xinit'
+[ "$USER" = 'root' ] || STARTX='startx'
+
 # Disable screen blanking
-xset s off
-xset -dpms
-xset s noblank
+xset -dpms 2>/dev/null || true
+xset s off 2>/dev/null || true
+xset s noblank 2>/dev/null || true
 
-# Get native display resolution
-DISPLAY_INFO=\$(xrandr 2>/dev/null | grep ' connected' | head -n1)
-if [ -n "\$DISPLAY_INFO" ]; then
-    # Extract resolution (e.g., "1920x1080" from "HDMI-1 connected 1920x1080+0+0")
-    RESOLUTION=\$(echo "\$DISPLAY_INFO" | grep -oE '[0-9]+x[0-9]+' | head -n1)
-    WIDTH=\$(echo "\$RESOLUTION" | cut -d'x' -f1)
-    HEIGHT=\$(echo "\$RESOLUTION" | cut -d'x' -f2)
-else
-    # Fallback if xrandr fails
-    WIDTH=1920
-    HEIGHT=1080
-fi
-
-# Hide mouse cursor after 0.5 seconds of inactivity
-unclutter -idle 0.5 &
-
-# Start Chromium in kiosk mode with native resolution
-chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --fast --fast-start --disable-features=TranslateUI --disk-cache-dir=/tmp/chromium-cache --disable-pinch --overscroll-history-navigation=disabled --disable-features=OverscrollHistoryNavigation --start-fullscreen --window-size=\${WIDTH},\${HEIGHT} --window-position=0,0 "$url" &
+exec "$STARTX" "$FP_CHROMIUM" $CHROMIUM_OPTS "${URL:-https://dietpi.com/}"
 EOF
 
-# Set permissions
-chown -R dietpi:dietpi /home/dietpi/.config
+# Make the script executable
+chmod +x /var/lib/dietpi/dietpi-software/installed/chromium-autostart.sh
 
-# Enable auto-login for LXDE
-/boot/dietpi/dietpi-autostart 11
+# Create the kiosk-url helper script
+cat > /usr/local/bin/kiosk-url << 'EOF'
+#!/bin/bash
+# Simple script to change the kiosk URL
 
-echo "Kiosk setup complete with URL: \$KIOSK_URL"
+if [ $# -eq 0 ]; then
+    echo "Current kiosk URL:"
+    grep "^SOFTWARE_CHROMIUM_AUTOSTART_URL=" /boot/dietpi.txt | cut -d= -f2
+    echo ""
+    echo "Usage: kiosk-url <new-url>"
+    echo "Example: kiosk-url https://example.com"
+    exit 0
+fi
+
+NEW_URL="$1"
+
+# Update the URL in dietpi.txt
+sudo sed -i "s|^SOFTWARE_CHROMIUM_AUTOSTART_URL=.*|SOFTWARE_CHROMIUM_AUTOSTART_URL=$NEW_URL|" /boot/dietpi.txt
+
+echo "Kiosk URL changed to: $NEW_URL"
+echo "Restarting kiosk..."
+
+# Restart the display
+sudo systemctl restart getty@tty1
+
+echo "Done! The kiosk should now display: $NEW_URL"
+EOF
+
+chmod +x /usr/local/bin/kiosk-url
+
+echo "Kiosk setup complete with enhanced features"
 CUSTOM_SCRIPT
+    
+    # Replace placeholders in the script
+    sed -i "s|HOSTNAME_PLACEHOLDER|$hostname|g" "$boot_mount/Automation_Custom_Script.sh"
     
     chmod +x "$boot_mount/Automation_Custom_Script.sh"
     

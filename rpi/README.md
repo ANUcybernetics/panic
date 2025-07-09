@@ -4,7 +4,7 @@ This directory contains scripts to set up Raspberry Pi devices as browser kiosks
 
 ## Quick Start
 
-1. Insert an SD card into your Mac
+1. Insert an SD card into your Mac's built-in SD card reader
 2. Run the automated setup script:
 
 ```bash
@@ -12,8 +12,8 @@ This directory contains scripts to set up Raspberry Pi devices as browser kiosks
 ```
 
 3. Insert the SD card into your Pi and power on
-4. Wait ~5-10 minutes for initial setup
-5. The Pi will boot directly into kiosk mode
+4. Wait ~10-15 minutes for initial setup (first boot takes longer)
+5. The Pi will boot directly into kiosk mode at full screen resolution
 
 ## Why DietPi?
 
@@ -27,11 +27,14 @@ We use DietPi instead of Raspberry Pi OS because:
 
 - ✅ Fully automated setup via SD card
 - ✅ Boots directly to kiosk mode (no desktop visible)
+- ✅ Auto-detects native display resolution
 - ✅ Supports both regular and enterprise WiFi
-- ✅ Tailscale integration for remote access
-- ✅ Automatic security updates
-- ✅ Mouse cursor auto-hide
+- ✅ SSH server pre-installed for remote access
+- ✅ Tailscale integration for secure remote access
+- ✅ Mouse cursor auto-hide with unclutter
 - ✅ Screen blanking disabled
+- ✅ Easy URL changes with `kiosk-url` command
+- ✅ Comprehensive kiosk flags (no pinch, no navigation, etc.)
 - ✅ Cached image downloads for faster subsequent setups
 
 ## How It Works
@@ -118,7 +121,9 @@ done
 
 ## SSH Access
 
-### Tailscale SSH Access
+SSH server (OpenSSH) is automatically installed on all kiosks for remote management.
+
+### Tailscale SSH Access (Recommended)
 
 If you provided a Tailscale auth key during setup, you can SSH into the Pi from anywhere on your tailnet:
 
@@ -129,37 +134,74 @@ ssh dietpi@<hostname>
 # No port forwarding or VPN required!
 ```
 
+**Important:** You must configure Tailscale ACLs to allow SSH access:
+
+1. Visit https://login.tailscale.com/admin/acls
+2. Add SSH rules to your policy:
+
+```json
+{
+  "acls": [
+    // ... existing rules ...
+  ],
+  "ssh": [
+    {
+      "action": "accept",
+      "src": ["your-email@domain.com"],
+      "dst": ["tag:your-tag"],  // or specific hostnames
+      "users": ["dietpi", "root"]
+    }
+  ]
+}
+```
+
 ### Local Network Access
 
-Without Tailscale, you'll need to use password authentication:
+Without Tailscale, use standard SSH with password authentication:
 
 ```bash
-# Using the hostname on local network
+# Using the IP address
+ssh dietpi@<ip-address>
+
+# Or using mDNS hostname (may require .local suffix)
 ssh dietpi@<hostname>.local
+
 # Default password: dietpi (or what you specified with --password)
 ```
 
-To get a Tailscale auth key:
+### Getting a Tailscale Auth Key
+
 1. Visit https://login.tailscale.com/admin/settings/keys
-2. Generate an auth key (consider a reusable key for multiple devices)
-3. Use the key with `--tailscale-authkey` during setup
+2. Generate an auth key (use reusable + pre-authorized for multiple devices)
+3. Optionally tag devices for easier ACL management
+4. Use the key with `--tailscale-authkey` during setup
 
 Benefits of Tailscale:
 - Access your Pi from anywhere without port forwarding
 - Automatic encrypted connections
 - Works behind NAT/firewalls
 - No manual VPN configuration needed
+- Centralized access control via ACLs
 
 ## Maintenance
 
 ### Updating the Display URL
 
-SSH into the Pi and edit the autostart file:
+The easiest way to change the kiosk URL is using the built-in `kiosk-url` command:
+
 ```bash
-sudo nano /home/dietpi/.config/openbox/autostart
+# Check current URL
+ssh dietpi@<hostname> kiosk-url
+
+# Change to a new URL
+ssh dietpi@<hostname> kiosk-url https://new-url.com
+
+# Or interactively after SSH:
+ssh dietpi@<hostname>
+kiosk-url https://new-url.com
 ```
 
-Change the URL in the chromium line and reboot.
+The URL change takes effect immediately - no reboot required!
 
 ### Viewing Logs
 
@@ -167,21 +209,27 @@ Change the URL in the chromium line and reboot.
 # System logs
 sudo journalctl -f
 
-# X session errors
-cat /home/dietpi/.xsession-errors
+# Chromium/kiosk specific logs
+sudo journalctl -u getty@tty1 -f
+
+# DietPi automation logs (useful for troubleshooting setup)
+cat /var/tmp/dietpi/logs/dietpi-automation_custom_script.log
 ```
 
 ### Manual Control
 
 ```bash
-# Stop kiosk
-sudo systemctl stop lightdm
+# Restart kiosk (chromium)
+sudo systemctl restart getty@tty1
 
-# Start kiosk
-sudo systemctl start lightdm
+# Stop kiosk temporarily
+sudo killall chromium
 
-# Restart kiosk
-sudo systemctl restart lightdm
+# View kiosk service status
+sudo systemctl status getty@tty1
+
+# Reboot the Pi
+sudo reboot
 ```
 
 ### Monitoring Setup Progress
@@ -194,28 +242,48 @@ To watch the initial setup progress:
 ## Troubleshooting
 
 ### SD Card Not Found
-- Ensure SD card is inserted in built-in reader
-- Script expects SD card at `/dev/disk4` on Mac
-- Check with `diskutil list`
+- Ensure SD card is inserted in Mac's built-in SD card reader
+- Script automatically finds the SD card reader (no longer hardcoded)
+- Check with `diskutil list` to see all disks
+- Look for "Built In SDXC Reader" in disk info
 
-### Black Screen
+### Black Screen / No Display
 - Check if Chromium is running: `ps aux | grep chromium`
-- Check X session errors: `cat ~/.xsession-errors`
+- Check current resolution: `ps aux | grep -oE "window-size=[0-9]+,[0-9]+"`
 - Verify URL is accessible: `curl -I <your-url>`
+- View logs: `sudo journalctl -u getty@tty1 -n 50`
+
+### Wrong Resolution
+- The script auto-detects native resolution
+- Check detected resolution in process list: `ps aux | grep window-size`
+- Force a specific resolution by editing `/boot/dietpi.txt`:
+  ```bash
+  SOFTWARE_CHROMIUM_RES_X=1920
+  SOFTWARE_CHROMIUM_RES_Y=1080
+  ```
+- Then restart: `sudo systemctl restart getty@tty1`
+
+### Mouse Cursor Visible
+- Check if unclutter is running: `ps aux | grep unclutter`
+- Manually hide cursor: `DISPLAY=:0 unclutter -idle 0.1 -root &`
 
 ### WiFi Not Connecting
 - Check WiFi config: `sudo nano /boot/dietpi-wifi.txt`
-- For enterprise WiFi, ensure phase1="peaplabel=0" is set
-- Restart networking: `sudo systemctl restart networking`
+- For enterprise WiFi, verify all PEAP settings are correct
+- View network status: `ip addr` and `iwconfig`
+- Check logs: `sudo journalctl -u networking -n 50`
 
-### Kiosk Not Starting
-- SSH in and check: `sudo systemctl status lightdm`
-- View logs: `cat /home/dietpi/.xsession-errors`
+### SSH Access Issues
+- Verify SSH is running: `sudo systemctl status ssh`
+- For Tailscale SSH, check ACL configuration
+- For local SSH, ensure you're on the same network
+- Default credentials: username `dietpi`, password as set during setup
+
+### Kiosk Not Starting After Boot
+- Check service status: `sudo systemctl status getty@tty1`
+- Verify autostart mode: `cat /boot/dietpi/.dietpi-autostart_index` (should be 11)
+- Check if X server started: `ps aux | grep xinit`
 - Verify Chromium installed: `which chromium`
-
-### Display Issues
-- Adjust GPU memory split: `sudo dietpi-config` > Display Options
-- Check HDMI config: `sudo nano /boot/config.txt`
 
 ## Advanced Usage
 
