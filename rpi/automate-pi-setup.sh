@@ -144,8 +144,9 @@ AUTO_SETUP_AUTOMATED=1
 # Global password for dietpi user
 AUTO_SETUP_GLOBAL_PASSWORD=$password
 
-# Software to install (105 = OpenSSH Server, 113 = Chromium, 173 = LXDE desktop)
-AUTO_SETUP_INSTALL_SOFTWARE_ID=105,173,113
+# Software to install (105 = OpenSSH Server, 113 = Chromium)
+# Note: Don't include desktop environments as they conflict with kiosk mode
+AUTO_SETUP_INSTALL_SOFTWARE_ID=105,113
 
 # Enable auto-login
 AUTO_SETUP_AUTOSTART_TARGET_INDEX=11
@@ -267,10 +268,13 @@ if [ -n "$AUTHKEY_PATH" ]; then
     rm -f "$AUTHKEY_PATH"
 fi
 
-# Install unclutter-xfixes for hiding mouse cursor (works better than classic unclutter)
-echo "Installing unclutter for cursor hiding..."
+# Install required packages for kiosk mode
+echo "Installing required packages..."
 apt-get update
-apt-get install -y unclutter-xfixes
+apt-get install -y unclutter-xfixes openbox
+
+# Note: openbox is needed because DietPi's kiosk mode doesn't include a window manager
+# Without it, X sessions fail with "no window managers found"
 
 # Backup original chromium autostart script
 if [ -f /var/lib/dietpi/dietpi-software/installed/chromium-autostart.sh ]; then
@@ -355,11 +359,14 @@ CHROMIUM_OPTS="$CHROMIUM_OPTS --disable-features=UseModernMediaControls"
 CHROMIUM_OPTS="$CHROMIUM_OPTS --enable-gpu-rasterization"
 CHROMIUM_OPTS="$CHROMIUM_OPTS --enable-accelerated-2d-canvas"
 
-# For 4K displays, use larger memory limits
+# For 4K displays, disable GPU to avoid DMA buffer errors
 if [ "$RES_X" -gt 2560 ] || [ "$RES_Y" -gt 1440 ]; then
     echo "Detected high resolution display, applying optimizations..."
     CHROMIUM_OPTS="$CHROMIUM_OPTS --max-old-space-size=4096"
     CHROMIUM_OPTS="$CHROMIUM_OPTS --memory-pressure-off"
+    # Disable GPU for 4K displays to avoid rendering issues
+    CHROMIUM_OPTS="$CHROMIUM_OPTS --disable-gpu --disable-gpu-compositing"
+    echo "GPU disabled for 4K display compatibility"
 fi
 
 # Home page URL
@@ -388,13 +395,30 @@ unclutter --hide-on-touch --start-hidden --timeout 0 &
 
 # For high-resolution displays, ensure proper mode is set
 if command -v xrandr >/dev/null 2>&1; then
-    # Get the best available mode
-    BEST_MODE=\$(xrandr 2>/dev/null | grep -A1 ' connected' | tail -1 | awk '{print \$1}')
-    if [ -n "\$BEST_MODE" ]; then
-        echo "Setting display mode to: \$BEST_MODE"
-        xrandr --output \$(xrandr | grep ' connected' | head -1 | awk '{print \$1}') --mode \$BEST_MODE --rate 60 2>/dev/null || true
+    # Get the connected display
+    DISPLAY_OUTPUT=\$(xrandr | grep ' connected' | head -1 | awk '{print \$1}')
+    
+    # Check if 4K resolution is detected
+    if xrandr | grep -q "3840x2160\\|4096x2160"; then
+        echo "4K display detected, attempting to set mode..."
+        # Try 4K first, but be prepared to fall back
+        if ! xrandr --output \$DISPLAY_OUTPUT --mode 3840x2160 --rate 30 2>/dev/null; then
+            echo "4K mode failed, falling back to 1080p..."
+            xrandr --output \$DISPLAY_OUTPUT --mode 1920x1080 --rate 60 2>/dev/null || true
+        fi
+    else
+        # Non-4K display, use best available mode
+        BEST_MODE=\$(xrandr 2>/dev/null | grep -A1 ' connected' | tail -1 | awk '{print \$1}')
+        if [ -n "\$BEST_MODE" ]; then
+            echo "Setting display mode to: \$BEST_MODE"
+            xrandr --output \$DISPLAY_OUTPUT --mode \$BEST_MODE --rate 60 2>/dev/null || true
+        fi
     fi
 fi
+
+# Start openbox window manager in background
+openbox &
+sleep 1
 
 # Small delay to ensure display is ready
 sleep 1
