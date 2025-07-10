@@ -7,7 +7,7 @@ set -u
 set -o pipefail
 
 # Configuration
-readonly RASPI_IMAGE_URL="https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2025-01-03/2025-01-03-raspios-bookworm-arm64.img.xz"
+readonly RASPI_IMAGE_URL="https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2025-05-13/2025-05-13-raspios-bookworm-arm64.img.xz"
 readonly DEFAULT_URL="https://panic.fly.dev"
 readonly CACHE_DIR="$HOME/.cache/raspi-images"
 
@@ -82,7 +82,20 @@ download_raspi_os() {
     fi
     
     echo -e "${YELLOW}Downloading Raspberry Pi OS image...${NC}"
-    curl -L -o "$cached_file" "$RASPI_IMAGE_URL"
+    if ! curl -L -o "$cached_file" "$RASPI_IMAGE_URL"; then
+        echo -e "${RED}Error: Failed to download image from $RASPI_IMAGE_URL${NC}"
+        rm -f "$cached_file"
+        exit 1
+    fi
+    
+    # Verify it's actually an xz file
+    if ! file "$cached_file" | grep -q "XZ compressed data"; then
+        echo -e "${RED}Error: Downloaded file is not a valid XZ compressed image${NC}"
+        echo "File type: $(file "$cached_file")"
+        rm -f "$cached_file"
+        exit 1
+    fi
+    
     cp "$cached_file" "$output_file"
     echo -e "${GREEN}✓ Image cached for future use${NC}"
 }
@@ -100,7 +113,23 @@ write_image_to_sd() {
     
     # Decompress and write in one step
     echo "Decompressing and writing image..."
-    xzcat "$image_file" | sudo dd of="$device" bs=4m
+    
+    # Check if pv is available for progress display
+    if command -v pv >/dev/null 2>&1; then
+        # Get uncompressed size for progress bar
+        local uncompressed_size=$(xz -l "$image_file" 2>/dev/null | awk 'NR==2 {print $5}')
+        if [ -n "$uncompressed_size" ]; then
+            echo "Using pv for progress display..."
+            xzcat "$image_file" | pv -s "$uncompressed_size" | sudo dd of="$device" bs=4m
+        else
+            # Fallback if we can't get size
+            xzcat "$image_file" | pv | sudo dd of="$device" bs=4m
+        fi
+    else
+        echo "Tip: Install 'pv' (brew install pv) to see progress"
+        echo "You can press Ctrl+T to see current progress"
+        xzcat "$image_file" | sudo dd of="$device" bs=4m
+    fi
     
     # Ensure all data is written
     sync

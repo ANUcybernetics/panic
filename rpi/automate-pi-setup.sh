@@ -101,7 +101,23 @@ write_image_to_sd() {
     
     # Decompress and write in one step
     echo "Decompressing and writing image..."
-    xzcat "$image_file" | sudo dd of="$device" bs=4m
+    
+    # Check if pv is available for progress display
+    if command -v pv >/dev/null 2>&1; then
+        # Get uncompressed size for progress bar
+        local uncompressed_size=$(xz -l "$image_file" 2>/dev/null | awk 'NR==2 {print $5}')
+        if [ -n "$uncompressed_size" ]; then
+            echo "Using pv for progress display..."
+            xzcat "$image_file" | pv -s "$uncompressed_size" | sudo dd of="$device" bs=4m
+        else
+            # Fallback if we can't get size
+            xzcat "$image_file" | pv | sudo dd of="$device" bs=4m
+        fi
+    else
+        echo "Tip: Install 'pv' (brew install pv) to see progress"
+        echo "You can press Ctrl+T to see current progress"
+        xzcat "$image_file" | sudo dd of="$device" bs=4m
+    fi
     
     # Ensure all data is written
     sync
