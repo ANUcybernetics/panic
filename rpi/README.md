@@ -10,7 +10,7 @@ specified URL.
 2. Run the automated setup script:
 
 ```bash
-./automate-pi-setup.sh --url "https://example.com" --wifi-ssid "YourNetwork" --wifi-password "YourPassword" --hostname "kiosk1"
+./pi-setup.sh --url "https://example.com" --wifi-ssid "YourNetwork" --wifi-password "YourPassword" --hostname "kiosk1"
 ```
 
 3. Insert the SD card into your Pi and power on
@@ -43,7 +43,7 @@ We use DietPi instead of Raspberry Pi OS because:
 
 ## How It Works
 
-The `automate-pi-setup.sh` script provides a fully automated workflow:
+The `pi-setup.sh` script provides a fully automated workflow:
 
 1. **Downloads DietPi image** (with caching for faster subsequent runs)
 2. **Writes image to SD card**
@@ -61,7 +61,7 @@ The automation uses DietPi's built-in features:
 
 ## Script Options
 
-### `automate-pi-setup.sh`
+### `pi-setup.sh`
 
 **Options:**
 
@@ -81,7 +81,7 @@ The automation uses DietPi's built-in features:
 **Regular home/office WiFi:**
 
 ```bash
-./automate-pi-setup.sh \
+./pi-setup.sh \
   --url "https://panic.fly.dev" \
   --wifi-ssid "MyNetwork" \
   --wifi-password "MyPassword" \
@@ -91,7 +91,7 @@ The automation uses DietPi's built-in features:
 **Enterprise WiFi (WPA2-EAP/PEAP):**
 
 ```bash
-./automate-pi-setup.sh \
+./pi-setup.sh \
   --url "https://panic.fly.dev/display/1" \
   --wifi-ssid "CorpNetwork" \
   --wifi-enterprise-user "username@domain.com" \
@@ -102,7 +102,7 @@ The automation uses DietPi's built-in features:
 **Ethernet Only:**
 
 ```bash
-./automate-pi-setup.sh \
+./pi-setup.sh \
   --url "https://example.com" \
   --hostname "wired-kiosk"
 ```
@@ -111,7 +111,7 @@ The automation uses DietPi's built-in features:
 
 ```bash
 for i in {1..5}; do
-  ./automate-pi-setup.sh \
+  ./pi-setup.sh \
     --url "https://panic.fly.dev/i/$i/grid" \
     --hostname "panic$i" \
     --wifi-ssid "ANU-Secure" \
@@ -123,7 +123,7 @@ done
 **With Tailscale for Remote Access:**
 
 ```bash
-./automate-pi-setup.sh \
+./pi-setup.sh \
   --url "https://panic.fly.dev" \
   --wifi-ssid "MyNetwork" \
   --wifi-password "MyPassword" \
@@ -335,10 +335,10 @@ The script caches downloaded images for 30 days:
 
 ```bash
 # List cached images
-./automate-pi-setup.sh --list-cache
+./pi-setup.sh --list-cache
 
 # Clear cache
-./automate-pi-setup.sh --clear-cache
+./pi-setup.sh --clear-cache
 ```
 
 Images are stored in `~/.cache/dietpi-images/`
