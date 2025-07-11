@@ -395,8 +395,9 @@ sleep 3
 reboot
 FIRSTRUN_SCRIPT
 
-    # Replace the placeholder with actual config
-    echo "${FIRSTRUN_SCRIPT//CONFIG_JSON_PLACEHOLDER/$config_json}"
+    # Replace the placeholder with actual config - escape the JSON for sed
+    local escaped_json=$(echo "$config_json" | sed 's/[[\.*^$()+?{|]/\\&/g')
+    echo "$FIRSTRUN_SCRIPT" | sed "s|CONFIG_JSON_PLACEHOLDER|$escaped_json|"
 }
 
 # Function to configure Raspberry Pi OS
