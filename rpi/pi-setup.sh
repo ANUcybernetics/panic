@@ -515,6 +515,8 @@ xkb_layout = us
 cursor_theme = none
 cursor_size = 1
 
+# Configure both HDMI outputs identically
+# Display will work regardless of which port is used
 [output:HDMI-A-1]
 mode = preferred
 position = 0,0
@@ -522,7 +524,7 @@ transform = normal
 
 [output:HDMI-A-2]
 mode = preferred
-position = auto
+position = 0,0
 transform = normal
 
 [output:DSI-1]
@@ -714,17 +716,14 @@ EOF
         echo -e "${GREEN}✓ WiFi configured${NC}"
     fi
 
-    # Configure config.txt for better 4K support
+    # Configure config.txt for better 4K support on RPi5
     cat >> "$boot_mount/config.txt" << EOF
 
 # Enable 4K60 support
 hdmi_enable_4kp60=1
 
-# GPU memory for 4K support
-gpu_mem=256
-
-# Enable Wayland
-dtoverlay=vc4-kms-v3d
+# Enable Wayland with RPi5-specific overlay
+dtoverlay=vc4-kms-v3d-pi5
 max_framebuffers=2
 
 # Disable overscan
