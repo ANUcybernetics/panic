@@ -265,11 +265,9 @@ if [ -n "$SSH_KEY" ]; then
     echo "SSH key configured"
 fi
 
-# Wait for network
-echo "Waiting for network connectivity..."
-while ! ping -c 1 google.com > /dev/null 2>&1; do
-    sleep 2
-done
+# Enable systemd-networkd-wait-online for proper network readiness
+echo "Enabling network wait service..."
+systemctl enable systemd-networkd-wait-online.service
 
 # Install required packages
 echo "Installing required packages..."
@@ -283,25 +281,139 @@ if [ -n "$TAILSCALE_AUTHKEY" ]; then
     echo "Tailscale installed and connected"
 fi
 
-# Create kiosk service
-cat > /etc/systemd/system/kiosk.service <<EOF
+# Create Wayfire compositor service
+cat > /etc/systemd/system/wayfire.service <<EOF
 [Unit]
-Description=Chromium Kiosk Mode
-After=multi-user.target
+Description=Wayfire Wayland Compositor
+After=systemd-user-sessions.service plymouth-quit-wait.service
+Wants=dbus.socket systemd-logind.service
+Conflicts=getty@tty1.service
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/chromium-kiosk.sh
-User=$USERNAME
-Group=$USERNAME
-Restart=always
+ExecStart=/usr/bin/wayfire
+Restart=on-failure
 RestartSec=5
-Environment="XDG_RUNTIME_DIR=/run/user/1000"
-Environment="WAYLAND_DISPLAY=wayland-1"
+User=$USERNAME
+PAMName=login
+StandardInput=tty
+StandardOutput=journal
+StandardError=journal
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+UtmpIdentifier=tty1
+
+# Environment
+Environment="XDG_RUNTIME_DIR=/run/user/%U"
+Environment="XDG_SESSION_TYPE=wayland"
 
 [Install]
 WantedBy=graphical.target
 EOF
+
+# Create kiosk service with proper dependencies
+cat > /etc/systemd/system/kiosk.service <<EOF
+[Unit]
+Description=Chromium Kiosk Mode
+After=graphical.target network-online.target wayfire.service
+
+# Soft dependency - start even if network fails
+Wants=network-online.target
+
+# Hard dependency - display must be ready
+Requires=graphical.target wayfire.service
+BindsTo=wayfire.service
+
+# Ensure filesystem is mounted
+RequiresMountsFor=/boot/firmware
+
+[Service]
+Type=simple
+User=$USERNAME
+Group=$USERNAME
+
+# Robust startup - wait for Wayland socket
+ExecStartPre=/bin/bash -c 'for i in {1..30}; do [ -S "\${WAYLAND_DISPLAY:-/run/user/%U/wayland-1}" ] && break || sleep 1; done'
+ExecStart=/usr/local/bin/chromium-kiosk.sh
+
+# Recovery settings
+Restart=always
+RestartSec=10
+StartLimitBurst=10
+StartLimitIntervalSec=600
+
+# If it fails 10 times in 10 minutes, run recovery
+OnFailure=kiosk-recovery.service
+
+# Environment - use systemd specifiers
+Environment="XDG_RUNTIME_DIR=/run/user/%U"
+Environment="WAYLAND_DISPLAY=wayland-1"
+
+# Security and resource limits
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/boot/firmware
+NoNewPrivileges=yes
+MemoryMax=2G
+TasksMax=512
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=chromium-kiosk
+
+[Install]
+WantedBy=graphical.target
+EOF
+
+# Create recovery service
+cat > /etc/systemd/system/kiosk-recovery.service <<EOF
+[Unit]
+Description=Kiosk Recovery Mode
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/kiosk-recovery.sh
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kiosk-recovery
+EOF
+
+# Create recovery script
+cat > /usr/local/bin/kiosk-recovery.sh <<EOF
+#!/bin/bash
+# Kiosk recovery script - runs when kiosk fails repeatedly
+
+echo "Kiosk recovery mode activated"
+
+# Log the failure
+echo "Kiosk service failed repeatedly at \$(date)" >> /var/log/kiosk-failures.log
+journalctl -u kiosk.service -n 50 --no-pager >> /var/log/kiosk-failures.log
+
+# Try to restore network connectivity
+systemctl restart systemd-networkd
+systemctl restart wpa_supplicant
+
+# Clear Chromium cache in case of corruption
+rm -rf /tmp/chromium-cache
+rm -rf /home/$USERNAME/.cache/chromium
+
+# Reset display
+systemctl restart wayfire.service
+
+# Wait a bit before allowing restart
+sleep 30
+
+# Reset the failure counter
+systemctl reset-failed kiosk.service
+
+echo "Recovery complete, kiosk service can restart"
+EOF
+
+chmod +x /usr/local/bin/kiosk-recovery.sh
 
 # Create chromium kiosk script
 mkdir -p /usr/local/bin
@@ -313,13 +425,11 @@ cat > /usr/local/bin/chromium-kiosk.sh <<'EOF'
 # Read the first line only to avoid issues with extra newlines
 URL=$(head -n1 /boot/firmware/kiosk_url.txt 2>/dev/null || echo "https://panic.fly.dev")
 
-# Wait for Wayland to be ready
-sleep 5
+# Log startup
+logger -t chromium-kiosk "Starting Chromium kiosk with URL: $URL"
 
 # Hide mouse cursor
 unclutter -idle 0.1 -root &
-
-echo "Starting Chromium in kiosk mode" | tee /var/log/chromium-kiosk.log
 
 # Launch Chromium in kiosk mode with Wayland support
 # Wayfire will handle native resolution detection
@@ -367,23 +477,26 @@ NEW_URL="$1"
 printf '%s\n' "$NEW_URL" | sudo tee /boot/firmware/kiosk_url.txt > /dev/null
 
 echo "Kiosk URL changed to: $NEW_URL"
-echo "Restarting kiosk..."
 
-# Restart the kiosk service
-sudo systemctl restart kiosk
+# The systemd path unit will automatically detect the change and restart kiosk
+echo "Waiting for automatic kiosk restart..."
 
-echo "Done! The kiosk should now display: $NEW_URL"
+# Wait for the restart to complete
+sleep 2
+
+# Check status
+if sudo systemctl is-active --quiet kiosk.service; then
+    echo "Done! The kiosk is now displaying: $NEW_URL"
+else
+    echo "Warning: Kiosk service may have failed to restart"
+    echo "Check status with: sudo systemctl status kiosk.service"
+fi
 EOF
 
 chmod +x /usr/local/bin/kiosk-url
 
-# Configure auto-login
-mkdir -p /etc/systemd/system/getty@tty1.service.d
-cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf <<EOF
-[Service]
-ExecStart=
-ExecStart=-/sbin/agetty --autologin $USERNAME --noclear %I \$TERM
-EOF
+# No need for auto-login with systemd service approach
+# Wayfire service will handle the display directly
 
 # Configure Wayfire as compositor (lightweight for kiosk)
 apt-get install -y wayfire
@@ -420,19 +533,113 @@ EOF
 
 chown -R $USERNAME:$USERNAME /home/$USERNAME/.config
 
-# Set up automatic Wayland session start
-cat > /home/$USERNAME/.bash_profile <<'EOF'
-# Auto-start Wayfire on tty1
-if [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ] && [ "$XDG_VTNR" -eq 1 ]; then
-    exec wayfire
-fi
-EOF
-
-chown $USERNAME:$USERNAME /home/$USERNAME/.bash_profile
+# No need for bash_profile auto-start with systemd service approach
 
 # Enable services
-systemctl enable kiosk
+systemctl enable wayfire.service
+systemctl enable kiosk.service
+systemctl enable kiosk-recovery.service
 systemctl set-default graphical.target
+
+# Enable linger for the user to allow user services
+loginctl enable-linger $USERNAME
+
+# Create systemd path unit to monitor URL changes
+cat > /etc/systemd/system/kiosk-url-monitor.path <<EOF
+[Unit]
+Description=Monitor kiosk URL file for changes
+After=boot.mount
+
+[Path]
+PathModified=/boot/firmware/kiosk_url.txt
+Unit=kiosk-restart.service
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Create service to restart kiosk when URL changes
+cat > /etc/systemd/system/kiosk-restart.service <<EOF
+[Unit]
+Description=Restart kiosk when URL changes
+After=kiosk.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/systemctl restart kiosk.service
+EOF
+
+# Enable the path monitor
+systemctl enable kiosk-url-monitor.path
+
+# Create health check timer
+cat > /etc/systemd/system/kiosk-health.timer <<EOF
+[Unit]
+Description=Periodic kiosk health check
+After=kiosk.service
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=30min
+Unit=kiosk-health.service
+
+[Install]
+WantedBy=timers.target
+EOF
+
+# Create health check service
+cat > /etc/systemd/system/kiosk-health.service <<EOF
+[Unit]
+Description=Check kiosk health and log status
+After=kiosk.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/kiosk-health-check.sh
+StandardOutput=journal
+StandardError=journal
+EOF
+
+# Create health check script
+cat > /usr/local/bin/kiosk-health-check.sh <<EOF
+#!/bin/bash
+# Health check for kiosk system
+
+echo "Running kiosk health check at \$(date)"
+
+# Check if services are running
+for service in wayfire kiosk; do
+    if systemctl is-active --quiet \$service.service; then
+        echo "✓ \$service.service is running"
+    else
+        echo "✗ \$service.service is not running"
+        logger -t kiosk-health "WARNING: \$service.service is not running"
+    fi
+done
+
+# Check memory usage
+MEMORY_USAGE=\$(free | grep Mem | awk '{print int(\$3/\$2 * 100)}')
+echo "Memory usage: \$MEMORY_USAGE%"
+if [ \$MEMORY_USAGE -gt 90 ]; then
+    logger -t kiosk-health "WARNING: Memory usage is high: \$MEMORY_USAGE%"
+fi
+
+# Check if URL file exists
+if [ -f /boot/firmware/kiosk_url.txt ]; then
+    echo "✓ URL file exists: \$(head -n1 /boot/firmware/kiosk_url.txt)"
+else
+    echo "✗ URL file missing"
+    logger -t kiosk-health "ERROR: URL file missing"
+fi
+
+# Log disk usage
+df -h /boot/firmware / | logger -t kiosk-health
+EOF
+
+chmod +x /usr/local/bin/kiosk-health-check.sh
+
+# Enable health check timer
+systemctl enable kiosk-health.timer
 
 # Store the URL (using printf to avoid echo interpreting escapes)
 printf '%s\n' "$URL" > /boot/firmware/kiosk_url.txt
@@ -973,11 +1180,15 @@ EOF
     echo "1. Insert the SD card into your Raspberry Pi"
     echo "2. Power on the Pi"
     echo "3. Raspberry Pi OS will automatically:"
-    echo "   - Connect to WiFi"
+    echo "   - Connect to WiFi (with systemd-networkd)"
     echo "   - Run first-boot configuration"
-    echo "   - Install Chromium and Wayland compositor"
-    echo "   - Configure kiosk mode with 4K support"
-    echo "   - Reboot into kiosk mode displaying: $url"
+    echo "   - Install Chromium and Wayfire compositor"
+    echo "   - Configure systemd services with:"
+    echo "     • Automatic recovery on failure"
+    echo "     • Resource limits (2GB memory)"
+    echo "     • Health monitoring every 30 minutes"
+    echo "     • Automatic restart on URL changes"
+    echo "   - Boot into kiosk mode displaying: $url"
     echo
     if [ -n "$tailscale_authkey" ]; then
         echo "Tailscale access:"
@@ -1001,7 +1212,14 @@ EOF
     echo "   - Full 4K display support via Wayland compositor"
     echo "   - Native resolution detection through Wayfire"
     echo "   - GPU-accelerated Chromium with Wayland backend"
-    echo "   - Use 'kiosk-url' command to change URL"
+    echo "   - Robust systemd service management"
+    echo ""
+    echo "Useful commands:"
+    echo "   kiosk-url <new-url>              - Change displayed URL"
+    echo "   sudo systemctl status kiosk      - Check kiosk status"
+    echo "   sudo journalctl -u kiosk -f      - Follow kiosk logs"
+    echo "   sudo systemctl restart kiosk     - Restart kiosk"
+    echo "   sudo journalctl -u kiosk-health  - View health check logs"
 }
 
 # Run main function
