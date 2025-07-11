@@ -8,7 +8,6 @@ set -o pipefail
 
 # Configuration
 readonly RASPI_IMAGE_URL="https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2025-05-13/2025-05-13-raspios-bookworm-arm64.img.xz"
-readonly DEFAULT_URL="https://panic.fly.dev"
 readonly CACHE_DIR="$HOME/.cache/raspi-images"
 
 # Colors for output
@@ -540,15 +539,24 @@ main() {
     echo "With Wayland support for 4K displays"
     echo
     
-    # Parse arguments (same as DietPi version)
-    local url="$DEFAULT_URL"
+    # Check if no arguments provided
+    if [ $# -eq 0 ]; then
+        echo -e "${RED}Error: No arguments provided${NC}"
+        echo
+        echo "This script requires several arguments to configure your Raspberry Pi."
+        echo "Run with --help for usage information."
+        exit 1
+    fi
+    
+    # Parse arguments - no defaults, all required
+    local url=""
     local wifi_ssid=""
     local wifi_password=""
     local wifi_enterprise_user=""
     local wifi_enterprise_pass=""
-    local hostname="raspberrypi"
-    local username="pi"
-    local password="raspberry"
+    local hostname=""
+    local username=""
+    local password=""
     local tailscale_authkey=""
     
     while [[ $# -gt 0 ]]; do
@@ -615,29 +623,52 @@ main() {
                 cat << EOF
 Usage: $0 [OPTIONS]
 
-Options:
-    --url <url>                  Kiosk URL (default: $DEFAULT_URL)
+Required Options:
+    --url <url>                  URL to display in kiosk mode
+    --hostname <name>            Hostname for the Raspberry Pi
+    --username <user>            Username for the admin account
+    --password <pass>            Password for the admin account
+
+Network Options (at least one required):
     --wifi-ssid <ssid>           WiFi network name
-    --wifi-password <pass>       WiFi password (for WPA2-PSK)
-    --wifi-enterprise-user <u>   Enterprise WiFi username
-    --wifi-enterprise-pass <p>   Enterprise WiFi password
-    --hostname <name>            Custom hostname (default: raspberrypi)
-    --username <user>            Username (default: pi)
-    --password <pass>            Password (default: raspberry)
+    --wifi-password <pass>       WiFi password (for WPA2-PSK networks)
+    --wifi-enterprise-user <u>   Enterprise WiFi username (use with --wifi-ssid)
+    --wifi-enterprise-pass <p>   Enterprise WiFi password (use with --wifi-ssid)
+
+Optional:
     --tailscale-authkey <key>    Tailscale auth key for automatic join
+    
+Utility Commands:
     --list-cache                 List cached images
     --clear-cache                Clear all cached images
     --help                       Show this help message
 
 Examples:
     # Regular WiFi:
-    $0 --url "https://example.com" --wifi-ssid "MyNetwork" --wifi-password "MyPassword"
+    $0 --url "https://example.com" \\
+       --hostname "kiosk-pi" \\
+       --username "admin" \\
+       --password "securepass123" \\
+       --wifi-ssid "MyNetwork" \\
+       --wifi-password "MyPassword"
     
     # Enterprise WiFi:
-    $0 --url "https://example.com" --wifi-ssid "CorpNetwork" \\
+    $0 --url "https://example.com" \\
+       --hostname "kiosk-display" \\
+       --username "admin" \\
+       --password "securepass123" \\
+       --wifi-ssid "CorpNetwork" \\
        --wifi-enterprise-user "username@domain.com" \\
-       --wifi-enterprise-pass "password" \\
-       --hostname "kiosk-display"
+       --wifi-enterprise-pass "password"
+    
+    # With Tailscale for remote access:
+    $0 --url "https://panic.fly.dev" \\
+       --hostname "panic-display-1" \\
+       --username "panic" \\
+       --password "mypassword" \\
+       --wifi-ssid "HomeWiFi" \\
+       --wifi-password "wifipass" \\
+       --tailscale-authkey "tskey-auth-..."
 
 Features:
     - Full 4K display support via Wayland
@@ -661,6 +692,55 @@ EOF
                 ;;
         esac
     done
+    
+    # Validate required arguments
+    local missing_args=()
+    
+    if [ -z "$url" ]; then
+        missing_args+=("--url")
+    fi
+    
+    if [ -z "$hostname" ]; then
+        missing_args+=("--hostname")
+    fi
+    
+    if [ -z "$username" ]; then
+        missing_args+=("--username")
+    fi
+    
+    if [ -z "$password" ]; then
+        missing_args+=("--password")
+    fi
+    
+    # WiFi requires either regular password OR enterprise credentials
+    if [ -n "$wifi_ssid" ]; then
+        if [ -z "$wifi_password" ] && ([ -z "$wifi_enterprise_user" ] || [ -z "$wifi_enterprise_pass" ]); then
+            echo -e "${RED}Error: WiFi SSID provided but no credentials${NC}"
+            echo "Either provide --wifi-password for regular WiFi"
+            echo "Or provide both --wifi-enterprise-user and --wifi-enterprise-pass for enterprise WiFi"
+            exit 1
+        fi
+    fi
+    
+    # Check if any required arguments are missing
+    if [ ${#missing_args[@]} -gt 0 ]; then
+        echo -e "${RED}Error: Missing required arguments: ${missing_args[*]}${NC}"
+        echo
+        echo "Required arguments:"
+        echo "  --url <url>          The URL to display in kiosk mode"
+        echo "  --hostname <name>    Hostname for the Raspberry Pi"  
+        echo "  --username <user>    Username for the admin account"
+        echo "  --password <pass>    Password for the admin account"
+        echo
+        echo "Optional arguments:"
+        echo "  --wifi-ssid <ssid>   WiFi network name (optional if using ethernet)"
+        echo "  --wifi-password      WiFi password (for WPA2-PSK networks)"
+        echo "  --wifi-enterprise-*  Enterprise WiFi credentials"
+        echo "  --tailscale-authkey  Tailscale auth key for remote access"
+        echo
+        echo "Run with --help for full usage information"
+        exit 1
+    fi
     
     # Find SD card
     sd_device=$(find_sd_card)
