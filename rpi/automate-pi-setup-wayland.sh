@@ -190,15 +190,20 @@ generate_password_hash() {
 # Function to create the firstrun script content with JSON configuration
 create_firstrun_script() {
     local config_json="$1"
-
-    cat <<'FIRSTRUN_SCRIPT'
+    
+    # Base64 encode the JSON to avoid any escaping issues
+    local config_b64=$(echo -n "$config_json" | base64)
+    
+    # Output the script with base64 config embedded
+    cat <<EOF
 #!/bin/bash
 # First-run script for Raspberry Pi OS kiosk setup
 
 set -e
 
-# Configuration passed as JSON
-CONFIG_JSON='CONFIG_JSON_PLACEHOLDER'
+# Configuration passed as base64-encoded JSON
+CONFIG_B64="$config_b64"
+CONFIG_JSON=\$(echo "\$CONFIG_B64" | base64 -d)
 
 # Install jq for JSON parsing
 echo "Installing jq for configuration parsing..."
@@ -393,11 +398,7 @@ rm -f /boot/firmware/firstrun.sh
 echo "Setup complete! Rebooting into kiosk mode..."
 sleep 3
 reboot
-FIRSTRUN_SCRIPT
-
-    # Replace the placeholder with actual config - escape the JSON for sed
-    local escaped_json=$(echo "$config_json" | sed 's/[[\.*^$()+?{|]/\\&/g')
-    echo "$FIRSTRUN_SCRIPT" | sed "s|CONFIG_JSON_PLACEHOLDER|$escaped_json|"
+EOF
 }
 
 # Function to configure Raspberry Pi OS
@@ -480,8 +481,8 @@ hdmi_force_hotplug=1
 EOF
     echo -e "${GREEN}✓ Display settings configured for 4K${NC}"
 
-    # Create configuration JSON
-    local config_json=$(jq -n \
+    # Create configuration JSON (compact to avoid newlines)
+    local config_json=$(jq -n -c \
         --arg hostname "$hostname" \
         --arg username "$username" \
         --arg url "$url" \
