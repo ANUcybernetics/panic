@@ -108,8 +108,19 @@ write_image_to_sd() {
     
     # Check if pv is available for progress display
     if command -v pv >/dev/null 2>&1; then
-        # Get uncompressed size for progress bar (remove commas from the number)
-        local uncompressed_size=$(xz -l "$image_file" 2>/dev/null | awk 'NR==2 {print $5}' | tr -d ',')
+        # Get uncompressed size for progress bar (handle MiB/GiB units)
+        local uncompressed_size=$(xz -l "$image_file" 2>/dev/null | awk 'NR==2 {
+            # Remove commas from the size field
+            gsub(",", "", $5);
+            size=$5;
+            unit=$6;
+            if (unit == "MiB")
+                print int(size * 1024 * 1024);
+            else if (unit == "GiB")
+                print int(size * 1024 * 1024 * 1024);
+            else
+                print size;
+        }')
         
         # Fallback to known sizes if xz -l fails
         if [ -z "$uncompressed_size" ] || [ "$uncompressed_size" -eq 0 ] 2>/dev/null; then
