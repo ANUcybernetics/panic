@@ -96,6 +96,10 @@ write_image_to_sd() {
     echo -e "${YELLOW}Writing image to SD card...${NC}"
     echo "This will take several minutes..."
     
+    # Prompt for sudo password early to avoid interrupting the progress display
+    echo "Requesting administrator privileges for writing to SD card..."
+    sudo -v
+    
     # Unmount any mounted partitions
     diskutil unmountDisk force "$device" || true
     
@@ -104,13 +108,30 @@ write_image_to_sd() {
     
     # Check if pv is available for progress display
     if command -v pv >/dev/null 2>&1; then
-        # Get uncompressed size for progress bar
-        local uncompressed_size=$(xz -l "$image_file" 2>/dev/null | awk 'NR==2 {print $5}')
-        if [ -n "$uncompressed_size" ]; then
-            echo "Using pv for progress display..."
+        # Get uncompressed size for progress bar (remove commas from the number)
+        local uncompressed_size=$(xz -l "$image_file" 2>/dev/null | awk 'NR==2 {print $5}' | tr -d ',')
+        
+        # Fallback to known sizes if xz -l fails
+        if [ -z "$uncompressed_size" ] || [ "$uncompressed_size" -eq 0 ] 2>/dev/null; then
+            # Try to determine size based on filename
+            case "$image_file" in
+                *DietPi*RPi5*Bookworm*)
+                    # DietPi RPi5 Bookworm is approximately 2.1GB uncompressed
+                    uncompressed_size=$((2100 * 1024 * 1024))
+                    echo "Using known size for DietPi RPi5 Bookworm..."
+                    ;;
+                *)
+                    uncompressed_size=""
+                    ;;
+            esac
+        fi
+        
+        if [ -n "$uncompressed_size" ] && [ "$uncompressed_size" -gt 0 ] 2>/dev/null; then
+            echo "Using pv for progress display with ETA..."
             xzcat "$image_file" | pv -s "$uncompressed_size" | sudo dd of="$device" bs=4m
         else
             # Fallback if we can't get size
+            echo "Using pv for progress display (size unknown)..."
             xzcat "$image_file" | pv | sudo dd of="$device" bs=4m
         fi
     else

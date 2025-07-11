@@ -22,10 +22,33 @@ if [[ "$OSTYPE" != "darwin"* ]]; then
     exit 1
 fi
 
+# Check for required tools and install if needed
+check_and_install_tools() {
+    # Check for jq
+    if ! command -v jq >/dev/null 2>&1; then
+        echo -e "${YELLOW}jq not found. Installing via Homebrew...${NC}"
+
+        # Check if Homebrew is installed
+        if ! command -v brew >/dev/null 2>&1; then
+            echo -e "${RED}Error: Homebrew is required to install jq${NC}"
+            echo "Install Homebrew from https://brew.sh"
+            exit 1
+        fi
+
+        brew install jq
+        echo -e "${GREEN}✓ jq installed${NC}"
+    fi
+
+    # Check for pv (optional but helpful)
+    if ! command -v pv >/dev/null 2>&1; then
+        echo -e "${YELLOW}Tip: Install 'pv' for progress display: brew install pv${NC}"
+    fi
+}
+
 # Function to find SD card device (same as DietPi version)
 find_sd_card() {
     echo -e "${YELLOW}Checking for SD card in built-in reader...${NC}" >&2
-    
+
     # Look through all disks to find the built-in SDXC reader
     for disk in /dev/disk*; do
         # Skip partition identifiers (e.g., disk1s1)
@@ -46,7 +69,7 @@ find_sd_card() {
             fi
         fi
     done
-    
+
     echo -e "${RED}Error: Built-in SD card reader not found${NC}" >&2
     echo -e "${YELLOW}Please ensure your Mac has a built-in SD card reader${NC}" >&2
     return 1
@@ -55,21 +78,21 @@ find_sd_card() {
 # Function to download Raspberry Pi OS image with caching
 download_raspi_os() {
     local output_file="$1"
-    
+
     # Create cache directory if it doesn't exist
     mkdir -p "$CACHE_DIR"
-    
+
     # Extract filename from URL
     local filename=$(basename "$RASPI_IMAGE_URL")
     local cached_file="$CACHE_DIR/$filename"
-    
+
     # Check if we have a cached version
     if [ -f "$cached_file" ]; then
         echo -e "${GREEN}✓ Found cached image: $filename${NC}"
         # Check if cached file is less than 30 days old
         local file_age=$(($(date +%s) - $(stat -f %m "$cached_file")))
         local thirty_days=$((30 * 24 * 60 * 60))
-        
+
         if [ $file_age -lt $thirty_days ]; then
             echo -e "${GREEN}✓ Using cached image ($(($file_age / 86400)) days old)${NC}"
             cp "$cached_file" "$output_file"
@@ -79,14 +102,14 @@ download_raspi_os() {
             rm -f "$cached_file"
         fi
     fi
-    
+
     echo -e "${YELLOW}Downloading Raspberry Pi OS image...${NC}"
     if ! curl -L -o "$cached_file" "$RASPI_IMAGE_URL"; then
         echo -e "${RED}Error: Failed to download image from $RASPI_IMAGE_URL${NC}"
         rm -f "$cached_file"
         exit 1
     fi
-    
+
     # Verify it's actually an xz file
     if ! file "$cached_file" | grep -q "XZ compressed data"; then
         echo -e "${RED}Error: Downloaded file is not a valid XZ compressed image${NC}"
@@ -94,7 +117,7 @@ download_raspi_os() {
         rm -f "$cached_file"
         exit 1
     fi
-    
+
     cp "$cached_file" "$output_file"
     echo -e "${GREEN}✓ Image cached for future use${NC}"
 }
@@ -103,25 +126,25 @@ download_raspi_os() {
 write_image_to_sd() {
     local image_file="$1"
     local device="$2"
-    
+
     echo -e "${YELLOW}Writing image to SD card...${NC}"
     echo "This will take several minutes..."
-    
+
     # Prompt for sudo password early to avoid interrupting the progress display
     echo "Requesting administrator privileges for writing to SD card..."
     sudo -v
-    
+
     # Unmount any mounted partitions
     diskutil unmountDisk force "$device" || true
-    
+
     # Decompress and write in one step
     echo "Decompressing and writing image..."
-    
+
     # Check if pv is available for progress display
     if command -v pv >/dev/null 2>&1; then
         # Get uncompressed size for progress bar (remove commas from the number)
         local uncompressed_size=$(xz -l "$image_file" 2>/dev/null | awk 'NR==2 {print $5}' | tr -d ',')
-        
+
         # Fallback to known sizes if xz -l fails
         if [ -z "$uncompressed_size" ] || [ "$uncompressed_size" -eq 0 ] 2>/dev/null; then
             # Try to determine size based on filename
@@ -136,7 +159,7 @@ write_image_to_sd() {
                     ;;
             esac
         fi
-        
+
         if [ -n "$uncompressed_size" ] && [ "$uncompressed_size" -gt 0 ] 2>/dev/null; then
             echo "Using pv for progress display with ETA..."
             xzcat "$image_file" | pv -s "$uncompressed_size" | sudo dd of="$device" bs=4m
@@ -150,10 +173,10 @@ write_image_to_sd() {
         echo "You can press Ctrl+T to see current progress"
         xzcat "$image_file" | sudo dd of="$device" bs=4m
     fi
-    
+
     # Ensure all data is written
     sync
-    
+
     echo -e "${GREEN}✓ Image written successfully${NC}"
 }
 
@@ -162,6 +185,218 @@ generate_password_hash() {
     local password="$1"
     # Use openssl to generate a SHA-512 password hash
     echo "$password" | openssl passwd -6 -stdin
+}
+
+# Function to create the firstrun script content with JSON configuration
+create_firstrun_script() {
+    local config_json="$1"
+
+    cat <<'FIRSTRUN_SCRIPT'
+#!/bin/bash
+# First-run script for Raspberry Pi OS kiosk setup
+
+set -e
+
+# Configuration passed as JSON
+CONFIG_JSON='CONFIG_JSON_PLACEHOLDER'
+
+# Install jq for JSON parsing
+echo "Installing jq for configuration parsing..."
+apt-get update
+apt-get install -y jq
+
+# Parse configuration
+HOSTNAME=$(echo "$CONFIG_JSON" | jq -r '.hostname')
+USERNAME=$(echo "$CONFIG_JSON" | jq -r '.username')
+URL=$(echo "$CONFIG_JSON" | jq -r '.url')
+TAILSCALE_AUTHKEY=$(echo "$CONFIG_JSON" | jq -r '.tailscale_authkey // empty')
+
+# Set hostname
+hostnamectl set-hostname "$HOSTNAME"
+sed -i "s/raspberrypi/$HOSTNAME/g" /etc/hosts
+
+# Wait for network
+echo "Waiting for network connectivity..."
+while ! ping -c 1 google.com > /dev/null 2>&1; do
+    sleep 2
+done
+
+# Install required packages
+echo "Installing required packages..."
+apt-get install -y chromium-browser unclutter xinit xserver-xorg-video-all xserver-xorg-input-all wayfire
+
+# Install and configure Tailscale if auth key provided
+if [ -n "$TAILSCALE_AUTHKEY" ]; then
+    echo "Installing Tailscale..."
+    curl -fsSL https://tailscale.com/install.sh | sh
+    tailscale up --authkey="$TAILSCALE_AUTHKEY" --ssh --hostname="$HOSTNAME"
+    echo "Tailscale installed and connected"
+fi
+
+# Create kiosk service
+cat > /etc/systemd/system/kiosk.service <<EOF
+[Unit]
+Description=Chromium Kiosk Mode
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/chromium-kiosk.sh
+User=$USERNAME
+Group=$USERNAME
+Restart=always
+RestartSec=5
+Environment="XDG_RUNTIME_DIR=/run/user/1000"
+Environment="WAYLAND_DISPLAY=wayland-1"
+
+[Install]
+WantedBy=graphical.target
+EOF
+
+# Create chromium kiosk script
+mkdir -p /usr/local/bin
+cat > /usr/local/bin/chromium-kiosk.sh <<'EOF'
+#!/bin/bash
+# Chromium kiosk script for Wayland
+
+# Get URL from file or use default
+URL=$(cat /boot/firmware/kiosk_url.txt 2>/dev/null || echo "https://panic.fly.dev")
+
+# Wait for Wayland to be ready
+sleep 5
+
+# Hide mouse cursor
+unclutter -idle 0.1 -root &
+
+# Get display resolution
+RESOLUTION=""
+if [ -f /sys/class/graphics/fb0/virtual_size ]; then
+    RESOLUTION=$(cat /sys/class/graphics/fb0/virtual_size | tr ',' 'x')
+fi
+
+# Default to 1920x1080 if detection fails
+if [ -z "$RESOLUTION" ]; then
+    RESOLUTION="1920x1080"
+fi
+
+RES_X=$(echo "$RESOLUTION" | cut -d'x' -f1)
+RES_Y=$(echo "$RESOLUTION" | cut -d'x' -f2)
+CHROMIUM_RES="${RES_X},${RES_Y}"
+
+echo "Using resolution: $CHROMIUM_RES" | tee /var/log/chromium-kiosk.log
+
+# Launch Chromium in kiosk mode with Wayland support
+exec chromium-browser \
+    --kiosk \
+    --noerrdialogs \
+    --disable-infobars \
+    --disable-translate \
+    --no-first-run \
+    --fast \
+    --fast-start \
+    --disable-features=TranslateUI \
+    --disk-cache-dir=/tmp/chromium-cache \
+    --window-size=$CHROMIUM_RES \
+    --window-position=0,0 \
+    --disable-features=OverscrollHistoryNavigation \
+    --disable-pinch \
+    --check-for-update-interval=31536000 \
+    --disable-component-update \
+    --autoplay-policy=no-user-gesture-required \
+    --enable-features=UseOzonePlatform \
+    --ozone-platform=wayland \
+    --in-process-gpu \
+    "$URL"
+EOF
+
+chmod +x /usr/local/bin/chromium-kiosk.sh
+
+# Create kiosk-url helper script
+cat > /usr/local/bin/kiosk-url <<'EOF'
+#!/bin/bash
+# Simple script to change the kiosk URL
+
+if [ $# -eq 0 ]; then
+    echo "Current kiosk URL:"
+    cat /boot/firmware/kiosk_url.txt 2>/dev/null || echo "https://panic.fly.dev (default)"
+    echo ""
+    echo "Usage: kiosk-url <new-url>"
+    echo "Example: kiosk-url https://example.com"
+    exit 0
+fi
+
+NEW_URL="$1"
+
+# Update the URL
+echo "$NEW_URL" | sudo tee /boot/firmware/kiosk_url.txt > /dev/null
+
+echo "Kiosk URL changed to: $NEW_URL"
+echo "Restarting kiosk..."
+
+# Restart the kiosk service
+sudo systemctl restart kiosk
+
+echo "Done! The kiosk should now display: $NEW_URL"
+EOF
+
+chmod +x /usr/local/bin/kiosk-url
+
+# Configure auto-login
+mkdir -p /etc/systemd/system/getty@tty1.service.d
+cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf <<EOF
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin $USERNAME --noclear %I \$TERM
+EOF
+
+# Configure Wayfire as compositor (lightweight for kiosk)
+apt-get install -y wayfire
+
+# Create Wayfire config for kiosk
+mkdir -p /home/$USERNAME/.config/wayfire
+cat > /home/$USERNAME/.config/wayfire/wayfire.ini <<'EOF'
+[core]
+plugins = autostart
+
+[autostart]
+chromium = /usr/local/bin/chromium-kiosk.sh
+
+[input]
+xkb_layout = us
+cursor_theme = none
+cursor_size = 1
+EOF
+
+chown -R $USERNAME:$USERNAME /home/$USERNAME/.config
+
+# Set up automatic Wayland session start
+cat > /home/$USERNAME/.bash_profile <<'EOF'
+# Auto-start Wayfire on tty1
+if [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ] && [ "$XDG_VTNR" -eq 1 ]; then
+    exec wayfire
+fi
+EOF
+
+chown $USERNAME:$USERNAME /home/$USERNAME/.bash_profile
+
+# Enable services
+systemctl enable kiosk
+systemctl set-default graphical.target
+
+# Store the URL
+echo "$URL" > /boot/firmware/kiosk_url.txt
+
+# Clean up
+rm -f /boot/firmware/firstrun.sh
+
+# Reboot into kiosk mode
+echo "Setup complete! Rebooting into kiosk mode..."
+sleep 3
+reboot
+FIRSTRUN_SCRIPT
+
+    # Replace the placeholder with actual config
+    echo "${FIRSTRUN_SCRIPT//CONFIG_JSON_PLACEHOLDER/$config_json}"
 }
 
 # Function to configure Raspberry Pi OS
@@ -176,18 +411,18 @@ configure_raspi_os() {
     local username="$8"
     local password="$9"
     local tailscale_authkey="${10}"
-    
+
     echo -e "${YELLOW}Configuring Raspberry Pi OS...${NC}"
-    
+
     # Enable SSH
     touch "$boot_mount/ssh"
     echo -e "${GREEN}✓ SSH enabled${NC}"
-    
+
     # Set up user account (userconf.txt)
     local password_hash=$(generate_password_hash "$password")
     echo "${username}:${password_hash}" > "$boot_mount/userconf.txt"
     echo -e "${GREEN}✓ User account configured${NC}"
-    
+
     # Configure WiFi
     if [ -n "$wifi_ssid" ]; then
         if [ -n "$wifi_enterprise_user" ] && [ -n "$wifi_enterprise_pass" ]; then
@@ -222,7 +457,7 @@ EOF
         fi
         echo -e "${GREEN}✓ WiFi configured${NC}"
     fi
-    
+
     # Configure config.txt for better 4K support
     cat >> "$boot_mount/config.txt" << EOF
 
@@ -243,260 +478,24 @@ disable_overscan=1
 hdmi_force_hotplug=1
 EOF
     echo -e "${GREEN}✓ Display settings configured for 4K${NC}"
-    
-    # Create first-run script
-    mkdir -p "$boot_mount/firstrun"
-    
-    # Store Tailscale auth key if provided
-    if [ -n "$tailscale_authkey" ]; then
-        echo "$tailscale_authkey" > "$boot_mount/firstrun/tailscale_authkey"
-    fi
-    
-    # Create the first-run setup script
-    cat > "$boot_mount/firstrun.sh" << 'FIRSTRUN_SCRIPT'
-#!/bin/bash
-# First-run script for Raspberry Pi OS kiosk setup
 
-# Set hostname
-STORED_HOSTNAME=$(cat /boot/firmware/firstrun/hostname 2>/dev/null || echo "raspberrypi")
-hostnamectl set-hostname "$STORED_HOSTNAME"
-sed -i "s/raspberrypi/$STORED_HOSTNAME/g" /etc/hosts
+    # Create configuration JSON
+    local config_json=$(jq -n \
+        --arg hostname "$hostname" \
+        --arg username "$username" \
+        --arg url "$url" \
+        --arg tailscale "$tailscale_authkey" \
+        '{hostname: $hostname, username: $username, url: $url, tailscale_authkey: $tailscale}')
 
-# Wait for network
-echo "Waiting for network connectivity..."
-while ! ping -c 1 google.com > /dev/null 2>&1; do
-    sleep 2
-done
+    # Create the first-run script with embedded JSON configuration
+    create_firstrun_script "$config_json" > "$boot_mount/firstrun.sh"
+    chmod +x "$boot_mount/firstrun.sh"
 
-# Update system
-apt-get update
-
-# Install required packages
-echo "Installing required packages..."
-apt-get install -y chromium-browser unclutter xinit xserver-xorg-video-all xserver-xorg-input-all
-
-# Install and configure Tailscale if auth key provided
-if [ -f /boot/firmware/firstrun/tailscale_authkey ]; then
-    echo "Installing Tailscale..."
-    curl -fsSL https://tailscale.com/install.sh | sh
-    
-    TAILSCALE_AUTHKEY=$(cat /boot/firmware/firstrun/tailscale_authkey)
-    tailscale up --authkey="$TAILSCALE_AUTHKEY" --ssh --hostname="$STORED_HOSTNAME"
-    
-    echo "Tailscale installed and connected"
-    rm -f /boot/firmware/firstrun/tailscale_authkey
-fi
-
-# Create kiosk user if it doesn't exist
-STORED_USERNAME=$(cat /boot/firmware/firstrun/username 2>/dev/null || echo "pi")
-
-# Create systemd service for kiosk mode
-cat > /etc/systemd/system/kiosk.service << 'EOF'
-[Unit]
-Description=Chromium Kiosk Mode
-After=multi-user.target
-
-[Service]
-Type=simple
-ExecStart=/usr/local/bin/chromium-kiosk.sh
-User=STORED_USERNAME
-Group=STORED_USERNAME
-Restart=always
-RestartSec=5
-
-# Environment for Wayland
-Environment="XDG_RUNTIME_DIR=/run/user/1000"
-Environment="WAYLAND_DISPLAY=wayland-1"
-
-[Install]
-WantedBy=graphical.target
-EOF
-
-# Replace username placeholder in service file
-sed -i "s/STORED_USERNAME/$STORED_USERNAME/g" /etc/systemd/system/kiosk.service
-
-# Create the kiosk script
-cat > /usr/local/bin/chromium-kiosk.sh << 'KIOSK_SCRIPT'
-#!/bin/bash
-# Chromium kiosk script for Wayland
-
-# Get URL from file or use default
-URL=$(cat /boot/firmware/kiosk_url.txt 2>/dev/null || echo "https://panic.fly.dev")
-
-# Wait for Wayland to be ready
-sleep 5
-
-# Hide mouse cursor
-unclutter -idle 0.1 -root &
-
-# Get display resolution (try multiple methods)
-RESOLUTION=""
-
-# Method 1: Try wlr-randr if available
-if command -v wlr-randr >/dev/null 2>&1; then
-    RESOLUTION=$(wlr-randr | grep -E "current [0-9]+x[0-9]+" | grep -oE "[0-9]+x[0-9]+" | head -1)
-fi
-
-# Method 2: Try wayland-info if available
-if [ -z "$RESOLUTION" ] && command -v wayland-info >/dev/null 2>&1; then
-    RESOLUTION=$(wayland-info | grep -E "width: [0-9]+, height: [0-9]+" | head -1 | sed 's/.*width: \([0-9]*\), height: \([0-9]*\).*/\1x\2/')
-fi
-
-# Method 3: Check /sys/class/graphics
-if [ -z "$RESOLUTION" ]; then
-    if [ -f /sys/class/graphics/fb0/virtual_size ]; then
-        RESOLUTION=$(cat /sys/class/graphics/fb0/virtual_size | tr ',' 'x')
-    fi
-fi
-
-# Default to 1920x1080 if detection fails
-if [ -z "$RESOLUTION" ]; then
-    RESOLUTION="1920x1080"
-fi
-
-# For 4K displays, we might need to force 1080p if GPU has issues
-RES_X=$(echo "$RESOLUTION" | cut -d'x' -f1)
-RES_Y=$(echo "$RESOLUTION" | cut -d'x' -f2)
-
-# Check if 4K and potentially problematic
-if [ "$RES_X" -gt 2560 ] || [ "$RES_Y" -gt 1440 ]; then
-    echo "Detected high resolution: ${RESOLUTION}"
-    # Try 4K first, but be prepared to fall back
-    CHROMIUM_RES="${RES_X},${RES_Y}"
-else
-    CHROMIUM_RES="${RES_X},${RES_Y}"
-fi
-
-echo "Using resolution: $CHROMIUM_RES" | tee /var/log/chromium-kiosk.log
-
-# Launch Chromium in kiosk mode with Wayland support
-exec chromium-browser \
-    --kiosk \
-    --noerrdialogs \
-    --disable-infobars \
-    --disable-translate \
-    --no-first-run \
-    --fast \
-    --fast-start \
-    --disable-features=TranslateUI \
-    --disk-cache-dir=/tmp/chromium-cache \
-    --window-size=$CHROMIUM_RES \
-    --window-position=0,0 \
-    --disable-features=OverscrollHistoryNavigation \
-    --disable-pinch \
-    --check-for-update-interval=31536000 \
-    --disable-component-update \
-    --autoplay-policy=no-user-gesture-required \
-    --enable-features=UseOzonePlatform \
-    --ozone-platform=wayland \
-    --in-process-gpu \
-    "$URL"
-KIOSK_SCRIPT
-
-chmod +x /usr/local/bin/chromium-kiosk.sh
-
-# Create helper script to change URL
-cat > /usr/local/bin/kiosk-url << 'EOF'
-#!/bin/bash
-# Simple script to change the kiosk URL
-
-if [ $# -eq 0 ]; then
-    echo "Current kiosk URL:"
-    cat /boot/firmware/kiosk_url.txt 2>/dev/null || echo "https://panic.fly.dev (default)"
-    echo ""
-    echo "Usage: kiosk-url <new-url>"
-    echo "Example: kiosk-url https://example.com"
-    exit 0
-fi
-
-NEW_URL="$1"
-
-# Update the URL
-echo "$NEW_URL" | sudo tee /boot/firmware/kiosk_url.txt > /dev/null
-
-echo "Kiosk URL changed to: $NEW_URL"
-echo "Restarting kiosk..."
-
-# Restart the kiosk service
-sudo systemctl restart kiosk
-
-echo "Done! The kiosk should now display: $NEW_URL"
-EOF
-
-chmod +x /usr/local/bin/kiosk-url
-
-# Configure auto-login for Wayland session
-mkdir -p /etc/systemd/system/getty@tty1.service.d
-cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << EOF
-[Service]
-ExecStart=
-ExecStart=-/sbin/agetty --autologin $STORED_USERNAME --noclear %I \$TERM
-EOF
-
-# Configure Wayfire as compositor (lightweight for kiosk)
-apt-get install -y wayfire
-
-# Create Wayfire config for kiosk
-mkdir -p /home/$STORED_USERNAME/.config/wayfire
-cat > /home/$STORED_USERNAME/.config/wayfire/wayfire.ini << 'EOF'
-[core]
-plugins = autostart
-
-[autostart]
-chromium = /usr/local/bin/chromium-kiosk.sh
-
-[input]
-xkb_layout = us
-cursor_theme = none
-cursor_size = 1
-EOF
-
-chown -R $STORED_USERNAME:$STORED_USERNAME /home/$STORED_USERNAME/.config
-
-# Set up automatic Wayland session start
-cat > /home/$STORED_USERNAME/.bash_profile << 'EOF'
-# Auto-start Wayfire on tty1
-if [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ] && [ "$XDG_VTNR" -eq 1 ]; then
-    exec wayfire
-fi
-EOF
-
-chown $STORED_USERNAME:$STORED_USERNAME /home/$STORED_USERNAME/.bash_profile
-
-# Enable services
-systemctl enable kiosk
-systemctl set-default graphical.target
-
-# Store the URL
-STORED_URL=$(cat /boot/firmware/firstrun/url 2>/dev/null || echo "https://panic.fly.dev")
-echo "$STORED_URL" > /boot/firmware/kiosk_url.txt
-
-# Clean up first-run artifacts
-rm -f /boot/firmware/firstrun.sh
-rm -rf /boot/firmware/firstrun
-
-# Reboot into kiosk mode
-echo "Setup complete! Rebooting into kiosk mode..."
-sleep 3
-reboot
-FIRSTRUN_SCRIPT
-    
-    # Store configuration for first-run script
-    mkdir -p "$boot_mount/firstrun"
-    echo "$hostname" > "$boot_mount/firstrun/hostname"
-    echo "$username" > "$boot_mount/firstrun/username"
-    echo "$url" > "$boot_mount/firstrun/url"
-    
-    # Don't replace placeholders - the script uses different variable names to avoid conflicts
-    # The script reads values from the firstrun directory instead
-    
-    # Don't make the main script executable yet
-    
     # Raspberry Pi OS expects firstrun.sh in the root of boot partition
     # and it must follow specific conventions
     mv "$boot_mount/firstrun.sh" "$boot_mount/firstrun_custom.sh"
     chmod +x "$boot_mount/firstrun_custom.sh"
-    
+
     # Create the official firstrun.sh that Raspberry Pi OS will execute
     cat > "$boot_mount/firstrun.sh" << 'OFFICIAL_FIRSTRUN'
 #!/bin/bash
@@ -510,7 +509,7 @@ set +e
 if [ -f /boot/firmware/firstrun_custom.sh ]; then
     echo "Running custom first boot setup..."
     bash /boot/firmware/firstrun_custom.sh 2>&1 | tee /var/log/firstrun_custom.log
-    
+
     # Clean up
     rm -f /boot/firmware/firstrun_custom.sh
     rm -f /boot/firmware/firstrun
@@ -521,14 +520,14 @@ rm -f /boot/firmware/firstrun.sh
 
 exit 0
 OFFICIAL_FIRSTRUN
-    
+
     chmod +x "$boot_mount/firstrun.sh"
-    
+
     # Also need to modify cmdline.txt to trigger firstrun
     # Raspberry Pi OS looks for systemd.run_success_action=reboot systemd.run=/boot/firmware/firstrun.sh
     cp "$boot_mount/cmdline.txt" "$boot_mount/cmdline.txt.bak"
     echo -n " systemd.run_success_action=reboot systemd.run=/boot/firmware/firstrun.sh" >> "$boot_mount/cmdline.txt"
-    
+
     echo -e "${GREEN}✓ Raspberry Pi OS automation configured${NC}"
 }
 
@@ -538,7 +537,7 @@ main() {
     echo "====================================="
     echo "With Wayland support for 4K displays"
     echo
-    
+
     # Check if no arguments provided
     if [ $# -eq 0 ]; then
         echo -e "${RED}Error: No arguments provided${NC}"
@@ -547,7 +546,10 @@ main() {
         echo "Run with --help for usage information."
         exit 1
     fi
-    
+
+    # Check and install required tools
+    check_and_install_tools
+
     # Parse arguments - no defaults, all required
     local url=""
     local wifi_ssid=""
@@ -558,7 +560,7 @@ main() {
     local username=""
     local password=""
     local tailscale_authkey=""
-    
+
     while [[ $# -gt 0 ]]; do
         case $1 in
             --url)
@@ -637,7 +639,7 @@ Network Options (at least one required):
 
 Optional:
     --tailscale-authkey <key>    Tailscale auth key for automatic join
-    
+
 Utility Commands:
     --list-cache                 List cached images
     --clear-cache                Clear all cached images
@@ -651,7 +653,7 @@ Examples:
        --password "securepass123" \\
        --wifi-ssid "MyNetwork" \\
        --wifi-password "MyPassword"
-    
+
     # Enterprise WiFi:
     $0 --url "https://example.com" \\
        --hostname "kiosk-display" \\
@@ -660,7 +662,7 @@ Examples:
        --wifi-ssid "CorpNetwork" \\
        --wifi-enterprise-user "username@domain.com" \\
        --wifi-enterprise-pass "password"
-    
+
     # With Tailscale for remote access:
     $0 --url "https://panic.fly.dev" \\
        --hostname "panic-display-1" \\
@@ -692,26 +694,26 @@ EOF
                 ;;
         esac
     done
-    
+
     # Validate required arguments
     local missing_args=()
-    
+
     if [ -z "$url" ]; then
         missing_args+=("--url")
     fi
-    
+
     if [ -z "$hostname" ]; then
         missing_args+=("--hostname")
     fi
-    
+
     if [ -z "$username" ]; then
         missing_args+=("--username")
     fi
-    
+
     if [ -z "$password" ]; then
         missing_args+=("--password")
     fi
-    
+
     # WiFi requires either regular password OR enterprise credentials
     if [ -n "$wifi_ssid" ]; then
         if [ -z "$wifi_password" ] && ([ -z "$wifi_enterprise_user" ] || [ -z "$wifi_enterprise_pass" ]); then
@@ -721,14 +723,14 @@ EOF
             exit 1
         fi
     fi
-    
+
     # Check if any required arguments are missing
     if [ ${#missing_args[@]} -gt 0 ]; then
         echo -e "${RED}Error: Missing required arguments: ${missing_args[*]}${NC}"
         echo
         echo "Required arguments:"
         echo "  --url <url>          The URL to display in kiosk mode"
-        echo "  --hostname <name>    Hostname for the Raspberry Pi"  
+        echo "  --hostname <name>    Hostname for the Raspberry Pi"
         echo "  --username <user>    Username for the admin account"
         echo "  --password <pass>    Password for the admin account"
         echo
@@ -741,15 +743,15 @@ EOF
         echo "Run with --help for full usage information"
         exit 1
     fi
-    
+
     # Find SD card
     sd_device=$(find_sd_card)
     if [ -z "$sd_device" ]; then
         exit 1
     fi
-    
+
     echo -e "${GREEN}Using SD card: $sd_device${NC}"
-    
+
     # Confirm with user
     echo -e "${YELLOW}WARNING: This will erase all data on $sd_device${NC}"
     echo -n "Continue? (yes/no): "
@@ -758,26 +760,26 @@ EOF
         echo "Aborted."
         exit 0
     fi
-    
+
     # Download Raspberry Pi OS image
     local temp_image="/tmp/raspi_os_image.img.xz"
     download_raspi_os "$temp_image"
-    
+
     # Write image to SD card
     write_image_to_sd "$temp_image" "$sd_device"
-    
+
     # Wait for device to settle after write
     echo "Waiting for device to settle..."
     sleep 3
-    
+
     # Force mount the disk
     echo "Mounting partitions..."
     diskutil mountDisk "$sd_device" || true
     sleep 2
-    
+
     # Find boot partition - Raspberry Pi OS uses bootfs
     local boot_mount=""
-    
+
     # First try common mount points
     for mount in /Volumes/bootfs /Volumes/boot /Volumes/BOOT /Volumes/NO\ NAME; do
         if [ -d "$mount" ]; then
@@ -789,7 +791,7 @@ EOF
             fi
         fi
     done
-    
+
     # If not found, try to find FAT partition
     if [ -z "$boot_mount" ]; then
         echo "Searching for boot partition..."
@@ -799,7 +801,7 @@ EOF
             echo "Attempting to mount $fat_partition..."
             diskutil mount "$fat_partition"
             sleep 2
-            
+
             # Check again
             for mount in /Volumes/*; do
                 if [ -d "$mount" ] && [ -f "$mount/config.txt" ]; then
@@ -810,7 +812,7 @@ EOF
             done
         fi
     fi
-    
+
     if [ -z "$boot_mount" ]; then
         echo -e "${RED}Error: Boot partition not found${NC}"
         echo "Available volumes:"
@@ -820,19 +822,19 @@ EOF
         diskutil list "$sd_device"
         exit 1
     fi
-    
+
     # Configure Raspberry Pi OS
     configure_raspi_os "$boot_mount" "$wifi_ssid" "$wifi_password" \
                       "$wifi_enterprise_user" "$wifi_enterprise_pass" \
                       "$url" "$hostname" "$username" "$password" \
                       "$tailscale_authkey"
-    
+
     # Sync and eject SD card
     echo -e "${YELLOW}Syncing and ejecting SD card...${NC}"
     sync
     sleep 2
     diskutil eject "$sd_device"
-    
+
     echo -e "${GREEN}✓ SD card is ready!${NC}"
     echo
     echo "Next steps:"
