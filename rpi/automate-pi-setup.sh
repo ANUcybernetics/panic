@@ -201,43 +201,52 @@ generate_password_hash() {
 # Function to create the firstrun script content with JSON configuration
 create_firstrun_script() {
     local config_json="$1"
-    local ssh_key="$2"
     
     # Base64 encode the JSON to avoid any escaping issues
-    local config_b64=$(echo -n "$config_json" | base64)
+    local config_b64=$(printf '%s' "$config_json" | base64)
     
     # Output the script with base64 config embedded
-    cat <<EOF
+    # We use a marker to inject the base64 config
+    cat <<'FIRSTRUN_SCRIPT' | sed "s|__CONFIG_B64__|${config_b64}|g"
 #!/bin/bash
 # First-run script for Raspberry Pi OS kiosk setup
 
 set -e
 
 # Configuration passed as base64-encoded JSON
-CONFIG_B64="$config_b64"
-CONFIG_JSON=\$(echo "\$CONFIG_B64" | base64 -d)
+CONFIG_B64="__CONFIG_B64__"
+CONFIG_JSON=$(echo "$CONFIG_B64" | base64 -d)
 
 # Install jq for JSON parsing
 echo "Installing jq for configuration parsing..."
 apt-get update
 apt-get install -y jq
 
-# Parse configuration
-HOSTNAME=$(echo "$CONFIG_JSON" | jq -r '.hostname')
-USERNAME=$(echo "$CONFIG_JSON" | jq -r '.username')
-URL=$(echo "$CONFIG_JSON" | jq -r '.url')
+# Parse configuration with error handling
+if ! HOSTNAME=$(echo "$CONFIG_JSON" | jq -r '.hostname'); then
+    echo "Error: Failed to parse hostname from configuration"
+    exit 1
+fi
+if ! USERNAME=$(echo "$CONFIG_JSON" | jq -r '.username'); then
+    echo "Error: Failed to parse username from configuration"
+    exit 1
+fi
+if ! URL=$(echo "$CONFIG_JSON" | jq -r '.url'); then
+    echo "Error: Failed to parse URL from configuration"
+    exit 1
+fi
 TAILSCALE_AUTHKEY=$(echo "$CONFIG_JSON" | jq -r '.tailscale_authkey // empty')
+SSH_KEY=$(echo "$CONFIG_JSON" | jq -r '.ssh_key // empty')
 
 # Set hostname
 hostnamectl set-hostname "$HOSTNAME"
 sed -i "s/raspberrypi/$HOSTNAME/g" /etc/hosts
 
 # Setup SSH key if provided
-SSH_KEY_B64="${ssh_key}"
-if [ -n "$SSH_KEY_B64" ]; then
+if [ -n "$SSH_KEY" ]; then
     echo "Setting up SSH key for $USERNAME..."
     mkdir -p /home/$USERNAME/.ssh
-    echo "$SSH_KEY_B64" | base64 -d > /home/$USERNAME/.ssh/authorized_keys
+    echo "$SSH_KEY" > /home/$USERNAME/.ssh/authorized_keys
     chmod 700 /home/$USERNAME/.ssh
     chmod 600 /home/$USERNAME/.ssh/authorized_keys
     chown -R $USERNAME:$USERNAME /home/$USERNAME/.ssh
@@ -289,7 +298,8 @@ cat > /usr/local/bin/chromium-kiosk.sh <<'EOF'
 # Chromium kiosk script for Wayland
 
 # Get URL from file or use default
-URL=$(cat /boot/firmware/kiosk_url.txt 2>/dev/null || echo "https://panic.fly.dev")
+# Read the first line only to avoid issues with extra newlines
+URL=$(head -n1 /boot/firmware/kiosk_url.txt 2>/dev/null || echo "https://panic.fly.dev")
 
 # Wait for Wayland to be ready
 sleep 5
@@ -332,7 +342,7 @@ cat > /usr/local/bin/kiosk-url <<'EOF'
 
 if [ $# -eq 0 ]; then
     echo "Current kiosk URL:"
-    cat /boot/firmware/kiosk_url.txt 2>/dev/null || echo "https://panic.fly.dev (default)"
+    head -n1 /boot/firmware/kiosk_url.txt 2>/dev/null || echo "https://panic.fly.dev (default)"
     echo ""
     echo "Usage: kiosk-url <new-url>"
     echo "Example: kiosk-url https://example.com"
@@ -341,8 +351,8 @@ fi
 
 NEW_URL="$1"
 
-# Update the URL
-echo "$NEW_URL" | sudo tee /boot/firmware/kiosk_url.txt > /dev/null
+# Update the URL (using printf to avoid echo interpreting escapes)
+printf '%s\n' "$NEW_URL" | sudo tee /boot/firmware/kiosk_url.txt > /dev/null
 
 echo "Kiosk URL changed to: $NEW_URL"
 echo "Restarting kiosk..."
@@ -412,8 +422,8 @@ chown $USERNAME:$USERNAME /home/$USERNAME/.bash_profile
 systemctl enable kiosk
 systemctl set-default graphical.target
 
-# Store the URL
-echo "$URL" > /boot/firmware/kiosk_url.txt
+# Store the URL (using printf to avoid echo interpreting escapes)
+printf '%s\n' "$URL" > /boot/firmware/kiosk_url.txt
 
 # Clean up
 rm -f /boot/firmware/firstrun.sh
@@ -422,7 +432,7 @@ rm -f /boot/firmware/firstrun.sh
 echo "Setup complete! Rebooting into kiosk mode..."
 sleep 3
 reboot
-EOF
+FIRSTRUN_SCRIPT
 }
 
 # Function to configure Raspberry Pi OS
@@ -506,26 +516,28 @@ hdmi_force_hotplug=1
 EOF
     echo -e "${GREEN}✓ Display settings configured for 4K${NC}"
 
-    # Create configuration JSON (compact to avoid newlines)
-    local config_json=$(jq -n -c \
-        --arg hostname "$hostname" \
-        --arg username "$username" \
-        --arg url "$url" \
-        --arg tailscale "$tailscale_authkey" \
-        '{hostname: $hostname, username: $username, url: $url, tailscale_authkey: $tailscale}')
-
-    # Read SSH public key if it exists and base64 encode it
-    local ssh_key_b64=""
+    # Read SSH public key if it exists
+    local ssh_key_content=""
     if [ -f "$ssh_key_file" ]; then
-        ssh_key_b64=$(cat "$ssh_key_file" | base64)
+        ssh_key_content=$(cat "$ssh_key_file")
         echo -e "${GREEN}✓ Found SSH key: $(basename "$ssh_key_file")${NC}"
     else
         echo -e "${YELLOW}Note: No SSH key found at $ssh_key_file${NC}"
         echo -e "${YELLOW}      Password authentication will be used${NC}"
     fi
 
-    # Create the first-run script with embedded JSON configuration and SSH key
-    create_firstrun_script "$config_json" "$ssh_key_b64" > "$boot_mount/firstrun.sh"
+    # Create configuration JSON (compact to avoid newlines)
+    # jq properly escapes all special characters in strings
+    local config_json=$(jq -n -c \
+        --arg hostname "$hostname" \
+        --arg username "$username" \
+        --arg url "$url" \
+        --arg tailscale "$tailscale_authkey" \
+        --arg ssh_key "$ssh_key_content" \
+        '{hostname: $hostname, username: $username, url: $url, tailscale_authkey: $tailscale, ssh_key: $ssh_key}')
+
+    # Create the first-run script with embedded JSON configuration
+    create_firstrun_script "$config_json" > "$boot_mount/firstrun.sh"
     chmod +x "$boot_mount/firstrun.sh"
 
     # Raspberry Pi OS expects firstrun.sh in the root of boot partition
