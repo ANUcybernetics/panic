@@ -252,7 +252,7 @@ done
 
 # Install required packages
 echo "Installing required packages..."
-apt-get install -y chromium-browser unclutter xinit xserver-xorg-video-all xserver-xorg-input-all wayfire
+apt-get install -y chromium-browser unclutter wayfire wlr-randr
 
 # Install and configure Tailscale if auth key provided
 if [ -n "$TAILSCALE_AUTHKEY" ]; then
@@ -297,24 +297,10 @@ sleep 5
 # Hide mouse cursor
 unclutter -idle 0.1 -root &
 
-# Get display resolution
-RESOLUTION=""
-if [ -f /sys/class/graphics/fb0/virtual_size ]; then
-    RESOLUTION=$(cat /sys/class/graphics/fb0/virtual_size | tr ',' 'x')
-fi
-
-# Default to 1920x1080 if detection fails
-if [ -z "$RESOLUTION" ]; then
-    RESOLUTION="1920x1080"
-fi
-
-RES_X=$(echo "$RESOLUTION" | cut -d'x' -f1)
-RES_Y=$(echo "$RESOLUTION" | cut -d'x' -f2)
-CHROMIUM_RES="${RES_X},${RES_Y}"
-
-echo "Using resolution: $CHROMIUM_RES" | tee /var/log/chromium-kiosk.log
+echo "Starting Chromium in kiosk mode" | tee /var/log/chromium-kiosk.log
 
 # Launch Chromium in kiosk mode with Wayland support
+# Wayfire will handle native resolution detection
 exec chromium-browser \
     --kiosk \
     --noerrdialogs \
@@ -325,8 +311,7 @@ exec chromium-browser \
     --fast-start \
     --disable-features=TranslateUI \
     --disk-cache-dir=/tmp/chromium-cache \
-    --window-size=$CHROMIUM_RES \
-    --window-position=0,0 \
+    --start-fullscreen \
     --disable-features=OverscrollHistoryNavigation \
     --disable-pinch \
     --check-for-update-interval=31536000 \
@@ -385,7 +370,7 @@ apt-get install -y wayfire
 mkdir -p /home/$USERNAME/.config/wayfire
 cat > /home/$USERNAME/.config/wayfire/wayfire.ini <<'EOF'
 [core]
-plugins = autostart
+plugins = autostart alpha output
 
 [autostart]
 chromium = /usr/local/bin/chromium-kiosk.sh
@@ -394,6 +379,21 @@ chromium = /usr/local/bin/chromium-kiosk.sh
 xkb_layout = us
 cursor_theme = none
 cursor_size = 1
+
+[output:HDMI-A-1]
+mode = preferred
+position = 0,0
+transform = normal
+
+[output:HDMI-A-2]
+mode = preferred
+position = auto
+transform = normal
+
+[output:DSI-1]
+mode = preferred
+position = 0,0
+transform = normal
 EOF
 
 chown -R $USERNAME:$USERNAME /home/$USERNAME/.config
@@ -725,9 +725,9 @@ Examples:
        --ssh-key ~/.ssh/id_rsa.pub
 
 Features:
-    - Full 4K display support via Wayland
-    - Automatic resolution detection
-    - Chromium kiosk mode with GPU acceleration
+    - Full 4K display support via Wayland compositor
+    - Native resolution detection through Wayfire
+    - GPU-accelerated Chromium with Wayland backend
     - Tailscale SSH access
     - WiFi configuration (WPA2 and Enterprise)
 
@@ -918,9 +918,9 @@ EOF
     echo "Note: First boot takes 5-10 minutes for automated setup"
     echo
     echo "Features:"
-    echo "   - Full 4K display support via Wayland"
-    echo "   - Automatic resolution detection"
-    echo "   - GPU-accelerated Chromium"
+    echo "   - Full 4K display support via Wayland compositor"
+    echo "   - Native resolution detection through Wayfire"
+    echo "   - GPU-accelerated Chromium with Wayland backend"
     echo "   - Use 'kiosk-url' command to change URL"
 }
 
