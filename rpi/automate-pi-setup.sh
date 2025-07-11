@@ -114,7 +114,7 @@ write_image_to_sd() {
             gsub(",", "", $5);
             size=$5;
             unit=$6;
-            if (unit == "MiB")
+            if (unit == "MiB") 
                 print int(size * 1024 * 1024);
             else if (unit == "GiB")
                 print int(size * 1024 * 1024 * 1024);
