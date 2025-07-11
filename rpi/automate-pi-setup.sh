@@ -126,16 +126,28 @@ download_raspi_os() {
 write_image_to_sd() {
     local image_file="$1"
     local device="$2"
+    local test_mode="${3:-false}"
 
     echo -e "${YELLOW}Writing image to SD card...${NC}"
     echo "This will take several minutes..."
 
-    # Prompt for sudo password early to avoid interrupting the progress display
-    echo "Requesting administrator privileges for writing to SD card..."
-    sudo -v
+    if [ "$test_mode" != "true" ]; then
+        # Prompt for sudo password early to avoid interrupting the progress display
+        echo "Requesting administrator privileges for writing to SD card..."
+        sudo -v
 
-    # Unmount any mounted partitions
-    diskutil unmountDisk force "$device" || true
+        # Unmount any mounted partitions
+        diskutil unmountDisk force "$device" || true
+    fi
+
+    if [ "$test_mode" = "true" ]; then
+        echo -e "${YELLOW}TEST MODE: Skipping actual image write${NC}"
+        echo "Would decompress and write: $image_file -> $device"
+        echo "Simulating write operation..."
+        sleep 2
+        echo -e "${GREEN}✓ TEST MODE: Image write simulated${NC}"
+        return 0
+    fi
 
     # Decompress and write in one step
     echo "Decompressing and writing image..."
@@ -610,6 +622,7 @@ main() {
     local password=""
     local tailscale_authkey=""
     local ssh_key_file="$HOME/.ssh/panic_rpi_ssh.pub"
+    local test_mode=false
 
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -675,6 +688,11 @@ main() {
                 fi
                 exit 0
                 ;;
+            --test)
+                test_mode=true
+                echo -e "${YELLOW}TEST MODE: Will skip actual SD card write${NC}"
+                shift
+                ;;
             --help)
                 cat << EOF
 Usage: $0 [OPTIONS]
@@ -694,6 +712,7 @@ Network Options (at least one required):
 Optional:
     --tailscale-authkey <key>    Tailscale auth key for automatic join
     --ssh-key <path>             Path to SSH public key (default: ~/.ssh/panic_rpi_ssh.pub)
+    --test                       Test mode - skip actual SD card write
 
 Utility Commands:
     --list-cache                 List cached images
@@ -735,6 +754,15 @@ Examples:
        --wifi-ssid "MyNetwork" \\
        --wifi-password "MyPassword" \\
        --ssh-key ~/.ssh/id_rsa.pub
+
+    # Test mode (no SD card write):
+    $0 --test \\
+       --url "https://example.com?param=value&special=char%20test" \\
+       --hostname "test-pi" \\
+       --username "admin" \\
+       --password "test123" \\
+       --wifi-ssid "TestNetwork" \\
+       --wifi-password "testpass"
 
 Features:
     - Full 4K display support via Wayland compositor
@@ -808,21 +836,27 @@ EOF
         exit 1
     fi
 
-    # Find SD card
-    sd_device=$(find_sd_card)
-    if [ -z "$sd_device" ]; then
-        exit 1
-    fi
+    # Find SD card (skip in test mode)
+    local sd_device=""
+    if [ "$test_mode" = "true" ]; then
+        sd_device="/dev/disk99"  # Dummy device for test mode
+        echo -e "${YELLOW}TEST MODE: Using dummy device${NC}"
+    else
+        sd_device=$(find_sd_card)
+        if [ -z "$sd_device" ]; then
+            exit 1
+        fi
 
-    echo -e "${GREEN}Using SD card: $sd_device${NC}"
+        echo -e "${GREEN}Using SD card: $sd_device${NC}"
 
-    # Confirm with user
-    echo -e "${YELLOW}WARNING: This will erase all data on $sd_device${NC}"
-    echo -n "Continue? (yes/no): "
-    read -r response
-    if [ "$response" != "yes" ]; then
-        echo "Aborted."
-        exit 0
+        # Confirm with user
+        echo -e "${YELLOW}WARNING: This will erase all data on $sd_device${NC}"
+        echo -n "Continue? (yes/no): "
+        read -r response
+        if [ "$response" != "yes" ]; then
+            echo "Aborted."
+            exit 0
+        fi
     fi
 
     # Download Raspberry Pi OS image
@@ -830,34 +864,45 @@ EOF
     download_raspi_os "$temp_image"
 
     # Write image to SD card
-    write_image_to_sd "$temp_image" "$sd_device"
+    write_image_to_sd "$temp_image" "$sd_device" "$test_mode"
 
     # Wait for device to settle after write
     echo "Waiting for device to settle..."
     sleep 3
 
-    # Force mount the disk
-    echo "Mounting partitions..."
-    diskutil mountDisk "$sd_device" || true
-    sleep 2
-
-    # Find boot partition - Raspberry Pi OS uses bootfs
+    # Find boot partition
     local boot_mount=""
 
-    # First try common mount points
-    for mount in /Volumes/bootfs /Volumes/boot /Volumes/BOOT /Volumes/NO\ NAME; do
-        if [ -d "$mount" ]; then
-            # Check if it looks like a boot partition
-            if [ -f "$mount/config.txt" ] || [ -f "$mount/cmdline.txt" ]; then
-                boot_mount="$mount"
-                echo -e "${GREEN}✓ Found boot partition at: $boot_mount${NC}"
-                break
-            fi
-        fi
-    done
+    if [ "$test_mode" = "true" ]; then
+        # In test mode, create a temporary directory structure
+        boot_mount=$(mktemp -d /tmp/raspi_boot_test.XXXXXX)
+        echo -e "${YELLOW}TEST MODE: Using temporary directory: $boot_mount${NC}"
+        
+        # Create dummy files that would exist on a real boot partition
+        touch "$boot_mount/config.txt"
+        touch "$boot_mount/cmdline.txt"
+        echo "console=serial0,115200 console=tty1 root=PARTUUID=xxxxxxxx-02 rootfstype=ext4 fsck.repair=yes rootwait" > "$boot_mount/cmdline.txt"
+    else
+        # Force mount the disk
+        echo "Mounting partitions..."
+        diskutil mountDisk "$sd_device" || true
+        sleep 2
 
-    # If not found, try to find FAT partition
-    if [ -z "$boot_mount" ]; then
+        # First try common mount points
+        for mount in /Volumes/bootfs /Volumes/boot /Volumes/BOOT /Volumes/NO\ NAME; do
+            if [ -d "$mount" ]; then
+                # Check if it looks like a boot partition
+                if [ -f "$mount/config.txt" ] || [ -f "$mount/cmdline.txt" ]; then
+                    boot_mount="$mount"
+                    echo -e "${GREEN}✓ Found boot partition at: $boot_mount${NC}"
+                    break
+                fi
+            fi
+        done
+    fi
+
+    # If not found, try to find FAT partition (not in test mode)
+    if [ -z "$boot_mount" ] && [ "$test_mode" != "true" ]; then
         echo "Searching for boot partition..."
         # Get the FAT partition (usually s1)
         local fat_partition=$(diskutil list "$sd_device" | grep "DOS_FAT" | awk '{print $NF}')
@@ -879,11 +924,13 @@ EOF
 
     if [ -z "$boot_mount" ]; then
         echo -e "${RED}Error: Boot partition not found${NC}"
-        echo "Available volumes:"
-        ls -la /Volumes/
-        echo ""
-        echo "Disk layout:"
-        diskutil list "$sd_device"
+        if [ "$test_mode" != "true" ]; then
+            echo "Available volumes:"
+            ls -la /Volumes/
+            echo ""
+            echo "Disk layout:"
+            diskutil list "$sd_device"
+        fi
         exit 1
     fi
 
@@ -894,12 +941,33 @@ EOF
                       "$tailscale_authkey" "$ssh_key_file"
 
     # Sync and eject SD card
-    echo -e "${YELLOW}Syncing and ejecting SD card...${NC}"
-    sync
-    sleep 2
-    diskutil eject "$sd_device"
-
-    echo -e "${GREEN}✓ SD card is ready!${NC}"
+    if [ "$test_mode" = "true" ]; then
+        echo -e "${YELLOW}TEST MODE: Configuration complete${NC}"
+        echo "Created files in: $boot_mount"
+        echo -e "${GREEN}Configuration files generated successfully:${NC}"
+        echo "  - ssh"
+        echo "  - userconf.txt"
+        [ -f "$boot_mount/wpa_supplicant.conf" ] && echo "  - wpa_supplicant.conf"
+        echo "  - config.txt (appended)"
+        echo "  - firstrun.sh"
+        echo "  - firstrun_custom.sh"
+        echo "  - cmdline.txt (modified)"
+        echo ""
+        echo "Test directory contents:"
+        ls -la "$boot_mount"
+        echo ""
+        echo -e "${YELLOW}Preserving test directory for inspection: $boot_mount${NC}"
+        echo "You can inspect the generated files with:"
+        echo "  cat $boot_mount/firstrun_custom.sh  # Check escaping"
+        echo "  cat $boot_mount/kiosk_url.txt       # After running firstrun"
+        echo -e "${GREEN}✓ TEST MODE: Configuration test complete!${NC}"
+    else
+        echo -e "${YELLOW}Syncing and ejecting SD card...${NC}"
+        sync
+        sleep 2
+        diskutil eject "$sd_device"
+        echo -e "${GREEN}✓ SD card is ready!${NC}"
+    fi
     echo
     echo "Next steps:"
     echo "1. Insert the SD card into your Raspberry Pi"
