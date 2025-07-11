@@ -108,6 +108,10 @@ write_image_to_sd() {
     echo -e "${YELLOW}Writing image to SD card...${NC}"
     echo "This will take several minutes..."
     
+    # Prompt for sudo password early to avoid interrupting the progress display
+    echo "Requesting administrator privileges for writing to SD card..."
+    sudo -v
+    
     # Unmount any mounted partitions
     diskutil unmountDisk force "$device" || true
     
@@ -116,13 +120,30 @@ write_image_to_sd() {
     
     # Check if pv is available for progress display
     if command -v pv >/dev/null 2>&1; then
-        # Get uncompressed size for progress bar
-        local uncompressed_size=$(xz -l "$image_file" 2>/dev/null | awk 'NR==2 {print $5}')
-        if [ -n "$uncompressed_size" ]; then
-            echo "Using pv for progress display..."
+        # Get uncompressed size for progress bar (remove commas from the number)
+        local uncompressed_size=$(xz -l "$image_file" 2>/dev/null | awk 'NR==2 {print $5}' | tr -d ',')
+        
+        # Fallback to known sizes if xz -l fails
+        if [ -z "$uncompressed_size" ] || [ "$uncompressed_size" -eq 0 ] 2>/dev/null; then
+            # Try to determine size based on filename
+            case "$image_file" in
+                *raspios*2025-05-13*)
+                    # Raspberry Pi OS 2025-05-13 is approximately 5.8GB uncompressed
+                    uncompressed_size=$((5800 * 1024 * 1024))
+                    echo "Using known size for Raspberry Pi OS 2025-05-13..."
+                    ;;
+                *)
+                    uncompressed_size=""
+                    ;;
+            esac
+        fi
+        
+        if [ -n "$uncompressed_size" ] && [ "$uncompressed_size" -gt 0 ] 2>/dev/null; then
+            echo "Using pv for progress display with ETA..."
             xzcat "$image_file" | pv -s "$uncompressed_size" | sudo dd of="$device" bs=4m
         else
             # Fallback if we can't get size
+            echo "Using pv for progress display (size unknown)..."
             xzcat "$image_file" | pv | sudo dd of="$device" bs=4m
         fi
     else
@@ -238,9 +259,9 @@ EOF
 # First-run script for Raspberry Pi OS kiosk setup
 
 # Set hostname
-HOSTNAME_PLACEHOLDER_TEMP=$(cat /boot/firmware/firstrun/hostname 2>/dev/null || echo "raspberrypi")
-hostnamectl set-hostname "$HOSTNAME_PLACEHOLDER_TEMP"
-sed -i "s/raspberrypi/$HOSTNAME_PLACEHOLDER_TEMP/g" /etc/hosts
+STORED_HOSTNAME=$(cat /boot/firmware/firstrun/hostname 2>/dev/null || echo "raspberrypi")
+hostnamectl set-hostname "$STORED_HOSTNAME"
+sed -i "s/raspberrypi/$STORED_HOSTNAME/g" /etc/hosts
 
 # Wait for network
 echo "Waiting for network connectivity..."
@@ -261,14 +282,14 @@ if [ -f /boot/firmware/firstrun/tailscale_authkey ]; then
     curl -fsSL https://tailscale.com/install.sh | sh
     
     TAILSCALE_AUTHKEY=$(cat /boot/firmware/firstrun/tailscale_authkey)
-    tailscale up --authkey="$TAILSCALE_AUTHKEY" --ssh --hostname="$HOSTNAME_PLACEHOLDER_TEMP"
+    tailscale up --authkey="$TAILSCALE_AUTHKEY" --ssh --hostname="$STORED_HOSTNAME"
     
     echo "Tailscale installed and connected"
     rm -f /boot/firmware/firstrun/tailscale_authkey
 fi
 
 # Create kiosk user if it doesn't exist
-USERNAME_PLACEHOLDER=$(cat /boot/firmware/firstrun/username 2>/dev/null || echo "pi")
+STORED_USERNAME=$(cat /boot/firmware/firstrun/username 2>/dev/null || echo "pi")
 
 # Create systemd service for kiosk mode
 cat > /etc/systemd/system/kiosk.service << 'EOF'
@@ -279,8 +300,8 @@ After=multi-user.target
 [Service]
 Type=simple
 ExecStart=/usr/local/bin/chromium-kiosk.sh
-User=USERNAME_PLACEHOLDER
-Group=USERNAME_PLACEHOLDER
+User=STORED_USERNAME
+Group=STORED_USERNAME
 Restart=always
 RestartSec=5
 
@@ -293,7 +314,7 @@ WantedBy=graphical.target
 EOF
 
 # Replace username placeholder in service file
-sed -i "s/USERNAME_PLACEHOLDER/$USERNAME_PLACEHOLDER/g" /etc/systemd/system/kiosk.service
+sed -i "s/STORED_USERNAME/$STORED_USERNAME/g" /etc/systemd/system/kiosk.service
 
 # Create the kiosk script
 cat > /usr/local/bin/chromium-kiosk.sh << 'KIOSK_SCRIPT'
@@ -410,15 +431,15 @@ mkdir -p /etc/systemd/system/getty@tty1.service.d
 cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << EOF
 [Service]
 ExecStart=
-ExecStart=-/sbin/agetty --autologin $USERNAME_PLACEHOLDER --noclear %I \$TERM
+ExecStart=-/sbin/agetty --autologin $STORED_USERNAME --noclear %I \$TERM
 EOF
 
 # Configure Wayfire as compositor (lightweight for kiosk)
 apt-get install -y wayfire
 
 # Create Wayfire config for kiosk
-mkdir -p /home/$USERNAME_PLACEHOLDER/.config/wayfire
-cat > /home/$USERNAME_PLACEHOLDER/.config/wayfire/wayfire.ini << 'EOF'
+mkdir -p /home/$STORED_USERNAME/.config/wayfire
+cat > /home/$STORED_USERNAME/.config/wayfire/wayfire.ini << 'EOF'
 [core]
 plugins = autostart
 
@@ -431,24 +452,25 @@ cursor_theme = none
 cursor_size = 1
 EOF
 
-chown -R $USERNAME_PLACEHOLDER:$USERNAME_PLACEHOLDER /home/$USERNAME_PLACEHOLDER/.config
+chown -R $STORED_USERNAME:$STORED_USERNAME /home/$STORED_USERNAME/.config
 
 # Set up automatic Wayland session start
-cat > /home/$USERNAME_PLACEHOLDER/.bash_profile << 'EOF'
+cat > /home/$STORED_USERNAME/.bash_profile << 'EOF'
 # Auto-start Wayfire on tty1
 if [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ] && [ "$XDG_VTNR" -eq 1 ]; then
     exec wayfire
 fi
 EOF
 
-chown $USERNAME_PLACEHOLDER:$USERNAME_PLACEHOLDER /home/$USERNAME_PLACEHOLDER/.bash_profile
+chown $STORED_USERNAME:$STORED_USERNAME /home/$STORED_USERNAME/.bash_profile
 
 # Enable services
 systemctl enable kiosk
 systemctl set-default graphical.target
 
 # Store the URL
-echo "URL_PLACEHOLDER" > /boot/firmware/kiosk_url.txt
+STORED_URL=$(cat /boot/firmware/firstrun/url 2>/dev/null || echo "https://panic.fly.dev")
+echo "$STORED_URL" > /boot/firmware/kiosk_url.txt
 
 # Clean up first-run artifacts
 rm -f /boot/firmware/firstrun.sh
@@ -464,14 +486,49 @@ FIRSTRUN_SCRIPT
     mkdir -p "$boot_mount/firstrun"
     echo "$hostname" > "$boot_mount/firstrun/hostname"
     echo "$username" > "$boot_mount/firstrun/username"
+    echo "$url" > "$boot_mount/firstrun/url"
     
-    # Replace placeholders in the script
-    sed -i.bak "s|HOSTNAME_PLACEHOLDER|$hostname|g" "$boot_mount/firstrun.sh"
-    sed -i.bak "s|USERNAME_PLACEHOLDER|$username|g" "$boot_mount/firstrun.sh"
-    sed -i.bak "s|URL_PLACEHOLDER|$url|g" "$boot_mount/firstrun.sh"
-    rm "$boot_mount/firstrun.sh.bak"
+    # Don't replace placeholders - the script uses different variable names to avoid conflicts
+    # The script reads values from the firstrun directory instead
+    
+    # Don't make the main script executable yet
+    
+    # Raspberry Pi OS expects firstrun.sh in the root of boot partition
+    # and it must follow specific conventions
+    mv "$boot_mount/firstrun.sh" "$boot_mount/firstrun_custom.sh"
+    chmod +x "$boot_mount/firstrun_custom.sh"
+    
+    # Create the official firstrun.sh that Raspberry Pi OS will execute
+    cat > "$boot_mount/firstrun.sh" << 'OFFICIAL_FIRSTRUN'
+#!/bin/bash
+
+set +e
+
+# This script is executed by Raspberry Pi OS on first boot
+# It runs as root with the filesystem fully available
+
+# Run our custom setup script
+if [ -f /boot/firmware/firstrun_custom.sh ]; then
+    echo "Running custom first boot setup..."
+    bash /boot/firmware/firstrun_custom.sh 2>&1 | tee /var/log/firstrun_custom.log
+    
+    # Clean up
+    rm -f /boot/firmware/firstrun_custom.sh
+    rm -f /boot/firmware/firstrun
+fi
+
+# Remove this script to prevent running again
+rm -f /boot/firmware/firstrun.sh
+
+exit 0
+OFFICIAL_FIRSTRUN
     
     chmod +x "$boot_mount/firstrun.sh"
+    
+    # Also need to modify cmdline.txt to trigger firstrun
+    # Raspberry Pi OS looks for systemd.run_success_action=reboot systemd.run=/boot/firmware/firstrun.sh
+    cp "$boot_mount/cmdline.txt" "$boot_mount/cmdline.txt.bak"
+    echo -n " systemd.run_success_action=reboot systemd.run=/boot/firmware/firstrun.sh" >> "$boot_mount/cmdline.txt"
     
     echo -e "${GREEN}✓ Raspberry Pi OS automation configured${NC}"
 }
