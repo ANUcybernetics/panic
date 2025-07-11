@@ -201,6 +201,7 @@ generate_password_hash() {
 # Function to create the firstrun script content with JSON configuration
 create_firstrun_script() {
     local config_json="$1"
+    local ssh_key="$2"
     
     # Base64 encode the JSON to avoid any escaping issues
     local config_b64=$(echo -n "$config_json" | base64)
@@ -230,6 +231,18 @@ TAILSCALE_AUTHKEY=$(echo "$CONFIG_JSON" | jq -r '.tailscale_authkey // empty')
 # Set hostname
 hostnamectl set-hostname "$HOSTNAME"
 sed -i "s/raspberrypi/$HOSTNAME/g" /etc/hosts
+
+# Setup SSH key if provided
+SSH_KEY_B64="${ssh_key}"
+if [ -n "$SSH_KEY_B64" ]; then
+    echo "Setting up SSH key for $USERNAME..."
+    mkdir -p /home/$USERNAME/.ssh
+    echo "$SSH_KEY_B64" | base64 -d > /home/$USERNAME/.ssh/authorized_keys
+    chmod 700 /home/$USERNAME/.ssh
+    chmod 600 /home/$USERNAME/.ssh/authorized_keys
+    chown -R $USERNAME:$USERNAME /home/$USERNAME/.ssh
+    echo "SSH key configured"
+fi
 
 # Wait for network
 echo "Waiting for network connectivity..."
@@ -424,6 +437,7 @@ configure_raspi_os() {
     local username="$8"
     local password="$9"
     local tailscale_authkey="${10}"
+    local ssh_key_file="${11}"
 
     echo -e "${YELLOW}Configuring Raspberry Pi OS...${NC}"
 
@@ -500,8 +514,18 @@ EOF
         --arg tailscale "$tailscale_authkey" \
         '{hostname: $hostname, username: $username, url: $url, tailscale_authkey: $tailscale}')
 
-    # Create the first-run script with embedded JSON configuration
-    create_firstrun_script "$config_json" > "$boot_mount/firstrun.sh"
+    # Read SSH public key if it exists and base64 encode it
+    local ssh_key_b64=""
+    if [ -f "$ssh_key_file" ]; then
+        ssh_key_b64=$(cat "$ssh_key_file" | base64)
+        echo -e "${GREEN}✓ Found SSH key: $(basename "$ssh_key_file")${NC}"
+    else
+        echo -e "${YELLOW}Note: No SSH key found at $ssh_key_file${NC}"
+        echo -e "${YELLOW}      Password authentication will be used${NC}"
+    fi
+
+    # Create the first-run script with embedded JSON configuration and SSH key
+    create_firstrun_script "$config_json" "$ssh_key_b64" > "$boot_mount/firstrun.sh"
     chmod +x "$boot_mount/firstrun.sh"
 
     # Raspberry Pi OS expects firstrun.sh in the root of boot partition
@@ -573,6 +597,7 @@ main() {
     local username=""
     local password=""
     local tailscale_authkey=""
+    local ssh_key_file="$HOME/.ssh/panic_rpi_ssh.pub"
 
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -610,6 +635,10 @@ main() {
                 ;;
             --tailscale-authkey)
                 tailscale_authkey="$2"
+                shift 2
+                ;;
+            --ssh-key)
+                ssh_key_file="$2"
                 shift 2
                 ;;
             --list-cache)
@@ -652,6 +681,7 @@ Network Options (at least one required):
 
 Optional:
     --tailscale-authkey <key>    Tailscale auth key for automatic join
+    --ssh-key <path>             Path to SSH public key (default: ~/.ssh/panic_rpi_ssh.pub)
 
 Utility Commands:
     --list-cache                 List cached images
@@ -684,6 +714,15 @@ Examples:
        --wifi-ssid "HomeWiFi" \\
        --wifi-password "wifipass" \\
        --tailscale-authkey "tskey-auth-..."
+
+    # With SSH key for passwordless access:
+    $0 --url "https://example.com" \\
+       --hostname "kiosk-display" \\
+       --username "admin" \\
+       --password "securepass123" \\
+       --wifi-ssid "MyNetwork" \\
+       --wifi-password "MyPassword" \\
+       --ssh-key ~/.ssh/id_rsa.pub
 
 Features:
     - Full 4K display support via Wayland
@@ -840,7 +879,7 @@ EOF
     configure_raspi_os "$boot_mount" "$wifi_ssid" "$wifi_password" \
                       "$wifi_enterprise_user" "$wifi_enterprise_pass" \
                       "$url" "$hostname" "$username" "$password" \
-                      "$tailscale_authkey"
+                      "$tailscale_authkey" "$ssh_key_file"
 
     # Sync and eject SD card
     echo -e "${YELLOW}Syncing and ejecting SD card...${NC}"
@@ -863,8 +902,18 @@ EOF
     if [ -n "$tailscale_authkey" ]; then
         echo "Tailscale access:"
         echo "   ssh $username@$hostname  (via Tailscale network)"
+        if [ -f "$ssh_key_file" ]; then
+            echo "   (Passwordless access via SSH key)"
+        fi
         echo "   No need for port forwarding or VPN!"
         echo
+    else
+        if [ -f "$ssh_key_file" ]; then
+            echo "SSH access:"
+            echo "   ssh $username@${hostname}.local"
+            echo "   (Passwordless access via SSH key)"
+            echo
+        fi
     fi
     echo "Note: First boot takes 5-10 minutes for automated setup"
     echo
