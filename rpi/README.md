@@ -1,15 +1,16 @@
 # Raspberry Pi Kiosk Setup
 
-This directory contains a script to set up Raspberry Pi devices as browser kiosks that boot directly into fullscreen Chromium displaying a specified URL.
+This directory contains a script to set up Raspberry Pi 5 devices as browser kiosks that boot directly into fullscreen Chromium displaying a specified URL.
 
 ## Overview
 
 The `pi-setup.sh` script creates a fully automated DietPi installation that:
-- Boots directly into GPU-accelerated kiosk mode using Wayfire/Wayland
+- Boots directly into GPU-accelerated kiosk mode using Wayfire/Wayland compositor
 - Automatically joins your Tailscale network (no manual IP discovery needed)
-- Supports native display resolutions including 4K at 60Hz
-- Configures WiFi for subsequent use after initial Ethernet setup
+- Supports native display resolutions including 4K at 60Hz with full GPU acceleration
+- Configures WiFi (both consumer WPA2 and enterprise 802.1X) for subsequent use after initial Ethernet setup
 - Hides the mouse cursor and provides a clean kiosk experience
+- Optimized specifically for Raspberry Pi 5 with 8GB RAM
 
 ## How It Works
 
@@ -205,13 +206,23 @@ Optional:
 - **Reliable automation**: `AUTO_SETUP_CUSTOM_SCRIPT_EXEC` runs consistently
 - **Faster boot**: Less overhead than full Raspberry Pi OS
 - **Better for kiosks**: Designed for headless and automated deployments
+- **Latest version**: Always uses the latest DietPi release with full Raspberry Pi 5 support
 
 ### Why Wayfire/Wayland?
 
-- **Native GPU acceleration**: Full hardware acceleration for smooth performance
-- **Better 4K support**: Handles high resolutions without X11 limitations
+- **Native GPU acceleration**: Full hardware acceleration with V3D/VC4 drivers
+- **Better 4K support**: Handles 4K@60Hz without X11 limitations
 - **Modern stack**: Future-proof compared to X11
 - **Auto-detection**: Automatically uses optimal display settings
+- **Hardware video decoding**: Supports H.265/HEVC hardware acceleration
+
+### GPU Optimization
+
+The script configures:
+- 512MB GPU memory split for 4K displays
+- Performance CPU governor for consistent frame rates
+- Hardware-accelerated Chromium flags for smooth rendering
+- Wayland-native operation avoiding X11 overhead
 
 ### Security Notes
 
@@ -223,9 +234,14 @@ Optional:
 
 ### Hardware Requirements
 
-- Raspberry Pi 3, 4, 5, or Zero 2 W
-- 8GB+ SD card (16GB recommended)
-- Stable power supply (official Pi power supply recommended)
-- HDMI display
+- Raspberry Pi 5 with 8GB RAM (script optimized for this model)
+- 16GB+ SD card (32GB recommended for better performance)
+- Official Raspberry Pi 27W USB-C power supply
+- HDMI 2.1 cable for 4K@60Hz support
+- 4K-capable display (or any HDMI display)
 - Ethernet connection for initial setup
 - WiFi for subsequent operation (optional)
+
+### Testing 4K Support
+
+See the task file for detailed instructions on verifying 4K display capabilities.

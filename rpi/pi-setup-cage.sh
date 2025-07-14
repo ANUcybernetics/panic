@@ -1,16 +1,17 @@
 #!/bin/bash
-# DietPi automated SD card setup for Raspberry Pi 5 kiosk mode with Wayland
+# DietPi automated SD card setup for Raspberry Pi 5 kiosk mode with Cage compositor
 # This script creates a fully automated DietPi installation that boots directly into 
-# GPU-accelerated Chromium kiosk mode using Wayfire/Wayland and automatically joins Tailscale
+# GPU-accelerated Chromium kiosk mode using the minimal Cage Wayland compositor
 #
 # Features:
-# - Full GPU acceleration with Wayland/Wayfire compositor
+# - Minimal Cage compositor for lowest overhead
+# - Full GPU acceleration with Wayland
 # - Native 4K display support with auto-detection
 # - Consumer and enterprise WiFi configuration
 # - Automatic Tailscale network join
 # - Optimized for Raspberry Pi 5 with 8GB RAM
 #
-# Uses latest DietPi version
+# Uses latest DietPi version with Cage compositor
 
 set -e
 set -u
@@ -261,7 +262,7 @@ AUTO_SETUP_GLOBAL_PASSWORD=$password
 # Software to install:
 # 105 = OpenSSH Server
 # 113 = Chromium
-# Note: We'll install Wayfire in custom script for Wayland support
+# Note: We'll install Cage in custom script for minimal Wayland support
 AUTO_SETUP_INSTALL_SOFTWARE_ID=105,113
 
 # Set autostart to custom script (7 = custom script)
@@ -357,12 +358,12 @@ EOF
         echo -e "${GREEN}✓ SSH key configured${NC}"
     fi
 
-    # Create custom automation script for kiosk setup
+    # Create custom automation script for kiosk setup with Cage
     cat > "$boot_mount/Automation_Custom_Script.sh" << 'CUSTOM_SCRIPT'
 #!/bin/bash
-# DietPi custom automation script for kiosk mode with Tailscale
+# DietPi custom automation script for Cage kiosk mode with Tailscale
 
-echo "Starting DietPi custom automation script..."
+echo "Starting DietPi custom automation script (Cage version)..."
 
 # Function to detect correct boot partition path
 get_boot_path() {
@@ -431,11 +432,11 @@ if [ -f "$KEY_PATH" ]; then
     rm -f "$KEY_PATH"
 fi
 
-# Install additional packages for Wayland kiosk mode and GPU acceleration
-echo "Installing packages for Wayland kiosk mode..."
+# Install Cage compositor and dependencies
+echo "Installing Cage compositor for minimal kiosk mode..."
 apt-get update
 apt-get install -y \
-    wayfire \
+    cage \
     wlr-randr \
     libgles2-mesa \
     libgbm1 \
@@ -444,72 +445,13 @@ apt-get install -y \
     mesa-va-drivers \
     mesa-vdpau-drivers \
     libdrm2 \
-    libxcb-dri3-0 \
-    libxcb-present0 \
-    libxcb-sync1 \
     xwayland
 
-# Create Wayfire configuration directory
-mkdir -p /home/dietpi/.config
-
-# Configure Wayfire compositor
-echo "Configuring Wayfire compositor..."
-cat > /home/dietpi/.config/wayfire.ini << 'EOF'
-[core]
-# Enable necessary plugins for kiosk mode
-plugins = autostart alpha animate expo resize place decoration
-
-# Backend selection - prefer DRM for better performance
-backend = drm
-
-# Enable GPU acceleration
-xwayland = true
-vwidth = 3840
-vheight = 2160
-
-[autostart]
-autostart_wf_shell = false
-kiosk = /usr/local/bin/chromium-kiosk.sh
-
-# Hide cursor after inactivity
-hide_cursor = hide-cursor
-
-[hide-cursor]
-hide_delay = 1
-toggle = none
-
-# Output configuration for all possible outputs
-[output:HDMI-A-1]
-mode = auto
-position = 0,0
-transform = normal
-scale = 1.0
-
-[output:HDMI-A-2]
-mode = auto
-position = 0,0
-transform = normal
-scale = 1.0
-
-[output:DSI-1]
-mode = auto
-position = 0,0
-transform = normal
-scale = 1.0
-
-# Enable DRM backend options for better performance
-[drm]
-# Force enable atomic mode setting for better 4K support
-enable_atomic = true
-EOF
-
-chown -R dietpi:dietpi /home/dietpi/.config
-
-# Create kiosk launch script for Wayland
+# Create kiosk launch script for Cage
 echo "Creating Chromium kiosk script..."
 cat > /usr/local/bin/chromium-kiosk.sh << 'EOF'
 #!/bin/bash
-# Chromium kiosk script for Wayland
+# Chromium kiosk script for Cage compositor
 
 # Get URL from dietpi.txt or use default
 # Note: BOOT_PATH needs to be determined at runtime since this runs on the Pi
@@ -523,10 +465,6 @@ URL=${URL:-https://panic.fly.dev}
 
 # Log startup
 logger -t chromium-kiosk "Starting Chromium kiosk with URL: $URL"
-
-# Hide mouse cursor - Wayland doesn't need unclutter
-export XCURSOR_THEME=DMZ-White
-export XCURSOR_SIZE=1
 
 # Launch Chromium in kiosk mode with Wayland support and GPU acceleration
 exec chromium-browser \
@@ -559,18 +497,18 @@ EOF
 
 chmod +x /usr/local/bin/chromium-kiosk.sh
 
-# Create Wayfire service for auto-start
-echo "Creating Wayfire systemd service..."
-cat > /etc/systemd/system/wayfire.service << 'EOF'
+# Create Cage service for auto-start
+echo "Creating Cage systemd service..."
+cat > /etc/systemd/system/cage.service << 'EOF'
 [Unit]
-Description=Wayfire Wayland Compositor
+Description=Cage Wayland Compositor (Kiosk)
 After=systemd-user-sessions.service plymouth-quit-wait.service
 Wants=dbus.socket systemd-logind.service
 Conflicts=getty@tty1.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/wayfire
+ExecStart=/usr/bin/cage -- /usr/local/bin/chromium-kiosk.sh
 Restart=on-failure
 RestartSec=5
 User=dietpi
@@ -583,7 +521,7 @@ TTYReset=yes
 TTYVHangup=yes
 UtmpIdentifier=tty1
 
-# Environment
+# Environment for Cage
 Environment="XDG_RUNTIME_DIR=/run/user/1000"
 Environment="XDG_SESSION_TYPE=wayland"
 Environment="MOZ_ENABLE_WAYLAND=1"
@@ -594,6 +532,8 @@ Environment="SDL_VIDEODRIVER=wayland"
 Environment="WAYLAND_DISPLAY=wayland-1"
 Environment="WLR_RENDERER=gles2"
 Environment="WLR_NO_HARDWARE_CURSORS=1"
+# Cage-specific options
+Environment="CAGE_DISABLE_CSD=1"
 
 [Install]
 WantedBy=graphical.target
@@ -601,7 +541,7 @@ EOF
 
 # Enable services
 systemctl daemon-reload
-systemctl enable wayfire.service
+systemctl enable cage.service
 systemctl set-default graphical.target
 
 # Configure auto-login for tty1
@@ -612,12 +552,12 @@ ExecStart=
 ExecStart=-/sbin/agetty --autologin dietpi --noclear %I \$TERM
 EOF
 
-# Create custom DietPi autostart script that launches Wayfire
+# Create custom DietPi autostart script that launches Cage
 cat > /var/lib/dietpi/dietpi-autostart/custom.sh << 'EOF'
 #!/bin/bash
-# Launch Wayfire on tty1
+# Launch Cage on tty1
 if [ "$(tty)" = "/dev/tty1" ]; then
-    systemctl start wayfire
+    systemctl start cage
 fi
 EOF
 chmod +x /var/lib/dietpi/dietpi-autostart/custom.sh
@@ -656,7 +596,7 @@ chmod +x /usr/local/bin/verify-display.sh
 # Log display info on first boot
 /usr/local/bin/verify-display.sh > /var/log/display-capabilities.log 2>&1
 
-echo "DietPi Wayland kiosk setup complete!"
+echo "DietPi Cage kiosk setup complete!"
 CUSTOM_SCRIPT
 
     chmod +x "$boot_mount/Automation_Custom_Script.sh"
@@ -702,6 +642,9 @@ Examples:
        --wifi-enterprise-user "username@domain.com" \\
        --wifi-enterprise-pass "password" \\
        --tailscale-authkey "tskey-auth-..."
+
+This version uses the minimal Cage compositor instead of Wayfire for better
+performance and lower resource usage in kiosk deployments.
 
 EOF
     exit 1
@@ -826,13 +769,14 @@ main() {
     fi
 
     # Show configuration
-    echo -e "${GREEN}DietPi Kiosk SD Card Setup${NC}"
-    echo "============================="
+    echo -e "${GREEN}DietPi Kiosk SD Card Setup (Cage Version)${NC}"
+    echo "=========================================="
     echo "Configuration:"
     echo "  Hostname: $hostname"
     echo "  Username: $username"
     echo "  Password: [hidden]"
     echo "  Kiosk URL: $url"
+    echo "  Compositor: Cage (minimal)"
     if [ -n "$wifi_ssid" ]; then
         echo "  WiFi SSID: $wifi_ssid"
         if [ -n "$wifi_enterprise_user" ]; then
@@ -917,7 +861,7 @@ main() {
     echo "3. Wait 5-10 minutes for DietPi to:"
     echo "   - Complete automated installation"
     echo "   - Install and join Tailscale network (if configured)"
-    echo "   - Configure kiosk mode"
+    echo "   - Configure Cage kiosk mode"
     echo "   - Reboot into kiosk display"
     echo ""
     if [ -n "$tailscale_authkey" ]; then
@@ -933,10 +877,16 @@ main() {
     echo ""
     echo "The Pi will automatically:"
     echo "- Boot directly into kiosk mode showing: $url"
-    echo "- Use GPU-accelerated Wayland for native resolution support"
+    echo "- Use minimal Cage compositor for best performance"
     echo "- Support 4K displays at full 60Hz with hardware acceleration"
-    echo "- Hide the mouse cursor"
+    echo "- Hide the mouse cursor automatically"
     echo "- Restart the browser if it crashes"
+    echo ""
+    echo "Cage advantages over Wayfire:"
+    echo "- Minimal resource usage (no desktop features)"
+    echo "- Purpose-built for single-app kiosk mode"
+    echo "- Faster boot times"
+    echo "- More stable for 24/7 operation"
 }
 
 # Run main function
