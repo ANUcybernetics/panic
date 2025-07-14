@@ -5,8 +5,8 @@ defmodule PanicWeb.NetworkLive.Info do
   import PanicWeb.PanicComponents
 
   alias Panic.Engine.Network
-  alias PanicWeb.WatcherSubscriber
   alias PanicWeb.TerminalAuth
+  alias PanicWeb.WatcherSubscriber
 
   @impl true
   def render(%{live_action: :all} = assigns) do

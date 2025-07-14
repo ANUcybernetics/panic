@@ -4,8 +4,8 @@ defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
   import Panic.Fixtures
   import Phoenix.LiveViewTest
 
-  alias Panic.Watcher.Installation
   alias Panic.Engine.Network
+  alias Panic.Watcher.Installation
   alias PanicWeb.TerminalAuth
 
   describe "anonymous user with vestaboard watchers" do

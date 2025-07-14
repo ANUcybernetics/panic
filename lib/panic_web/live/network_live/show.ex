@@ -4,8 +4,8 @@ defmodule PanicWeb.NetworkLive.Show do
 
   import PanicWeb.PanicComponents
 
-  alias PanicWeb.WatcherSubscriber
   alias PanicWeb.NetworkLive.ModelSelectComponent
+  alias PanicWeb.WatcherSubscriber
 
   @impl true
   def render(assigns) do

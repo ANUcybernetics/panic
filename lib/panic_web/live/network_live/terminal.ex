@@ -2,8 +2,8 @@ defmodule PanicWeb.NetworkLive.Terminal do
   @moduledoc false
   use PanicWeb, :live_view
 
-  alias PanicWeb.WatcherSubscriber
   alias PanicWeb.TerminalAuth
+  alias PanicWeb.WatcherSubscriber
 
   @impl true
   def render(assigns) do

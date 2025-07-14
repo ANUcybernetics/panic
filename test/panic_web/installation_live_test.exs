@@ -4,8 +4,8 @@ defmodule PanicWeb.InstallationLiveTest do
   """
   use PanicWeb.ConnCase, async: false
 
-  alias Panic.Watcher.Installation
   alias Panic.Engine.Network
+  alias Panic.Watcher.Installation
 
   describe "user IS logged in" do
     setup do

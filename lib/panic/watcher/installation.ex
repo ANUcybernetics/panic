@@ -30,8 +30,8 @@ defmodule Panic.Watcher.Installation do
     authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub]
 
-  alias Panic.Watcher.Installation.Config
   alias Panic.Engine.Network
+  alias Panic.Watcher.Installation.Config
 
   attributes do
     integer_primary_key :id

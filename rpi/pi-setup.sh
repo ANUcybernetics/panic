@@ -160,7 +160,7 @@ write_image_to_sd() {
             gsub(",", "", $5);
             size=$5;
             unit=$6;
-            if (unit == "MiB") 
+            if (unit == "MiB")
                 print int(size * 1024 * 1024);
             else if (unit == "GiB")
                 print int(size * 1024 * 1024 * 1024);
@@ -213,10 +213,10 @@ generate_password_hash() {
 # Function to create the firstrun script content with JSON configuration
 create_firstrun_script() {
     local config_json="$1"
-    
+
     # Base64 encode the JSON to avoid any escaping issues
     local config_b64=$(printf '%s' "$config_json" | base64)
-    
+
     # Output the script with base64 config embedded
     # We use a marker to inject the base64 config
     cat <<'FIRSTRUN_SCRIPT' | sed "s|__CONFIG_B64__|${config_b64}|g"
@@ -1083,7 +1083,7 @@ EOF
         # In test mode, create a temporary directory structure
         boot_mount=$(mktemp -d /tmp/raspi_boot_test.XXXXXX)
         echo -e "${YELLOW}TEST MODE: Using temporary directory: $boot_mount${NC}"
-        
+
         # Create dummy files that would exist on a real boot partition
         touch "$boot_mount/config.txt"
         touch "$boot_mount/cmdline.txt"

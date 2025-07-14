@@ -5,8 +5,8 @@ defmodule Panic.WatcherTest do
   use Panic.DataCase, async: false
 
   alias Ash.Error.Invalid
-  alias Panic.Watcher.Installation
   alias Panic.Engine.Network
+  alias Panic.Watcher.Installation
 
   setup do
     user = Panic.Fixtures.user()

@@ -7,8 +7,8 @@ defmodule Panic.InstallationTest do
 
   alias Ash.Error.Invalid
   alias Ash.Error.Query.NotFound
-  alias Panic.Watcher.Installation
   alias Panic.Engine.Network
+  alias Panic.Watcher.Installation
 
   describe "Installation resource" do
     setup do
