@@ -22,21 +22,19 @@ if [[ "$OSTYPE" != "darwin"* ]]; then
     exit 1
 fi
 
-# Check for required tools and install if needed
-check_and_install_tools() {
+# Check for required tools
+check_required_tools() {
     # Check for jq
     if ! command -v jq >/dev/null 2>&1; then
-        echo -e "${YELLOW}jq not found. Installing via Homebrew...${NC}"
-
-        # Check if Homebrew is installed
-        if ! command -v brew >/dev/null 2>&1; then
-            echo -e "${RED}Error: Homebrew is required to install jq${NC}"
-            echo "Install Homebrew from https://brew.sh"
-            exit 1
-        fi
-
-        brew install jq
-        echo -e "${GREEN}✓ jq installed${NC}"
+        echo -e "${RED}Error: jq is required but not installed${NC}"
+        echo
+        echo "Please install jq using one of these methods:"
+        echo "  • Homebrew: brew install jq"
+        echo "  • MacPorts: sudo port install jq"
+        echo "  • Download from: https://jqlang.github.io/jq/download/"
+        echo
+        echo "jq is needed to safely handle JSON configuration with special characters."
+        exit 1
     fi
 
     # Check for pv (optional but helpful)
@@ -814,8 +812,8 @@ main() {
         exit 1
     fi
 
-    # Check and install required tools
-    check_and_install_tools
+    # Check for required tools
+    check_required_tools
 
     # Parse arguments - no defaults, all required
     local url=""
