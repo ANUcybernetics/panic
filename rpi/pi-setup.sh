@@ -276,9 +276,8 @@ AUTO_SETUP_GLOBAL_PASSWORD=$password
 # Note: We'll install Wayfire in custom script for Wayland support
 AUTO_SETUP_INSTALL_SOFTWARE_ID=105,113
 
-# Set autostart to custom script (7 = custom script)
-AUTO_SETUP_AUTOSTART_TARGET_INDEX=14
-AUTO_SETUP_AUTOSTART_LOGIN_USER=dietpi
+# Set autostart to disabled - we'll use systemd services instead
+AUTO_SETUP_AUTOSTART_TARGET_INDEX=0
 
 # Disable serial console
 AUTO_SETUP_SERIAL_CONSOLE_ENABLE=0
@@ -389,20 +388,24 @@ get_boot_path() {
 
 BOOT_PATH=$(get_boot_path)
 
-# Wait for network
-echo "Waiting for network connectivity..."
-while ! ping -c 1 google.com > /dev/null 2>&1; do
-    sleep 2
-done
+# Enable systemd network waiting service
+systemctl enable systemd-networkd-wait-online.service
 
-# Install and configure Tailscale if auth key provided
+# Create Tailscale setup script
+cat > /usr/local/bin/setup-tailscale.sh << 'EOF'
+#!/bin/bash
+# Tailscale setup script
+
+BOOT_PATH=$([ -d "/boot/firmware" ] && echo "/boot/firmware" || echo "/boot")
 AUTHKEY_PATH="${BOOT_PATH}/dietpi_userdata/tailscale_authkey"
 
 if [ -f "$AUTHKEY_PATH" ]; then
-    echo "Installing Tailscale..."
+    echo "Setting up Tailscale..."
     
-    # Install Tailscale
-    curl -fsSL https://tailscale.com/install.sh | sh
+    # Install Tailscale if not already installed
+    if ! command -v tailscale >/dev/null 2>&1; then
+        curl -fsSL https://tailscale.com/install.sh | sh
+    fi
     
     # Read the auth key
     TAILSCALE_AUTHKEY=$(cat "$AUTHKEY_PATH")
@@ -427,7 +430,31 @@ if [ -f "$AUTHKEY_PATH" ]; then
     
     # Remove the auth key file for security
     rm -f "$AUTHKEY_PATH"
+else
+    echo "No Tailscale auth key found, skipping setup"
 fi
+EOF
+chmod +x /usr/local/bin/setup-tailscale.sh
+
+# Create Tailscale systemd service
+cat > /etc/systemd/system/tailscale-setup.service << 'EOF'
+[Unit]
+Description=Tailscale Initial Setup
+After=network-online.target tailscaled.service
+Wants=network-online.target
+Before=wayfire-kiosk.service
+ConditionPathExists=/usr/local/bin/setup-tailscale.sh
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/setup-tailscale.sh
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
 
 # Install SSH keys if provided
 KEY_PATH="${BOOT_PATH}/dietpi_userdata/authorized_keys"
@@ -573,32 +600,30 @@ EOF
 
 chmod +x /usr/local/bin/chromium-kiosk.sh
 
-# Create Wayfire service for auto-start
+# Create improved Wayfire service with proper dependencies
 echo "Creating Wayfire systemd service..."
-cat > /etc/systemd/system/wayfire.service << 'EOF'
+cat > /etc/systemd/system/wayfire-kiosk.service << 'EOF'
 [Unit]
-Description=Wayfire Wayland Compositor
-After=systemd-user-sessions.service plymouth-quit-wait.service
-Wants=dbus.socket systemd-logind.service
-Conflicts=getty@tty1.service
+Description=Wayfire Kiosk Mode
+Documentation=https://github.com/WayfireWM/wayfire
+After=multi-user.target network-online.target systemd-user-sessions.service systemd-udev-settle.service
+Wants=network-online.target
+# Ensure GPU is ready
+ConditionPathExists=/dev/dri/card0
+# Don't run if graphical target isn't active
+RequiredBy=graphical.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/wayfire
-Restart=on-failure
-RestartSec=5
 User=dietpi
+Group=dietpi
 PAMName=login
-StandardInput=tty
-StandardOutput=journal
-StandardError=journal
-TTYPath=/dev/tty1
-TTYReset=yes
-TTYVHangup=yes
-UtmpIdentifier=tty1
 
-# Environment
-Environment="XDG_RUNTIME_DIR=/run/user/1000"
+# Let systemd handle runtime directory
+RuntimeDirectory=wayfire-%i
+RuntimeDirectoryMode=0700
+
+# Environment setup
 Environment="XDG_SESSION_TYPE=wayland"
 Environment="MOZ_ENABLE_WAYLAND=1"
 Environment="GDK_BACKEND=wayland"
@@ -609,32 +634,57 @@ Environment="WAYLAND_DISPLAY=wayland-1"
 Environment="WLR_RENDERER=gles2"
 Environment="WLR_NO_HARDWARE_CURSORS=1"
 
+# Ensure GPU is ready before starting
+ExecStartPre=/bin/bash -c 'until [ -e /dev/dri/card0 ]; do echo "Waiting for GPU..."; sleep 1; done'
+ExecStartPre=/bin/bash -c 'echo "GPU ready at /dev/dri/card0"'
+
+# Start Wayfire
+ExecStart=/usr/bin/wayfire
+
+# Restart policy
+Restart=always
+RestartSec=10
+StartLimitInterval=120
+StartLimitBurst=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+
+# Security hardening
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/home/dietpi
+ReadWritePaths=/tmp
+ReadWritePaths=/var/log
+NoNewPrivileges=yes
+
 [Install]
 WantedBy=graphical.target
 EOF
 
 # Enable services
 systemctl daemon-reload
-systemctl enable wayfire.service
+systemctl enable wayfire-kiosk.service
+systemctl enable tailscale-setup.service
 systemctl set-default graphical.target
 
-# Configure auto-login for tty1
-mkdir -p /etc/systemd/system/getty@tty1.service.d
-cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << 'EOF'
+# Create a simple override to ensure wayfire starts on the correct TTY
+mkdir -p /etc/systemd/system/wayfire-kiosk.service.d
+cat > /etc/systemd/system/wayfire-kiosk.service.d/tty.conf << 'EOF'
 [Service]
-ExecStart=
-ExecStart=-/sbin/agetty --autologin dietpi --noclear %I \$TERM
+# Bind to tty1 for kiosk mode
+StandardInput=tty
+StandardOutput=journal
+StandardError=journal
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
 EOF
 
-# Create custom DietPi autostart script that launches Wayfire
-cat > /var/lib/dietpi/dietpi-autostart/custom.sh << 'EOF'
-#!/bin/bash
-# Launch Wayfire on tty1
-if [ "$(tty)" = "/dev/tty1" ]; then
-    systemctl start wayfire
-fi
-EOF
-chmod +x /var/lib/dietpi/dietpi-autostart/custom.sh
+# Configure dietpi user to be in necessary groups for GPU access
+usermod -a -G video,render,input dietpi
 
 # Create display verification script
 cat > /usr/local/bin/verify-display.sh << 'EOF'
@@ -669,6 +719,56 @@ chmod +x /usr/local/bin/verify-display.sh
 
 # Log display info on first boot
 /usr/local/bin/verify-display.sh > /var/log/display-capabilities.log 2>&1
+
+# Create a health check timer for the kiosk
+cat > /etc/systemd/system/kiosk-health-check.service << 'EOF'
+[Unit]
+Description=Kiosk Health Check
+After=wayfire-kiosk.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/kiosk-health-check.sh
+StandardOutput=journal
+StandardError=journal
+EOF
+
+cat > /etc/systemd/system/kiosk-health-check.timer << 'EOF'
+[Unit]
+Description=Run Kiosk Health Check every 5 minutes
+Requires=kiosk-health-check.service
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=5min
+
+[Install]
+WantedBy=timers.target
+EOF
+
+cat > /usr/local/bin/kiosk-health-check.sh << 'EOF'
+#!/bin/bash
+# Simple health check for kiosk mode
+
+# Check if Wayfire is running
+if ! pgrep -x wayfire > /dev/null; then
+    echo "Wayfire not running, attempting restart..."
+    systemctl restart wayfire-kiosk.service
+fi
+
+# Check if Chromium is running
+if ! pgrep -f "chromium.*--kiosk" > /dev/null; then
+    echo "Chromium not running in kiosk mode"
+    # Wayfire should restart it automatically
+fi
+
+# Log current status
+echo "Kiosk health check completed at $(date)"
+EOF
+chmod +x /usr/local/bin/kiosk-health-check.sh
+
+# Enable the health check timer
+systemctl enable kiosk-health-check.timer
 
 echo "DietPi Wayland kiosk setup complete!"
 CUSTOM_SCRIPT
