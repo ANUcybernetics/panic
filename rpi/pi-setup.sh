@@ -711,20 +711,25 @@ configure_raspi_os() {
 
     echo -e "${YELLOW}Configuring Raspberry Pi OS...${NC}"
 
-    # Enable SSH - this is still needed!
+    # Note: SSH, user account, and WiFi are now configured via custom.toml
+    # But we'll keep these as fallback for older Raspberry Pi OS versions
+    
+    # Create empty ssh file as a fallback (custom.toml should handle this)
     touch "$boot_mount/ssh"
-    echo -e "${GREEN}✓ SSH enabled${NC}"
-
-    # Set up user account (userconf.txt)
-    local password_hash=$(generate_password_hash "$password")
-    echo "${username}:${password_hash}" > "$boot_mount/userconf.txt"
-    echo -e "${GREEN}✓ User account configured${NC}"
-
-    # Configure WiFi
-    if [ -n "$wifi_ssid" ]; then
-        if [ -n "$wifi_enterprise_user" ] && [ -n "$wifi_enterprise_pass" ]; then
-            # Enterprise WiFi
-            cat > "$boot_mount/wpa_supplicant.conf" << EOF
+    
+    # For older systems that don't support custom.toml, keep the traditional files
+    if [ ! -f "$boot_mount/custom.toml" ]; then
+        echo -e "${YELLOW}Creating fallback configuration files...${NC}"
+        
+        # Set up user account (userconf.txt)
+        local password_hash=$(generate_password_hash "$password")
+        echo "${username}:${password_hash}" > "$boot_mount/userconf.txt"
+        
+        # Configure WiFi
+        if [ -n "$wifi_ssid" ]; then
+            if [ -n "$wifi_enterprise_user" ] && [ -n "$wifi_enterprise_pass" ]; then
+                # Enterprise WiFi
+                cat > "$boot_mount/wpa_supplicant.conf" << EOF
 country=AU
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
@@ -739,9 +744,9 @@ network={
     phase2="auth=MSCHAPV2"
 }
 EOF
-        elif [ -n "$wifi_password" ]; then
-            # Regular WiFi
-            cat > "$boot_mount/wpa_supplicant.conf" << EOF
+            elif [ -n "$wifi_password" ]; then
+                # Regular WiFi
+                cat > "$boot_mount/wpa_supplicant.conf" << EOF
 country=AU
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
@@ -751,8 +756,8 @@ network={
     psk="$wifi_password"
 }
 EOF
+            fi
         fi
-        echo -e "${GREEN}✓ WiFi configured${NC}"
     fi
 
     # Configure config.txt for better 4K support on RPi5
@@ -797,17 +802,73 @@ EOF
     create_firstrun_script "$config_json" > "$boot_mount/firstrun.sh"
     chmod +x "$boot_mount/firstrun.sh"
 
-    # The most reliable way: modify cmdline.txt to run our script
-    # Raspberry Pi OS will execute this on first boot
-    cp "$boot_mount/cmdline.txt" "$boot_mount/cmdline.txt.bak"
+    # For Raspberry Pi OS Bookworm, systemd.run in cmdline.txt is no longer supported
+    # Instead, we'll use the Raspberry Pi Imager custom settings approach
     
-    # Add quiet to suppress boot messages and add our firstrun script
-    sed -i 's/ quiet / /g' "$boot_mount/cmdline.txt"
-    sed -i 's/ splash / /g' "$boot_mount/cmdline.txt"
-    echo -n " quiet init=/usr/lib/raspberrypi-sys-mods/firstboot systemd.run=/boot/firmware/firstrun.sh systemd.run_success_action=reboot" >> "$boot_mount/cmdline.txt"
+    # Create a custom.toml file that Raspberry Pi OS will process on first boot
+    cat > "$boot_mount/custom.toml" << EOF
+# Raspberry Pi Imager Custom Settings
+[all]
+hostname = "$hostname"
+
+[all.user]
+name = "$username"
+password_encrypted = "$(generate_password_hash "$password")"
+
+[all.ssh]
+enabled = true
+EOF
+
+    # Add SSH authorized keys if provided
+    if [ -f "$ssh_key_file" ]; then
+        local ssh_key_content=$(cat "$ssh_key_file")
+        cat >> "$boot_mount/custom.toml" << EOF
+authorized_keys = ["$ssh_key_content"]
+EOF
+    fi
+
+    # WiFi configuration in custom.toml
+    if [ -n "$wifi_ssid" ]; then
+        cat >> "$boot_mount/custom.toml" << EOF
+
+[all.wlan]
+ssid = "$wifi_ssid"
+password = "$wifi_password"
+country = "AU"
+EOF
+    fi
+
+    # Add run_on_first_boot command
+    cat >> "$boot_mount/custom.toml" << EOF
+
+[all.first_boot]
+run_commands = ["/boot/firmware/firstrun.sh"]
+EOF
+
+    echo -e "${GREEN}✓ Created custom.toml for Raspberry Pi OS customization${NC}"
+    
+    # As a fallback, also create a service that runs on first boot
+    # This uses the raspberrypi-sys-mods firstboot mechanism
+    mkdir -p "$boot_mount/os_customisations"
+    
+    # Create a script that will be run by the firstboot service
+    cat > "$boot_mount/os_customisations/firstboot.sh" << 'FIRSTBOOT_WRAPPER'
+#!/bin/bash
+# Wrapper script for Raspberry Pi OS firstboot
+
+# Check if our kiosk setup script exists and run it
+if [ -f /boot/firmware/firstrun.sh ]; then
+    echo "Running kiosk setup script..."
+    bash /boot/firmware/firstrun.sh
+fi
+
+exit 0
+FIRSTBOOT_WRAPPER
+
+    chmod +x "$boot_mount/os_customisations/firstboot.sh"
 
     echo -e "${GREEN}✓ Raspberry Pi OS automation configured${NC}"
-    echo -e "${GREEN}✓ First-boot script will run automatically${NC}"
+    echo -e "${GREEN}✓ First-boot script will run automatically via custom.toml${NC}"
 }
 
 # Main function (similar structure to DietPi version)
