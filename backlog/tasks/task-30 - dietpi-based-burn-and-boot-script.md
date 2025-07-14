@@ -32,7 +32,7 @@ configuration and software installed, which (after some initial installation and
 reboots) always boots into a full-screen Chromium kiosk-mode window with the
 (script provided) kiosk URL.
 
-## Testing 4K Display Support
+## Appendix: testing 4K Display Support
 
 ### Prerequisites
 
@@ -44,6 +44,7 @@ reboots) always boots into a full-screen Chromium kiosk-mode window with the
 ### Initial Setup Verification
 
 1. **Flash the SD card** with the script:
+
    ```bash
    ./pi-setup.sh \
      --wifi-ssid "YourNetwork" \
@@ -51,7 +52,7 @@ reboots) always boots into a full-screen Chromium kiosk-mode window with the
      --tailscale-authkey "tskey-auth-xxxxx" \
      --url "https://webglsamples.org/aquarium/aquarium.html"
    ```
-   
+
    Note: The WebGL aquarium is a good test for GPU acceleration.
 
 2. **Connect the Pi**:
@@ -89,6 +90,7 @@ glxinfo -B | grep -E "OpenGL|renderer"
 #### 2. Verify Resolution
 
 The output from `wlr-randr` should show something like:
+
 ```
 HDMI-A-1
   Enabled: yes
@@ -127,11 +129,13 @@ The WebGL aquarium should run smoothly at 4K resolution. You can also test with:
 #### 5. Common Issues and Solutions
 
 **Display shows lower resolution than 4K:**
+
 - Check HDMI cable quality (must support HDMI 2.1)
 - Try the other HDMI port on the Pi 5
 - Verify display supports 4K@60Hz
 
 **Choppy performance:**
+
 ```bash
 # Check if performance governor is active
 cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
@@ -143,6 +147,7 @@ vcgencmd get_mem gpu
 ```
 
 **Black screen or no display:**
+
 ```bash
 # Check Wayfire service status
 sudo systemctl status wayfire
@@ -161,11 +166,13 @@ sudo systemctl restart wayfire
 If auto-detection fails, you can force 4K resolution:
 
 1. Edit Wayfire config:
+
    ```bash
    sudo nano /home/dietpi/.config/wayfire.ini
    ```
 
 2. Update the output section:
+
    ```ini
    [output:HDMI-A-1]
    mode = 3840x2160@60.000
@@ -202,6 +209,7 @@ For optimal 4K performance:
 If 4K display is not working properly:
 
 1. Collect diagnostic info:
+
    ```bash
    sudo /usr/local/bin/verify-display.sh > display-debug.log 2>&1
    sudo journalctl -u wayfire -n 500 > wayfire.log
@@ -209,6 +217,7 @@ If 4K display is not working properly:
    ```
 
 2. Check for known issues:
+
    - DietPi forums: https://dietpi.com/forum/
    - Wayfire issues: https://github.com/WayfireWM/wayfire/issues
 
