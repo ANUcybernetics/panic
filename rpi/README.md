@@ -1,361 +1,231 @@
 # Raspberry Pi Kiosk Setup
 
-This directory contains scripts to set up Raspberry Pi devices as browser kiosks
-using DietPi OS. The kiosks boot directly into fullscreen Chromium displaying a
-specified URL.
+This directory contains a script to set up Raspberry Pi devices as browser kiosks that boot directly into fullscreen Chromium displaying a specified URL.
 
-## Quick Start
+## Overview
 
-1. Insert an SD card into your Mac's built-in SD card reader
-2. Run the automated setup script:
-
-```bash
-./pi-setup.sh --url "https://example.com" --wifi-ssid "YourNetwork" --wifi-password "YourPassword" --hostname "kiosk1"
-```
-
-3. Insert the SD card into your Pi and power on
-4. Wait ~10-15 minutes for initial setup (first boot takes longer)
-5. The Pi will boot directly into kiosk mode at full screen resolution
-
-## Why DietPi?
-
-We use DietPi instead of Raspberry Pi OS because:
-
-- **Fully automated setup** - No first-boot configuration wizards
-- **Minimal footprint** - ~400MB vs 5GB for Raspberry Pi OS
-- **Faster boot times** - Optimized for single-purpose use
-- **Better automation** - Built-in support for unattended installation
-
-## Features
-
-- ✅ Fully automated setup via SD card
-- ✅ Boots directly to kiosk mode (no desktop visible)
-- ✅ Auto-detects native display resolution (including 4K/UHD)
-- ✅ Supports both regular and enterprise WiFi
-- ✅ SSH server pre-installed for remote access
-- ✅ Tailscale integration for secure remote access
-- ✅ Mouse cursor auto-hide with unclutter
-- ✅ Screen blanking disabled
-- ✅ Easy URL changes with `kiosk-url` command
-- ✅ Comprehensive kiosk flags (no pinch, no navigation, etc.)
-- ✅ Cached image downloads for faster subsequent setups
-- ✅ Optimized for high-resolution displays (4K/UHD)
+The `pi-setup.sh` script creates a fully automated DietPi installation that:
+- Boots directly into GPU-accelerated kiosk mode using Wayfire/Wayland
+- Automatically joins your Tailscale network (no manual IP discovery needed)
+- Supports native display resolutions including 4K at 60Hz
+- Configures WiFi for subsequent use after initial Ethernet setup
+- Hides the mouse cursor and provides a clean kiosk experience
 
 ## How It Works
 
-The `pi-setup.sh` script provides a fully automated workflow:
+DietPi provides a reliable firstboot automation mechanism through `AUTO_SETUP_CUSTOM_SCRIPT_EXEC`:
 
-1. **Downloads DietPi image** (with caching for faster subsequent runs)
-2. **Writes image to SD card**
-3. **Configures unattended installation** via DietPi's automation system
-4. **Sets up WiFi** (including enterprise WPA2-EAP)
-5. **Configures kiosk mode** with Chromium
+1. **SD Card Preparation**:
+   - Flashes DietPi image (lighter weight than Raspberry Pi OS)
+   - Creates `dietpi.txt` with automation settings
+   - Configures WiFi credentials for later use
+   - Places custom script that runs automatically on first boot
 
-The automation uses DietPi's built-in features:
+2. **Automatic First Boot** (no manual intervention):
+   - DietPi runs the custom script without any user interaction
+   - Installs and configures Tailscale with your auth key
+   - Sets up Wayfire compositor for GPU-accelerated Wayland
+   - Configures Chromium in kiosk mode with native resolution support
+   - Reboots into kiosk mode showing your URL
 
-- **dietpi.txt** - Main automation config that specifies software to install,
-  network settings, locale/timezone, and auto-login
-- **dietpi-wifi.txt** - WiFi configuration including enterprise support
-- **Automation_Custom_Script.sh** - Post-install script that configures Chromium
-  kiosk mode
+## Prerequisites
 
-## Script Options
+1. **Initial setup requires Ethernet connection**
+   - The first boot must happen with Ethernet connected
+   - WiFi is configured during first boot for subsequent use
+   - After initial setup, the Pi can run on WiFi alone
 
-### `pi-setup.sh`
-
-**Options:**
-
-- `--url <url>` - The URL to display in kiosk mode (required)
-- `--wifi-ssid <ssid>` - WiFi network name
-- `--wifi-password <pass>` - WiFi password (for WPA2-PSK)
-- `--wifi-enterprise-user <user>` - Enterprise WiFi username
-- `--wifi-enterprise-pass <pass>` - Enterprise WiFi password
-- `--hostname <name>` - Device hostname (default: DietPi)
-- `--password <pass>` - Password for dietpi user (default: dietpi)
-- `--tailscale-authkey <key>` - Tailscale auth key for automatic network join
-- `--list-cache` - Show cached images
-- `--clear-cache` - Clear cached images
-
-### Configuration Examples
-
-**Regular home/office WiFi:**
+2. **Install required tools on your Mac:**
 
 ```bash
-./pi-setup.sh \
-  --url "https://panic.fly.dev" \
-  --wifi-ssid "MyNetwork" \
-  --wifi-password "MyPassword" \
-  --hostname "panic-kiosk"
+# Install jq for JSON handling
+brew install jq
+
+# Install pv for progress display
+brew install pv
 ```
 
-**Enterprise WiFi (WPA2-EAP/PEAP):**
+3. **Get a Tailscale auth key:**
+   - Visit https://login.tailscale.com/admin/settings/keys
+   - Generate a reusable auth key
+   - Enable "Pre-authorized" for automatic approval
+
+## Setting Up a Kiosk
+
+### Basic Setup
+
+For a kiosk that automatically joins Tailscale:
+
+```bash
+# Flash the SD card
+./pi-setup.sh \
+  --wifi-ssid "YourNetwork" \
+  --wifi-password "YourPassword" \
+  --tailscale-authkey "tskey-auth-xxxxx" \
+  --url "https://panic.fly.dev/"
+
+# Insert SD card into Pi (with Ethernet) and power on
+# Wait 5-10 minutes for automatic setup
+
+# Verify it joined Tailscale
+tailscale status | grep panic-rpi
+
+# That's it! The Pi is now showing your URL in kiosk mode
+```
+
+### Enterprise WiFi Setup
+
+For networks with enterprise authentication:
 
 ```bash
 ./pi-setup.sh \
-  --url "https://panic.fly.dev/display/1" \
   --wifi-ssid "CorpNetwork" \
   --wifi-enterprise-user "username@domain.com" \
   --wifi-enterprise-pass "password" \
-  --hostname "display1"
+  --tailscale-authkey "tskey-auth-xxxxx" \
+  --url "https://example.com/"
 ```
 
-**Ethernet Only:**
+### Custom Configuration
+
+All options:
 
 ```bash
 ./pi-setup.sh \
-  --url "https://example.com" \
-  --hostname "wired-kiosk"
+  --url "https://example.com/"          # URL to display
+  --hostname "my-kiosk"                  # Hostname (default: panic-rpi)
+  --username "admin"                     # Username (default: dietpi)
+  --password "securepass"                # Password (default: dietpi)
+  --wifi-ssid "Network"                  # WiFi network name
+  --wifi-password "pass"                 # WiFi password
+  --tailscale-authkey "tskey-..."       # Tailscale auth key
+  --ssh-key ~/.ssh/id_rsa.pub          # SSH public key for access
 ```
 
-**Multiple Displays:**
+## Setting Up Multiple Kiosks
 
-```bash
-for i in {1..5}; do
-  ./pi-setup.sh \
-    --url "https://panic.fly.dev/i/$i/grid" \
-    --hostname "panic$i" \
-    --wifi-ssid "ANU-Secure" \
-    --wifi-enterprise-user "SOCY2" \
-    --wifi-enterprise-pass "pass"
-done
-```
+For multiple Pis with different configurations:
 
-**With Tailscale for Remote Access:**
-
-```bash
-./pi-setup.sh \
-  --url "https://panic.fly.dev" \
-  --wifi-ssid "MyNetwork" \
-  --wifi-password "MyPassword" \
-  --hostname "panic-kiosk" \
-  --tailscale-authkey "tskey-auth-xxxxx"
-```
-
-## SSH Access
-
-SSH server (OpenSSH) is automatically installed on all kiosks for remote
-management.
-
-### Tailscale SSH Access (Recommended)
-
-If you provided a Tailscale auth key during setup, you can SSH into the Pi from
-anywhere on your tailnet:
-
-```bash
-# SSH from anywhere on your tailnet
-ssh dietpi@<hostname>
-
-# No port forwarding or VPN required!
-```
-
-**Important:** You must configure Tailscale ACLs to allow SSH access:
-
-1. Visit https://login.tailscale.com/admin/acls
-2. Add SSH rules to your policy:
+1. **Create a device list** (`devices.json`):
 
 ```json
-{
-  "acls": [
-    // ... existing rules ...
-  ],
-  "ssh": [
-    {
-      "action": "accept",
-      "src": ["your-email@domain.com"],
-      "dst": ["tag:your-tag"], // or specific hostnames
-      "users": ["dietpi", "root"]
-    }
-  ]
-}
+[
+  {
+    "hostname": "panic-display-1",
+    "url": "https://panic.fly.dev/installations/display-1"
+  },
+  {
+    "hostname": "panic-display-2",
+    "url": "https://panic.fly.dev/installations/display-2"
+  },
+  {
+    "hostname": "panic-kiosk-lobby",
+    "url": "https://example.com/lobby-dashboard"
+  }
+]
 ```
 
-### Local Network Access
+2. **Deploy each device**:
 
-Without Tailscale, use standard SSH with password authentication:
+For each device in your list:
+- Run `pi-setup.sh` with the specific hostname and URL
+- Flash SD card, insert into Pi, and power on
+- Each Pi will automatically join your Tailscale network
 
-```bash
-# Using the IP address
-ssh dietpi@<ip-address>
+## Remote Management
 
-# Or using mDNS hostname (may require .local suffix)
-ssh dietpi@<hostname>.local
-
-# Default password: dietpi (or what you specified with --password)
-```
-
-### Getting a Tailscale Auth Key
-
-1. Visit https://login.tailscale.com/admin/settings/keys
-2. Generate an auth key (use reusable + pre-authorized for multiple devices)
-3. Optionally tag devices for easier ACL management
-4. Use the key with `--tailscale-authkey` during setup
-
-Benefits of Tailscale:
-
-- Access your Pi from anywhere without port forwarding
-- Automatic encrypted connections
-- Works behind NAT/firewalls
-- No manual VPN configuration needed
-- Centralized access control via ACLs
-
-## Maintenance
-
-### Updating the Display URL
-
-The easiest way to change the kiosk URL is using the built-in `kiosk-url`
-command:
+Once deployed, manage your kiosks via Tailscale:
 
 ```bash
-# Check current URL
-ssh dietpi@<hostname> kiosk-url
+# SSH into any kiosk
+tailscale ssh dietpi@panic-rpi
 
-# Change to a new URL
-ssh dietpi@<hostname> kiosk-url https://new-url.com
+# Change the displayed URL
+echo "https://new-url.com" | sudo tee /boot/firmware/SOFTWARE_CHROMIUM_AUTOSTART_URL
+sudo systemctl restart wayfire
 
-# Or interactively after SSH:
-ssh dietpi@<hostname>
-kiosk-url https://new-url.com
-```
+# View kiosk logs
+sudo journalctl -u wayfire -f
 
-The URL change takes effect immediately - no reboot required!
-
-### Viewing Logs
-
-```bash
-# System logs
-sudo journalctl -f
-
-# Chromium/kiosk specific logs
-sudo journalctl -u getty@tty1 -f
-
-# DietPi automation logs (useful for troubleshooting setup)
-cat /var/tmp/dietpi/logs/dietpi-automation_custom_script.log
-```
-
-### Manual Control
-
-```bash
-# Restart kiosk (chromium)
-sudo systemctl restart getty@tty1
-
-# Stop kiosk temporarily
-sudo killall chromium
-
-# View kiosk service status
-sudo systemctl status getty@tty1
-
-# Reboot the Pi
+# Reboot a kiosk
 sudo reboot
+
+# Check all your kiosks
+tailscale status | grep panic
 ```
-
-### Monitoring Setup Progress
-
-To watch the initial setup progress:
-
-1. Connect Pi to screen during first boot
-2. You'll see DietPi's automation progress
-3. Or SSH in after ~5 minutes and check logs: `sudo journalctl -f`
 
 ## Troubleshooting
 
-### SD Card Not Found
+**Pi doesn't join Tailscale network:**
+- Verify the Pi has Ethernet connectivity during first boot
+- Check if Tailscale auth key is still valid
+- Connect a monitor to see boot messages
 
-- Ensure SD card is inserted in Mac's built-in SD card reader
-- Script automatically finds the SD card reader (no longer hardcoded)
-- Check with `diskutil list` to see all disks
-- Look for "Built In SDXC Reader" in disk info
+**Display issues:**
+- Wayfire automatically detects and uses native resolution
+- For 4K displays, ensure HDMI cable supports 4K@60Hz
+- Check logs: `sudo journalctl -u wayfire -n 50`
 
-### Black Screen / No Display
+**Wrong URL displayed:**
+- Check current URL: `grep SOFTWARE_CHROMIUM_AUTOSTART_URL /boot/firmware/dietpi.txt`
+- Update URL and restart: `sudo systemctl restart wayfire`
 
-- Check if Chromium is running: `ps aux | grep chromium`
-- Check current resolution: `ps aux | grep -oE "window-size=[0-9]+,[0-9]+"`
-- Verify URL is accessible: `curl -I <your-url>`
-- View logs: `sudo journalctl -u getty@tty1 -n 50`
+**Can't SSH to Pi:**
+- Ensure Pi is on Tailscale: `tailscale status | grep <hostname>`
+- Try direct SSH if on same network: `ssh dietpi@<pi-ip>`
 
-### Wrong Resolution / 4K Display Issues
-
-- The script auto-detects native resolution with improved 4K support
-- Check detected resolution in process list: `ps aux | grep window-size`
-- Check logs: `cat /var/log/chromium-kiosk.log`
-- For 4K displays, the script automatically:
-  - Increases GPU memory to 256MB
-  - Adds optimization flags for high-resolution rendering
-  - Retries resolution detection multiple times
-- Force a specific resolution by editing `/boot/dietpi.txt`:
-  ```bash
-  SOFTWARE_CHROMIUM_RES_X=3840
-  SOFTWARE_CHROMIUM_RES_Y=2160
-  ```
-- Then restart: `sudo systemctl restart getty@tty1`
-- If display goes black on 4K:
-  - SSH into the Pi and check `xrandr` output
-  - Look for HDMI negotiation issues in `dmesg | grep -i hdmi`
-
-### Mouse Cursor Visible
-
-- Check if unclutter is running: `ps aux | grep unclutter`
-- Manually hide cursor: `DISPLAY=:0 unclutter -idle 0.1 -root &`
-
-### WiFi Not Connecting
-
-- Check WiFi config: `sudo nano /boot/dietpi-wifi.txt`
-- For enterprise WiFi, verify all PEAP settings are correct
-- View network status: `ip addr` and `iwconfig`
-- Check logs: `sudo journalctl -u networking -n 50`
-
-### SSH Access Issues
-
-- Verify SSH is running: `sudo systemctl status ssh`
-- For Tailscale SSH, check ACL configuration
-- For local SSH, ensure you're on the same network
-- Default credentials: username `dietpi`, password as set during setup
-
-### Kiosk Not Starting After Boot
-
-- Check service status: `sudo systemctl status getty@tty1`
-- Verify autostart mode: `cat /boot/dietpi/.dietpi-autostart_index` (should
-  be 11)
-- Check if X server started: `ps aux | grep xinit`
-- Verify Chromium installed: `which chromium`
-
-## Advanced Usage
-
-### Custom DietPi Configuration
-
-Edit the `dietpi.txt` section in the script to customize:
-
-- Different software packages
-- Alternative desktop environments
-- Network settings
-- Performance tuning
-
-## Cache Management
-
-The script caches downloaded images for 30 days:
+## Script Reference
 
 ```bash
-# List cached images
-./pi-setup.sh --list-cache
+./pi-setup.sh [OPTIONS]
 
-# Clear cache
-./pi-setup.sh --clear-cache
+Configuration Options:
+    --url <url>                  URL to display in kiosk mode (default: https://panic.fly.dev/)
+    --hostname <name>            Hostname for the Raspberry Pi (default: panic-rpi)
+    --username <user>            Username for the admin account (default: dietpi)
+    --password <pass>            Password for the admin account (default: dietpi)
+
+Network Options (at least one required):
+    --wifi-ssid <ssid>           WiFi network name
+    --wifi-password <pass>       WiFi password (for WPA2-PSK networks)
+    --wifi-enterprise-user <u>   Enterprise WiFi username
+    --wifi-enterprise-pass <p>   Enterprise WiFi password
+    --tailscale-authkey <key>    Tailscale auth key for automatic join
+
+Optional:
+    --ssh-key <path>             Path to SSH public key
+    --test                       Test mode - skip actual SD card write
 ```
 
-Images are stored in `~/.cache/dietpi-images/`
+## Technical Details
 
-## Security Notes
+### Why DietPi?
 
-- Default user is `dietpi` (not changeable via automation)
-- Set a strong password with `--password`
-- With Tailscale, SSH is secured through the tailnet
-- Without Tailscale, password authentication is used
+- **Lighter weight**: Minimal Debian-based OS optimized for SBCs
+- **Reliable automation**: `AUTO_SETUP_CUSTOM_SCRIPT_EXEC` runs consistently
+- **Faster boot**: Less overhead than full Raspberry Pi OS
+- **Better for kiosks**: Designed for headless and automated deployments
+
+### Why Wayfire/Wayland?
+
+- **Native GPU acceleration**: Full hardware acceleration for smooth performance
+- **Better 4K support**: Handles high resolutions without X11 limitations
+- **Modern stack**: Future-proof compared to X11
+- **Auto-detection**: Automatically uses optimal display settings
+
+### Security Notes
+
+- Default credentials: `dietpi` / `dietpi` (change in production!)
+- Tailscale provides encrypted remote access
+- Consider using SSH keys instead of passwords
+- Kiosks run with minimal privileges
 - DietPi includes automatic security updates
 
-## Hardware Requirements
+### Hardware Requirements
 
-- Raspberry Pi 3, 4, or 5
-- 8GB+ SD card
-- Stable power supply
+- Raspberry Pi 3, 4, 5, or Zero 2 W
+- 8GB+ SD card (16GB recommended)
+- Stable power supply (official Pi power supply recommended)
 - HDMI display
-- Network connection (WiFi or Ethernet)
-- macOS with SD card reader (for running the setup script)
+- Ethernet connection for initial setup
+- WiFi for subsequent operation (optional)
