@@ -221,7 +221,16 @@ create_firstrun_script() {
 #!/bin/bash
 # First-run script for Raspberry Pi OS kiosk setup
 
-set -e
+# Don't exit on error - we want to complete as much as possible
+set +e
+
+# Log everything
+exec > >(tee -a /var/log/firstrun.log)
+exec 2>&1
+
+echo "========================================="
+echo "Starting firstrun script at $(date)"
+echo "========================================="
 
 # Configuration passed as base64-encoded JSON
 CONFIG_B64="__CONFIG_B64__"
@@ -229,8 +238,11 @@ CONFIG_JSON=$(echo "$CONFIG_B64" | base64 -d)
 
 # Install jq for JSON parsing
 echo "Installing jq for configuration parsing..."
-apt-get update
-apt-get install -y jq
+apt-get update || echo "Warning: apt-get update failed"
+apt-get install -y jq || {
+    echo "Error: Failed to install jq, trying without it"
+    # Fallback to basic parsing if jq fails
+}
 
 # Parse configuration with error handling
 if ! HOSTNAME=$(echo "$CONFIG_JSON" | jq -r '.hostname'); then
@@ -269,7 +281,13 @@ systemctl enable systemd-networkd-wait-online.service
 
 # Install required packages
 echo "Installing required packages..."
-apt-get install -y chromium-browser unclutter wayfire wlr-randr
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    chromium-browser unclutter wayfire wlr-randr || {
+    echo "Error: Failed to install some packages, retrying..."
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        chromium-browser unclutter wayfire wlr-randr
+}
 
 # Install and configure Tailscale if auth key provided
 if [ -n "$TAILSCALE_AUTHKEY" ]; then
@@ -536,10 +554,21 @@ chown -R $USERNAME:$USERNAME /home/$USERNAME/.config
 # No need for bash_profile auto-start with systemd service approach
 
 # Enable services
-systemctl enable wayfire.service
-systemctl enable kiosk.service
-systemctl enable kiosk-recovery.service
-systemctl set-default graphical.target
+echo "Enabling systemd services..."
+systemctl enable wayfire.service || echo "Warning: Failed to enable wayfire.service"
+systemctl enable kiosk.service || echo "Warning: Failed to enable kiosk.service"
+systemctl enable kiosk-recovery.service || echo "Warning: Failed to enable kiosk-recovery.service"
+systemctl set-default graphical.target || echo "Warning: Failed to set graphical.target"
+
+# Verify services were created
+echo "Verifying services..."
+for service in wayfire kiosk kiosk-recovery; do
+    if systemctl list-unit-files | grep -q "^${service}.service"; then
+        echo "✓ ${service}.service created successfully"
+    else
+        echo "✗ ${service}.service NOT FOUND!"
+    fi
+done
 
 # Enable linger for the user to allow user services
 loginctl enable-linger $USERNAME
@@ -644,12 +673,24 @@ systemctl enable kiosk-health.timer
 # Store the URL (using printf to avoid echo interpreting escapes)
 printf '%s\n' "$URL" > /boot/firmware/kiosk_url.txt
 
-# Clean up
+# Clean up the firstrun script to prevent re-runs
 rm -f /boot/firmware/firstrun.sh
 
+# Remove our systemd.run from cmdline.txt to prevent re-runs
+if [ -f /boot/firmware/cmdline.txt.bak ]; then
+    cp /boot/firmware/cmdline.txt.bak /boot/firmware/cmdline.txt
+    rm -f /boot/firmware/cmdline.txt.bak
+fi
+
+# Final status
+echo "========================================="
+echo "Firstrun script completed at $(date)"
+echo "========================================="
+
 # Reboot into kiosk mode
-echo "Setup complete! Rebooting into kiosk mode..."
-sleep 3
+echo "Setup complete! Rebooting into kiosk mode in 10 seconds..."
+echo "Check /var/log/firstrun.log for details"
+sleep 10
 reboot
 FIRSTRUN_SCRIPT
 }
@@ -670,8 +711,11 @@ configure_raspi_os() {
 
     echo -e "${YELLOW}Configuring Raspberry Pi OS...${NC}"
 
-    # Note: SSH enabling and user account are now handled by custom.toml
-    # But we'll keep userconf.txt for the password since custom.toml doesn't support password setting
+    # Enable SSH - this is still needed!
+    touch "$boot_mount/ssh"
+    echo -e "${GREEN}✓ SSH enabled${NC}"
+
+    # Set up user account (userconf.txt)
     local password_hash=$(generate_password_hash "$password")
     echo "${username}:${password_hash}" > "$boot_mount/userconf.txt"
     echo -e "${GREEN}✓ User account configured${NC}"
@@ -750,60 +794,20 @@ EOF
         '{hostname: $hostname, username: $username, url: $url, tailscale_authkey: $tailscale, ssh_key: $ssh_key}')
 
     # Create the first-run script with embedded JSON configuration
-    create_firstrun_script "$config_json" > "$boot_mount/firstrun_custom.sh"
-    chmod +x "$boot_mount/firstrun_custom.sh"
+    create_firstrun_script "$config_json" > "$boot_mount/firstrun.sh"
+    chmod +x "$boot_mount/firstrun.sh"
 
-    # For Raspberry Pi OS Bookworm, we use the custom.toml approach
-    # This is processed by the imager_custom script on first boot
-    cat > "$boot_mount/custom.toml" << EOF
-# Raspberry Pi Imager custom settings
-[all]
-
-[all.os]
-hostname = "$hostname"
-
-[all.os.ssh]
-enabled = true
-EOF
-
-    # Add SSH key if provided
-    if [ -f "$ssh_key_file" ]; then
-        echo "authorized_keys = [" >> "$boot_mount/custom.toml"
-        echo "  \"$(cat "$ssh_key_file")\"" >> "$boot_mount/custom.toml"
-        echo "]" >> "$boot_mount/custom.toml"
-    fi
-
-    # Create a run-once script that will be executed by the firstboot service
-    # We need to ensure our custom script runs after the system is fully set up
-    cat > "$boot_mount/run-once.sh" << 'RUN_ONCE_HEADER'
-#!/bin/bash
-# This script runs once on first boot to set up the kiosk
-
-set -e
-
-# Wait for network to be ready
-sleep 10
-
-# Run our custom setup if it exists
-if [ -f /boot/firmware/firstrun_custom.sh ]; then
-    echo "Running custom kiosk setup..."
-    bash /boot/firmware/firstrun_custom.sh 2>&1 | tee /var/log/kiosk-setup.log
-    
-    # Clean up
-    rm -f /boot/firmware/firstrun_custom.sh
-    rm -f /boot/firmware/run-once.sh
-fi
-RUN_ONCE_HEADER
-
-    chmod +x "$boot_mount/run-once.sh"
-
-    # Add a call to our run-once script in cmdline.txt
-    # This uses the init_resize.sh hook that Raspberry Pi OS provides
+    # The most reliable way: modify cmdline.txt to run our script
+    # Raspberry Pi OS will execute this on first boot
     cp "$boot_mount/cmdline.txt" "$boot_mount/cmdline.txt.bak"
-    echo -n " init=/usr/lib/raspberrypi-sys-mods/firstboot systemd.run=/boot/firmware/run-once.sh systemd.run_success_action=none" >> "$boot_mount/cmdline.txt"
+    
+    # Add quiet to suppress boot messages and add our firstrun script
+    sed -i 's/ quiet / /g' "$boot_mount/cmdline.txt"
+    sed -i 's/ splash / /g' "$boot_mount/cmdline.txt"
+    echo -n " quiet init=/usr/lib/raspberrypi-sys-mods/firstboot systemd.run=/boot/firmware/firstrun.sh systemd.run_success_action=reboot" >> "$boot_mount/cmdline.txt"
 
     echo -e "${GREEN}✓ Raspberry Pi OS automation configured${NC}"
-    echo -e "${GREEN}✓ Custom.toml and run-once script created${NC}"
+    echo -e "${GREEN}✓ First-boot script will run automatically${NC}"
 }
 
 # Main function (similar structure to DietPi version)
