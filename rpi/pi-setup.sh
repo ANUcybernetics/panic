@@ -670,11 +670,8 @@ configure_raspi_os() {
 
     echo -e "${YELLOW}Configuring Raspberry Pi OS...${NC}"
 
-    # Enable SSH
-    touch "$boot_mount/ssh"
-    echo -e "${GREEN}✓ SSH enabled${NC}"
-
-    # Set up user account (userconf.txt)
+    # Note: SSH enabling and user account are now handled by custom.toml
+    # But we'll keep userconf.txt for the password since custom.toml doesn't support password setting
     local password_hash=$(generate_password_hash "$password")
     echo "${username}:${password_hash}" > "$boot_mount/userconf.txt"
     echo -e "${GREEN}✓ User account configured${NC}"
@@ -753,47 +750,60 @@ EOF
         '{hostname: $hostname, username: $username, url: $url, tailscale_authkey: $tailscale, ssh_key: $ssh_key}')
 
     # Create the first-run script with embedded JSON configuration
-    create_firstrun_script "$config_json" > "$boot_mount/firstrun.sh"
-    chmod +x "$boot_mount/firstrun.sh"
-
-    # Raspberry Pi OS expects firstrun.sh in the root of boot partition
-    # and it must follow specific conventions
-    mv "$boot_mount/firstrun.sh" "$boot_mount/firstrun_custom.sh"
+    create_firstrun_script "$config_json" > "$boot_mount/firstrun_custom.sh"
     chmod +x "$boot_mount/firstrun_custom.sh"
 
-    # Create the official firstrun.sh that Raspberry Pi OS will execute
-    cat > "$boot_mount/firstrun.sh" << 'OFFICIAL_FIRSTRUN'
+    # For Raspberry Pi OS Bookworm, we use the custom.toml approach
+    # This is processed by the imager_custom script on first boot
+    cat > "$boot_mount/custom.toml" << EOF
+# Raspberry Pi Imager custom settings
+[all]
+
+[all.os]
+hostname = "$hostname"
+
+[all.os.ssh]
+enabled = true
+EOF
+
+    # Add SSH key if provided
+    if [ -f "$ssh_key_file" ]; then
+        echo "authorized_keys = [" >> "$boot_mount/custom.toml"
+        echo "  \"$(cat "$ssh_key_file")\"" >> "$boot_mount/custom.toml"
+        echo "]" >> "$boot_mount/custom.toml"
+    fi
+
+    # Create a run-once script that will be executed by the firstboot service
+    # We need to ensure our custom script runs after the system is fully set up
+    cat > "$boot_mount/run-once.sh" << 'RUN_ONCE_HEADER'
 #!/bin/bash
+# This script runs once on first boot to set up the kiosk
 
-set +e
+set -e
 
-# This script is executed by Raspberry Pi OS on first boot
-# It runs as root with the filesystem fully available
+# Wait for network to be ready
+sleep 10
 
-# Run our custom setup script
+# Run our custom setup if it exists
 if [ -f /boot/firmware/firstrun_custom.sh ]; then
-    echo "Running custom first boot setup..."
-    bash /boot/firmware/firstrun_custom.sh 2>&1 | tee /var/log/firstrun_custom.log
-
+    echo "Running custom kiosk setup..."
+    bash /boot/firmware/firstrun_custom.sh 2>&1 | tee /var/log/kiosk-setup.log
+    
     # Clean up
     rm -f /boot/firmware/firstrun_custom.sh
-    rm -f /boot/firmware/firstrun
+    rm -f /boot/firmware/run-once.sh
 fi
+RUN_ONCE_HEADER
 
-# Remove this script to prevent running again
-rm -f /boot/firmware/firstrun.sh
+    chmod +x "$boot_mount/run-once.sh"
 
-exit 0
-OFFICIAL_FIRSTRUN
-
-    chmod +x "$boot_mount/firstrun.sh"
-
-    # Also need to modify cmdline.txt to trigger firstrun
-    # Raspberry Pi OS looks for systemd.run_success_action=reboot systemd.run=/boot/firmware/firstrun.sh
+    # Add a call to our run-once script in cmdline.txt
+    # This uses the init_resize.sh hook that Raspberry Pi OS provides
     cp "$boot_mount/cmdline.txt" "$boot_mount/cmdline.txt.bak"
-    echo -n " systemd.run_success_action=reboot systemd.run=/boot/firmware/firstrun.sh" >> "$boot_mount/cmdline.txt"
+    echo -n " init=/usr/lib/raspberrypi-sys-mods/firstboot systemd.run=/boot/firmware/run-once.sh systemd.run_success_action=none" >> "$boot_mount/cmdline.txt"
 
     echo -e "${GREEN}✓ Raspberry Pi OS automation configured${NC}"
+    echo -e "${GREEN}✓ Custom.toml and run-once script created${NC}"
 }
 
 # Main function (similar structure to DietPi version)
@@ -1177,8 +1187,9 @@ EOF
     echo "1. Insert the SD card into your Raspberry Pi"
     echo "2. Power on the Pi"
     echo "3. Raspberry Pi OS will automatically:"
-    echo "   - Connect to WiFi (with systemd-networkd)"
-    echo "   - Run first-boot configuration"
+    echo "   - Process custom.toml for initial setup (hostname, SSH)"
+    echo "   - Connect to WiFi"
+    echo "   - Run kiosk setup script on first boot"
     echo "   - Install Chromium and Wayfire compositor"
     echo "   - Configure systemd services with:"
     echo "     • Automatic recovery on failure"
