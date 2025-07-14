@@ -58,6 +58,28 @@ check_required_tools() {
         echo "pv is needed for progress display during SD card writing."
         exit 1
     fi
+    
+    # Check network connectivity early
+    echo -e "${YELLOW}Checking network connectivity...${NC}"
+    if ! curl -s --head --connect-timeout 5 https://dietpi.com >/dev/null 2>&1; then
+        echo -e "${RED}Error: No internet connection${NC}"
+        echo "This script needs internet access to download the DietPi image"
+        echo "Please check your network connection and try again"
+        exit 1
+    fi
+    echo -e "${GREEN}✓ Network connectivity OK${NC}"
+    
+    # Check disk space for download and extraction
+    local required_gb=4  # DietPi image is ~2GB compressed, need space for extraction
+    local available_gb=$(df -g /tmp | awk 'NR==2 {print $4}')
+    
+    if [ "$available_gb" -lt "$required_gb" ]; then
+        echo -e "${RED}Error: Not enough disk space${NC}"
+        echo "Need at least ${required_gb}GB free in /tmp, but only ${available_gb}GB available"
+        echo "Please free up some disk space and try again"
+        exit 1
+    fi
+    echo -e "${GREEN}✓ Disk space OK (${available_gb}GB available)${NC}"
 }
 
 # Function to find SD card device
@@ -103,19 +125,9 @@ download_dietpi() {
 
     # Check if we have a cached version
     if [ -f "$cached_file" ]; then
-        echo -e "${GREEN}✓ Found cached image: $filename${NC}"
-        # Check if cached file is less than 30 days old
-        local file_age=$(($(date +%s) - $(stat -f %m "$cached_file")))
-        local thirty_days=$((30 * 24 * 60 * 60))
-
-        if [ $file_age -lt $thirty_days ]; then
-            echo -e "${GREEN}✓ Using cached image ($(($file_age / 86400)) days old)${NC}"
-            cp "$cached_file" "$output_file"
-            return 0
-        else
-            echo -e "${YELLOW}Cached image is older than 30 days, downloading fresh copy...${NC}"
-            rm -f "$cached_file"
-        fi
+        echo -e "${GREEN}✓ Using cached image: $filename${NC}"
+        cp "$cached_file" "$output_file"
+        return 0
     fi
 
     echo -e "${YELLOW}Downloading DietPi image...${NC}"
@@ -351,10 +363,12 @@ EOF
         echo -e "${GREEN}✓ Tailscale auth key configured${NC}"
     fi
 
-    # Add SSH key if provided
-    if [ -n "$ssh_key_file" ] && [ -f "$ssh_key_file" ]; then
+    # Add SSH key if provided and exists
+    if [ -f "$ssh_key_file" ]; then
         cp "$ssh_key_file" "$boot_mount/dietpi_userdata/authorized_keys"
         echo -e "${GREEN}✓ SSH key configured${NC}"
+    elif [ -n "$ssh_key_file" ]; then
+        echo -e "${YELLOW}⚠ SSH key file not found: $ssh_key_file${NC}"
     fi
 
     # Create custom automation script for kiosk setup
@@ -676,7 +690,7 @@ Configuration Options:
     --username <user>            Username for the admin account (default: dietpi)
     --password <pass>            Password for the admin account (default: dietpi)
 
-Network Options (at least one required):
+Network Options (optional):
     --wifi-ssid <ssid>           WiFi network name
     --wifi-password <pass>       WiFi password (for WPA2-PSK networks)
     --wifi-enterprise-user <u>   Enterprise WiFi username (use with --wifi-ssid)
@@ -684,7 +698,7 @@ Network Options (at least one required):
     --tailscale-authkey <key>    Tailscale auth key for automatic join
 
 Optional:
-    --ssh-key <path>             Path to SSH public key
+    --ssh-key <path>             Path to SSH public key (default: ~/.ssh/panic_rpi_ssh.pub)
     --test                       Test mode - skip actual SD card write
 
 Examples:
@@ -727,7 +741,7 @@ main() {
     local username="dietpi"
     local password="dietpi"
     local tailscale_authkey=""
-    local ssh_key_file=""
+    local ssh_key_file="$HOME/.ssh/panic_rpi_ssh.pub"
     local test_mode=false
 
     # Parse command line options
@@ -792,26 +806,44 @@ main() {
     # Validate required fields
     local errors=()
     
-    # Check that at least one network option is provided
-    if [ -z "$wifi_ssid" ] && [ -z "$tailscale_authkey" ]; then
-        errors+=("At least one network option is required (--wifi-ssid or --tailscale-authkey)")
-    fi
-    
     # If WiFi is specified, check for credentials
     if [ -n "$wifi_ssid" ]; then
+        # Check for problematic characters in WiFi credentials
+        if [[ "$wifi_ssid" =~ [\'\"] ]]; then
+            errors+=("WiFi SSID cannot contain quotes (single or double)")
+        fi
+        
         if [ -n "$wifi_enterprise_user" ] || [ -n "$wifi_enterprise_pass" ]; then
             # Enterprise WiFi - both user and pass required
             [ -z "$wifi_enterprise_user" ] && errors+=("--wifi-enterprise-user required when using enterprise WiFi")
             [ -z "$wifi_enterprise_pass" ] && errors+=("--wifi-enterprise-pass required when using enterprise WiFi")
+            
+            # Check for quotes in enterprise credentials
+            if [[ "$wifi_enterprise_user" =~ [\'\"] ]]; then
+                errors+=("WiFi enterprise username cannot contain quotes")
+            fi
+            if [[ "$wifi_enterprise_pass" =~ [\'\"] ]]; then
+                errors+=("WiFi enterprise password cannot contain quotes")
+            fi
         else
             # Regular WiFi - password required
             [ -z "$wifi_password" ] && errors+=("--wifi-password required for WPA2-PSK networks")
+            
+            # Check for quotes in password
+            if [[ "$wifi_password" =~ [\'\"] ]]; then
+                errors+=("WiFi password cannot contain quotes")
+            fi
         fi
     fi
     
-    # Validate SSH key file if provided
-    if [ -n "$ssh_key_file" ] && [ ! -f "$ssh_key_file" ]; then
+    # Validate SSH key file if provided (note: we always have a default now)
+    if [ -n "$ssh_key_file" ] && [ "$ssh_key_file" != "$HOME/.ssh/panic_rpi_ssh.pub" ] && [ ! -f "$ssh_key_file" ]; then
         errors+=("SSH key file not found: $ssh_key_file")
+    fi
+    
+    # Validate URL format
+    if ! [[ "$url" =~ ^https?:// ]]; then
+        errors+=("Invalid URL format: $url (must start with http:// or https://)")
     fi
     
     # Display errors if any
@@ -845,7 +877,7 @@ main() {
         echo "  WiFi: Not configured"
     fi
     echo "  Tailscale: $([ -n "$tailscale_authkey" ] && echo "Configured" || echo "Not configured")"
-    echo "  SSH Key: $([ -n "$ssh_key_file" ] && echo "$ssh_key_file" || echo "Not configured")"
+    echo "  SSH Key: $([ -f "$ssh_key_file" ] && echo "$ssh_key_file" || echo "Not configured")"
     echo "  Test Mode: $test_mode"
     echo ""
 
@@ -859,6 +891,20 @@ main() {
         if [ -z "$device" ]; then
             exit 1
         fi
+        
+        # Check SD card size
+        echo -e "${YELLOW}Checking SD card size...${NC}"
+        local min_size_gb=8
+        local size_bytes=$(diskutil info "$device" | grep "Disk Size:" | awk '{print $3}')
+        local size_gb=$((size_bytes / 1000000000))
+        
+        if [ "$size_gb" -lt "$min_size_gb" ]; then
+            echo -e "${RED}Error: SD card too small${NC}"
+            echo "Need at least ${min_size_gb}GB, but card is only ${size_gb}GB"
+            echo "Please use a larger SD card"
+            exit 1
+        fi
+        echo -e "${GREEN}✓ SD card size OK (${size_gb}GB)${NC}"
     fi
 
     # Confirm before proceeding
