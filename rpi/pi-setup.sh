@@ -689,6 +689,71 @@ EOF
 
 chmod +x /usr/local/bin/chromium-kiosk.sh
 
+# Create URL management script
+echo "Creating kiosk URL management script..."
+cat > /usr/local/bin/kiosk-set-url << 'EOF'
+#!/bin/bash
+# Script to update the kiosk URL without reflashing
+
+set -e
+
+# Check if URL was provided
+if [ $# -eq 0 ]; then
+    echo "Usage: kiosk-set-url <url>"
+    echo "Example: kiosk-set-url https://example.com"
+    echo ""
+    echo "Current URL:"
+    if [ -d "/boot/firmware" ]; then
+        grep "^SOFTWARE_CHROMIUM_AUTOSTART_URL=" /boot/firmware/dietpi.txt | cut -d= -f2
+    else
+        grep "^SOFTWARE_CHROMIUM_AUTOSTART_URL=" /boot/dietpi.txt | cut -d= -f2
+    fi
+    exit 1
+fi
+
+NEW_URL="$1"
+
+# Validate URL format
+if ! [[ "$NEW_URL" =~ ^https?:// ]]; then
+    echo "Error: Invalid URL format. URL must start with http:// or https://"
+    exit 1
+fi
+
+# Determine boot path
+if [ -d "/boot/firmware" ]; then
+    DIETPI_TXT="/boot/firmware/dietpi.txt"
+else
+    DIETPI_TXT="/boot/dietpi.txt"
+fi
+
+# Check if dietpi.txt exists
+if [ ! -f "$DIETPI_TXT" ]; then
+    echo "Error: $DIETPI_TXT not found"
+    exit 1
+fi
+
+# Backup the current dietpi.txt
+cp "$DIETPI_TXT" "${DIETPI_TXT}.bak.$(date +%Y%m%d_%H%M%S)"
+
+# Update the URL in dietpi.txt
+echo "Updating URL to: $NEW_URL"
+sed -i "s|^SOFTWARE_CHROMIUM_AUTOSTART_URL=.*|SOFTWARE_CHROMIUM_AUTOSTART_URL=$NEW_URL|" "$DIETPI_TXT"
+
+# Verify the change
+echo "Verification:"
+grep "^SOFTWARE_CHROMIUM_AUTOSTART_URL=" "$DIETPI_TXT"
+
+# Restart the kiosk service to apply changes
+echo "Restarting kiosk service..."
+systemctl restart cage-kiosk.service
+
+echo ""
+echo "✓ Kiosk URL updated successfully!"
+echo "The display should refresh with the new URL in a few seconds."
+EOF
+
+chmod +x /usr/local/bin/kiosk-set-url
+
 # Create Cage service for kiosk mode
 echo "Creating Cage systemd service..."
 cat > /etc/systemd/system/cage-kiosk.service << 'EOF'
