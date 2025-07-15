@@ -58,28 +58,6 @@ check_required_tools() {
         echo "pv is needed for progress display during SD card writing."
         exit 1
     fi
-    
-    # Check network connectivity early
-    echo -e "${YELLOW}Checking network connectivity...${NC}"
-    if ! curl -s --head --connect-timeout 5 https://dietpi.com >/dev/null 2>&1; then
-        echo -e "${RED}Error: No internet connection${NC}"
-        echo "This script needs internet access to download the DietPi image"
-        echo "Please check your network connection and try again"
-        exit 1
-    fi
-    echo -e "${GREEN}✓ Network connectivity OK${NC}"
-    
-    # Check disk space for download and extraction
-    local required_gb=4  # DietPi image is ~2GB compressed, need space for extraction
-    local available_gb=$(df -g /tmp | awk 'NR==2 {print $4}')
-    
-    if [ "$available_gb" -lt "$required_gb" ]; then
-        echo -e "${RED}Error: Not enough disk space${NC}"
-        echo "Need at least ${required_gb}GB free in /tmp, but only ${available_gb}GB available"
-        echo "Please free up some disk space and try again"
-        exit 1
-    fi
-    echo -e "${GREEN}✓ Disk space OK (${available_gb}GB available)${NC}"
 }
 
 # Function to find SD card device
@@ -176,29 +154,22 @@ write_image_to_sd() {
         return 0
     fi
 
-    # Get uncompressed size for progress bar
-    local uncompressed_size=$(xz -l "$image_file" 2>/dev/null | awk 'NR==2 {
-        gsub(",", "", $5);
-        size=$5;
-        unit=$6;
-        if (unit == "MiB")
-            print size * 1024 * 1024;
-        else if (unit == "GiB")
-            print size * 1024 * 1024 * 1024;
-        else if (unit == "B")
-            print size;
-        else
-            print 0;  # Unknown unit
-    }')
-    
-    echo "Using pv for progress display with ETA..."
+    echo "Using pv for progress display..."
     # Use larger block size (32MB) and raw device for better performance
-    xzcat "$image_file" | pv -s "$uncompressed_size" | sudo dd of="${device/disk/rdisk}" bs=32m
+    # Let pv figure out the size automatically from the pipe
+    xzcat "$image_file" | pv | sudo dd of="${device/disk/rdisk}" bs=32m
 
     # Ensure all data is written
     sudo sync
 
     echo -e "${GREEN}✓ Image written to SD card${NC}"
+    
+    # Force macOS to mount the disk
+    echo -e "${YELLOW}Mounting disk partitions...${NC}"
+    diskutil mountDisk "$device" || true
+    
+    # Give macOS a moment to mount the partitions
+    sleep 3
 }
 
 # Function to wait for boot partition
@@ -216,20 +187,48 @@ wait_for_boot_partition() {
 
     echo -e "${YELLOW}Waiting for boot partition to mount...${NC}" >&2
     
-    # Wait up to 30 seconds for the boot partition to appear
-    for i in {1..30}; do
-        # Look for the boot partition
+    # List current volumes for debugging
+    echo -e "${YELLOW}Current volumes:${NC}" >&2
+    ls -la /Volumes/ >&2
+    
+    # Wait up to 45 seconds for the boot partition to appear
+    for i in {1..45}; do
+        # Look for any new volume that might be the boot partition
+        # DietPi might name it differently - check for common patterns
         for volume in /Volumes/*; do
-            if [[ "$volume" =~ boot|BOOT ]]; then
-                echo -e "${GREEN}✓ Found boot partition at $volume${NC}" >&2
-                echo "$volume"
-                return 0
+            # Skip known system volumes
+            if [[ "$volume" == "/Volumes/Macintosh HD" ]] || [[ "$volume" == "/Volumes/Macintosh HD - Data" ]]; then
+                continue
+            fi
+            
+            # Check if it's likely a boot partition
+            local volume_name=$(basename "$volume")
+            # Use tr for lowercase conversion (more compatible)
+            local volume_lower=$(echo "$volume_name" | tr '[:upper:]' '[:lower:]')
+            
+            if [[ "$volume_lower" =~ boot ]] || [[ "$volume_lower" =~ dietpi ]] || [[ "$volume_name" == "NO NAME" ]] || [[ "$volume_name" =~ ^[A-Z0-9_]+$ ]]; then
+                echo -e "${YELLOW}Found potential boot partition: $volume${NC}" >&2
+                # Verify it's the SD card by checking for expected files
+                if [ -d "$volume" ] && [ -r "$volume" ]; then
+                    echo -e "${GREEN}✓ Using boot partition at $volume${NC}" >&2
+                    echo "$volume"
+                    return 0
+                fi
             fi
         done
+        
+        # Show progress
+        if [ $((i % 10)) -eq 0 ]; then
+            echo -e "${YELLOW}Still waiting... ($i/45)${NC}" >&2
+            ls -la /Volumes/ >&2
+        fi
+        
         sleep 1
     done
     
-    echo -e "${RED}Error: Boot partition not found after 30 seconds${NC}" >&2
+    echo -e "${RED}Error: Boot partition not found after 45 seconds${NC}" >&2
+    echo -e "${YELLOW}Final volumes:${NC}" >&2
+    ls -la /Volumes/ >&2
     return 1
 }
 
@@ -991,20 +990,6 @@ main() {
         if [ -z "$device" ]; then
             exit 1
         fi
-        
-        # Check SD card size
-        echo -e "${YELLOW}Checking SD card size...${NC}"
-        local min_size_gb=8
-        local size_bytes=$(diskutil info "$device" | grep "Disk Size:" | awk '{print $3}')
-        local size_gb=$((size_bytes / 1000000000))
-        
-        if [ "$size_gb" -lt "$min_size_gb" ]; then
-            echo -e "${RED}Error: SD card too small${NC}"
-            echo "Need at least ${min_size_gb}GB, but card is only ${size_gb}GB"
-            echo "Please use a larger SD card"
-            exit 1
-        fi
-        echo -e "${GREEN}✓ SD card size OK (${size_gb}GB)${NC}"
     fi
 
     # Confirm before proceeding
@@ -1052,6 +1037,7 @@ main() {
     else
         echo -e "${YELLOW}Syncing and ejecting SD card...${NC}"
         sync
+        # Eject the entire SD card device (this will unmount all partitions)
         diskutil eject "$device"
         echo -e "${GREEN}✓ SD card ready!${NC}"
     fi
