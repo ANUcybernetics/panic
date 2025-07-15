@@ -58,6 +58,17 @@ check_required_tools() {
         echo "pv is needed for progress display during SD card writing."
         exit 1
     fi
+
+    # Check for humanfriendly
+    if ! command -v humanfriendly >/dev/null 2>&1; then
+        echo -e "${RED}Error: humanfriendly is required but not installed${NC}"
+        echo
+        echo "Please install humanfriendly using uv:"
+        echo "  uv tool install --python 3.12 humanfriendly"
+        echo
+        echo "humanfriendly is needed to parse compressed image sizes for accurate progress display."
+        exit 1
+    fi
 }
 
 # Function to find SD card device
@@ -88,6 +99,33 @@ find_sd_card() {
     echo -e "${RED}Error: Built-in SD card reader not found${NC}" >&2
     echo -e "${YELLOW}Please ensure your Mac has a built-in SD card reader${NC}" >&2
     return 1
+}
+
+# Function to get uncompressed size of xz file in bytes
+get_uncompressed_size() {
+    local xz_file="$1"
+    
+    # Extract uncompressed size from xz -l output
+    # Format: "862.6 MiB" -> we need both number and unit
+    local size_str=$(xz -l "$xz_file" 2>/dev/null | grep -A 1 "Uncompressed" | tail -1 | awk '{print $5 $6}')
+    
+    if [ -z "$size_str" ]; then
+        echo -e "${YELLOW}Warning: Could not determine uncompressed size${NC}" >&2
+        echo "0"
+        return 1
+    fi
+    
+    # Convert human-readable size to bytes using humanfriendly
+    local size_bytes=$(humanfriendly --parse-size "$size_str" 2>/dev/null)
+    
+    if [ -z "$size_bytes" ] || [ "$size_bytes" = "0" ]; then
+        echo -e "${YELLOW}Warning: Could not parse size '$size_str'${NC}" >&2
+        echo "0"
+        return 1
+    fi
+    
+    echo "$size_bytes"
+    return 0
 }
 
 # Function to download DietPi image with caching
@@ -154,10 +192,20 @@ write_image_to_sd() {
         return 0
     fi
 
-    echo "Using pv for progress display..."
-    # Use larger block size (32MB) and raw device for better performance
-    # Let pv figure out the size automatically from the pipe
-    xzcat "$image_file" | pv | sudo dd of="${device/disk/rdisk}" bs=32m
+    # Get uncompressed size for accurate progress display
+    local uncompressed_size=$(get_uncompressed_size "$image_file")
+    
+    if [ "$uncompressed_size" != "0" ]; then
+        echo "Uncompressed image size: $(humanfriendly --format-size "$uncompressed_size")"
+        echo "Using pv for progress display with accurate ETA..."
+        # Use larger block size (32MB) and raw device for better performance
+        # Pass size to pv for accurate progress and ETA
+        xzcat "$image_file" | pv -s "$uncompressed_size" | sudo dd of="${device/disk/rdisk}" bs=32m
+    else
+        echo "Using pv for progress display (size unknown)..."
+        # Fall back to size-less progress display
+        xzcat "$image_file" | pv | sudo dd of="${device/disk/rdisk}" bs=32m
+    fi
 
     # Ensure all data is written
     sudo sync

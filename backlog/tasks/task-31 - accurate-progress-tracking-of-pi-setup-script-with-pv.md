@@ -1,7 +1,7 @@
 ---
 id: task-31
 title: accurate progress tracking of pi setup script with pv
-status: To Do
+status: In Progress
 assignee: []
 created_date: "2025-07-15"
 labels: []
