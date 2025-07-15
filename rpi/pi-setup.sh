@@ -9,6 +9,7 @@
 # - Consumer and enterprise WiFi configuration
 # - Automatic Tailscale network join
 # - Optimized for Raspberry Pi 5 with 8GB RAM
+# - Fixed GL implementation for better compatibility (angle/gles)
 #
 # Uses latest DietPi version
 
@@ -354,16 +355,10 @@ CONFIG_BLUETOOTH_DISABLE=1
 # Enable maximum performance mode for better GPU acceleration
 CONFIG_CPU_GOVERNOR=performance
 
-# HDMI settings for 4K support with auto-detection
-CONFIG_HDMI_GROUP=0
-# Mode 0 = auto-detect native resolution
-CONFIG_HDMI_MODE=0
-# Boost signal for 4K displays
-CONFIG_HDMI_BOOST=7
-
-# Enable HDMI audio
-CONFIG_HDMI_FORCE_HOTPLUG=1
-CONFIG_HDMI_DRIVE=2
+# HDMI settings for display support
+# Auto-detection works best - the system will detect both 1080p and 4K displays
+# GPU memory is set to 512MB to ensure 4K displays have enough resources
+# No forced HDMI modes - let the KMS driver handle native resolution detection
 
 # Custom script to run after installation
 AUTO_SETUP_CUSTOM_SCRIPT_EXEC=/boot/Automation_Custom_Script.sh
@@ -681,7 +676,8 @@ exec chromium-browser \
     --enable-zero-copy \
     --enable-hardware-overlays \
     --disable-features=UseChromeOSDirectVideoDecoder \
-    --use-gl=egl \
+    --use-gl=angle \
+    --use-angle=gles \
     --ignore-gpu-blocklist \
     --disable-gpu-driver-bug-workarounds \
     "$URL"
@@ -776,8 +772,8 @@ RuntimeDirectoryMode=0700
 Environment="XDG_RUNTIME_DIR=/run/user/1000"
 Environment="XDG_SESSION_TYPE=wayland"
 Environment="WLR_BACKEND=drm"
-# Allow both HDMI outputs to be detected - card1 handles display output on RPi5
-Environment="WLR_DRM_DEVICES=/dev/dri/card1"
+# Allow both HDMI outputs to be detected
+Environment="WLR_DRM_DEVICES=/dev/dri/card1:/dev/dri/card0"
 Environment="WLR_RENDERER=gles2"
 Environment="WLR_NO_HARDWARE_CURSORS=1"
 
