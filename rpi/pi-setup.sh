@@ -387,8 +387,9 @@ get_boot_path() {
 
 BOOT_PATH=$(get_boot_path)
 
-# Enable systemd network waiting service
-systemctl enable systemd-networkd-wait-online.service
+# Disable systemd-networkd-wait-online to prevent boot warnings
+# Our services have their own network checks, so this isn't needed
+systemctl disable systemd-networkd-wait-online.service
 
 # Create Tailscale setup script
 cat > /usr/local/bin/setup-tailscale.sh << 'EOF'
@@ -493,8 +494,36 @@ apt-get install -y \
 # Add dietpi user to necessary groups for GPU, TTY, and audio access
 usermod -a -G video,render,input,tty,audio dietpi
 
+# Enable lingering for dietpi user so user services start at boot
+loginctl enable-linger dietpi
+
+# Enable PulseAudio to start automatically for dietpi user
+mkdir -p /home/dietpi/.config/systemd/user
+cat > /home/dietpi/.config/systemd/user/pulseaudio.service << 'EOF'
+[Unit]
+Description=Sound Service
+
+[Service]
+Type=notify
+PrivateDevices=no
+MemoryDenyWriteExecute=yes
+UMask=0077
+ExecStart=/usr/bin/pulseaudio --daemonize=no --log-target=journal
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
+EOF
+
+# Fix ownership and enable PulseAudio for the dietpi user
+chown -R dietpi:dietpi /home/dietpi/.config
+sudo -u dietpi systemctl --user daemon-reload
+sudo -u dietpi systemctl --user enable pulseaudio.service
+sudo -u dietpi systemctl --user enable pulseaudio.socket
+
 # Configure PulseAudio for HDMI output
 echo "Configuring audio for HDMI output..."
+mkdir -p /etc/pulse/default.pa.d
 cat > /etc/pulse/default.pa.d/hdmi-audio.pa << 'EOF'
 # Set HDMI as default audio output
 load-module module-alsa-sink device=hdmi:CARD=vc4hdmi0,DEV=0 sink_name=hdmi0 sink_properties="device.description='HDMI-1'"
@@ -539,12 +568,13 @@ Wants=sound.target
 
 [Service]
 Type=oneshot
+ExecStartPre=/bin/bash -c 'until pgrep -x pulseaudio > /dev/null; do echo "Waiting for PulseAudio..."; sleep 1; done'
 ExecStart=/usr/local/bin/setup-hdmi-audio.sh
 User=dietpi
 RemainAfterExit=yes
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=graphical.target
 EOF
 
 systemctl enable hdmi-audio-setup.service
@@ -638,6 +668,8 @@ Environment="QT_QPA_PLATFORM=wayland"
 # Audio configuration for HDMI output
 Environment="PULSE_RUNTIME_PATH=/run/user/1000/pulse"
 
+# Ensure PulseAudio is available (it starts via socket activation)
+
 # Wait for GPU and ensure audio is initialized
 ExecStartPre=/bin/bash -c 'until [ -e /dev/dri/card0 ]; do echo "Waiting for GPU..."; sleep 1; done'
 ExecStartPre=/bin/bash -c 'if [ -e /proc/asound/cards ]; then echo "Audio system ready"; fi'
@@ -661,6 +693,7 @@ systemctl disable getty@tty1.service
 systemctl daemon-reload
 systemctl enable cage-kiosk.service
 systemctl enable tailscale-setup.service
+systemctl enable hdmi-audio-setup.service
 systemctl set-default graphical.target
 
 # Create display verification script
@@ -748,6 +781,11 @@ chmod +x /usr/local/bin/kiosk-health-check.sh
 systemctl enable kiosk-health-check.timer
 
 echo "DietPi Cage kiosk setup complete!"
+
+# Trigger automatic reboot after first-run setup
+echo "System will reboot automatically in 10 seconds..."
+sleep 10
+reboot
 CUSTOM_SCRIPT
 
     chmod +x "$boot_mount/Automation_Custom_Script.sh"
