@@ -114,56 +114,65 @@ All options:
 
 ## Setting Up Multiple Kiosks
 
-For multiple Pis with different configurations:
+For multiple Pis, simply run the setup script with different hostnames and URLs for each device:
 
-1. **Create a device list** (`devices.json`):
+```bash
+# First kiosk
+./pi-setup.sh --hostname "lobby-display" --url "https://example.com/lobby" --tailscale-authkey "tskey-..."
 
-```json
-[
-  {
-    "hostname": "panic-display-1",
-    "url": "https://panic.fly.dev/installations/display-1"
-  },
-  {
-    "hostname": "panic-display-2",
-    "url": "https://panic.fly.dev/installations/display-2"
-  },
-  {
-    "hostname": "panic-kiosk-lobby",
-    "url": "https://example.com/lobby-dashboard"
-  }
-]
+# Second kiosk
+./pi-setup.sh --hostname "conference-room" --url "https://example.com/schedule" --tailscale-authkey "tskey-..."
 ```
 
-2. **Deploy each device**:
-
-For each device in your list:
-- Run `pi-setup.sh` with the specific hostname and URL
-- Flash SD card, insert into Pi, and power on
-- Each Pi will automatically join your Tailscale network
+Each Pi will automatically join your Tailscale network with its unique hostname.
 
 ## Remote Management
 
-Once deployed, manage your kiosks via Tailscale:
+### SSH Access
+
+Once the Pi completes its initial setup (5-10 minutes after boot), you can SSH in via Tailscale:
 
 ```bash
-# SSH into any kiosk
+# Connect using Tailscale SSH (no password needed if your Tailscale user has access)
+tailscale ssh dietpi@<hostname>
+
+# Example:
 tailscale ssh dietpi@panic-rpi
+```
 
-# Change the displayed URL (NEW: using the kiosk-set-url utility)
-sudo kiosk-set-url https://new-url.com
+If you didn't configure Tailscale, you'll need to find the Pi's IP address on your local network and use regular SSH with the password you configured.
 
+### Changing the Kiosk URL
+
+The easiest way to update what's displayed is using the `kiosk-set-url` utility:
+
+```bash
 # View current URL
 sudo kiosk-set-url
 
+# Change to a new URL
+sudo kiosk-set-url https://new-url.com
+```
+
+The display will automatically refresh with the new URL within a few seconds.
+
+### Other Management Tasks
+
+```bash
 # View kiosk logs
 sudo journalctl -u cage-kiosk -f
 
-# Reboot a kiosk
+# Check if kiosk is running
+sudo systemctl status cage-kiosk
+
+# Restart the kiosk
+sudo systemctl restart cage-kiosk
+
+# Reboot the Pi
 sudo reboot
 
-# Check all your kiosks
-tailscale status | grep panic
+# Check all your Pis on Tailscale
+tailscale status | grep -E "lobby|conference|kiosk"
 ```
 
 ## Troubleshooting
