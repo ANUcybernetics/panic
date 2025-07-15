@@ -1,10 +1,10 @@
 #!/bin/bash
 # DietPi automated SD card setup for Raspberry Pi 5 kiosk mode with Wayland
 # This script creates a fully automated DietPi installation that boots directly into 
-# GPU-accelerated Chromium kiosk mode using Wayfire/Wayland and automatically joins Tailscale
+# GPU-accelerated Chromium kiosk mode using Cage compositor and automatically joins Tailscale
 #
 # Features:
-# - Full GPU acceleration with Wayland/Wayfire compositor
+# - Full GPU acceleration with minimal Cage Wayland compositor
 # - Native 4K display support with auto-detection
 # - Consumer and enterprise WiFi configuration
 # - Automatic Tailscale network join
@@ -187,10 +187,6 @@ wait_for_boot_partition() {
 
     echo -e "${YELLOW}Waiting for boot partition to mount...${NC}" >&2
     
-    # List current volumes for debugging
-    echo -e "${YELLOW}Current volumes:${NC}" >&2
-    ls -la /Volumes/ >&2
-    
     # Wait up to 45 seconds for the boot partition to appear
     for i in {1..45}; do
         # Look for any new volume that might be the boot partition
@@ -207,28 +203,24 @@ wait_for_boot_partition() {
             local volume_lower=$(echo "$volume_name" | tr '[:upper:]' '[:lower:]')
             
             if [[ "$volume_lower" =~ boot ]] || [[ "$volume_lower" =~ dietpi ]] || [[ "$volume_name" == "NO NAME" ]] || [[ "$volume_name" =~ ^[A-Z0-9_]+$ ]]; then
-                echo -e "${YELLOW}Found potential boot partition: $volume${NC}" >&2
                 # Verify it's the SD card by checking for expected files
                 if [ -d "$volume" ] && [ -r "$volume" ]; then
-                    echo -e "${GREEN}✓ Using boot partition at $volume${NC}" >&2
+                    echo -e "${GREEN}✓ Found boot partition${NC}" >&2
                     echo "$volume"
                     return 0
                 fi
             fi
         done
         
-        # Show progress
+        # Show progress every 10 seconds
         if [ $((i % 10)) -eq 0 ]; then
             echo -e "${YELLOW}Still waiting... ($i/45)${NC}" >&2
-            ls -la /Volumes/ >&2
         fi
         
         sleep 1
     done
     
     echo -e "${RED}Error: Boot partition not found after 45 seconds${NC}" >&2
-    echo -e "${YELLOW}Final volumes:${NC}" >&2
-    ls -la /Volumes/ >&2
     return 1
 }
 
@@ -257,6 +249,9 @@ configure_dietpi() {
 ##### Network Options #####
 # Hostname
 AUTO_SETUP_NET_HOSTNAME=$hostname
+
+# Ethernet settings - ensure ethernet is enabled
+AUTO_SETUP_NET_ETHERNET_ENABLED=1
 
 # WiFi settings
 AUTO_SETUP_NET_WIFI_ENABLED=1
@@ -303,11 +298,16 @@ CONFIG_BLUETOOTH_DISABLE=1
 # Enable maximum performance mode for better GPU acceleration
 CONFIG_CPU_GOVERNOR=performance
 
-# Set HDMI settings for 4K support
-CONFIG_HDMI_GROUP=2
-# Don't force mode - let it auto-detect
+# HDMI settings for 4K support with auto-detection
+CONFIG_HDMI_GROUP=0
+# Mode 0 = auto-detect native resolution
 CONFIG_HDMI_MODE=0
+# Boost signal for 4K displays
 CONFIG_HDMI_BOOST=7
+
+# Enable HDMI audio
+CONFIG_HDMI_FORCE_HOTPLUG=1
+CONFIG_HDMI_DRIVE=2
 
 # Custom script to run after installation
 AUTO_SETUP_CUSTOM_SCRIPT_EXEC=/boot/Automation_Custom_Script.sh
@@ -414,6 +414,7 @@ if [ -f "$AUTHKEY_PATH" ]; then
     HOSTNAME=$(grep "^AUTO_SETUP_NET_HOSTNAME=" "$DIETPI_TXT" | cut -d= -f2)
     
     # Start tailscale and authenticate
+    echo "Starting Tailscale with hostname: $HOSTNAME"
     tailscale up --authkey="$TAILSCALE_AUTHKEY" --ssh --hostname="$HOSTNAME" --accept-routes --accept-dns=false
     
     # Wait for Tailscale to connect
@@ -441,7 +442,7 @@ cat > /etc/systemd/system/tailscale-setup.service << 'EOF'
 Description=Tailscale Initial Setup
 After=network-online.target tailscaled.service
 Wants=network-online.target
-Before=wayfire-kiosk.service
+Before=cage-kiosk.service
 ConditionPathExists=/usr/local/bin/setup-tailscale.sh
 
 [Service]
@@ -471,11 +472,12 @@ if [ -f "$KEY_PATH" ]; then
     rm -f "$KEY_PATH"
 fi
 
-# Install additional packages for Wayland kiosk mode and GPU acceleration
-echo "Installing packages for Wayland kiosk mode..."
+# Install Cage compositor and dependencies for minimal kiosk mode
+echo "Installing Cage compositor and dependencies..."
 apt-get update
 apt-get install -y \
-    wayfire \
+    cage \
+    seatd \
     wlr-randr \
     libgles2-mesa \
     libgbm1 \
@@ -484,66 +486,68 @@ apt-get install -y \
     mesa-va-drivers \
     mesa-vdpau-drivers \
     libdrm2 \
-    libxcb-dri3-0 \
-    libxcb-present0 \
-    libxcb-sync1 \
-    xwayland
+    xwayland \
+    pulseaudio \
+    pulseaudio-utils
 
-# Create Wayfire configuration directory
-mkdir -p /home/dietpi/.config
+# Add dietpi user to necessary groups for GPU, TTY, and audio access
+usermod -a -G video,render,input,tty,audio dietpi
 
-# Configure Wayfire compositor
-echo "Configuring Wayfire compositor..."
-cat > /home/dietpi/.config/wayfire.ini << 'EOF'
-[core]
-# Enable necessary plugins for kiosk mode
-plugins = autostart alpha animate expo resize place decoration
+# Configure PulseAudio for HDMI output
+echo "Configuring audio for HDMI output..."
+cat > /etc/pulse/default.pa.d/hdmi-audio.pa << 'EOF'
+# Set HDMI as default audio output
+load-module module-alsa-sink device=hdmi:CARD=vc4hdmi0,DEV=0 sink_name=hdmi0 sink_properties="device.description='HDMI-1'"
+load-module module-alsa-sink device=hdmi:CARD=vc4hdmi1,DEV=0 sink_name=hdmi1 sink_properties="device.description='HDMI-2'"
 
-# Backend selection - prefer DRM for better performance
-backend = drm
-
-# Enable GPU acceleration
-xwayland = true
-vwidth = 3840
-vheight = 2160
-
-[autostart]
-autostart_wf_shell = false
-kiosk = /usr/local/bin/chromium-kiosk.sh
-
-# Hide cursor after inactivity
-hide_cursor = hide-cursor
-
-[hide-cursor]
-hide_delay = 1
-toggle = none
-
-# Output configuration for all possible outputs
-[output:HDMI-A-1]
-mode = auto
-position = 0,0
-transform = normal
-scale = 1.0
-
-[output:HDMI-A-2]
-mode = auto
-position = 0,0
-transform = normal
-scale = 1.0
-
-[output:DSI-1]
-mode = auto
-position = 0,0
-transform = normal
-scale = 1.0
-
-# Enable DRM backend options for better performance
-[drm]
-# Force enable atomic mode setting for better 4K support
-enable_atomic = true
+# Set the first available HDMI as default
+set-default-sink hdmi0
 EOF
 
-chown -R dietpi:dietpi /home/dietpi/.config
+# Create a script to ensure audio works after boot
+cat > /usr/local/bin/setup-hdmi-audio.sh << 'EOF'
+#!/bin/bash
+# Wait for PulseAudio to start
+sleep 5
+
+# Find active HDMI output and set as default
+for card in /proc/asound/card*; do
+    if grep -q "vc4-hdmi" "$card/id" 2>/dev/null; then
+        card_num=$(basename "$card" | sed 's/card//')
+        # Check if HDMI is connected
+        if grep -q "connected" "/sys/class/drm/card$card_num-HDMI-A-1/status" 2>/dev/null || \
+           grep -q "connected" "/sys/class/drm/card$card_num-HDMI-A-2/status" 2>/dev/null; then
+            pactl set-default-sink "hdmi$card_num" 2>/dev/null || true
+            echo "Set HDMI audio output to card $card_num"
+            break
+        fi
+    fi
+done
+
+# Unmute and set volume
+amixer set Master unmute 2>/dev/null || true
+amixer set Master 80% 2>/dev/null || true
+EOF
+chmod +x /usr/local/bin/setup-hdmi-audio.sh
+
+# Create systemd service to run audio setup after cage starts
+cat > /etc/systemd/system/hdmi-audio-setup.service << 'EOF'
+[Unit]
+Description=Configure HDMI Audio Output
+After=cage-kiosk.service sound.target
+Wants=sound.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/setup-hdmi-audio.sh
+User=dietpi
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable hdmi-audio-setup.service
 
 # Create kiosk launch script for Wayland
 echo "Creating Chromium kiosk script..."
@@ -599,18 +603,13 @@ EOF
 
 chmod +x /usr/local/bin/chromium-kiosk.sh
 
-# Create improved Wayfire service with proper dependencies
-echo "Creating Wayfire systemd service..."
-cat > /etc/systemd/system/wayfire-kiosk.service << 'EOF'
+# Create Cage service for kiosk mode
+echo "Creating Cage systemd service..."
+cat > /etc/systemd/system/cage-kiosk.service << 'EOF'
 [Unit]
-Description=Wayfire Kiosk Mode
-Documentation=https://github.com/WayfireWM/wayfire
-After=multi-user.target network-online.target systemd-user-sessions.service systemd-udev-settle.service
+Description=Cage Wayland Kiosk
+After=multi-user.target network-online.target systemd-user-sessions.service
 Wants=network-online.target
-# Ensure GPU is ready
-ConditionPathExists=/dev/dri/card0
-# Don't run if graphical target isn't active
-RequiredBy=graphical.target
 
 [Service]
 Type=simple
@@ -618,72 +617,51 @@ User=dietpi
 Group=dietpi
 PAMName=login
 
-# Let systemd handle runtime directory
-RuntimeDirectory=wayfire-%i
+# Runtime directory
+RuntimeDirectory=cage
 RuntimeDirectoryMode=0700
 
-# Environment setup
+# Environment
+Environment="XDG_RUNTIME_DIR=/run/user/1000"
 Environment="XDG_SESSION_TYPE=wayland"
-Environment="MOZ_ENABLE_WAYLAND=1"
-Environment="GDK_BACKEND=wayland"
-Environment="QT_QPA_PLATFORM=wayland"
-Environment="CLUTTER_BACKEND=wayland"
-Environment="SDL_VIDEODRIVER=wayland"
-Environment="WAYLAND_DISPLAY=wayland-1"
+Environment="WLR_BACKEND=drm"
+# Allow both HDMI outputs to be detected - card1 handles display output on RPi5
+Environment="WLR_DRM_DEVICES=/dev/dri/card1"
 Environment="WLR_RENDERER=gles2"
 Environment="WLR_NO_HARDWARE_CURSORS=1"
 
-# Ensure GPU is ready before starting
-ExecStartPre=/bin/bash -c 'until [ -e /dev/dri/card0 ]; do echo "Waiting for GPU..."; sleep 1; done'
-ExecStartPre=/bin/bash -c 'echo "GPU ready at /dev/dri/card0"'
+# Chromium environment for Wayland
+Environment="MOZ_ENABLE_WAYLAND=1"
+Environment="GDK_BACKEND=wayland"
+Environment="QT_QPA_PLATFORM=wayland"
 
-# Start Wayfire
-ExecStart=/usr/bin/wayfire
+# Audio configuration for HDMI output
+Environment="PULSE_RUNTIME_PATH=/run/user/1000/pulse"
+
+# Wait for GPU and ensure audio is initialized
+ExecStartPre=/bin/bash -c 'until [ -e /dev/dri/card0 ]; do echo "Waiting for GPU..."; sleep 1; done'
+ExecStartPre=/bin/bash -c 'if [ -e /proc/asound/cards ]; then echo "Audio system ready"; fi'
+
+# Start cage with chromium
+# Note: Cage will auto-detect the connected display and use native resolution
+ExecStart=/usr/bin/cage -- /usr/local/bin/chromium-kiosk.sh
 
 # Restart policy
 Restart=always
 RestartSec=10
-StartLimitInterval=120
-StartLimitBurst=5
-
-# Logging
-StandardOutput=journal
-StandardError=journal
-
-# Security hardening
-PrivateTmp=yes
-ProtectSystem=strict
-ProtectHome=yes
-ReadWritePaths=/home/dietpi
-ReadWritePaths=/tmp
-ReadWritePaths=/var/log
-NoNewPrivileges=yes
 
 [Install]
 WantedBy=graphical.target
 EOF
 
+# Disable getty on tty1 to avoid conflicts
+systemctl disable getty@tty1.service
+
 # Enable services
 systemctl daemon-reload
-systemctl enable wayfire-kiosk.service
+systemctl enable cage-kiosk.service
 systemctl enable tailscale-setup.service
 systemctl set-default graphical.target
-
-# Create a simple override to ensure wayfire starts on the correct TTY
-mkdir -p /etc/systemd/system/wayfire-kiosk.service.d
-cat > /etc/systemd/system/wayfire-kiosk.service.d/tty.conf << 'EOF'
-[Service]
-# Bind to tty1 for kiosk mode
-StandardInput=tty
-StandardOutput=journal
-StandardError=journal
-TTYPath=/dev/tty1
-TTYReset=yes
-TTYVHangup=yes
-EOF
-
-# Configure dietpi user to be in necessary groups for GPU access
-usermod -a -G video,render,input dietpi
 
 # Create display verification script
 cat > /usr/local/bin/verify-display.sh << 'EOF'
@@ -723,7 +701,7 @@ chmod +x /usr/local/bin/verify-display.sh
 cat > /etc/systemd/system/kiosk-health-check.service << 'EOF'
 [Unit]
 Description=Kiosk Health Check
-After=wayfire-kiosk.service
+After=cage-kiosk.service
 
 [Service]
 Type=oneshot
@@ -749,16 +727,16 @@ cat > /usr/local/bin/kiosk-health-check.sh << 'EOF'
 #!/bin/bash
 # Simple health check for kiosk mode
 
-# Check if Wayfire is running
-if ! pgrep -x wayfire > /dev/null; then
-    echo "Wayfire not running, attempting restart..."
-    systemctl restart wayfire-kiosk.service
+# Check if Cage is running
+if ! pgrep -x cage > /dev/null; then
+    echo "Cage not running, attempting restart..."
+    systemctl restart cage-kiosk.service
 fi
 
 # Check if Chromium is running
 if ! pgrep -f "chromium.*--kiosk" > /dev/null; then
     echo "Chromium not running in kiosk mode"
-    # Wayfire should restart it automatically
+    # Cage should restart it automatically
 fi
 
 # Log current status
@@ -769,7 +747,7 @@ chmod +x /usr/local/bin/kiosk-health-check.sh
 # Enable the health check timer
 systemctl enable kiosk-health-check.timer
 
-echo "DietPi Wayland kiosk setup complete!"
+echo "DietPi Cage kiosk setup complete!"
 CUSTOM_SCRIPT
 
     chmod +x "$boot_mount/Automation_Custom_Script.sh"
@@ -1065,10 +1043,15 @@ main() {
     echo ""
     echo "The Pi will automatically:"
     echo "- Boot directly into kiosk mode showing: $url"
-    echo "- Use GPU-accelerated Wayland for native resolution support"
+    echo "- Use minimal Cage compositor with GPU acceleration"
     echo "- Support 4K displays at full 60Hz with hardware acceleration"
     echo "- Hide the mouse cursor"
     echo "- Restart the browser if it crashes"
+    echo ""
+    echo "Cage advantages:"
+    echo "- Minimal resource usage (no desktop features)"
+    echo "- Purpose-built for single-app kiosk mode"
+    echo "- Better stability for 24/7 operation"
 }
 
 # Run main function
