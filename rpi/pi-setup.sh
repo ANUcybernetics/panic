@@ -218,6 +218,14 @@ write_image_to_sd() {
     
     # Give macOS a moment to mount the partitions
     sleep 3
+    
+    # Immediately disable Spotlight indexing on the newly mounted volumes
+    echo "Disabling Spotlight indexing on SD card..."
+    for volume in /Volumes/*; do
+        if diskutil info "$volume" 2>/dev/null | grep -q "$device"; then
+            sudo mdutil -i off "$volume" 2>/dev/null || true
+        fi
+    done
 }
 
 # Function to wait for boot partition
@@ -1099,11 +1107,53 @@ main() {
         echo ""
         echo -e "${GREEN}✓ TEST MODE: Configuration test complete!${NC}"
     else
-        echo -e "${YELLOW}Syncing and ejecting SD card...${NC}"
+        echo -e "${YELLOW}Preparing to eject SD card...${NC}"
+        
+        # Sync all data first
+        echo "Syncing data..."
         sync
-        # Eject the entire SD card device (this will unmount all partitions)
-        diskutil eject "$device"
-        echo -e "${GREEN}✓ SD card ready!${NC}"
+        
+        # Give the system a moment to finish any pending operations
+        sleep 2
+        
+        # Try to disable Spotlight on the volumes before ejecting
+        echo "Preventing Spotlight indexing..."
+        for volume in /Volumes/*; do
+            # Check if this volume is on our SD card device
+            if diskutil info "$volume" 2>/dev/null | grep -q "$device"; then
+                # Disable indexing for this volume
+                sudo mdutil -i off "$volume" 2>/dev/null || true
+            fi
+        done
+        
+        # Wait a moment for mds to release the volume
+        sleep 2
+        
+        # Try standard eject
+        if diskutil eject "$device" 2>/dev/null; then
+            echo -e "${GREEN}✓ SD card ejected successfully!${NC}"
+        else
+            # If standard eject fails, try unmounting disk first then ejecting
+            echo -e "${YELLOW}Standard eject failed, trying alternative approach...${NC}"
+            
+            # Unmount the disk (but don't force it, to avoid data corruption)
+            if diskutil unmountDisk "$device" 2>/dev/null; then
+                # Try eject again after unmount
+                if diskutil eject "$device" 2>/dev/null; then
+                    echo -e "${GREEN}✓ SD card ejected successfully!${NC}"
+                else
+                    echo -e "${YELLOW}⚠ Could not eject SD card automatically.${NC}"
+                    echo -e "${YELLOW}The disk has been unmounted safely. You can now remove it manually.${NC}"
+                    echo -e "${YELLOW}If Spotlight is still indexing, wait a moment and remove when safe.${NC}"
+                fi
+            else
+                # Last resort - force unmount but warn the user
+                echo -e "${YELLOW}⚠ Could not unmount gracefully. Attempting force unmount...${NC}"
+                diskutil unmountDisk force "$device" 2>/dev/null || true
+                echo -e "${YELLOW}The disk has been forcefully unmounted. You may remove the SD card.${NC}"
+                echo -e "${YELLOW}Note: If you see warnings about improper ejection, they can be safely ignored.${NC}"
+            fi
+        fi
     fi
 
     echo ""
