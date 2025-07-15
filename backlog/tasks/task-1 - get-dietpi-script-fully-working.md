@@ -7,7 +7,7 @@ created_date: "2025-07-08"
 labels:
   - devops
   - awaiting hardware test
-dependencies: []
+dependencies: ["task-30"]
 ---
 
 ## Description

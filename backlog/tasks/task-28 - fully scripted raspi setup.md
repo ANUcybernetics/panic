@@ -5,8 +5,10 @@ status: In Progress
 assignee: []
 created_date: "2025-07-09"
 labels: []
-dependencies: []
+dependencies: ["task-30"]
 ---
+
+NOTE: once task 30 is done, this can be closed as well
 
 # Task 28: Fully Scripted Raspberry Pi OS Setup
 
