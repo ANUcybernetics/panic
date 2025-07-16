@@ -117,7 +117,7 @@ All options:
   --wifi-ssid "Network"                  # WiFi network name
   --wifi-password "pass"                 # WiFi password
   --tailscale-authkey "tskey-..."       # Tailscale auth key
-  --ssh-key ~/.ssh/id_rsa.pub          # SSH public key for access
+  --ssh-key ~/.ssh/id_rsa.pub          # SSH public key (optional - omit to use Tailscale SSH only)
 ```
 
 ## Setting Up Multiple Kiosks
@@ -228,7 +228,7 @@ Configuration Options:
     --username <user>            Username for the admin account (default: dietpi)
     --password <pass>            Password for the admin account (default: dietpi)
 
-Network Options (at least one required):
+Network Options (optional):
     --wifi-ssid <ssid>           WiFi network name
     --wifi-password <pass>       WiFi password (for WPA2-PSK networks)
     --wifi-enterprise-user <u>   Enterprise WiFi username
@@ -236,7 +236,7 @@ Network Options (at least one required):
     --tailscale-authkey <key>    Tailscale auth key for automatic join
 
 Optional:
-    --ssh-key <path>             Path to SSH public key
+    --ssh-key <path>             Path to SSH public key (no default - omit for Tailscale SSH only)
     --test                       Test mode - skip actual SD card write
 ```
 
@@ -278,8 +278,11 @@ The script configures:
 ### Security Notes
 
 - Default credentials: `dietpi` / `dietpi` (change in production!)
-- Tailscale provides encrypted remote access
-- Consider using SSH keys instead of passwords
+- Tailscale provides encrypted remote access with built-in SSH
+- SSH keys are optional - omit `--ssh-key` to rely solely on Tailscale SSH
+- If SSH key is specified but file doesn't exist, script will fail with clear error
+- Tailscale auth keys are automatically removed after first use
+- WiFi credentials cannot contain quotes (validation enforced)
 - Kiosks run with minimal privileges
 - DietPi includes automatic security updates
 
@@ -328,6 +331,7 @@ The script now provides:
 - Automatic handling of macOS Spotlight indexing issues
 - Graceful ejection with fallback options
 - Clear user feedback throughout the process
+- Image caching to avoid re-downloading on subsequent runs
 
 ### Audio Support
 
@@ -337,3 +341,18 @@ Full HDMI audio support is now configured:
 - Automatic detection of active HDMI port
 - Volume set to 80% by default
 - Audio verification script included
+
+### Health Monitoring
+
+The kiosk includes automatic health checks:
+
+- Systemd timer runs health check every 5 minutes
+- Automatically restarts Cage/Chromium if they crash
+- Logs health status for debugging
+- Ensures 24/7 reliability
+
+### Additional Features
+
+- **Image Caching**: DietPi images are cached locally to speed up subsequent runs
+- **Credential Validation**: WiFi credentials are validated (quotes not allowed)
+- **Automatic Cleanup**: Tailscale auth keys are removed after successful setup for security
