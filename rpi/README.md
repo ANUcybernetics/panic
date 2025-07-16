@@ -12,8 +12,9 @@ installation that:
 - automatically joins your Tailscale network
 - supports native display resolutions including 4K at 60Hz
 - configures WiFi (WPA2 and enterprise 802.1X)
-- includes HDMI audio support and `kiosk-set-url` utility for easy URL changes
+- includes HDMI audio support
 - optimized specifically for Raspberry Pi 5 with 8GB RAM
+- provides a `kiosk-set-url` utility for easy URL changes
 
 ## Prerequisites
 
