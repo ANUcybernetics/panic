@@ -1,14 +1,19 @@
 # Raspberry Pi Kiosk Setup
 
-This directory contains a script to set up Raspberry Pi 5 devices as browser kiosks that boot directly into fullscreen Chromium displaying a specified URL.
+This directory contains a script to set up Raspberry Pi 5 devices as browser
+kiosks that boot directly into fullscreen Chromium displaying a specified URL.
 
 ## Overview
 
 The `pi-setup.sh` script creates a fully automated DietPi installation that:
-- Boots directly into GPU-accelerated kiosk mode using Cage Wayland compositor (minimal and purpose-built for kiosks)
+
+- Boots directly into GPU-accelerated kiosk mode using Cage Wayland compositor
+  (minimal and purpose-built for kiosks)
 - Automatically joins your Tailscale network (no manual IP discovery needed)
-- Supports native display resolutions including 4K at 60Hz with full GPU acceleration
-- Configures WiFi (both consumer WPA2 and enterprise 802.1X) for subsequent use after initial Ethernet setup
+- Supports native display resolutions including 4K at 60Hz with full GPU
+  acceleration
+- Configures WiFi (both consumer WPA2 and enterprise 802.1X) for subsequent use
+  after initial Ethernet setup
 - Hides the mouse cursor and provides a clean kiosk experience
 - Includes audio support for HDMI output
 - Provides accurate progress tracking during SD card writing
@@ -17,9 +22,11 @@ The `pi-setup.sh` script creates a fully automated DietPi installation that:
 
 ## How It Works
 
-DietPi provides a reliable firstboot automation mechanism through `AUTO_SETUP_CUSTOM_SCRIPT_EXEC`:
+DietPi provides a reliable firstboot automation mechanism through
+`AUTO_SETUP_CUSTOM_SCRIPT_EXEC`:
 
 1. **SD Card Preparation**:
+
    - Flashes DietPi image (lighter weight than Raspberry Pi OS)
    - Creates `dietpi.txt` with automation settings
    - Configures WiFi credentials for later use
@@ -38,6 +45,7 @@ DietPi provides a reliable firstboot automation mechanism through `AUTO_SETUP_CU
 ## Prerequisites
 
 1. **Initial setup requires Ethernet connection**
+
    - The first boot must happen with Ethernet connected
    - WiFi is configured during first boot for subsequent use
    - After initial setup, the Pi can run on WiFi alone
@@ -114,7 +122,8 @@ All options:
 
 ## Setting Up Multiple Kiosks
 
-For multiple Pis, simply run the setup script with different hostnames and URLs for each device:
+For multiple Pis, simply run the setup script with different hostnames and URLs
+for each device:
 
 ```bash
 # First kiosk
@@ -130,7 +139,8 @@ Each Pi will automatically join your Tailscale network with its unique hostname.
 
 ### SSH Access
 
-Once the Pi completes its initial setup (5-10 minutes after boot), you can SSH in via Tailscale:
+Once the Pi completes its initial setup (5-10 minutes after boot), you can SSH
+in via Tailscale:
 
 ```bash
 # Connect using Tailscale SSH (no password needed if your Tailscale user has access)
@@ -140,7 +150,8 @@ tailscale ssh dietpi@<hostname>
 tailscale ssh dietpi@panic-rpi
 ```
 
-If you didn't configure Tailscale, you'll need to find the Pi's IP address on your local network and use regular SSH with the password you configured.
+If you didn't configure Tailscale, you'll need to find the Pi's IP address on
+your local network and use regular SSH with the password you configured.
 
 ### Changing the Kiosk URL
 
@@ -178,26 +189,31 @@ tailscale status | grep -E "lobby|conference|kiosk"
 ## Troubleshooting
 
 **Pi doesn't join Tailscale network:**
+
 - Verify the Pi has Ethernet connectivity during first boot
 - Check if Tailscale auth key is still valid
 - Connect a monitor to see boot messages
 
 **Display issues:**
+
 - Cage automatically detects and uses native resolution
 - For 4K displays, ensure HDMI cable supports 4K@60Hz
 - Check logs: `sudo journalctl -u cage-kiosk -n 50`
 - Verify display info: `sudo /usr/local/bin/verify-display.sh`
 
 **Wrong URL displayed:**
+
 - Check current URL: `sudo kiosk-set-url`
 - Update URL: `sudo kiosk-set-url https://new-url.com`
 
 **Audio not working:**
+
 - Check audio setup: `sudo journalctl -u hdmi-audio-setup`
 - Verify PulseAudio: `pactl info`
 - Check HDMI audio: `aplay -l`
 
 **Can't SSH to Pi:**
+
 - Ensure Pi is on Tailscale: `tailscale status | grep <hostname>`
 - Try direct SSH if on same network: `ssh dietpi@<pi-ip>`
 
@@ -232,12 +248,15 @@ Optional:
 - **Reliable automation**: `AUTO_SETUP_CUSTOM_SCRIPT_EXEC` runs consistently
 - **Faster boot**: Less overhead than full Raspberry Pi OS
 - **Better for kiosks**: Designed for headless and automated deployments
-- **Latest version**: Always uses the latest DietPi release with full Raspberry Pi 5 support
+- **Latest version**: Always uses the latest DietPi release with full Raspberry
+  Pi 5 support
 
 ### Why Cage/Wayland?
 
-- **Purpose-built for kiosks**: Cage is a minimal Wayland compositor designed specifically for single-app kiosk mode
-- **Minimal resource usage**: No desktop environment overhead - just your app and the compositor
+- **Purpose-built for kiosks**: Cage is a minimal Wayland compositor designed
+  specifically for single-app kiosk mode
+- **Minimal resource usage**: No desktop environment overhead - just your app
+  and the compositor
 - **Native GPU acceleration**: Full hardware acceleration with V3D/VC4 drivers
 - **Better 4K support**: Handles 4K@60Hz without X11 limitations
 - **Modern stack**: Future-proof compared to X11
@@ -248,6 +267,7 @@ Optional:
 ### GPU Optimization
 
 The script configures:
+
 - 512MB GPU memory split for 4K displays
 - Performance CPU governor for consistent frame rates
 - Hardware-accelerated Chromium flags for smooth rendering
@@ -275,13 +295,15 @@ The script configures:
 
 ### Testing 4K Support
 
-See the task file for detailed instructions on verifying 4K display capabilities.
+See the task file for detailed instructions on verifying 4K display
+capabilities.
 
 ## New Features
 
 ### kiosk-set-url Utility
 
-The script now installs a convenient utility for changing the kiosk URL without editing system files:
+The script now installs a convenient utility for changing the kiosk URL without
+editing system files:
 
 ```bash
 # View current URL
@@ -292,6 +314,7 @@ sudo kiosk-set-url https://new-url.com
 ```
 
 The utility:
+
 - Validates URL format
 - Creates a backup of the configuration
 - Restarts the kiosk service automatically
@@ -300,6 +323,7 @@ The utility:
 ### Improved SD Card Writing
 
 The script now provides:
+
 - Accurate progress tracking with ETA using `pv` and `humanfriendly`
 - Automatic handling of macOS Spotlight indexing issues
 - Graceful ejection with fallback options
@@ -308,6 +332,7 @@ The script now provides:
 ### Audio Support
 
 Full HDMI audio support is now configured:
+
 - PulseAudio configured for HDMI output
 - Automatic detection of active HDMI port
 - Volume set to 80% by default
