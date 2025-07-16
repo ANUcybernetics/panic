@@ -361,7 +361,7 @@ CONFIG_CPU_GOVERNOR=performance
 # No forced HDMI modes - let the KMS driver handle native resolution detection
 
 # Custom script to run after installation
-AUTO_SETUP_CUSTOM_SCRIPT_EXEC=/boot/Automation_Custom_Script.sh
+AUTO_SETUP_CUSTOM_SCRIPT_EXEC=/boot/firmware/Automation_Custom_Script.sh
 
 ##### Chromium Kiosk Settings #####
 # Set the kiosk URL
@@ -427,16 +427,8 @@ EOF
 
 echo "Starting DietPi custom automation script..."
 
-# Function to detect correct boot partition path
-get_boot_path() {
-    if [ -d "/boot/firmware" ]; then
-        echo "/boot/firmware"
-    else
-        echo "/boot"
-    fi
-}
-
-BOOT_PATH=$(get_boot_path)
+# Use the current DietPi boot partition path
+BOOT_PATH="/boot/firmware"
 
 # Disable systemd-networkd-wait-online to prevent boot warnings
 # Our services have their own network checks, so this isn't needed
@@ -447,7 +439,7 @@ cat > /usr/local/bin/setup-tailscale.sh << 'EOF'
 #!/bin/bash
 # Tailscale setup script
 
-BOOT_PATH=$([ -d "/boot/firmware" ] && echo "/boot/firmware" || echo "/boot")
+BOOT_PATH="/boot/firmware"
 AUTHKEY_PATH="${BOOT_PATH}/dietpi_userdata/tailscale_authkey"
 
 if [ -f "$AUTHKEY_PATH" ]; then
@@ -637,12 +629,7 @@ cat > /usr/local/bin/chromium-kiosk.sh << 'EOF'
 # Chromium kiosk script for Wayland
 
 # Get URL from dietpi.txt or use default
-# Note: BOOT_PATH needs to be determined at runtime since this runs on the Pi
-if [ -d "/boot/firmware" ]; then
-    DIETPI_TXT="/boot/firmware/dietpi.txt"
-else
-    DIETPI_TXT="/boot/dietpi.txt"
-fi
+DIETPI_TXT="/boot/firmware/dietpi.txt"
 URL=$(sed -n '/^[[:blank:]]*SOFTWARE_CHROMIUM_AUTOSTART_URL=/{s/^[^=]*=//p;q}' "$DIETPI_TXT")
 URL=${URL:-https://panic.fly.dev}
 
@@ -699,11 +686,7 @@ if [ $# -eq 0 ]; then
     echo "Example: kiosk-set-url https://example.com"
     echo ""
     echo "Current URL:"
-    if [ -d "/boot/firmware" ]; then
-        grep "^SOFTWARE_CHROMIUM_AUTOSTART_URL=" /boot/firmware/dietpi.txt | cut -d= -f2
-    else
-        grep "^SOFTWARE_CHROMIUM_AUTOSTART_URL=" /boot/dietpi.txt | cut -d= -f2
-    fi
+    grep "^SOFTWARE_CHROMIUM_AUTOSTART_URL=" /boot/firmware/dietpi.txt | cut -d= -f2
     exit 1
 fi
 
@@ -715,12 +698,8 @@ if ! [[ "$NEW_URL" =~ ^https?:// ]]; then
     exit 1
 fi
 
-# Determine boot path
-if [ -d "/boot/firmware" ]; then
-    DIETPI_TXT="/boot/firmware/dietpi.txt"
-else
-    DIETPI_TXT="/boot/dietpi.txt"
-fi
+# Use current DietPi boot path
+DIETPI_TXT="/boot/firmware/dietpi.txt"
 
 # Check if dietpi.txt exists
 if [ ! -f "$DIETPI_TXT" ]; then
