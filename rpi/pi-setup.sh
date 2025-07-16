@@ -930,7 +930,7 @@ Network Options (optional):
     --tailscale-authkey <key>    Tailscale auth key for automatic join
 
 Optional:
-    --ssh-key <path>             Path to SSH public key (default: ~/.ssh/panic_rpi_ssh.pub)
+    --ssh-key <path>             Path to SSH public key (no default - omit for Tailscale SSH only)
     --test                       Test mode - skip actual SD card write
 
 Examples:
@@ -973,7 +973,7 @@ main() {
     local username="dietpi"
     local password="dietpi"
     local tailscale_authkey=""
-    local ssh_key_file="$HOME/.ssh/panic_rpi_ssh.pub"
+    local ssh_key_file=""
     local test_mode=false
 
     # Parse command line options
@@ -1068,8 +1068,8 @@ main() {
         fi
     fi
     
-    # Validate SSH key file if provided (note: we always have a default now)
-    if [ -n "$ssh_key_file" ] && [ "$ssh_key_file" != "$HOME/.ssh/panic_rpi_ssh.pub" ] && [ ! -f "$ssh_key_file" ]; then
+    # Validate SSH key file if provided
+    if [ -n "$ssh_key_file" ] && [ ! -f "$ssh_key_file" ]; then
         errors+=("SSH key file not found: $ssh_key_file")
     fi
     
