@@ -5,20 +5,21 @@ kiosks that boot directly into fullscreen Chromium displaying a specified URL.
 
 ## Overview
 
-The `pi-setup.sh` script creates a fully automated DietPi installation that:
+The `pi-setup.sh` script creates a fully automated [DietPi](https://dietpi.com)
+installation that:
 
-- Boots directly into GPU-accelerated kiosk mode using Cage Wayland compositor
+- boots directly into GPU-accelerated kiosk mode using Cage Wayland compositor
   (minimal and purpose-built for kiosks)
-- Automatically joins your Tailscale network (no manual IP discovery needed)
-- Supports native display resolutions including 4K at 60Hz with full GPU
+- automatically joins your Tailscale network (no manual IP discovery needed)
+- supports native display resolutions including 4K at 60Hz with full GPU
   acceleration
-- Configures WiFi (both consumer WPA2 and enterprise 802.1X) for subsequent use
+- configures WiFi (both consumer WPA2 and enterprise 802.1X) for subsequent use
   after initial Ethernet setup
-- Hides the mouse cursor and provides a clean kiosk experience
-- Includes audio support for HDMI output
-- Provides accurate progress tracking during SD card writing
-- Handles macOS Spotlight indexing issues automatically
-- Optimized specifically for Raspberry Pi 5 with 8GB RAM
+- hides the mouse cursor and provides a clean kiosk experience
+- includes audio support for HDMI output
+- provides accurate progress tracking during SD card writing
+- handles macOS Spotlight indexing issues automatically
+- optimized specifically for Raspberry Pi 5 with 8GB RAM
 
 ## How It Works
 
@@ -27,28 +28,28 @@ DietPi provides a reliable firstboot automation mechanism through
 
 1. **SD Card Preparation**:
 
-   - Flashes DietPi image (lighter weight than Raspberry Pi OS)
-   - Creates `dietpi.txt` with automation settings
-   - Configures WiFi credentials for later use
-   - Places custom script that runs automatically on first boot
-   - Disables Spotlight indexing to prevent ejection issues
+   - flashes DietPi image (lighter weight than Raspberry Pi OS)
+   - creates `dietpi.txt` with automation settings
+   - configures WiFi credentials for later use
+   - places custom script that runs automatically on first boot
+   - disables Spotlight indexing to prevent ejection issues
 
 2. **Automatic First Boot** (no manual intervention):
    - DietPi runs the custom script without any user interaction
-   - Installs and configures Tailscale with your auth key
-   - Sets up Cage compositor for minimal, GPU-accelerated Wayland kiosk
-   - Configures Chromium in kiosk mode with native resolution support
-   - Sets up PulseAudio for HDMI audio output
-   - Installs `kiosk-set-url` utility for easy URL changes
-   - Reboots into kiosk mode showing your URL
+   - installs and configures Tailscale with your auth key
+   - sets up Cage compositor for minimal, GPU-accelerated Wayland kiosk
+   - configures Chromium in kiosk mode with native resolution support
+   - sets up PulseAudio for HDMI audio output
+   - installs `kiosk-set-url` utility for easy URL changes
+   - reboots into kiosk mode showing your URL
 
 ## Prerequisites
 
 1. **Initial setup requires Ethernet connection**
 
-   - The first boot must happen with Ethernet connected
-   - WiFi is configured during first boot for subsequent use
-   - After initial setup, the Pi can run on WiFi alone
+   - the first boot must happen with Ethernet connected
+   - wiFi is configured during first boot for subsequent use
+   - after initial setup, the Pi can run on WiFi alone
 
 2. **Install required tools on your Mac:**
 
@@ -64,9 +65,9 @@ uv tool install --python 3.12 humanfriendly
 ```
 
 3. **Get a Tailscale auth key:**
-   - Visit https://login.tailscale.com/admin/settings/keys
-   - Generate a reusable auth key
-   - Enable "Pre-authorized" for automatic approval
+   - visit https://login.tailscale.com/admin/settings/keys
+   - generate a reusable auth key
+   - enable "Pre-authorized" for automatic approval
 
 ## Setting Up a Kiosk
 
@@ -280,7 +281,8 @@ The script configures:
 - Default credentials: `dietpi` / `dietpi` (change in production!)
 - Tailscale provides encrypted remote access with built-in SSH
 - SSH keys are optional - omit `--ssh-key` to rely solely on Tailscale SSH
-- If SSH key is specified but file doesn't exist, script will fail with clear error
+- If SSH key is specified but file doesn't exist, script will fail with clear
+  error
 - Tailscale auth keys are automatically removed after first use
 - WiFi credentials cannot contain quotes (validation enforced)
 - Kiosks run with minimal privileges
@@ -353,6 +355,8 @@ The kiosk includes automatic health checks:
 
 ### Additional Features
 
-- **Image Caching**: DietPi images are cached locally to speed up subsequent runs
+- **Image Caching**: DietPi images are cached locally to speed up subsequent
+  runs
 - **Credential Validation**: WiFi credentials are validated (quotes not allowed)
-- **Automatic Cleanup**: Tailscale auth keys are removed after successful setup for security
+- **Automatic Cleanup**: Tailscale auth keys are removed after successful setup
+  for security
