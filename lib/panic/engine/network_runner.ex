@@ -11,8 +11,8 @@ defmodule Panic.Engine.NetworkRunner do
   - Manages invocation lifecycle from creation to completion
   - Enforces network lockout periods between runs
   - Implements gradual backoff delays between invocations based on run age:
-    - Genesis < 5 minutes old: Process next invocation immediately
-    - Genesis 5 minutes - 1 hour old: 30 second delay before next invocation
+    - Genesis < 10 minutes old: 1 second delay before next invocation
+    - Genesis 10 minutes - 1 hour old: 15 second delay before next invocation
     - Genesis > 1 hour old: 1 hour delay before next invocation
   - Handles async invocation processing without blocking the GenServer
   - Dispatches to watchers (like Vestaboard) asynchronously
@@ -678,13 +678,13 @@ defmodule Panic.Engine.NetworkRunner do
   # This replaces the old calculate_invocation_delay/calculate_combined_delay approach for cleaner timing
   defp calculate_next_invocation_time(genesis_invocation, vestaboard_dispatched) do
     now = DateTime.utc_now()
-    age_seconds = DateTime.diff(now, genesis_invocation.inserted_at, :second)
+    age_ms = DateTime.diff(now, genesis_invocation.inserted_at, :millisecond)
 
     # Calculate base delay based on genesis invocation age
     base_delay_ms =
       cond do
-        age_seconds < to_timeout(minute: 10) -> to_timeout(second: 1)
-        age_seconds < to_timeout(hour: 1) -> to_timeout(second: 15)
+        age_ms < to_timeout(minute: 10) -> to_timeout(second: 1)
+        age_ms < to_timeout(hour: 1) -> to_timeout(second: 15)
         true -> to_timeout(hour: 1)
       end
 
