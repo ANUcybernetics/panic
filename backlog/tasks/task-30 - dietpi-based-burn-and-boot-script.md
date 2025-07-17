@@ -1,7 +1,7 @@
 ---
 id: task-30
 title: dietpi-based burn-and-boot script
-status: In Progress
+status: Done
 assignee: []
 created_date: "2025-07-14"
 labels: []

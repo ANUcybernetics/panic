@@ -1,7 +1,7 @@
 ---
 id: task-28
 title: "fully-scripted raspi setup"
-status: In Progress
+status: Done
 assignee: []
 created_date: "2025-07-09"
 labels: []

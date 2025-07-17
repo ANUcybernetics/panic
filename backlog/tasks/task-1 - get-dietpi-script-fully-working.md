@@ -1,7 +1,7 @@
 ---
 id: task-1
 title: get dietpi script fully working
-status: To Do
+status: Done
 assignee: []
 created_date: "2025-07-08"
 labels:
