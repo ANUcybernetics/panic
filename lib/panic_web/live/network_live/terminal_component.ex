@@ -65,6 +65,12 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
     {:noreply, assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, invocation_params))}
   end
 
+  def handle_event("validate", _params, socket) do
+    # Handle the case where only _target is sent (e.g., on field blur)
+    # In this case, we don't need to validate as there are no new params
+    {:noreply, socket}
+  end
+
   def handle_event("start-run", %{"invocation" => invocation_params}, socket) do
     prompt = invocation_params["input"] || ""
 

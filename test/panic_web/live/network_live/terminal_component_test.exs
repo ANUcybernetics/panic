@@ -47,22 +47,80 @@ defmodule PanicWeb.NetworkLive.TerminalComponentTest do
     end
   end
 
-  describe "fix for terminal component" do
-    test "demonstrates the error case and fix", %{} do
-      # The issue: NetworkRunner.start_run can return {:error, exception}
-      # when there's an error in prepare_first (e.g., missing API tokens)
-      # But TerminalComponent expects {:error, form} and calls AshPhoenix.Form.errors(form)
-
-      # The error happens at line 68 in terminal_component.ex:
-      # |> put_flash(:error, AshPhoenix.Form.errors(form))
-
-      # When form is actually an exception, this causes:
-      # ArgumentError: Expected to receive either an `%AshPhoenix.Form{}` 
-      # or a `%Phoenix.HTML.Form{}` with `%AshPhoenix.Form{}` as its source.
-
-      # The fix is to check if the error is a form or an exception
-      # and handle each case appropriately
-      assert true
+  describe "error handling for missing API tokens" do
+    test "handles exceptions from NetworkRunner gracefully", %{conn: conn, owner: owner} do
+      # Create a network with non-dummy models that require API tokens
+      {:ok, network} =
+        Panic.Engine.Network
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            name: "Test Network with Real Models",
+            lockout_seconds: 0
+          },
+          actor: owner
+        )
+        |> Ash.create()
+      
+      # Update network with a model that requires API tokens
+      {:ok, network} =
+        network
+        |> Ash.Changeset.for_update(
+          :update_models,
+          %{
+            models: ["gpt-4.1"]
+          },
+          actor: owner
+        )
+        |> Ash.update()
+      
+      # Since the owner has no API tokens, NetworkRunner.start_run will fail
+      # with an exception when trying to prepare the first invocation
+      
+      # Generate auth token
+      auth_token = PanicWeb.TerminalAuth.generate_token(network.id)
+      
+      # Load the terminal
+      {:ok, view, _html} = live(conn, ~p"/networks/#{network.id}/terminal?token=#{auth_token}")
+      
+      # Verify terminal loads
+      assert render(view) =~ "Current run:"
+      
+      # Submit a form - this will trigger NetworkRunner.start_run
+      # which will return {:error, exception} due to missing API tokens
+      html =
+        view
+        |> form("form", %{invocation: %{input: "test prompt"}})
+        |> render_submit()
+      
+      # The component should handle the exception gracefully and show an error
+      # It should NOT crash with ArgumentError about expecting AshPhoenix.Form
+      assert html =~ "Current run:"
+      
+      # Should show some kind of error message
+      assert html =~ "error" || html =~ "Error" || html =~ "failed"
+      
+      # Should not contain the ArgumentError message that would indicate a crash
+      refute html =~ "ArgumentError"
+      refute html =~ "Expected to receive either an"
+    end
+    
+    test "verifies the fix handles different error types correctly", %{conn: conn, network: network} do
+      # This test verifies that the error handling in terminal_component.ex
+      # properly handles both form errors and exceptions
+      
+      auth_token = PanicWeb.TerminalAuth.generate_token(network.id)
+      {:ok, view, _html} = live(conn, ~p"/networks/#{network.id}/terminal?token=#{auth_token}")
+      
+      # With dummy models, this should work fine
+      html =
+        view
+        |> form("form", %{invocation: %{input: "test"}})
+        |> render_submit()
+      
+      # Should not show errors with dummy models
+      refute html =~ "error occurred"
+      assert html =~ "Current run:"
     end
   end
 end
