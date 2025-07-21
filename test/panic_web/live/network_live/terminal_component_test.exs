@@ -61,7 +61,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponentTest do
           actor: owner
         )
         |> Ash.create()
-      
+
       # Update network with a model that requires API tokens
       {:ok, network} =
         network
@@ -73,51 +73,51 @@ defmodule PanicWeb.NetworkLive.TerminalComponentTest do
           actor: owner
         )
         |> Ash.update()
-      
+
       # Since the owner has no API tokens, NetworkRunner.start_run will fail
       # with an exception when trying to prepare the first invocation
-      
+
       # Generate auth token
       auth_token = PanicWeb.TerminalAuth.generate_token(network.id)
-      
+
       # Load the terminal
       {:ok, view, _html} = live(conn, ~p"/networks/#{network.id}/terminal?token=#{auth_token}")
-      
+
       # Verify terminal loads
       assert render(view) =~ "Current run:"
-      
+
       # Submit a form - this will trigger NetworkRunner.start_run
       # which will return {:error, exception} due to missing API tokens
       html =
         view
         |> form("form", %{invocation: %{input: "test prompt"}})
         |> render_submit()
-      
+
       # The component should handle the exception gracefully and show an error
       # It should NOT crash with ArgumentError about expecting AshPhoenix.Form
       assert html =~ "Current run:"
-      
+
       # Should show some kind of error message
       assert html =~ "error" || html =~ "Error" || html =~ "failed"
-      
+
       # Should not contain the ArgumentError message that would indicate a crash
       refute html =~ "ArgumentError"
       refute html =~ "Expected to receive either an"
     end
-    
+
     test "verifies the fix handles different error types correctly", %{conn: conn, network: network} do
       # This test verifies that the error handling in terminal_component.ex
       # properly handles both form errors and exceptions
-      
+
       auth_token = PanicWeb.TerminalAuth.generate_token(network.id)
       {:ok, view, _html} = live(conn, ~p"/networks/#{network.id}/terminal?token=#{auth_token}")
-      
+
       # With dummy models, this should work fine
       html =
         view
         |> form("form", %{invocation: %{input: "test"}})
         |> render_submit()
-      
+
       # Should not show errors with dummy models
       refute html =~ "error occurred"
       assert html =~ "Current run:"
