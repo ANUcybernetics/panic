@@ -13,7 +13,7 @@ defmodule Panic.Engine.NetworkRunner do
   - Implements gradual backoff delays between invocations based on run age:
     - Genesis < 10 minutes old: 1 second delay before next invocation
     - Genesis 10 minutes - 1 hour old: 15 second delay before next invocation
-    - Genesis > 1 hour old: 1 hour delay before next invocation
+    - Genesis > 1 hour old: 10 minute delay before next invocation
   - Handles async invocation processing without blocking the GenServer
   - Dispatches to watchers (like Vestaboard) asynchronously
   - Archives multimedia outputs asynchronously
@@ -685,7 +685,7 @@ defmodule Panic.Engine.NetworkRunner do
       cond do
         age_ms < to_timeout(minute: 10) -> to_timeout(second: 1)
         age_ms < to_timeout(hour: 1) -> to_timeout(second: 15)
-        true -> to_timeout(hour: 1)
+        true -> to_timeout(minute: 10)
       end
 
     # Add additional delay if vestaboards were dispatched
