@@ -461,16 +461,14 @@ if [ -f "$AUTHKEY_PATH" ]; then
     echo "Starting Tailscale with hostname: $HOSTNAME"
     tailscale up --authkey="$TAILSCALE_AUTHKEY" --ssh --hostname="$HOSTNAME" --accept-routes --accept-dns=false
     
-    # Wait for Tailscale to connect
-    for i in {1..10}; do
-        if tailscale status >/dev/null 2>&1; then
-            echo "Tailscale connected successfully"
-            tailscale status
-            break
-        fi
-        echo "Waiting for Tailscale... (attempt $i/10)"
-        sleep 2
-    done
+    # Check if connected (systemd will retry if this fails)
+    if tailscale status >/dev/null 2>&1; then
+        echo "Tailscale connected successfully"
+        tailscale status
+    else
+        echo "Tailscale connection pending..."
+        exit 1  # Let systemd retry
+    fi
     
     # Remove the auth key file for security
     rm -f "$AUTHKEY_PATH"
@@ -486,6 +484,7 @@ cat > /etc/systemd/system/tailscale-setup.service << 'EOF'
 Description=Tailscale Initial Setup
 After=network-online.target tailscaled.service
 Wants=network-online.target
+Requires=tailscaled.service
 Before=cage-kiosk.service
 ConditionPathExists=/usr/local/bin/setup-tailscale.sh
 
@@ -495,6 +494,11 @@ RemainAfterExit=yes
 ExecStart=/usr/local/bin/setup-tailscale.sh
 StandardOutput=journal
 StandardError=journal
+# Retry if tailscale isn't ready yet
+Restart=on-failure
+RestartSec=5
+StartLimitBurst=5
+StartLimitIntervalSec=60
 
 [Install]
 WantedBy=multi-user.target
@@ -532,13 +536,38 @@ apt-get install -y \
     libdrm2 \
     xwayland \
     pulseaudio \
-    pulseaudio-utils
+    pulseaudio-utils \
+    unclutter \
+    xdotool
 
-# Add dietpi user to necessary groups for GPU, TTY, and audio access
-usermod -a -G video,render,input,tty,audio dietpi
+# Add dietpi user to necessary groups for GPU, TTY, audio, and seat access
+usermod -a -G video,render,input,tty,audio,seat dietpi
+
+# Ensure seatd is properly configured
+systemctl enable seatd
+systemctl start seatd
 
 # Enable lingering for dietpi user so user services start at boot
 loginctl enable-linger dietpi
+
+# Create a systemd service to ensure XDG runtime directory exists
+cat > /etc/systemd/system/xdg-runtime-dir@.service << 'EOF'
+[Unit]
+Description=XDG Runtime Directory for user %i
+Before=cage-kiosk.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/mkdir -p /run/user/%i
+ExecStart=/bin/chown %i:%i /run/user/%i
+ExecStart=/bin/chmod 0700 /run/user/%i
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable xdg-runtime-dir@1000.service
 
 # Enable PulseAudio to start automatically for dietpi user
 mkdir -p /home/dietpi/.config/systemd/user
@@ -564,6 +593,16 @@ sudo -u dietpi systemctl --user daemon-reload
 sudo -u dietpi systemctl --user enable pulseaudio.service
 sudo -u dietpi systemctl --user enable pulseaudio.socket
 
+# Ensure proper color depth configuration
+echo "Configuring display for proper color depth..."
+
+# Create early KMS configuration for proper color depth
+mkdir -p /etc/modprobe.d
+cat > /etc/modprobe.d/drm-kms-helper.conf << 'EOF'
+# Force 24-bit color depth for KMS
+options drm_kms_helper force_color_format=rgb888
+EOF
+
 # Configure PulseAudio for HDMI output
 echo "Configuring audio for HDMI output..."
 mkdir -p /etc/pulse/default.pa.d
@@ -579,8 +618,7 @@ EOF
 # Create a script to ensure audio works after boot
 cat > /usr/local/bin/setup-hdmi-audio.sh << 'EOF'
 #!/bin/bash
-# Wait for PulseAudio to start
-sleep 5
+# Script expects PulseAudio to be already running via systemd dependencies
 
 # Find active HDMI output and set as default
 for card in /proc/asound/card*; do
@@ -607,14 +645,17 @@ cat > /etc/systemd/system/hdmi-audio-setup.service << 'EOF'
 [Unit]
 Description=Configure HDMI Audio Output
 After=cage-kiosk.service sound.target
-Wants=sound.target
+Requires=cage-kiosk.service
+# Only run if user's pulseaudio service is active
+Requisite=user@1000.service
 
 [Service]
 Type=oneshot
-ExecStartPre=/bin/bash -c 'until pgrep -x pulseaudio > /dev/null; do echo "Waiting for PulseAudio..."; sleep 1; done'
 ExecStart=/usr/local/bin/setup-hdmi-audio.sh
 User=dietpi
 RemainAfterExit=yes
+# Give up if PulseAudio isn't available after 30 seconds
+TimeoutStartSec=30
 
 [Install]
 WantedBy=graphical.target
@@ -636,9 +677,52 @@ URL=${URL:-https://panic.fly.dev}
 # Log startup
 logger -t chromium-kiosk "Starting Chromium kiosk with URL: $URL"
 
-# Hide mouse cursor - Wayland doesn't need unclutter
-export XCURSOR_THEME=DMZ-White
-export XCURSOR_SIZE=1
+# Create a transparent cursor for Wayland
+# This is the most reliable method for cursor hiding on Wayland
+create_transparent_cursor() {
+    local cursor_dir="/home/dietpi/.local/share/icons/transparent/cursors"
+    mkdir -p "$cursor_dir"
+    
+    # Create a truly transparent 1x1 PNG cursor
+    # PNG header + IHDR + transparent pixel data + IEND
+    printf '\x89\x50\x4e\x47\x0d\x0a\x1a\x0a\x00\x00\x00\x0d\x49\x48\x44\x52\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\x0d\x49\x44\x41\x54\x08\x99\x63\x60\x00\x00\x00\x01\x00\x01\x00\x00\x5f\xc3\x8e\x00\x00\x00\x00\x49\x45\x4e\x44\xae\x42\x60\x82' > "$cursor_dir/blank.png"
+    
+    # Create X11 cursor from PNG using xcursorgen
+    cat > "$cursor_dir/blank.cursor" << 'CURSOR'
+1 0 0 blank.png
+CURSOR
+    
+    cd "$cursor_dir"
+    
+    # Create the actual cursor file
+    echo -ne "Xcur\x00\x00\x00\x10\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x1c\x00\x00\x00\x24\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" > default
+    
+    # Create symlinks for all cursor names
+    for cursor in left_ptr arrow top_left_arrow watch cross hand2 hand1 hand pointing_hand pointer text xterm sb_h_double_arrow sb_v_double_arrow; do
+        ln -sf default "$cursor"
+    done
+    
+    # Create theme index
+    cat > "/home/dietpi/.local/share/icons/transparent/index.theme" << 'THEME'
+[Icon Theme]
+Name=Transparent
+Comment=Transparent cursor theme
+Inherits=
+THEME
+    
+    # Set ownership
+    chown -R dietpi:dietpi /home/dietpi/.local
+}
+
+create_transparent_cursor
+
+# Set cursor theme for the session
+export XCURSOR_THEME=transparent
+export XCURSOR_PATH=/home/dietpi/.local/share/icons:$XCURSOR_PATH
+
+# Note: Cursor hiding is challenging on Wayland due to security restrictions
+# The transparent cursor theme above should help make it less visible
+# For Wayland, we rely on Chromium's built-in cursor auto-hide after inactivity
 
 # Launch Chromium in kiosk mode with Wayland support and GPU acceleration
 exec chromium-browser \
@@ -657,16 +741,18 @@ exec chromium-browser \
     --check-for-update-interval=31536000 \
     --disable-component-update \
     --autoplay-policy=no-user-gesture-required \
-    --enable-features=UseOzonePlatform,VaapiVideoDecoder,VaapiVideoEncoder,CanvasOopRasterization \
+    --enable-features=UseOzonePlatform,VaapiVideoDecoder,VaapiVideoEncoder,CanvasOopRasterization,OverlayScrollbar,TouchpadOverscrollHistoryNavigation \
+    --disable-features=UseChromeOSDirectVideoDecoder \
     --ozone-platform=wayland \
     --enable-gpu-rasterization \
     --enable-zero-copy \
     --enable-hardware-overlays \
-    --disable-features=UseChromeOSDirectVideoDecoder \
-    --use-gl=angle \
-    --use-angle=gles \
+    --use-gl=egl \
     --ignore-gpu-blocklist \
     --disable-gpu-driver-bug-workarounds \
+    --force-color-profile=srgb \
+    --disable-lcd-text \
+    --hide-scrollbars \
     "$URL"
 EOF
 
@@ -734,8 +820,9 @@ echo "Creating Cage systemd service..."
 cat > /etc/systemd/system/cage-kiosk.service << 'EOF'
 [Unit]
 Description=Cage Wayland Kiosk
-After=multi-user.target network-online.target systemd-user-sessions.service
+After=multi-user.target network-online.target systemd-user-sessions.service seatd.service xdg-runtime-dir@1000.service
 Wants=network-online.target
+Requires=seatd.service xdg-runtime-dir@1000.service
 
 [Service]
 Type=simple
@@ -755,6 +842,11 @@ Environment="WLR_BACKEND=drm"
 Environment="WLR_DRM_DEVICES=/dev/dri/card1:/dev/dri/card0"
 Environment="WLR_RENDERER=gles2"
 Environment="WLR_NO_HARDWARE_CURSORS=1"
+# Hide cursor using libseat
+Environment="LIBSEAT_BACKEND=seatd"
+# Use transparent cursor theme as fallback
+Environment="XCURSOR_THEME=transparent"
+Environment="XCURSOR_PATH=/home/dietpi/.local/share/icons:/usr/share/icons"
 
 # Chromium environment for Wayland
 Environment="MOZ_ENABLE_WAYLAND=1"
@@ -763,12 +855,6 @@ Environment="QT_QPA_PLATFORM=wayland"
 
 # Audio configuration for HDMI output
 Environment="PULSE_RUNTIME_PATH=/run/user/1000/pulse"
-
-# Ensure PulseAudio is available (it starts via socket activation)
-
-# Wait for GPU and ensure audio is initialized
-ExecStartPre=/bin/bash -c 'until [ -e /dev/dri/card0 ]; do echo "Waiting for GPU..."; sleep 1; done'
-ExecStartPre=/bin/bash -c 'if [ -e /proc/asound/cards ]; then echo "Audio system ready"; fi'
 
 # Start cage with chromium
 # Note: Cage will auto-detect the connected display and use native resolution
@@ -822,6 +908,78 @@ if [ -f /sys/class/graphics/fb0/virtual_size ]; then
 fi
 EOF
 chmod +x /usr/local/bin/verify-display.sh
+
+# Create display fix script to handle phantom displays
+cat > /usr/local/bin/fix-phantom-displays.sh << 'EOF'
+#!/bin/bash
+# Fix phantom display issues by disabling disconnected outputs
+
+export XDG_RUNTIME_DIR=/run/user/1000
+
+# Script expects Wayland to be ready via systemd dependencies
+
+# Get list of outputs and their connection status
+if command -v wlr-randr >/dev/null 2>&1; then
+    # Check each HDMI output
+    for output in HDMI-A-1 HDMI-A-2; do
+        # Check if this output exists and is showing "(null)" which indicates phantom display
+        if wlr-randr 2>/dev/null | grep -q "$output.*(null)"; then
+            echo "Detected phantom display on $output, disabling..."
+            wlr-randr --output "$output" --off 2>/dev/null || true
+        fi
+    done
+    
+    # Also check for any output at low resolution that might be phantom
+    # Sometimes phantom displays default to 1024x768
+    if wlr-randr 2>/dev/null | grep -q "1024x768.*current"; then
+        # Find which output has this resolution
+        for output in HDMI-A-1 HDMI-A-2; do
+            if wlr-randr 2>/dev/null | grep -A5 "$output" | grep -q "1024x768.*current"; then
+                # Check if there's another output at higher resolution
+                other_output=$(wlr-randr 2>/dev/null | grep -E "(3840x2160|1920x1080).*current" | wc -l)
+                if [ "$other_output" -gt 0 ]; then
+                    echo "Disabling low-res phantom display on $output"
+                    wlr-randr --output "$output" --off 2>/dev/null || true
+                fi
+            fi
+        done
+    fi
+fi
+EOF
+chmod +x /usr/local/bin/fix-phantom-displays.sh
+
+# Create systemd service to fix phantom displays after cage starts
+cat > /etc/systemd/system/fix-phantom-displays.service << 'EOF'
+[Unit]
+Description=Fix Phantom Display Outputs
+After=cage-kiosk.service
+Requires=cage-kiosk.service
+# Give cage time to initialize the Wayland socket
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/fix-phantom-displays.sh
+User=dietpi
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+# Add a small startup delay via systemd instead of sleep in script
+ExecStartPre=/bin/sh -c 'systemctl is-active --quiet cage-kiosk.service'
+# Retry logic if wlr-randr isn't ready yet
+Restart=on-failure
+RestartSec=2
+StartLimitBurst=3
+StartLimitIntervalSec=30
+
+# Restart if the cage service restarts
+BindsTo=cage-kiosk.service
+
+[Install]
+WantedBy=graphical.target
+EOF
+
+systemctl enable fix-phantom-displays.service
 
 # Log display info on first boot
 /usr/local/bin/verify-display.sh > /var/log/display-capabilities.log 2>&1
