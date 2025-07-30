@@ -540,12 +540,21 @@ apt-get install -y \
     unclutter \
     xdotool
 
-# Add dietpi user to necessary groups for GPU, TTY, audio, and seat access
-usermod -a -G video,render,input,tty,audio,seat dietpi
+# Add dietpi user to necessary groups for GPU, TTY, audio access
+# Note: 'seat' group doesn't exist in DietPi, removed from list
+usermod -a -G video,render,input,tty,audio dietpi
 
-# Ensure seatd is properly configured
+# Force the group changes to be applied to running processes
+# This ensures cage-kiosk will have correct permissions when it starts
+killall -STOP dietpi 2>/dev/null || true
+killall -CONT dietpi 2>/dev/null || true
+
+# Ensure seatd is properly configured and running
 systemctl enable seatd
 systemctl start seatd
+
+# Give seatd a moment to start and create its socket
+sleep 2
 
 # Enable lingering for dietpi user so user services start at boot
 loginctl enable-linger dietpi
@@ -747,7 +756,8 @@ exec chromium-browser \
     --enable-gpu-rasterization \
     --enable-zero-copy \
     --enable-hardware-overlays \
-    --use-gl=egl \
+    --use-gl=angle \
+    --use-angle=gles \
     --ignore-gpu-blocklist \
     --disable-gpu-driver-bug-workarounds \
     --force-color-profile=srgb \
