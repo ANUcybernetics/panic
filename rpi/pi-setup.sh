@@ -1,26 +1,26 @@
 #!/bin/bash
-# DietPi automated SD card setup for Raspberry Pi 5 kiosk mode with Wayland
-# This script creates a fully automated DietPi installation that boots directly into 
-# GPU-accelerated Chromium kiosk mode using Cage compositor and automatically joins Tailscale
+# Raspberry Pi OS Bookworm automated SD card setup for Raspberry Pi 5 kiosk mode
+# This script creates a fully automated Raspberry Pi OS installation that boots directly into 
+# GPU-accelerated Chromium kiosk mode using Wayland/Wayfire and automatically joins Tailscale
 #
 # Features:
-# - Full GPU acceleration with minimal Cage Wayland compositor
+# - Full GPU acceleration with Wayfire Wayland compositor
 # - Native 4K display support with auto-detection
 # - Consumer and enterprise WiFi configuration
 # - Automatic Tailscale network join
 # - Optimized for Raspberry Pi 5 with 8GB RAM
-# - Fixed GL implementation for better compatibility (angle/gles)
+# - Uses official Raspberry Pi OS Bookworm
 #
-# Uses latest DietPi version
+# Uses latest Raspberry Pi OS Bookworm (64-bit)
 
 set -e
 set -u
 set -o pipefail
 
 # Configuration
-readonly DIETPI_IMAGE_URL="https://dietpi.com/downloads/images/DietPi_RPi5-ARMv8-Bookworm.img.xz"
+readonly RASPIOS_IMAGE_URL="https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2024-11-19/2024-11-19-raspios-bookworm-arm64.img.xz"
 readonly DEFAULT_URL="https://panic.fly.dev/"
-readonly CACHE_DIR="$HOME/.cache/dietpi-images"
+readonly CACHE_DIR="$HOME/.cache/raspios-images"
 
 # Colors for output
 readonly RED='\033[0;31m'
@@ -28,116 +28,97 @@ readonly GREEN='\033[0;32m'
 readonly YELLOW='\033[1;33m'
 readonly NC='\033[0m' # No Color
 
-# Check if running on macOS
-if [[ "$OSTYPE" != "darwin"* ]]; then
-    echo -e "${RED}Error: This script is designed for macOS${NC}"
+# Check if running on Linux (Ubuntu)
+if [[ "$OSTYPE" != "linux-gnu"* ]]; then
+    echo -e "${RED}Error: This script is designed for Linux (Ubuntu)${NC}"
+    echo "The macOS version is being deprecated due to OS compatibility issues."
     exit 1
 fi
 
 # Check for required tools
 check_required_tools() {
-    # Check for jq
-    if ! command -v jq >/dev/null 2>&1; then
-        echo -e "${RED}Error: jq is required but not installed${NC}"
+    local missing_tools=()
+    
+    # Check for required commands
+    for cmd in curl xz pv dd mktemp jq; do
+        if ! command -v "$cmd" >/dev/null 2>&1; then
+            missing_tools+=("$cmd")
+        fi
+    done
+    
+    if [ ${#missing_tools[@]} -gt 0 ]; then
+        echo -e "${RED}Error: Missing required tools: ${missing_tools[*]}${NC}"
         echo
-        echo "Please install jq using one of these methods:"
-        echo "  • Homebrew: brew install jq"
-        echo "  • MacPorts: sudo port install jq"
-        echo "  • Download from: https://jqlang.github.io/jq/download/"
-        echo
-        echo "jq is needed to safely handle JSON configuration with special characters."
-        exit 1
-    fi
-
-    # Check for pv
-    if ! command -v pv >/dev/null 2>&1; then
-        echo -e "${RED}Error: pv is required but not installed${NC}"
-        echo
-        echo "Please install pv using Homebrew:"
-        echo "  brew install pv"
-        echo
-        echo "pv is needed for progress display during SD card writing."
-        exit 1
-    fi
-
-    # Check for humanfriendly
-    if ! command -v humanfriendly >/dev/null 2>&1; then
-        echo -e "${RED}Error: humanfriendly is required but not installed${NC}"
-        echo
-        echo "Please install humanfriendly using uv:"
-        echo "  uv tool install --python 3.12 humanfriendly"
-        echo
-        echo "humanfriendly is needed to parse compressed image sizes for accurate progress display."
+        echo "Please install missing tools using:"
+        echo "  sudo apt-get update"
+        echo "  sudo apt-get install ${missing_tools[*]}"
         exit 1
     fi
 }
 
 # Function to find SD card device
 find_sd_card() {
-    echo -e "${YELLOW}Checking for SD card in built-in reader...${NC}" >&2
-
-    # Look through all disks to find the built-in SDXC reader
-    for disk in /dev/disk*; do
-        # Skip partition identifiers (e.g., disk1s1)
-        if [[ "$disk" =~ ^/dev/disk[0-9]+$ ]]; then
-            # Check if it's the built-in SDXC reader
-            local device_info=$(diskutil info "$disk" 2>/dev/null | grep "Device / Media Name:")
-            if echo "$device_info" | grep -q "Built In SDXC Reader"; then
-                # Check if it's removable media (i.e., has an SD card inserted)
-                if diskutil info "$disk" 2>/dev/null | grep -q "Removable Media:.*Removable"; then
-                    echo -e "${GREEN}✓ Found SD card in built-in reader at $disk${NC}" >&2
-                    echo "$disk"
-                    return 0
-                else
-                    echo -e "${RED}Error: Built-in SD card reader found at $disk but no SD card inserted${NC}" >&2
-                    echo -e "${YELLOW}Please insert an SD card and run the script again${NC}" >&2
-                    return 1
-                fi
-            fi
+    echo -e "${YELLOW}Looking for SD card devices...${NC}" >&2
+    
+    # List removable block devices
+    local devices=()
+    while IFS= read -r line; do
+        local device="/dev/$line"
+        local removable=$(cat "/sys/block/$line/removable" 2>/dev/null || echo "0")
+        local size=$(lsblk -b -n -o SIZE "$device" 2>/dev/null || echo "0")
+        local size_gb=$((size / 1024 / 1024 / 1024))
+        
+        # Check if removable and reasonable size for SD card (between 2GB and 256GB)
+        if [ "$removable" = "1" ] && [ "$size_gb" -ge 2 ] && [ "$size_gb" -le 256 ]; then
+            devices+=("$device")
         fi
+    done < <(ls /sys/block/ | grep -E '^(sd|mmcblk)[a-z0-9]*$')
+    
+    if [ ${#devices[@]} -eq 0 ]; then
+        echo -e "${RED}Error: No SD card devices found${NC}" >&2
+        echo -e "${YELLOW}Please insert an SD card and run the script again${NC}" >&2
+        return 1
+    fi
+    
+    if [ ${#devices[@]} -eq 1 ]; then
+        echo -e "${GREEN}✓ Found SD card at ${devices[0]}${NC}" >&2
+        echo "${devices[0]}"
+        return 0
+    fi
+    
+    # Multiple devices found, ask user to select
+    echo -e "${YELLOW}Multiple removable devices found:${NC}" >&2
+    for i in "${!devices[@]}"; do
+        local dev="${devices[$i]}"
+        local size=$(lsblk -b -n -o SIZE "$dev" 2>/dev/null || echo "0")
+        local size_gb=$((size / 1024 / 1024 / 1024))
+        local model=$(lsblk -n -o MODEL "$dev" 2>/dev/null | tr -d ' ' || echo "Unknown")
+        echo "  $((i+1))) $dev - ${size_gb}GB - $model" >&2
     done
-
-    echo -e "${RED}Error: Built-in SD card reader not found${NC}" >&2
-    echo -e "${YELLOW}Please ensure your Mac has a built-in SD card reader${NC}" >&2
-    return 1
-}
-
-# Function to get uncompressed size of xz file in bytes
-get_uncompressed_size() {
-    local xz_file="$1"
     
-    # Extract uncompressed size from xz -l output
-    # Format: "862.6 MiB" -> we need both number and unit
-    local size_str=$(xz -l "$xz_file" 2>/dev/null | grep -A 1 "Uncompressed" | tail -1 | awk '{print $5 $6}')
+    echo -n "Select device (1-${#devices[@]}): " >&2
+    read -r selection
     
-    if [ -z "$size_str" ]; then
-        echo -e "${YELLOW}Warning: Could not determine uncompressed size${NC}" >&2
-        echo "0"
+    if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le ${#devices[@]} ]; then
+        local selected="${devices[$((selection-1))]}"
+        echo -e "${GREEN}✓ Selected $selected${NC}" >&2
+        echo "$selected"
+        return 0
+    else
+        echo -e "${RED}Error: Invalid selection${NC}" >&2
         return 1
     fi
-    
-    # Convert human-readable size to bytes using humanfriendly
-    local size_bytes=$(humanfriendly --parse-size "$size_str" 2>/dev/null)
-    
-    if [ -z "$size_bytes" ] || [ "$size_bytes" = "0" ]; then
-        echo -e "${YELLOW}Warning: Could not parse size '$size_str'${NC}" >&2
-        echo "0"
-        return 1
-    fi
-    
-    echo "$size_bytes"
-    return 0
 }
 
-# Function to download DietPi image with caching
-download_dietpi() {
+# Function to download Raspberry Pi OS image with caching
+download_raspios() {
     local output_file="$1"
 
     # Create cache directory if it doesn't exist
     mkdir -p "$CACHE_DIR"
 
     # Extract filename from URL
-    local filename=$(basename "$DIETPI_IMAGE_URL")
+    local filename=$(basename "$RASPIOS_IMAGE_URL")
     local cached_file="$CACHE_DIR/$filename"
 
     # Check if we have a cached version
@@ -147,9 +128,9 @@ download_dietpi() {
         return 0
     fi
 
-    echo -e "${YELLOW}Downloading DietPi image...${NC}"
-    if ! curl -L -o "$cached_file" "$DIETPI_IMAGE_URL"; then
-        echo -e "${RED}Error: Failed to download image from $DIETPI_IMAGE_URL${NC}"
+    echo -e "${YELLOW}Downloading Raspberry Pi OS image...${NC}"
+    if ! curl -L -o "$cached_file" "$RASPIOS_IMAGE_URL"; then
+        echo -e "${RED}Error: Failed to download image from $RASPIOS_IMAGE_URL${NC}"
         rm -f "$cached_file"
         exit 1
     fi
@@ -175,15 +156,6 @@ write_image_to_sd() {
     echo -e "${YELLOW}Writing image to SD card...${NC}"
     echo "This will take several minutes..."
 
-    if [ "$test_mode" != "true" ]; then
-        # Prompt for sudo password early to avoid interrupting the progress display
-        echo "Requesting administrator privileges for writing to SD card..."
-        sudo -v
-
-        # Unmount any mounted partitions
-        diskutil unmountDisk force "$device" || true
-    fi
-
     if [ "$test_mode" = "true" ]; then
         echo -e "${YELLOW}TEST MODE: Skipping actual image write${NC}"
         echo "Would decompress and write: $image_file -> $device"
@@ -193,19 +165,25 @@ write_image_to_sd() {
         return 0
     fi
 
-    # Get uncompressed size for accurate progress display
-    local uncompressed_size=$(get_uncompressed_size "$image_file")
+    # Unmount any mounted partitions
+    for part in "${device}"*; do
+        if mountpoint -q "$part" 2>/dev/null; then
+            sudo umount "$part" || true
+        fi
+    done
+
+    # Get uncompressed size for progress display
+    local uncompressed_size=$(xz -l "$image_file" 2>/dev/null | grep -E "^ *[0-9]" | awk '{print $5}' | sed 's/,//g')
     
-    if [ "$uncompressed_size" != "0" ]; then
-        echo "Uncompressed image size: $(humanfriendly --format-size "$uncompressed_size")"
+    if [ -n "$uncompressed_size" ] && [ "$uncompressed_size" != "0" ]; then
+        echo "Uncompressed image size: $((uncompressed_size / 1024 / 1024 / 1024)) GB"
         echo "Using pv for progress display with accurate ETA..."
-        # Use larger block size (32MB) and raw device for better performance
-        # Pass size to pv for accurate progress and ETA
-        xzcat "$image_file" | pv -s "$uncompressed_size" | sudo dd of="${device/disk/rdisk}" bs=32m
+        # Use larger block size (32MB) for better performance
+        xzcat "$image_file" | pv -s "$uncompressed_size" | sudo dd of="$device" bs=32M status=none
     else
         echo "Using pv for progress display (size unknown)..."
         # Fall back to size-less progress display
-        xzcat "$image_file" | pv | sudo dd of="${device/disk/rdisk}" bs=32m
+        xzcat "$image_file" | pv | sudo dd of="$device" bs=32M status=none
     fi
 
     # Ensure all data is written
@@ -213,76 +191,49 @@ write_image_to_sd() {
 
     echo -e "${GREEN}✓ Image written to SD card${NC}"
     
-    # Force macOS to mount the disk
-    echo -e "${YELLOW}Mounting disk partitions...${NC}"
-    diskutil mountDisk "$device" || true
-    
-    # Give macOS a moment to mount the partitions
-    sleep 3
-    
-    # Immediately disable Spotlight indexing on the newly mounted volumes
-    echo "Disabling Spotlight indexing on SD card..."
-    for volume in /Volumes/*; do
-        if diskutil info "$volume" 2>/dev/null | grep -q "$device"; then
-            sudo mdutil -i off "$volume" 2>/dev/null || true
-        fi
-    done
+    # Force kernel to re-read partition table
+    sudo partprobe "$device" || true
+    sleep 2
 }
 
 # Function to wait for boot partition
 wait_for_boot_partition() {
     local device="$1"
     local test_mode="${2:-false}"
-    local mount_point=""
     
     if [ "$test_mode" = "true" ]; then
         echo -e "${YELLOW}TEST MODE: Creating temporary directory for boot partition${NC}" >&2
-        mount_point=$(mktemp -d)
+        local mount_point=$(mktemp -d)
         echo "$mount_point"
         return 0
     fi
 
     echo -e "${YELLOW}Waiting for boot partition to mount...${NC}" >&2
     
-    # Wait up to 45 seconds for the boot partition to appear
-    for i in {1..45}; do
-        # Look for any new volume that might be the boot partition
-        # DietPi might name it differently - check for common patterns
-        for volume in /Volumes/*; do
-            # Skip known system volumes
-            if [[ "$volume" == "/Volumes/Macintosh HD" ]] || [[ "$volume" == "/Volumes/Macintosh HD - Data" ]]; then
-                continue
-            fi
-            
-            # Check if it's likely a boot partition
-            local volume_name=$(basename "$volume")
-            # Use tr for lowercase conversion (more compatible)
-            local volume_lower=$(echo "$volume_name" | tr '[:upper:]' '[:lower:]')
-            
-            if [[ "$volume_lower" =~ boot ]] || [[ "$volume_lower" =~ dietpi ]] || [[ "$volume_name" == "NO NAME" ]] || [[ "$volume_name" =~ ^[A-Z0-9_]+$ ]]; then
-                # Verify it's the SD card by checking for expected files
-                if [ -d "$volume" ] && [ -r "$volume" ]; then
-                    echo -e "${GREEN}✓ Found boot partition${NC}" >&2
-                    echo "$volume"
-                    return 0
-                fi
-            fi
-        done
-        
-        # Show progress every 10 seconds
-        if [ $((i % 10)) -eq 0 ]; then
-            echo -e "${YELLOW}Still waiting... ($i/45)${NC}" >&2
-        fi
-        
-        sleep 1
-    done
+    # Create temporary mount point
+    local mount_point=$(mktemp -d)
     
-    echo -e "${RED}Error: Boot partition not found after 45 seconds${NC}" >&2
-    return 1
+    # Try to mount the boot partition
+    # For Raspberry Pi OS, it's usually the first partition
+    local boot_device="${device}1"
+    if [[ "$device" =~ mmcblk ]]; then
+        boot_device="${device}p1"
+    fi
+    
+    # Mount the boot partition
+    if sudo mount "$boot_device" "$mount_point" 2>/dev/null; then
+        echo -e "${GREEN}✓ Mounted boot partition at $mount_point${NC}" >&2
+        echo "$mount_point"
+        return 0
+    else
+        echo -e "${RED}Error: Failed to mount boot partition${NC}" >&2
+        rmdir "$mount_point"
+        return 1
+    fi
 }
 
-# Function to configure DietPi automation
-configure_dietpi() {
+# Function to configure Raspberry Pi OS
+configure_raspios() {
     local boot_mount="$1"
     local wifi_ssid="$2"
     local wifi_password="$3"
@@ -296,483 +247,396 @@ configure_dietpi() {
     local ssh_key_file="${11}"
     local test_mode="${12:-false}"
 
-    echo -e "${YELLOW}Configuring DietPi automation...${NC}"
+    echo -e "${YELLOW}Configuring Raspberry Pi OS for automated setup...${NC}"
 
-    # Create dietpi.txt for full automation
-    cat > "$boot_mount/dietpi.txt" << EOF
-# DietPi automation configuration
-# This file allows for completely unattended installation
-
-##### Network Options #####
-# Hostname
-AUTO_SETUP_NET_HOSTNAME=$hostname
-
-# Ethernet settings - ensure ethernet is enabled
-AUTO_SETUP_NET_ETHERNET_ENABLED=1
-
-# WiFi settings
-AUTO_SETUP_NET_WIFI_ENABLED=1
-AUTO_SETUP_NET_WIFI_COUNTRY_CODE=US
-
-##### Software Options #####
-# Automated installation
-AUTO_SETUP_AUTOMATED=1
-
-# Global password for dietpi user
-AUTO_SETUP_GLOBAL_PASSWORD=$password
-
-# Software to install:
-# 105 = OpenSSH Server
-# 113 = Chromium
-# Note: We'll install Wayfire in custom script for Wayland support
-AUTO_SETUP_INSTALL_SOFTWARE_ID=105,113
-
-# Set autostart to disabled - we'll use systemd services instead
-AUTO_SETUP_AUTOSTART_TARGET_INDEX=0
-
-# Disable serial console
-AUTO_SETUP_SERIAL_CONSOLE_ENABLE=0
-
-# Locale
-AUTO_SETUP_LOCALE=en_US.UTF-8
-
-# Keyboard
-AUTO_SETUP_KEYBOARD_LAYOUT=us
-
-# Timezone
-AUTO_SETUP_TIMEZONE=Etc/UTC
-
-##### DietPi-Config Settings #####
-# Disable swap
-CONFIG_SWAP_SIZE=0
-
-# GPU memory split (512MB for 4K support on RPi5)
-CONFIG_GPU_MEM_SPLIT=512
-
-# Disable Bluetooth
-CONFIG_BLUETOOTH_DISABLE=1
-
-# Enable maximum performance mode for better GPU acceleration
-CONFIG_CPU_GOVERNOR=performance
-
-# HDMI settings for display support
-# Auto-detection works best - the system will detect both 1080p and 4K displays
-# GPU memory is set to 512MB to ensure 4K displays have enough resources
-# No forced HDMI modes - let the KMS driver handle native resolution detection
-
-# Custom script to run after installation
-AUTO_SETUP_CUSTOM_SCRIPT_EXEC=/boot/firmware/Automation_Custom_Script.sh
-
-##### Chromium Kiosk Settings #####
-# Set the kiosk URL
-SOFTWARE_CHROMIUM_AUTOSTART_URL=$url
-
-# Don't set resolution in dietpi.txt - let our custom script auto-detect it
-EOF
-
-    # Configure WiFi
-    if [ -n "$wifi_ssid" ]; then
-        if [ -n "$wifi_enterprise_user" ] && [ -n "$wifi_enterprise_pass" ]; then
-            # Enterprise WiFi
-            cat > "$boot_mount/dietpi-wifi.txt" << EOF
-# WiFi Enterprise Configuration
-aWIFI_SSID[0]='$wifi_ssid'
-aWIFI_KEY[0]=''
-aWIFI_KEYMGR[0]='WPA-EAP'
-aWIFI_PROTO[0]='RSN'
-aWIFI_PAIRWISE[0]='CCMP'
-aWIFI_AUTH_ALG[0]='OPEN'
-aWIFI_EAP[0]='PEAP'
-aWIFI_IDENTITY[0]='$wifi_enterprise_user'
-aWIFI_PASSWORD[0]='$wifi_enterprise_pass'
-aWIFI_PHASE1[0]='peaplabel=0'
-aWIFI_PHASE2[0]='auth=MSCHAPV2'
-EOF
-        elif [ -n "$wifi_password" ]; then
-            # Regular WiFi
-            cat > "$boot_mount/dietpi-wifi.txt" << EOF
-# WiFi Configuration
-aWIFI_SSID[0]='$wifi_ssid'
-aWIFI_KEY[0]='$wifi_password'
-aWIFI_KEYMGR[0]='WPA-PSK'
-aWIFI_PROTO[0]='RSN'
-aWIFI_PAIRWISE[0]='CCMP'
-aWIFI_AUTH_ALG[0]='OPEN'
-EOF
+    # Helper function to write files (uses sudo in real mode, regular write in test mode)
+    write_file() {
+        local file="$1"
+        local content="$2"
+        if [ "$test_mode" = "true" ]; then
+            echo "$content" > "$file"
+        else
+            echo "$content" | sudo tee "$file" > /dev/null
         fi
-        echo -e "${GREEN}✓ WiFi configured${NC}"
-    fi
+    }
 
-    # Create dietpi_userdata directory if needed
-    mkdir -p "$boot_mount/dietpi_userdata"
+    # Helper function to create files
+    create_file() {
+        local file="$1"
+        if [ "$test_mode" = "true" ]; then
+            touch "$file"
+        else
+            sudo touch "$file"
+        fi
+    }
 
-    # Add Tailscale auth key if provided
-    if [ -n "$tailscale_authkey" ]; then
-        echo "$tailscale_authkey" > "$boot_mount/dietpi_userdata/tailscale_authkey"
-        echo -e "${GREEN}✓ Tailscale auth key configured${NC}"
-    fi
+    # Create userconf for user setup (bypasses first-boot wizard)
+    # Password needs to be encrypted using openssl
+    local encrypted_pass=$(openssl passwd -6 "$password")
+    write_file "$boot_mount/userconf.txt" "${username}:${encrypted_pass}"
+    echo -e "${GREEN}✓ User configuration created${NC}"
 
-    # Add SSH key if provided and exists
-    if [ -f "$ssh_key_file" ]; then
-        cp "$ssh_key_file" "$boot_mount/dietpi_userdata/authorized_keys"
-        echo -e "${GREEN}✓ SSH key configured${NC}"
-    elif [ -n "$ssh_key_file" ]; then
-        echo -e "${YELLOW}⚠ SSH key file not found: $ssh_key_file${NC}"
-    fi
+    # Enable SSH
+    create_file "$boot_mount/ssh"
+    echo -e "${GREEN}✓ SSH enabled${NC}"
 
-    # Create custom automation script for kiosk setup
-    cat > "$boot_mount/Automation_Custom_Script.sh" << 'CUSTOM_SCRIPT'
+    # Create firstrun.sh for automated configuration
+    if [ "$test_mode" = "true" ]; then
+        cat << 'FIRSTRUN_SCRIPT' > "$boot_mount/firstrun.sh"
 #!/bin/bash
-# DietPi custom automation script for kiosk mode with Tailscale
+# Raspberry Pi OS Bookworm first-run configuration script
+# This script runs once on first boot to set up the kiosk
 
-echo "Starting DietPi custom automation script..."
+set -e
 
-# Use the current DietPi boot partition path
+# Log all output
+exec > >(tee -a /var/log/firstrun.log)
+exec 2>&1
+
+echo "Starting first-run configuration at $(date)"
+
+# Set variables from boot partition files
 BOOT_PATH="/boot/firmware"
-
-# Disable systemd-networkd-wait-online to prevent boot warnings
-# Our services have their own network checks, so this isn't needed
-systemctl disable systemd-networkd-wait-online.service
-
-# Create Tailscale setup script
-cat > /usr/local/bin/setup-tailscale.sh << 'EOF'
-#!/bin/bash
-# Tailscale setup script
-
-BOOT_PATH="/boot/firmware"
-AUTHKEY_PATH="${BOOT_PATH}/dietpi_userdata/tailscale_authkey"
-
-if [ -f "$AUTHKEY_PATH" ]; then
-    echo "Setting up Tailscale..."
-    
-    # Install Tailscale if not already installed
-    if ! command -v tailscale >/dev/null 2>&1; then
-        curl -fsSL https://tailscale.com/install.sh | sh
-    fi
-    
-    # Read the auth key
-    TAILSCALE_AUTHKEY=$(cat "$AUTHKEY_PATH")
-    
-    # Get hostname from dietpi.txt
-    DIETPI_TXT="${BOOT_PATH}/dietpi.txt"
-    HOSTNAME=$(grep "^AUTO_SETUP_NET_HOSTNAME=" "$DIETPI_TXT" | cut -d= -f2)
-    
-    # Start tailscale and authenticate
-    echo "Starting Tailscale with hostname: $HOSTNAME"
-    tailscale up --authkey="$TAILSCALE_AUTHKEY" --ssh --hostname="$HOSTNAME" --accept-routes --accept-dns=false
-    
-    # Check if connected (systemd will retry if this fails)
-    if tailscale status >/dev/null 2>&1; then
-        echo "Tailscale connected successfully"
-        tailscale status
-    else
-        echo "Tailscale connection pending..."
-        exit 1  # Let systemd retry
-    fi
-    
-    # Remove the auth key file for security
-    rm -f "$AUTHKEY_PATH"
-else
-    echo "No Tailscale auth key found, skipping setup"
+if [ ! -d "$BOOT_PATH" ]; then
+    BOOT_PATH="/boot"
 fi
+
+# Read configuration
+if [ -f "$BOOT_PATH/kiosk-config.json" ]; then
+    CONFIG_FILE="$BOOT_PATH/kiosk-config.json"
+    KIOSK_URL=$(jq -r '.url' "$CONFIG_FILE")
+    HOSTNAME=$(jq -r '.hostname' "$CONFIG_FILE")
+    WIFI_SSID=$(jq -r '.wifi_ssid // empty' "$CONFIG_FILE")
+    WIFI_PASSWORD=$(jq -r '.wifi_password // empty' "$CONFIG_FILE")
+    WIFI_ENTERPRISE_USER=$(jq -r '.wifi_enterprise_user // empty' "$CONFIG_FILE")
+    WIFI_ENTERPRISE_PASS=$(jq -r '.wifi_enterprise_pass // empty' "$CONFIG_FILE")
+    TAILSCALE_AUTHKEY=$(jq -r '.tailscale_authkey // empty' "$CONFIG_FILE")
+    USERNAME=$(jq -r '.username' "$CONFIG_FILE")
+fi
+
+# Set hostname
+if [ -n "$HOSTNAME" ]; then
+    echo "$HOSTNAME" > /etc/hostname
+    sed -i "s/raspberrypi/$HOSTNAME/g" /etc/hosts
+    echo "Set hostname to: $HOSTNAME"
+fi
+
+# Configure WiFi
+if [ -n "$WIFI_SSID" ]; then
+    echo "Configuring WiFi for SSID: $WIFI_SSID"
+    
+    # Enable WiFi
+    rfkill unblock wifi || true
+    
+    # Configure WiFi country (required for WiFi to work)
+    raspi-config nonint do_wifi_country US
+    
+    # Wait for NetworkManager to be ready
+    systemctl start NetworkManager || true
+    sleep 5
+    
+    if [ -n "$WIFI_ENTERPRISE_USER" ] && [ -n "$WIFI_ENTERPRISE_PASS" ]; then
+        # Enterprise WiFi configuration using nmcli
+        nmcli con add type wifi con-name "$WIFI_SSID" ifname wlan0 ssid "$WIFI_SSID" \
+            wifi-sec.key-mgmt wpa-eap 802-1x.eap peap 802-1x.phase2-auth mschapv2 \
+            802-1x.identity "$WIFI_ENTERPRISE_USER" 802-1x.password "$WIFI_ENTERPRISE_PASS" \
+            connection.autoconnect yes
+    elif [ -n "$WIFI_PASSWORD" ]; then
+        # Regular WPA2 WiFi - create NetworkManager connection file
+        cat > "/etc/NetworkManager/system-connections/${WIFI_SSID}.nmconnection" << EOF
+[connection]
+id=$WIFI_SSID
+uuid=$(uuidgen)
+type=wifi
+interface-name=wlan0
+autoconnect=true
+
+[wifi]
+mode=infrastructure
+ssid=$WIFI_SSID
+
+[wifi-security]
+auth-alg=open
+key-mgmt=wpa-psk
+psk=$WIFI_PASSWORD
+
+[ipv4]
+method=auto
+
+[ipv6]
+method=auto
 EOF
-chmod +x /usr/local/bin/setup-tailscale.sh
+        chmod 600 "/etc/NetworkManager/system-connections/${WIFI_SSID}.nmconnection"
+        systemctl restart NetworkManager || true
+    fi
+    
+    echo "WiFi configured"
+fi
 
-# Create Tailscale systemd service
-cat > /etc/systemd/system/tailscale-setup.service << 'EOF'
-[Unit]
-Description=Tailscale Initial Setup
-After=network-online.target tailscaled.service
-Wants=network-online.target
-Requires=tailscaled.service
-Before=cage-kiosk.service
-ConditionPathExists=/usr/local/bin/setup-tailscale.sh
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/usr/local/bin/setup-tailscale.sh
-StandardOutput=journal
-StandardError=journal
-# Retry if tailscale isn't ready yet
-Restart=on-failure
-RestartSec=5
-StartLimitBurst=5
-StartLimitIntervalSec=60
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Install SSH keys if provided
-KEY_PATH="${BOOT_PATH}/dietpi_userdata/authorized_keys"
-
-if [ -f "$KEY_PATH" ]; then
+# Install SSH key if provided
+if [ -f "$BOOT_PATH/authorized_keys" ]; then
     echo "Installing SSH keys..."
-    # For DietPi user
-    mkdir -p /home/dietpi/.ssh
-    cp "$KEY_PATH" /home/dietpi/.ssh/authorized_keys
-    chown -R dietpi:dietpi /home/dietpi/.ssh
-    chmod 700 /home/dietpi/.ssh
-    chmod 600 /home/dietpi/.ssh/authorized_keys
-    
-    # Clean up
-    rm -f "$KEY_PATH"
+    USER_HOME="/home/$USERNAME"
+    mkdir -p "$USER_HOME/.ssh"
+    cp "$BOOT_PATH/authorized_keys" "$USER_HOME/.ssh/authorized_keys"
+    chown -R "$USERNAME:$USERNAME" "$USER_HOME/.ssh"
+    chmod 700 "$USER_HOME/.ssh"
+    chmod 600 "$USER_HOME/.ssh/authorized_keys"
+    rm -f "$BOOT_PATH/authorized_keys"
+    echo "SSH keys installed"
 fi
 
-# Install Cage compositor and dependencies for minimal kiosk mode
-echo "Installing Cage compositor and dependencies..."
+# Update system
+echo "Updating package lists..."
 apt-get update
+
+# Install required packages
+echo "Installing required packages..."
 apt-get install -y \
-    cage \
-    seatd \
+    chromium-browser \
+    wayfire \
     wlr-randr \
+    xwayland \
+    seatd \
     libgles2-mesa \
     libgbm1 \
     libegl1-mesa \
     libgl1-mesa-dri \
     mesa-va-drivers \
     mesa-vdpau-drivers \
-    libdrm2 \
-    xwayland \
     pulseaudio \
-    pulseaudio-utils \
-    unclutter \
-    xdotool
+    pulseaudio-module-bluetooth \
+    network-manager \
+    jq \
+    curl \
+    uuid-runtime
 
-# Add dietpi user to necessary groups for GPU, TTY, audio access
-# Note: 'seat' group doesn't exist in DietPi, removed from list
-usermod -a -G video,render,input,tty,audio dietpi
+# Add user to required groups
+usermod -a -G video,render,input,audio "$USERNAME"
 
-# Force the group changes to be applied to running processes
-# This ensures cage-kiosk will have correct permissions when it starts
-killall -STOP dietpi 2>/dev/null || true
-killall -CONT dietpi 2>/dev/null || true
-
-# Ensure seatd is properly configured and running
-systemctl enable seatd
-systemctl start seatd
-
-# Give seatd a moment to start and create its socket
-sleep 2
-
-# Enable lingering for dietpi user so user services start at boot
-loginctl enable-linger dietpi
-
-# Create a systemd service to ensure XDG runtime directory exists
-cat > /etc/systemd/system/xdg-runtime-dir@.service << 'EOF'
-[Unit]
-Description=XDG Runtime Directory for user %i
-Before=cage-kiosk.service
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/bin/mkdir -p /run/user/%i
-ExecStart=/bin/chown %i:%i /run/user/%i
-ExecStart=/bin/chmod 0700 /run/user/%i
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-systemctl enable xdg-runtime-dir@1000.service
-
-# Enable PulseAudio to start automatically for dietpi user
-mkdir -p /home/dietpi/.config/systemd/user
-cat > /home/dietpi/.config/systemd/user/pulseaudio.service << 'EOF'
-[Unit]
-Description=Sound Service
-
-[Service]
-Type=notify
-PrivateDevices=no
-MemoryDenyWriteExecute=yes
-UMask=0077
-ExecStart=/usr/bin/pulseaudio --daemonize=no --log-target=journal
-Restart=on-failure
-
-[Install]
-WantedBy=default.target
-EOF
-
-# Fix ownership and enable PulseAudio for the dietpi user
-chown -R dietpi:dietpi /home/dietpi/.config
-sudo -u dietpi systemctl --user daemon-reload
-sudo -u dietpi systemctl --user enable pulseaudio.service
-sudo -u dietpi systemctl --user enable pulseaudio.socket
-
-# Ensure proper color depth configuration
-echo "Configuring display for proper color depth..."
-
-# Create early KMS configuration for proper color depth
-mkdir -p /etc/modprobe.d
-cat > /etc/modprobe.d/drm-kms-helper.conf << 'EOF'
-# Force 24-bit color depth for KMS
-options drm_kms_helper force_color_format=rgb888
-EOF
-
-# Configure PulseAudio for HDMI output
-echo "Configuring audio for HDMI output..."
-mkdir -p /etc/pulse/default.pa.d
-cat > /etc/pulse/default.pa.d/hdmi-audio.pa << 'EOF'
-# Set HDMI as default audio output
-load-module module-alsa-sink device=hdmi:CARD=vc4hdmi0,DEV=0 sink_name=hdmi0 sink_properties="device.description='HDMI-1'"
-load-module module-alsa-sink device=hdmi:CARD=vc4hdmi1,DEV=0 sink_name=hdmi1 sink_properties="device.description='HDMI-2'"
-
-# Set the first available HDMI as default
-set-default-sink hdmi0
-EOF
-
-# Create a script to ensure audio works after boot
-cat > /usr/local/bin/setup-hdmi-audio.sh << 'EOF'
-#!/bin/bash
-# Script expects PulseAudio to be already running via systemd dependencies
-
-# Find active HDMI output and set as default
-for card in /proc/asound/card*; do
-    if grep -q "vc4-hdmi" "$card/id" 2>/dev/null; then
-        card_num=$(basename "$card" | sed 's/card//')
-        # Check if HDMI is connected
-        if grep -q "connected" "/sys/class/drm/card$card_num-HDMI-A-1/status" 2>/dev/null || \
-           grep -q "connected" "/sys/class/drm/card$card_num-HDMI-A-2/status" 2>/dev/null; then
-            pactl set-default-sink "hdmi$card_num" 2>/dev/null || true
-            echo "Set HDMI audio output to card $card_num"
-            break
-        fi
+# Install and configure Tailscale if auth key provided
+if [ -n "$TAILSCALE_AUTHKEY" ]; then
+    echo "Installing Tailscale..."
+    curl -fsSL https://tailscale.com/install.sh | sh
+    
+    echo "Configuring Tailscale..."
+    tailscale up --authkey="$TAILSCALE_AUTHKEY" --ssh --hostname="$HOSTNAME" --accept-routes --accept-dns=false
+    
+    # Verify connection
+    if tailscale status >/dev/null 2>&1; then
+        echo "Tailscale connected successfully"
+    else
+        echo "Warning: Tailscale connection pending"
     fi
-done
+fi
 
-# Unmute and set volume
+# Configure Wayfire for kiosk mode
+echo "Configuring Wayfire..."
+USER_HOME="/home/$USERNAME"
+
+# Create Wayfire config directory
+mkdir -p "$USER_HOME/.config/wayfire"
+
+# Create Wayfire configuration for kiosk mode
+cat > "$USER_HOME/.config/wayfire/wayfire.ini" << 'EOF'
+[core]
+# List of plugins to load
+plugins = autostart command vswitch
+
+# Preferred decoration mode: server | client
+preferred_decoration_mode = client
+
+# How to position XWayland windows
+xwayland_position = center
+
+[autostart]
+# Start PulseAudio
+pulseaudio = /usr/bin/pulseaudio --start
+
+# Hide cursor after 1 second of inactivity
+hide_cursor = sh -c "sleep 5 && wlr-randr && unclutter -idle 1"
+
+# Start Chromium in kiosk mode
+chromium = /usr/local/bin/chromium-kiosk.sh
+
+# Ensure proper display configuration
+display_fix = /usr/local/bin/fix-displays.sh
+
+[command]
+# Emergency exit
+binding_quit = <super> KEY_Q
+command_quit = killall wayfire
+
+[input]
+# Disable cursor for kiosk mode
+cursor_theme = none
+cursor_size = 1
+
+# Disable all input methods we don't need
+xkb_layout = us
+xkb_variant = 
+xkb_options = 
+
+# Mouse settings
+mouse_accel_profile = flat
+mouse_cursor_speed = 0
+
+[output]
+# Let Wayfire handle the output configuration
+mode = preferred
+position = 0,0
+transform = normal
+EOF
+
+# Create chromium kiosk launcher script
+cat > /usr/local/bin/chromium-kiosk.sh << EOF
+#!/bin/bash
+# Chromium kiosk launcher script
+
+# Get URL from configuration
+KIOSK_URL="$KIOSK_URL"
+
+# Wait for Wayland to be ready
+sleep 3
+
+# Ensure audio is working
 amixer set Master unmute 2>/dev/null || true
 amixer set Master 80% 2>/dev/null || true
-EOF
-chmod +x /usr/local/bin/setup-hdmi-audio.sh
 
-# Create systemd service to run audio setup after cage starts
-cat > /etc/systemd/system/hdmi-audio-setup.service << 'EOF'
+# Launch Chromium with optimal settings for kiosk mode
+exec chromium-browser \\
+    --kiosk \\
+    --no-first-run \\
+    --noerrdialogs \\
+    --disable-infobars \\
+    --disable-translate \\
+    --disable-features=TranslateUI \\
+    --disable-features=OverscrollHistoryNavigation \\
+    --disable-pinch \\
+    --overscroll-history-navigation=0 \\
+    --disable-component-update \\
+    --autoplay-policy=no-user-gesture-required \\
+    --start-fullscreen \\
+    --window-position=0,0 \\
+    --check-for-update-interval=31536000 \\
+    --simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT' \\
+    --disable-software-rasterizer \\
+    --enable-gpu-rasterization \\
+    --enable-accelerated-video-decode \\
+    --ignore-gpu-blocklist \\
+    --enable-features=VaapiVideoDecoder,VaapiVideoEncoder,CanvasOopRasterization \\
+    --use-gl=egl \\
+    --ozone-platform=wayland \\
+    --enable-wayland-ime \\
+    "\$KIOSK_URL"
+EOF
+
+chmod +x /usr/local/bin/chromium-kiosk.sh
+
+# Create display fix script
+cat > /usr/local/bin/fix-displays.sh << 'EOF'
+#!/bin/bash
+# Fix display configuration
+
+sleep 2
+
+# Get current display info
+if command -v wlr-randr >/dev/null 2>&1; then
+    # Log current outputs
+    wlr-randr > /tmp/display-info.log 2>&1
+    
+    # Find the primary display (usually the one with highest resolution)
+    PRIMARY=$(wlr-randr | grep -E "^[A-Z]+-[A-Z]-[0-9]" | head -1 | awk '{print $1}')
+    
+    if [ -n "$PRIMARY" ]; then
+        # Enable primary display at preferred mode
+        wlr-randr --output "$PRIMARY" --on --mode preferred
+        
+        # Disable any phantom displays
+        for output in $(wlr-randr | grep -E "^[A-Z]+-[A-Z]-[0-9]" | awk '{print $1}'); do
+            if [ "$output" != "$PRIMARY" ]; then
+                # Check if it's a phantom display (usually shows as disconnected or has no EDID)
+                if wlr-randr | grep -A5 "$output" | grep -q "Enabled: yes" && \
+                   wlr-randr | grep -A5 "$output" | grep -qE "(unknown|disconnected|\(null\))"; then
+                    wlr-randr --output "$output" --off
+                fi
+            fi
+        done
+    fi
+fi
+EOF
+
+chmod +x /usr/local/bin/fix-displays.sh
+
+# Set ownership
+chown -R "$USERNAME:$USERNAME" "$USER_HOME/.config"
+
+# Create systemd service for kiosk
+cat > /etc/systemd/system/kiosk.service << EOF
 [Unit]
-Description=Configure HDMI Audio Output
-After=cage-kiosk.service sound.target
-Requires=cage-kiosk.service
-# Only run if user's pulseaudio service is active
-Requisite=user@1000.service
+Description=Wayfire Kiosk
+After=multi-user.target systemd-user-sessions.service plymouth-quit-wait.service
+Wants=network-online.target
 
 [Service]
-Type=oneshot
-ExecStart=/usr/local/bin/setup-hdmi-audio.sh
-User=dietpi
-RemainAfterExit=yes
-# Give up if PulseAudio isn't available after 30 seconds
-TimeoutStartSec=30
+Type=simple
+User=$USERNAME
+Group=$USERNAME
+PAMName=login
+
+# Ensure runtime directory exists
+RuntimeDirectory=user/1000
+RuntimeDirectoryMode=0700
+
+# Environment variables
+Environment="HOME=/home/$USERNAME"
+Environment="USER=$USERNAME"
+Environment="XDG_RUNTIME_DIR=/run/user/1000"
+Environment="XDG_SESSION_TYPE=wayland"
+Environment="XDG_SESSION_CLASS=user"
+Environment="XDG_SESSION_ID=1"
+Environment="XDG_SEAT=seat0"
+Environment="XDG_VTNR=1"
+
+# Wayland/GPU settings
+Environment="WLR_BACKENDS=drm"
+Environment="WLR_DRM_NO_MODIFIERS=1"
+Environment="WLR_RENDERER=gles2"
+Environment="MESA_LOADER_DRIVER_OVERRIDE=v3d"
+
+# Start Wayfire
+ExecStartPre=/bin/mkdir -p /run/user/1000
+ExecStartPre=/bin/chown $USERNAME:$USERNAME /run/user/1000
+ExecStartPre=/bin/chmod 0700 /run/user/1000
+ExecStartPre=/bin/loginctl enable-linger $USERNAME
+
+ExecStart=/usr/bin/wayfire
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Run on tty1
+StandardInput=tty
+StandardOutput=journal
+StandardError=journal
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
 
 [Install]
 WantedBy=graphical.target
 EOF
 
-systemctl enable hdmi-audio-setup.service
-
-# Create kiosk launch script for Wayland
-echo "Creating Chromium kiosk script..."
-cat > /usr/local/bin/chromium-kiosk.sh << 'EOF'
-#!/bin/bash
-# Chromium kiosk script for Wayland
-
-# Get URL from dietpi.txt or use default
-DIETPI_TXT="/boot/firmware/dietpi.txt"
-URL=$(sed -n '/^[[:blank:]]*SOFTWARE_CHROMIUM_AUTOSTART_URL=/{s/^[^=]*=//p;q}' "$DIETPI_TXT")
-URL=${URL:-https://panic.fly.dev}
-
-# Log startup
-logger -t chromium-kiosk "Starting Chromium kiosk with URL: $URL"
-
-# Create a transparent cursor for Wayland
-# This is the most reliable method for cursor hiding on Wayland
-create_transparent_cursor() {
-    local cursor_dir="/home/dietpi/.local/share/icons/transparent/cursors"
-    mkdir -p "$cursor_dir"
-    
-    # Create a truly transparent 1x1 PNG cursor
-    # PNG header + IHDR + transparent pixel data + IEND
-    printf '\x89\x50\x4e\x47\x0d\x0a\x1a\x0a\x00\x00\x00\x0d\x49\x48\x44\x52\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\x0d\x49\x44\x41\x54\x08\x99\x63\x60\x00\x00\x00\x01\x00\x01\x00\x00\x5f\xc3\x8e\x00\x00\x00\x00\x49\x45\x4e\x44\xae\x42\x60\x82' > "$cursor_dir/blank.png"
-    
-    # Create X11 cursor from PNG using xcursorgen
-    cat > "$cursor_dir/blank.cursor" << 'CURSOR'
-1 0 0 blank.png
-CURSOR
-    
-    cd "$cursor_dir"
-    
-    # Create the actual cursor file
-    echo -ne "Xcur\x00\x00\x00\x10\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x1c\x00\x00\x00\x24\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" > default
-    
-    # Create symlinks for all cursor names
-    for cursor in left_ptr arrow top_left_arrow watch cross hand2 hand1 hand pointing_hand pointer text xterm sb_h_double_arrow sb_v_double_arrow; do
-        ln -sf default "$cursor"
-    done
-    
-    # Create theme index
-    cat > "/home/dietpi/.local/share/icons/transparent/index.theme" << 'THEME'
-[Icon Theme]
-Name=Transparent
-Comment=Transparent cursor theme
-Inherits=
-THEME
-    
-    # Set ownership
-    chown -R dietpi:dietpi /home/dietpi/.local
-}
-
-create_transparent_cursor
-
-# Set cursor theme for the session
-export XCURSOR_THEME=transparent
-export XCURSOR_PATH=/home/dietpi/.local/share/icons:$XCURSOR_PATH
-
-# Note: Cursor hiding is challenging on Wayland due to security restrictions
-# The transparent cursor theme above should help make it less visible
-# For Wayland, we rely on Chromium's built-in cursor auto-hide after inactivity
-
-# Launch Chromium in kiosk mode with Wayland support and GPU acceleration
-exec chromium-browser \
-    --kiosk \
-    --noerrdialogs \
-    --disable-infobars \
-    --disable-translate \
-    --no-first-run \
-    --fast \
-    --fast-start \
-    --disable-features=TranslateUI \
-    --disk-cache-dir=/tmp/chromium-cache \
-    --start-fullscreen \
-    --disable-features=OverscrollHistoryNavigation \
-    --disable-pinch \
-    --check-for-update-interval=31536000 \
-    --disable-component-update \
-    --autoplay-policy=no-user-gesture-required \
-    --enable-features=UseOzonePlatform,VaapiVideoDecoder,VaapiVideoEncoder,CanvasOopRasterization,OverlayScrollbar,TouchpadOverscrollHistoryNavigation \
-    --disable-features=UseChromeOSDirectVideoDecoder \
-    --ozone-platform=wayland \
-    --enable-gpu-rasterization \
-    --enable-zero-copy \
-    --enable-hardware-overlays \
-    --use-gl=angle \
-    --use-angle=gles \
-    --ignore-gpu-blocklist \
-    --disable-gpu-driver-bug-workarounds \
-    --force-color-profile=srgb \
-    --disable-lcd-text \
-    --hide-scrollbars \
-    "$URL"
-EOF
-
-chmod +x /usr/local/bin/chromium-kiosk.sh
+# Disable conflicting services
+systemctl disable getty@tty1.service
+systemctl disable graphical.target || true
 
 # Create URL management script
-echo "Creating kiosk URL management script..."
 cat > /usr/local/bin/kiosk-set-url << 'EOF'
 #!/bin/bash
-# Script to update the kiosk URL without reflashing
+# Script to update the kiosk URL
 
 set -e
 
@@ -782,7 +646,7 @@ if [ $# -eq 0 ]; then
     echo "Example: kiosk-set-url https://example.com"
     echo ""
     echo "Current URL:"
-    grep "^SOFTWARE_CHROMIUM_AUTOSTART_URL=" /boot/firmware/dietpi.txt | cut -d= -f2
+    grep "KIOSK_URL=" /usr/local/bin/chromium-kiosk.sh | cut -d'"' -f2
     exit 1
 fi
 
@@ -794,268 +658,605 @@ if ! [[ "$NEW_URL" =~ ^https?:// ]]; then
     exit 1
 fi
 
-# Use current DietPi boot path
-DIETPI_TXT="/boot/firmware/dietpi.txt"
+# Update the URL in the chromium kiosk script
+echo "Updating URL to: $NEW_URL"
+sed -i "s|KIOSK_URL=\".*\"|KIOSK_URL=\"$NEW_URL\"|" /usr/local/bin/chromium-kiosk.sh
 
-# Check if dietpi.txt exists
-if [ ! -f "$DIETPI_TXT" ]; then
-    echo "Error: $DIETPI_TXT not found"
-    exit 1
+# Also update in boot config for persistence
+if [ -f /boot/firmware/kiosk-url.txt ]; then
+    echo "$NEW_URL" > /boot/firmware/kiosk-url.txt
 fi
 
-# Backup the current dietpi.txt
-cp "$DIETPI_TXT" "${DIETPI_TXT}.bak.$(date +%Y%m%d_%H%M%S)"
-
-# Update the URL in dietpi.txt
-echo "Updating URL to: $NEW_URL"
-sed -i "s|^SOFTWARE_CHROMIUM_AUTOSTART_URL=.*|SOFTWARE_CHROMIUM_AUTOSTART_URL=$NEW_URL|" "$DIETPI_TXT"
-
-# Verify the change
-echo "Verification:"
-grep "^SOFTWARE_CHROMIUM_AUTOSTART_URL=" "$DIETPI_TXT"
-
-# Restart the kiosk service to apply changes
+# Restart kiosk service
 echo "Restarting kiosk service..."
-systemctl restart cage-kiosk.service
+systemctl restart kiosk.service
 
-echo ""
 echo "✓ Kiosk URL updated successfully!"
-echo "The display should refresh with the new URL in a few seconds."
 EOF
 
 chmod +x /usr/local/bin/kiosk-set-url
 
-# Create Cage service for kiosk mode
-echo "Creating Cage systemd service..."
-cat > /etc/systemd/system/cage-kiosk.service << 'EOF'
-[Unit]
-Description=Cage Wayland Kiosk
-After=multi-user.target network-online.target systemd-user-sessions.service seatd.service xdg-runtime-dir@1000.service
-Wants=network-online.target
-Requires=seatd.service xdg-runtime-dir@1000.service
-
-[Service]
-Type=simple
-User=dietpi
-Group=dietpi
-PAMName=login
-
-# Runtime directory
-RuntimeDirectory=cage
-RuntimeDirectoryMode=0700
-
-# Environment
-Environment="XDG_RUNTIME_DIR=/run/user/1000"
-Environment="XDG_SESSION_TYPE=wayland"
-Environment="WLR_BACKEND=drm"
-# Allow both HDMI outputs to be detected
-Environment="WLR_DRM_DEVICES=/dev/dri/card1:/dev/dri/card0"
-Environment="WLR_RENDERER=gles2"
-Environment="WLR_NO_HARDWARE_CURSORS=1"
-# Hide cursor using libseat
-Environment="LIBSEAT_BACKEND=seatd"
-# Use transparent cursor theme as fallback
-Environment="XCURSOR_THEME=transparent"
-Environment="XCURSOR_PATH=/home/dietpi/.local/share/icons:/usr/share/icons"
-
-# Chromium environment for Wayland
-Environment="MOZ_ENABLE_WAYLAND=1"
-Environment="GDK_BACKEND=wayland"
-Environment="QT_QPA_PLATFORM=wayland"
-
-# Audio configuration for HDMI output
-Environment="PULSE_RUNTIME_PATH=/run/user/1000/pulse"
-
-# Start cage with chromium
-# Note: Cage will auto-detect the connected display and use native resolution
-ExecStart=/usr/bin/cage -- /usr/local/bin/chromium-kiosk.sh
-
-# Restart policy
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=graphical.target
-EOF
-
-# Disable getty on tty1 to avoid conflicts
-systemctl disable getty@tty1.service
+# Store URL for persistence
+echo "$KIOSK_URL" > /boot/firmware/kiosk-url.txt
 
 # Enable services
 systemctl daemon-reload
-systemctl enable cage-kiosk.service
-systemctl enable tailscale-setup.service
-systemctl enable hdmi-audio-setup.service
-systemctl set-default graphical.target
+systemctl enable kiosk.service
 
-# Create display verification script
-cat > /usr/local/bin/verify-display.sh << 'EOF'
+# Configure boot behavior
+# Enable autologin on console (backup for kiosk service)
+mkdir -p /etc/systemd/system/getty@tty1.service.d
+cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << EOF
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin $USERNAME --noclear %I \$TERM
+Type=idle
+EOF
+
+# Set default target
+systemctl set-default multi-user.target
+
+# Configure GPU settings for RPi 5
+cat >> /boot/firmware/config.txt << EOF
+
+# GPU Configuration for Kiosk Mode
+gpu_mem=512
+dtoverlay=vc4-kms-v3d-pi5
+max_framebuffers=2
+
+# Disable unnecessary hardware
+dtparam=audio=on
+dtoverlay=disable-bt
+
+# Display settings
+hdmi_force_hotplug=1
+config_hdmi_boost=7
+EOF
+
+# Enable required overlays
+sed -i 's/^#dtparam=i2c_arm=on/dtparam=i2c_arm=on/' /boot/firmware/config.txt || true
+
+# Clean up
+rm -f "$BOOT_PATH/firstrun.sh"
+rm -f "$BOOT_PATH/kiosk-config.json"
+rm -f "$BOOT_PATH/userconf.txt"
+
+# Remove firstrun.sh from cmdline.txt
+if [ -f "$BOOT_PATH/cmdline.txt" ]; then
+    sed -i 's| systemd.run=/boot/firstrun.sh||g' "$BOOT_PATH/cmdline.txt"
+    sed -i 's| systemd.run=/boot/firmware/firstrun.sh||g' "$BOOT_PATH/cmdline.txt"
+    sed -i 's| systemd.run_success_action=reboot||g' "$BOOT_PATH/cmdline.txt"
+    sed -i 's| systemd.unit=kernel-command-line.target||g' "$BOOT_PATH/cmdline.txt"
+elif [ -f "/boot/cmdline.txt" ]; then
+    sed -i 's| systemd.run=/boot/firstrun.sh||g' /boot/cmdline.txt
+    sed -i 's| systemd.run=/boot/firmware/firstrun.sh||g' /boot/cmdline.txt
+    sed -i 's| systemd.run_success_action=reboot||g' /boot/cmdline.txt
+    sed -i 's| systemd.unit=kernel-command-line.target||g' /boot/cmdline.txt
+fi
+
+echo "First-run configuration complete at $(date)"
+echo "System will reboot in 10 seconds..."
+sleep 10
+reboot
+FIRSTRUN_SCRIPT
+    else
+        cat << 'FIRSTRUN_SCRIPT' | sudo tee "$boot_mount/firstrun.sh" > /dev/null
 #!/bin/bash
-# Verify display capabilities
+# Raspberry Pi OS Bookworm first-run configuration script
+# This script runs once on first boot to set up the kiosk
 
-echo "=== Display Configuration ==="
-if command -v wlr-randr >/dev/null 2>&1; then
-    echo "Wayland outputs:"
-    wlr-randr
-else
-    echo "wlr-randr not available, trying alternative methods..."
-    if [ -f /sys/class/drm/card*/modes ]; then
-        echo "Available modes:"
-        cat /sys/class/drm/card*/modes 2>/dev/null | sort -u
+set -e
+
+# Log all output
+exec > >(tee -a /var/log/firstrun.log)
+exec 2>&1
+
+echo "Starting first-run configuration at $(date)"
+
+# Set variables from boot partition files
+BOOT_PATH="/boot/firmware"
+if [ ! -d "$BOOT_PATH" ]; then
+    BOOT_PATH="/boot"
+fi
+
+# Read configuration
+if [ -f "$BOOT_PATH/kiosk-config.json" ]; then
+    CONFIG_FILE="$BOOT_PATH/kiosk-config.json"
+    KIOSK_URL=$(jq -r '.url' "$CONFIG_FILE")
+    HOSTNAME=$(jq -r '.hostname' "$CONFIG_FILE")
+    WIFI_SSID=$(jq -r '.wifi_ssid // empty' "$CONFIG_FILE")
+    WIFI_PASSWORD=$(jq -r '.wifi_password // empty' "$CONFIG_FILE")
+    WIFI_ENTERPRISE_USER=$(jq -r '.wifi_enterprise_user // empty' "$CONFIG_FILE")
+    WIFI_ENTERPRISE_PASS=$(jq -r '.wifi_enterprise_pass // empty' "$CONFIG_FILE")
+    TAILSCALE_AUTHKEY=$(jq -r '.tailscale_authkey // empty' "$CONFIG_FILE")
+    USERNAME=$(jq -r '.username' "$CONFIG_FILE")
+fi
+
+# Set hostname
+if [ -n "$HOSTNAME" ]; then
+    echo "$HOSTNAME" > /etc/hostname
+    sed -i "s/raspberrypi/$HOSTNAME/g" /etc/hosts
+    echo "Set hostname to: $HOSTNAME"
+fi
+
+# Configure WiFi
+if [ -n "$WIFI_SSID" ]; then
+    echo "Configuring WiFi for SSID: $WIFI_SSID"
+    
+    # Enable WiFi
+    rfkill unblock wifi || true
+    
+    # Configure WiFi country (required for WiFi to work)
+    raspi-config nonint do_wifi_country US
+    
+    # Wait for NetworkManager to be ready
+    systemctl start NetworkManager || true
+    sleep 5
+    
+    if [ -n "$WIFI_ENTERPRISE_USER" ] && [ -n "$WIFI_ENTERPRISE_PASS" ]; then
+        # Enterprise WiFi configuration using nmcli
+        nmcli con add type wifi con-name "$WIFI_SSID" ifname wlan0 ssid "$WIFI_SSID" \
+            wifi-sec.key-mgmt wpa-eap 802-1x.eap peap 802-1x.phase2-auth mschapv2 \
+            802-1x.identity "$WIFI_ENTERPRISE_USER" 802-1x.password "$WIFI_ENTERPRISE_PASS" \
+            connection.autoconnect yes
+    elif [ -n "$WIFI_PASSWORD" ]; then
+        # Regular WPA2 WiFi - create NetworkManager connection file
+        cat > "/etc/NetworkManager/system-connections/${WIFI_SSID}.nmconnection" << EOF
+[connection]
+id=$WIFI_SSID
+uuid=$(uuidgen)
+type=wifi
+interface-name=wlan0
+autoconnect=true
+
+[wifi]
+mode=infrastructure
+ssid=$WIFI_SSID
+
+[wifi-security]
+auth-alg=open
+key-mgmt=wpa-psk
+psk=$WIFI_PASSWORD
+
+[ipv4]
+method=auto
+
+[ipv6]
+method=auto
+EOF
+        chmod 600 "/etc/NetworkManager/system-connections/${WIFI_SSID}.nmconnection"
+        systemctl restart NetworkManager || true
+    fi
+    
+    echo "WiFi configured"
+fi
+
+# Install SSH key if provided
+if [ -f "$BOOT_PATH/authorized_keys" ]; then
+    echo "Installing SSH keys..."
+    USER_HOME="/home/$USERNAME"
+    mkdir -p "$USER_HOME/.ssh"
+    cp "$BOOT_PATH/authorized_keys" "$USER_HOME/.ssh/authorized_keys"
+    chown -R "$USERNAME:$USERNAME" "$USER_HOME/.ssh"
+    chmod 700 "$USER_HOME/.ssh"
+    chmod 600 "$USER_HOME/.ssh/authorized_keys"
+    rm -f "$BOOT_PATH/authorized_keys"
+    echo "SSH keys installed"
+fi
+
+# Update system
+echo "Updating package lists..."
+apt-get update
+
+# Install required packages
+echo "Installing required packages..."
+apt-get install -y \
+    chromium-browser \
+    wayfire \
+    wlr-randr \
+    xwayland \
+    seatd \
+    libgles2-mesa \
+    libgbm1 \
+    libegl1-mesa \
+    libgl1-mesa-dri \
+    mesa-va-drivers \
+    mesa-vdpau-drivers \
+    pulseaudio \
+    pulseaudio-module-bluetooth \
+    network-manager \
+    jq \
+    curl \
+    uuid-runtime
+
+# Add user to required groups
+usermod -a -G video,render,input,audio "$USERNAME"
+
+# Install and configure Tailscale if auth key provided
+if [ -n "$TAILSCALE_AUTHKEY" ]; then
+    echo "Installing Tailscale..."
+    curl -fsSL https://tailscale.com/install.sh | sh
+    
+    echo "Configuring Tailscale..."
+    tailscale up --authkey="$TAILSCALE_AUTHKEY" --ssh --hostname="$HOSTNAME" --accept-routes --accept-dns=false
+    
+    # Verify connection
+    if tailscale status >/dev/null 2>&1; then
+        echo "Tailscale connected successfully"
+    else
+        echo "Warning: Tailscale connection pending"
     fi
 fi
 
-echo ""
-echo "=== GPU Information ==="
-if command -v glxinfo >/dev/null 2>&1; then
-    glxinfo -B 2>/dev/null | grep -E "OpenGL|renderer|version"
-fi
+# Configure Wayfire for kiosk mode
+echo "Configuring Wayfire..."
+USER_HOME="/home/$USERNAME"
 
-echo ""
-echo "=== Current Resolution ==="
-if [ -f /sys/class/graphics/fb0/virtual_size ]; then
-    cat /sys/class/graphics/fb0/virtual_size
-fi
+# Create Wayfire config directory
+mkdir -p "$USER_HOME/.config/wayfire"
+
+# Create Wayfire configuration for kiosk mode
+cat > "$USER_HOME/.config/wayfire/wayfire.ini" << 'EOF'
+[core]
+# List of plugins to load
+plugins = autostart command vswitch
+
+# Preferred decoration mode: server | client
+preferred_decoration_mode = client
+
+# How to position XWayland windows
+xwayland_position = center
+
+[autostart]
+# Start PulseAudio
+pulseaudio = /usr/bin/pulseaudio --start
+
+# Hide cursor after 1 second of inactivity
+hide_cursor = sh -c "sleep 5 && wlr-randr && unclutter -idle 1"
+
+# Start Chromium in kiosk mode
+chromium = /usr/local/bin/chromium-kiosk.sh
+
+# Ensure proper display configuration
+display_fix = /usr/local/bin/fix-displays.sh
+
+[command]
+# Emergency exit
+binding_quit = <super> KEY_Q
+command_quit = killall wayfire
+
+[input]
+# Disable cursor for kiosk mode
+cursor_theme = none
+cursor_size = 1
+
+# Disable all input methods we don't need
+xkb_layout = us
+xkb_variant = 
+xkb_options = 
+
+# Mouse settings
+mouse_accel_profile = flat
+mouse_cursor_speed = 0
+
+[output]
+# Let Wayfire handle the output configuration
+mode = preferred
+position = 0,0
+transform = normal
 EOF
-chmod +x /usr/local/bin/verify-display.sh
 
-# Create display fix script to handle phantom displays
-cat > /usr/local/bin/fix-phantom-displays.sh << 'EOF'
+# Create chromium kiosk launcher script
+cat > /usr/local/bin/chromium-kiosk.sh << EOF
 #!/bin/bash
-# Fix phantom display issues by disabling disconnected outputs
+# Chromium kiosk launcher script
 
-export XDG_RUNTIME_DIR=/run/user/1000
+# Get URL from configuration
+KIOSK_URL="$KIOSK_URL"
 
-# Script expects Wayland to be ready via systemd dependencies
+# Wait for Wayland to be ready
+sleep 3
 
-# Get list of outputs and their connection status
+# Ensure audio is working
+amixer set Master unmute 2>/dev/null || true
+amixer set Master 80% 2>/dev/null || true
+
+# Launch Chromium with optimal settings for kiosk mode
+exec chromium-browser \\
+    --kiosk \\
+    --no-first-run \\
+    --noerrdialogs \\
+    --disable-infobars \\
+    --disable-translate \\
+    --disable-features=TranslateUI \\
+    --disable-features=OverscrollHistoryNavigation \\
+    --disable-pinch \\
+    --overscroll-history-navigation=0 \\
+    --disable-component-update \\
+    --autoplay-policy=no-user-gesture-required \\
+    --start-fullscreen \\
+    --window-position=0,0 \\
+    --check-for-update-interval=31536000 \\
+    --simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT' \\
+    --disable-software-rasterizer \\
+    --enable-gpu-rasterization \\
+    --enable-accelerated-video-decode \\
+    --ignore-gpu-blocklist \\
+    --enable-features=VaapiVideoDecoder,VaapiVideoEncoder,CanvasOopRasterization \\
+    --use-gl=egl \\
+    --ozone-platform=wayland \\
+    --enable-wayland-ime \\
+    "\$KIOSK_URL"
+EOF
+
+chmod +x /usr/local/bin/chromium-kiosk.sh
+
+# Create display fix script
+cat > /usr/local/bin/fix-displays.sh << 'EOF'
+#!/bin/bash
+# Fix display configuration
+
+sleep 2
+
+# Get current display info
 if command -v wlr-randr >/dev/null 2>&1; then
-    # Check each HDMI output
-    for output in HDMI-A-1 HDMI-A-2; do
-        # Check if this output exists and is showing "(null)" which indicates phantom display
-        if wlr-randr 2>/dev/null | grep -q "$output.*(null)"; then
-            echo "Detected phantom display on $output, disabling..."
-            wlr-randr --output "$output" --off 2>/dev/null || true
-        fi
-    done
+    # Log current outputs
+    wlr-randr > /tmp/display-info.log 2>&1
     
-    # Also check for any output at low resolution that might be phantom
-    # Sometimes phantom displays default to 1024x768
-    if wlr-randr 2>/dev/null | grep -q "1024x768.*current"; then
-        # Find which output has this resolution
-        for output in HDMI-A-1 HDMI-A-2; do
-            if wlr-randr 2>/dev/null | grep -A5 "$output" | grep -q "1024x768.*current"; then
-                # Check if there's another output at higher resolution
-                other_output=$(wlr-randr 2>/dev/null | grep -E "(3840x2160|1920x1080).*current" | wc -l)
-                if [ "$other_output" -gt 0 ]; then
-                    echo "Disabling low-res phantom display on $output"
-                    wlr-randr --output "$output" --off 2>/dev/null || true
+    # Find the primary display (usually the one with highest resolution)
+    PRIMARY=$(wlr-randr | grep -E "^[A-Z]+-[A-Z]-[0-9]" | head -1 | awk '{print $1}')
+    
+    if [ -n "$PRIMARY" ]; then
+        # Enable primary display at preferred mode
+        wlr-randr --output "$PRIMARY" --on --mode preferred
+        
+        # Disable any phantom displays
+        for output in $(wlr-randr | grep -E "^[A-Z]+-[A-Z]-[0-9]" | awk '{print $1}'); do
+            if [ "$output" != "$PRIMARY" ]; then
+                # Check if it's a phantom display (usually shows as disconnected or has no EDID)
+                if wlr-randr | grep -A5 "$output" | grep -q "Enabled: yes" && \
+                   wlr-randr | grep -A5 "$output" | grep -qE "(unknown|disconnected|\(null\))"; then
+                    wlr-randr --output "$output" --off
                 fi
             fi
         done
     fi
 fi
 EOF
-chmod +x /usr/local/bin/fix-phantom-displays.sh
 
-# Create systemd service to fix phantom displays after cage starts
-cat > /etc/systemd/system/fix-phantom-displays.service << 'EOF'
+chmod +x /usr/local/bin/fix-displays.sh
+
+# Set ownership
+chown -R "$USERNAME:$USERNAME" "$USER_HOME/.config"
+
+# Create systemd service for kiosk
+cat > /etc/systemd/system/kiosk.service << EOF
 [Unit]
-Description=Fix Phantom Display Outputs
-After=cage-kiosk.service
-Requires=cage-kiosk.service
-# Give cage time to initialize the Wayland socket
-After=graphical-session.target
+Description=Wayfire Kiosk
+After=multi-user.target systemd-user-sessions.service plymouth-quit-wait.service
+Wants=network-online.target
 
 [Service]
-Type=oneshot
-ExecStart=/usr/local/bin/fix-phantom-displays.sh
-User=dietpi
-RemainAfterExit=yes
+Type=simple
+User=$USERNAME
+Group=$USERNAME
+PAMName=login
+
+# Ensure runtime directory exists
+RuntimeDirectory=user/1000
+RuntimeDirectoryMode=0700
+
+# Environment variables
+Environment="HOME=/home/$USERNAME"
+Environment="USER=$USERNAME"
+Environment="XDG_RUNTIME_DIR=/run/user/1000"
+Environment="XDG_SESSION_TYPE=wayland"
+Environment="XDG_SESSION_CLASS=user"
+Environment="XDG_SESSION_ID=1"
+Environment="XDG_SEAT=seat0"
+Environment="XDG_VTNR=1"
+
+# Wayland/GPU settings
+Environment="WLR_BACKENDS=drm"
+Environment="WLR_DRM_NO_MODIFIERS=1"
+Environment="WLR_RENDERER=gles2"
+Environment="MESA_LOADER_DRIVER_OVERRIDE=v3d"
+
+# Start Wayfire
+ExecStartPre=/bin/mkdir -p /run/user/1000
+ExecStartPre=/bin/chown $USERNAME:$USERNAME /run/user/1000
+ExecStartPre=/bin/chmod 0700 /run/user/1000
+ExecStartPre=/bin/loginctl enable-linger $USERNAME
+
+ExecStart=/usr/bin/wayfire
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Run on tty1
+StandardInput=tty
 StandardOutput=journal
 StandardError=journal
-# Add a small startup delay via systemd instead of sleep in script
-ExecStartPre=/bin/sh -c 'systemctl is-active --quiet cage-kiosk.service'
-# Retry logic if wlr-randr isn't ready yet
-Restart=on-failure
-RestartSec=2
-StartLimitBurst=3
-StartLimitIntervalSec=30
-
-# Restart if the cage service restarts
-BindsTo=cage-kiosk.service
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
 
 [Install]
 WantedBy=graphical.target
 EOF
 
-systemctl enable fix-phantom-displays.service
+# Disable conflicting services
+systemctl disable getty@tty1.service
+systemctl disable graphical.target || true
 
-# Log display info on first boot
-/usr/local/bin/verify-display.sh > /var/log/display-capabilities.log 2>&1
-
-# Create a health check timer for the kiosk
-cat > /etc/systemd/system/kiosk-health-check.service << 'EOF'
-[Unit]
-Description=Kiosk Health Check
-After=cage-kiosk.service
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/kiosk-health-check.sh
-StandardOutput=journal
-StandardError=journal
-EOF
-
-cat > /etc/systemd/system/kiosk-health-check.timer << 'EOF'
-[Unit]
-Description=Run Kiosk Health Check every 5 minutes
-Requires=kiosk-health-check.service
-
-[Timer]
-OnBootSec=5min
-OnUnitActiveSec=5min
-
-[Install]
-WantedBy=timers.target
-EOF
-
-cat > /usr/local/bin/kiosk-health-check.sh << 'EOF'
+# Create URL management script
+cat > /usr/local/bin/kiosk-set-url << 'EOF'
 #!/bin/bash
-# Simple health check for kiosk mode
+# Script to update the kiosk URL
 
-# Check if Cage is running
-if ! pgrep -x cage > /dev/null; then
-    echo "Cage not running, attempting restart..."
-    systemctl restart cage-kiosk.service
+set -e
+
+# Check if URL was provided
+if [ $# -eq 0 ]; then
+    echo "Usage: kiosk-set-url <url>"
+    echo "Example: kiosk-set-url https://example.com"
+    echo ""
+    echo "Current URL:"
+    grep "KIOSK_URL=" /usr/local/bin/chromium-kiosk.sh | cut -d'"' -f2
+    exit 1
 fi
 
-# Check if Chromium is running
-if ! pgrep -f "chromium.*--kiosk" > /dev/null; then
-    echo "Chromium not running in kiosk mode"
-    # Cage should restart it automatically
+NEW_URL="$1"
+
+# Validate URL format
+if ! [[ "$NEW_URL" =~ ^https?:// ]]; then
+    echo "Error: Invalid URL format. URL must start with http:// or https://"
+    exit 1
 fi
 
-# Log current status
-echo "Kiosk health check completed at $(date)"
+# Update the URL in the chromium kiosk script
+echo "Updating URL to: $NEW_URL"
+sed -i "s|KIOSK_URL=\".*\"|KIOSK_URL=\"$NEW_URL\"|" /usr/local/bin/chromium-kiosk.sh
+
+# Also update in boot config for persistence
+if [ -f /boot/firmware/kiosk-url.txt ]; then
+    echo "$NEW_URL" > /boot/firmware/kiosk-url.txt
+fi
+
+# Restart kiosk service
+echo "Restarting kiosk service..."
+systemctl restart kiosk.service
+
+echo "✓ Kiosk URL updated successfully!"
 EOF
-chmod +x /usr/local/bin/kiosk-health-check.sh
 
-# Enable the health check timer
-systemctl enable kiosk-health-check.timer
+chmod +x /usr/local/bin/kiosk-set-url
 
-echo "DietPi Cage kiosk setup complete!"
+# Store URL for persistence
+echo "$KIOSK_URL" > /boot/firmware/kiosk-url.txt
 
-# Trigger automatic reboot after first-run setup
-echo "System will reboot automatically in 10 seconds..."
+# Enable services
+systemctl daemon-reload
+systemctl enable kiosk.service
+
+# Configure boot behavior
+# Enable autologin on console (backup for kiosk service)
+mkdir -p /etc/systemd/system/getty@tty1.service.d
+cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << EOF
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin $USERNAME --noclear %I \$TERM
+Type=idle
+EOF
+
+# Set default target
+systemctl set-default multi-user.target
+
+# Configure GPU settings for RPi 5
+cat >> /boot/firmware/config.txt << EOF
+
+# GPU Configuration for Kiosk Mode
+gpu_mem=512
+dtoverlay=vc4-kms-v3d-pi5
+max_framebuffers=2
+
+# Disable unnecessary hardware
+dtparam=audio=on
+dtoverlay=disable-bt
+
+# Display settings
+hdmi_force_hotplug=1
+config_hdmi_boost=7
+EOF
+
+# Enable required overlays
+sed -i 's/^#dtparam=i2c_arm=on/dtparam=i2c_arm=on/' /boot/firmware/config.txt || true
+
+# Clean up
+rm -f "$BOOT_PATH/firstrun.sh"
+rm -f "$BOOT_PATH/kiosk-config.json"
+rm -f "$BOOT_PATH/userconf.txt"
+
+# Remove firstrun.sh from cmdline.txt
+if [ -f "$BOOT_PATH/cmdline.txt" ]; then
+    sed -i 's| systemd.run=/boot/firstrun.sh||g' "$BOOT_PATH/cmdline.txt"
+    sed -i 's| systemd.run=/boot/firmware/firstrun.sh||g' "$BOOT_PATH/cmdline.txt"
+    sed -i 's| systemd.run_success_action=reboot||g' "$BOOT_PATH/cmdline.txt"
+    sed -i 's| systemd.unit=kernel-command-line.target||g' "$BOOT_PATH/cmdline.txt"
+elif [ -f "/boot/cmdline.txt" ]; then
+    sed -i 's| systemd.run=/boot/firstrun.sh||g' /boot/cmdline.txt
+    sed -i 's| systemd.run=/boot/firmware/firstrun.sh||g' /boot/cmdline.txt
+    sed -i 's| systemd.run_success_action=reboot||g' /boot/cmdline.txt
+    sed -i 's| systemd.unit=kernel-command-line.target||g' /boot/cmdline.txt
+fi
+
+echo "First-run configuration complete at $(date)"
+echo "System will reboot in 10 seconds..."
 sleep 10
 reboot
-CUSTOM_SCRIPT
+FIRSTRUN_SCRIPT
+        sudo chmod +x "$boot_mount/firstrun.sh"
+    fi
 
-    chmod +x "$boot_mount/Automation_Custom_Script.sh"
+    if [ "$test_mode" = "true" ]; then
+        chmod +x "$boot_mount/firstrun.sh"
+    else
+        sudo chmod +x "$boot_mount/firstrun.sh"
+    fi
+
+    # Create configuration file with all settings
+    local config_content=$(cat << EOF
+{
+    "url": "$url",
+    "hostname": "$hostname",
+    "username": "$username",
+    "wifi_ssid": "$wifi_ssid",
+    "wifi_password": "$wifi_password",
+    "wifi_enterprise_user": "$wifi_enterprise_user",
+    "wifi_enterprise_pass": "$wifi_enterprise_pass",
+    "tailscale_authkey": "$tailscale_authkey"
+}
+EOF
+)
+    write_file "$boot_mount/kiosk-config.json" "$config_content"
+
+    # Copy SSH key if provided
+    if [ -f "$ssh_key_file" ]; then
+        if [ "$test_mode" = "true" ]; then
+            cp "$ssh_key_file" "$boot_mount/authorized_keys"
+        else
+            sudo cp "$ssh_key_file" "$boot_mount/authorized_keys"
+        fi
+        echo -e "${GREEN}✓ SSH key configured${NC}"
+    fi
+
+    # Modify cmdline.txt to run firstrun.sh
+    local cmdline_file="$boot_mount/cmdline.txt"
+    if [ "$test_mode" = "true" ]; then
+        # In test mode, create a sample cmdline.txt
+        echo "console=serial0,115200 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 fsck.repair=yes rootwait" > "$cmdline_file"
+    fi
     
-    echo -e "${GREEN}✓ DietPi automation configured${NC}"
-    echo -e "${GREEN}✓ SD card is ready for boot${NC}"
+    if [ -f "$cmdline_file" ]; then
+        # Read current cmdline.txt
+        local current_cmdline=$(cat "$cmdline_file")
+        # Append firstrun.sh execution
+        local new_cmdline="$current_cmdline systemd.run=/boot/firmware/firstrun.sh systemd.run_success_action=reboot systemd.unit=kernel-command-line.target"
+        
+        if [ "$test_mode" = "true" ]; then
+            echo -n "$new_cmdline" > "$cmdline_file"
+        else
+            echo -n "$new_cmdline" | sudo tee "$cmdline_file" > /dev/null
+        fi
+        echo -e "${GREEN}✓ Boot configuration updated${NC}"
+    else
+        echo -e "${RED}Error: cmdline.txt not found${NC}"
+        return 1
+    fi
+
+    echo -e "${GREEN}✓ Raspberry Pi OS configuration complete${NC}"
 }
 
 # Print usage
@@ -1066,8 +1267,8 @@ Usage: $0 [OPTIONS]
 Configuration Options:
     --url <url>                  URL to display in kiosk mode (default: https://panic.fly.dev/)
     --hostname <name>            Hostname for the Raspberry Pi (default: panic-rpi)
-    --username <user>            Username for the admin account (default: dietpi)
-    --password <pass>            Password for the admin account (default: dietpi)
+    --username <user>            Username for the admin account (default: pi)
+    --password <pass>            Password for the admin account (default: raspberry)
 
 Network Options (optional):
     --wifi-ssid <ssid>           WiFi network name
@@ -1077,7 +1278,7 @@ Network Options (optional):
     --tailscale-authkey <key>    Tailscale auth key for automatic join
 
 Optional:
-    --ssh-key <path>             Path to SSH public key (no default - omit for Tailscale SSH only)
+    --ssh-key <path>             Path to SSH public key for passwordless login
     --test                       Test mode - skip actual SD card write
 
 Examples:
@@ -1107,9 +1308,6 @@ main() {
         usage
     fi
 
-    # Check required tools
-    check_required_tools
-
     # Parse arguments - with sensible defaults
     local url="$DEFAULT_URL"
     local wifi_ssid=""
@@ -1117,8 +1315,8 @@ main() {
     local wifi_enterprise_user=""
     local wifi_enterprise_pass=""
     local hostname="panic-rpi"
-    local username="dietpi"
-    local password="dietpi"
+    local username="pi"
+    local password="raspberry"
     local tailscale_authkey=""
     local ssh_key_file=""
     local test_mode=false
@@ -1187,31 +1385,13 @@ main() {
     
     # If WiFi is specified, check for credentials
     if [ -n "$wifi_ssid" ]; then
-        # Check for problematic characters in WiFi credentials
-        if [[ "$wifi_ssid" =~ [\'\"] ]]; then
-            errors+=("WiFi SSID cannot contain quotes (single or double)")
-        fi
-        
         if [ -n "$wifi_enterprise_user" ] || [ -n "$wifi_enterprise_pass" ]; then
             # Enterprise WiFi - both user and pass required
             [ -z "$wifi_enterprise_user" ] && errors+=("--wifi-enterprise-user required when using enterprise WiFi")
             [ -z "$wifi_enterprise_pass" ] && errors+=("--wifi-enterprise-pass required when using enterprise WiFi")
-            
-            # Check for quotes in enterprise credentials
-            if [[ "$wifi_enterprise_user" =~ [\'\"] ]]; then
-                errors+=("WiFi enterprise username cannot contain quotes")
-            fi
-            if [[ "$wifi_enterprise_pass" =~ [\'\"] ]]; then
-                errors+=("WiFi enterprise password cannot contain quotes")
-            fi
         else
             # Regular WiFi - password required
             [ -z "$wifi_password" ] && errors+=("--wifi-password required for WPA2-PSK networks")
-            
-            # Check for quotes in password
-            if [[ "$wifi_password" =~ [\'\"] ]]; then
-                errors+=("WiFi password cannot contain quotes")
-            fi
         fi
     fi
     
@@ -1236,9 +1416,14 @@ main() {
         exit 1
     fi
 
+    # Check required tools (skip in test mode since we don't need all tools)
+    if [ "$test_mode" != "true" ]; then
+        check_required_tools
+    fi
+
     # Show configuration
-    echo -e "${GREEN}DietPi Kiosk SD Card Setup${NC}"
-    echo "============================="
+    echo -e "${GREEN}Raspberry Pi OS Kiosk SD Card Setup${NC}"
+    echo "====================================="
     echo "Configuration:"
     echo "  Hostname: $hostname"
     echo "  Username: $username"
@@ -1282,9 +1467,9 @@ main() {
         fi
     fi
 
-    # Download DietPi image
-    local temp_image="/tmp/dietpi-$$.img.xz"
-    download_dietpi "$temp_image"
+    # Download Raspberry Pi OS image
+    local temp_image="/tmp/raspios-$$.img.xz"
+    download_raspios "$temp_image"
 
     # Write image to SD card
     write_image_to_sd "$temp_image" "$device" "$test_mode"
@@ -1301,12 +1486,12 @@ main() {
     fi
 
     # Configure the OS
-    configure_dietpi "$boot_mount" "$wifi_ssid" "$wifi_password" \
+    configure_raspios "$boot_mount" "$wifi_ssid" "$wifi_password" \
         "$wifi_enterprise_user" "$wifi_enterprise_pass" "$url" \
         "$hostname" "$username" "$password" "$tailscale_authkey" \
         "$ssh_key_file" "$test_mode"
 
-    # Cleanup and finish
+    # Cleanup
     if [ "$test_mode" = "true" ]; then
         echo ""
         echo -e "${YELLOW}TEST MODE: Generated files in: $boot_mount${NC}"
@@ -1315,87 +1500,44 @@ main() {
         echo ""
         echo -e "${GREEN}✓ TEST MODE: Configuration test complete!${NC}"
     else
-        echo -e "${YELLOW}Preparing to eject SD card...${NC}"
+        # Unmount boot partition
+        sudo umount "$boot_mount" || true
+        rmdir "$boot_mount" 2>/dev/null || true
         
-        # Sync all data first
-        echo "Syncing data..."
-        sync
+        # Sync and eject
+        echo -e "${YELLOW}Syncing data...${NC}"
+        sudo sync
         
-        # Give the system a moment to finish any pending operations
-        sleep 2
-        
-        # Try to disable Spotlight on the volumes before ejecting
-        echo "Preventing Spotlight indexing..."
-        for volume in /Volumes/*; do
-            # Check if this volume is on our SD card device
-            if diskutil info "$volume" 2>/dev/null | grep -q "$device"; then
-                # Disable indexing for this volume
-                sudo mdutil -i off "$volume" 2>/dev/null || true
-            fi
-        done
-        
-        # Wait a moment for mds to release the volume
-        sleep 2
-        
-        # Try standard eject
-        if diskutil eject "$device" 2>/dev/null; then
-            echo -e "${GREEN}✓ SD card ejected successfully!${NC}"
-        else
-            # If standard eject fails, try unmounting disk first then ejecting
-            echo -e "${YELLOW}Standard eject failed, trying alternative approach...${NC}"
-            
-            # Unmount the disk (but don't force it, to avoid data corruption)
-            if diskutil unmountDisk "$device" 2>/dev/null; then
-                # Try eject again after unmount
-                if diskutil eject "$device" 2>/dev/null; then
-                    echo -e "${GREEN}✓ SD card ejected successfully!${NC}"
-                else
-                    echo -e "${YELLOW}⚠ Could not eject SD card automatically.${NC}"
-                    echo -e "${YELLOW}The disk has been unmounted safely. You can now remove it manually.${NC}"
-                    echo -e "${YELLOW}If Spotlight is still indexing, wait a moment and remove when safe.${NC}"
-                fi
-            else
-                # Last resort - force unmount but warn the user
-                echo -e "${YELLOW}⚠ Could not unmount gracefully. Attempting force unmount...${NC}"
-                diskutil unmountDisk force "$device" 2>/dev/null || true
-                echo -e "${YELLOW}The disk has been forcefully unmounted. You may remove the SD card.${NC}"
-                echo -e "${YELLOW}Note: If you see warnings about improper ejection, they can be safely ignored.${NC}"
-            fi
-        fi
+        echo -e "${GREEN}✓ SD card ready!${NC}"
+        echo -e "${GREEN}You can now safely remove the SD card.${NC}"
     fi
 
     echo ""
     echo "Next steps:"
-    echo "1. Insert the SD card into your Raspberry Pi (with Ethernet connected)"
-    echo "2. Power on the Pi"
-    echo "3. Wait 5-10 minutes for DietPi to:"
-    echo "   - Complete automated installation"
-    echo "   - Install and join Tailscale network (if configured)"
-    echo "   - Configure kiosk mode"
+    echo "1. Insert the SD card into your Raspberry Pi 5"
+    echo "2. Connect Ethernet cable for initial setup (if using WiFi)"
+    echo "3. Power on the Pi"
+    echo "4. Wait 5-10 minutes for Raspberry Pi OS to:"
+    echo "   - Complete first-boot configuration"
+    echo "   - Connect to WiFi (if configured)"
+    echo "   - Install required packages"
+    echo "   - Join Tailscale network (if configured)"
+    echo "   - Configure and start kiosk mode"
     echo "   - Reboot into kiosk display"
     echo ""
     if [ -n "$tailscale_authkey" ]; then
-        echo "4. Verify the Pi is on Tailscale:"
+        echo "5. Verify the Pi is on Tailscale:"
         echo "   tailscale status | grep $hostname"
         echo ""
-        echo "5. You can SSH to the Pi via Tailscale:"
+        echo "6. You can SSH to the Pi via Tailscale:"
         echo "   tailscale ssh $username@$hostname"
     else
-        echo "4. You can SSH to the Pi when it's online:"
+        echo "5. You can SSH to the Pi when it's online:"
         echo "   ssh $username@<pi-ip-address>"
     fi
     echo ""
-    echo "The Pi will automatically:"
-    echo "- Boot directly into kiosk mode showing: $url"
-    echo "- Use minimal Cage compositor with GPU acceleration"
-    echo "- Support 4K displays at full 60Hz with hardware acceleration"
-    echo "- Hide the mouse cursor"
-    echo "- Restart the browser if it crashes"
-    echo ""
-    echo "Cage advantages:"
-    echo "- Minimal resource usage (no desktop features)"
-    echo "- Purpose-built for single-app kiosk mode"
-    echo "- Better stability for 24/7 operation"
+    echo "To change the kiosk URL after setup:"
+    echo "   sudo kiosk-set-url https://new-url.com"
 }
 
 # Run main function
