@@ -60,28 +60,44 @@ check_required_tools() {
 find_sd_card() {
     echo -e "${YELLOW}Looking for SD card devices...${NC}" >&2
     
-    # List removable block devices
+    # List removable block devices and USB card readers
     local devices=()
+    local device_info=()
+    
     while IFS= read -r line; do
         local device="/dev/$line"
         local removable=$(cat "/sys/block/$line/removable" 2>/dev/null || echo "0")
-        local size=$(lsblk -b -n -o SIZE "$device" 2>/dev/null || echo "0")
+        local size=$(lsblk -b -n -o SIZE "$device" 2>/dev/null | head -1 || echo "0")
         local size_gb=$((size / 1024 / 1024 / 1024))
         
-        # Check if removable and reasonable size for SD card (between 2GB and 256GB)
-        if [ "$removable" = "1" ] && [ "$size_gb" -ge 2 ] && [ "$size_gb" -le 256 ]; then
+        # Get vendor and model info
+        local vendor=$(cat "/sys/block/$line/device/vendor" 2>/dev/null | tr -d ' ' || echo "")
+        local model=$(cat "/sys/block/$line/device/model" 2>/dev/null | tr -d ' ' || echo "Unknown")
+        
+        # Check for USB card readers (often show as Multi-Reader or similar)
+        local is_card_reader=0
+        if [[ "$model" =~ Multi-Reader ]] || [[ "$model" =~ Card-Reader ]] || [[ "$model" =~ SD.*Reader ]]; then
+            is_card_reader=1
+        fi
+        
+        # Include device if:
+        # 1. It's removable with valid size, OR
+        # 2. It's a card reader slot with valid size (card readers show multiple slots, only count ones with cards)
+        if ([ "$removable" = "1" ] || [ "$is_card_reader" = "1" ]) && [ "$size_gb" -ge 2 ] && [ "$size_gb" -le 256 ]; then
             devices+=("$device")
+            device_info+=("${size_gb}GB - $vendor $model")
         fi
     done < <(ls /sys/block/ | grep -E '^(sd|mmcblk)[a-z0-9]*$')
     
     if [ ${#devices[@]} -eq 0 ]; then
         echo -e "${RED}Error: No SD card devices found${NC}" >&2
         echo -e "${YELLOW}Please insert an SD card and run the script again${NC}" >&2
+        echo -e "${YELLOW}Note: USB card readers should show up when a card is inserted${NC}" >&2
         return 1
     fi
     
     if [ ${#devices[@]} -eq 1 ]; then
-        echo -e "${GREEN}✓ Found SD card at ${devices[0]}${NC}" >&2
+        echo -e "${GREEN}✓ Found SD card at ${devices[0]} (${device_info[0]})${NC}" >&2
         echo "${devices[0]}"
         return 0
     fi
@@ -90,10 +106,8 @@ find_sd_card() {
     echo -e "${YELLOW}Multiple removable devices found:${NC}" >&2
     for i in "${!devices[@]}"; do
         local dev="${devices[$i]}"
-        local size=$(lsblk -b -n -o SIZE "$dev" 2>/dev/null || echo "0")
-        local size_gb=$((size / 1024 / 1024 / 1024))
-        local model=$(lsblk -n -o MODEL "$dev" 2>/dev/null | tr -d ' ' || echo "Unknown")
-        echo "  $((i+1))) $dev - ${size_gb}GB - $model" >&2
+        local info="${device_info[$i]}"
+        echo "  $((i+1))) $dev - $info" >&2
     done
     
     echo -n "Select device (1-${#devices[@]}): " >&2
@@ -101,7 +115,8 @@ find_sd_card() {
     
     if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le ${#devices[@]} ]; then
         local selected="${devices[$((selection-1))]}"
-        echo -e "${GREEN}✓ Selected $selected${NC}" >&2
+        local selected_info="${device_info[$((selection-1))]}"
+        echo -e "${GREEN}✓ Selected $selected ($selected_info)${NC}" >&2
         echo "$selected"
         return 0
     else
@@ -1459,7 +1474,14 @@ main() {
 
     # Confirm before proceeding
     if [ "$test_mode" != "true" ]; then
+        # Get device info for confirmation
+        local device_size=$(lsblk -b -n -o SIZE "$device" 2>/dev/null | head -1 || echo "0")
+        local device_size_gb=$((device_size / 1024 / 1024 / 1024))
+        local device_model=$(lsblk -n -o MODEL "$device" 2>/dev/null | tr -d ' ' || echo "Unknown")
+        
         echo -e "${YELLOW}WARNING: This will ERASE all data on $device${NC}"
+        echo -e "${YELLOW}Device: $device - ${device_size_gb}GB - $device_model${NC}"
+        echo -e "${RED}ALL DATA ON THIS DEVICE WILL BE LOST!${NC}"
         read -p "Continue? (yes/no): " confirm
         if [[ "$confirm" != "yes" ]]; then
             echo "Aborted."
