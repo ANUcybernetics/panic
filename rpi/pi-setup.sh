@@ -188,7 +188,8 @@ write_image_to_sd() {
     done
 
     # Get uncompressed size for progress display
-    local uncompressed_size=$(xz -l "$image_file" 2>/dev/null | grep -E "^ *[0-9]" | awk '{print $5}' | sed 's/,//g')
+    # Use --robot flag to get machine-readable output
+    local uncompressed_size=$(xz --robot --list "$image_file" 2>/dev/null | grep '^totals' | awk '{print $5}')
     
     if [ -n "$uncompressed_size" ] && [ "$uncompressed_size" != "0" ]; then
         echo "Uncompressed image size: $((uncompressed_size / 1024 / 1024 / 1024)) GB"
