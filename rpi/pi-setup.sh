@@ -429,6 +429,7 @@ cat > /etc/systemd/system/kiosk.service << EOF
 Description=Wayfire Kiosk
 After=multi-user.target systemd-user-sessions.service plymouth-quit-wait.service
 Wants=network-online.target
+Conflicts=getty@tty1.service
 
 [Service]
 Type=simple
@@ -481,9 +482,10 @@ TTYVTDisallocate=yes
 WantedBy=graphical.target
 EOF
 
-# Disable conflicting services
+# Disable conflicting services and plymouth boot splash
 systemctl disable getty@tty1.service
-systemctl disable graphical.target || true
+systemctl mask plymouth-quit.service
+systemctl mask plymouth-quit-wait.service
 
 # Create URL management script
 cat > /usr/local/bin/kiosk-set-url << 'EOF'
@@ -535,8 +537,12 @@ echo "$KIOSK_URL" > /boot/firmware/kiosk-url.txt || echo "$KIOSK_URL" > /boot/ki
 systemctl daemon-reload
 systemctl enable kiosk.service
 
-# Configure boot behavior
-# Enable autologin on console (backup for kiosk service)
+# Configure boot behavior for automatic kiosk start
+# Disable getty on tty1 to prevent login prompt
+systemctl disable getty@tty1.service
+systemctl mask getty@tty1.service
+
+# Enable autologin for the user (needed for proper session setup)
 mkdir -p /etc/systemd/system/getty@tty1.service.d
 cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << EOF
 [Service]
@@ -545,8 +551,18 @@ ExecStart=-/sbin/agetty --autologin $KIOSK_USERNAME --noclear %I \$TERM
 Type=idle
 EOF
 
-# Set default target
-systemctl set-default multi-user.target
+# Set graphical target as default to ensure kiosk starts
+systemctl set-default graphical.target
+
+# Create a drop-in to ensure kiosk starts immediately after boot
+mkdir -p /etc/systemd/system/kiosk.service.d
+cat > /etc/systemd/system/kiosk.service.d/override.conf << EOF
+[Unit]
+After=multi-user.target
+
+[Install]
+WantedBy=multi-user.target
+EOF
 
 # Configure GPU settings for RPi 5
 cat >> /boot/firmware/config.txt << 'EOF'
@@ -697,10 +713,13 @@ run_sdm_customization() {
         return 0
     fi
     
-    # Set localization defaults
-    local sdm_keymap="us"
-    local sdm_locale="en_US.UTF-8"
-    local sdm_timezone="America/New_York"
+    # Get localization settings from host system
+    local sdm_keymap="us"  # Default to US keyboard
+    local sdm_locale="$(locale | grep LANG= | cut -d= -f2 | tr -d '"' || echo 'en_US.UTF-8')"
+    local sdm_timezone="$(timedatectl show --property=Timezone --value 2>/dev/null || echo 'UTC')"
+    
+    echo "Using host locale: $sdm_locale"
+    echo "Using host timezone: $sdm_timezone"
     
     # Export environment variables for plugins
     export KIOSK_URL="$url"
@@ -796,8 +815,8 @@ Usage: $0 [OPTIONS]
 Configuration Options:
     --url <url>                  URL to display in kiosk mode (default: https://panic.fly.dev/)
     --hostname <name>            Hostname for the Raspberry Pi (default: panic-rpi)
-    --username <user>            Username for the admin account (default: pi)
-    --password <pass>            Password for the admin account (default: raspberry)
+    --username <user>            Username for the admin account (default: panic)
+    --password <pass>            Password for the admin account (default: panic)
 
 Network Options (optional):
     --wifi-ssid <ssid>           WiFi network name
@@ -844,8 +863,8 @@ main() {
     local wifi_enterprise_user=""
     local wifi_enterprise_pass=""
     local hostname="panic-rpi"
-    local username="pi"
-    local password="raspberry"
+    local username="panic"
+    local password="panic"
     local tailscale_authkey=""
     local ssh_key_file=""
     local test_mode=false
