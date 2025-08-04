@@ -3,6 +3,5 @@ elixir = "latest"
 erlang = "latest"
 node = "latest"
 sqlite = "latest"
-bun = "latest"
 
 # local dev login: ben@benswift.me / cybernetics1
