@@ -10,6 +10,7 @@
 # - Automatic Tailscale network join
 # - Optimized for Raspberry Pi 5 with 8GB RAM
 # - Uses official Raspberry Pi OS Bookworm
+# - Uses SDM (https://github.com/gitbls/sdm) for reliable image customization
 #
 # Uses latest Raspberry Pi OS Bookworm (64-bit)
 
@@ -18,7 +19,7 @@ set -u
 set -o pipefail
 
 # Configuration
-readonly RASPIOS_IMAGE_URL="https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2024-11-19/2024-11-19-raspios-bookworm-arm64.img.xz"
+readonly RASPIOS_IMAGE_URL="https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2025-05-13/2025-05-13-raspios-bookworm-arm64.img.xz"
 readonly DEFAULT_URL="https://panic.fly.dev/"
 readonly CACHE_DIR="$HOME/.cache/raspios-images"
 
@@ -40,7 +41,7 @@ check_required_tools() {
     local missing_tools=()
     
     # Check for required commands
-    for cmd in curl xz pv dd mktemp jq; do
+    for cmd in curl xz pv dd mktemp jq git; do
         if ! command -v "$cmd" >/dev/null 2>&1; then
             missing_tools+=("$cmd")
         fi
@@ -53,6 +54,23 @@ check_required_tools() {
         echo "  sudo apt-get update"
         echo "  sudo apt-get install ${missing_tools[*]}"
         exit 1
+    fi
+}
+
+# Check for SDM installation
+check_sdm() {
+    echo -e "${YELLOW}Checking for SDM installation...${NC}"
+    
+    if ! command -v sdm >/dev/null 2>&1; then
+        echo -e "${RED}Error: SDM is not installed${NC}"
+        echo ""
+        echo "Please install SDM first by running:"
+        echo "  ./install-sdm.sh"
+        echo ""
+        echo "Or manually install from: https://github.com/gitbls/sdm"
+        exit 1
+    else
+        echo -e "${GREEN}✓ SDM is installed${NC}"
     fi
 }
 
@@ -125,55 +143,69 @@ find_sd_card() {
     fi
 }
 
-# Function to download Raspberry Pi OS image with caching
-download_raspios() {
-    local output_file="$1"
+# Function to download and prepare Raspberry Pi OS image
+prepare_raspios_image() {
+    local work_dir="$1"
 
     # Create cache directory if it doesn't exist
     mkdir -p "$CACHE_DIR"
 
     # Extract filename from URL
     local filename=$(basename "$RASPIOS_IMAGE_URL")
-    local cached_file="$CACHE_DIR/$filename"
+    local cached_compressed="$CACHE_DIR/$filename"
+    local cached_img="${cached_compressed%.xz}"
+    local work_img="$work_dir/raspios.img"
 
-    # Check if we have a cached version
-    if [ -f "$cached_file" ]; then
-        echo -e "${GREEN}✓ Using cached image: $filename${NC}"
-        cp "$cached_file" "$output_file"
+    # Check if we have a cached uncompressed image
+    if [ -f "$cached_img" ]; then
+        echo -e "${GREEN}✓ Using cached image: $(basename "$cached_img")${NC}" >&2
+        cp "$cached_img" "$work_img"
+        echo "$work_img"
         return 0
     fi
 
-    echo -e "${YELLOW}Downloading Raspberry Pi OS image...${NC}"
-    if ! curl -L -o "$cached_file" "$RASPIOS_IMAGE_URL"; then
-        echo -e "${RED}Error: Failed to download image from $RASPIOS_IMAGE_URL${NC}"
-        rm -f "$cached_file"
-        exit 1
+    # Check if we have cached compressed version
+    if [ -f "$cached_compressed" ]; then
+        echo -e "${GREEN}✓ Found cached compressed image${NC}" >&2
+    else
+        echo -e "${YELLOW}Downloading Raspberry Pi OS image...${NC}" >&2
+        if ! curl -L -o "$cached_compressed" "$RASPIOS_IMAGE_URL"; then
+            echo -e "${RED}Error: Failed to download image from $RASPIOS_IMAGE_URL${NC}" >&2
+            rm -f "$cached_compressed"
+            exit 1
+        fi
     fi
 
     # Verify it's actually an xz file
-    if ! file "$cached_file" | grep -q "XZ compressed data"; then
-        echo -e "${RED}Error: Downloaded file is not a valid XZ compressed image${NC}"
-        echo "File type: $(file "$cached_file")"
-        rm -f "$cached_file"
+    if ! file "$cached_compressed" | grep -q "XZ compressed data"; then
+        echo -e "${RED}Error: Downloaded file is not a valid XZ compressed image${NC}" >&2
+        echo "File type: $(file "$cached_compressed")" >&2
+        rm -f "$cached_compressed"
         exit 1
     fi
 
-    cp "$cached_file" "$output_file"
-    echo -e "${GREEN}✓ Image cached for future use${NC}"
+    # Decompress to cache
+    echo -e "${YELLOW}Decompressing image...${NC}" >&2
+    xz -d -k -c "$cached_compressed" > "$cached_img"
+    
+    # Copy to work directory
+    cp "$cached_img" "$work_img"
+    echo -e "${GREEN}✓ Image ready for customization${NC}" >&2
+    echo "$work_img"
 }
 
-# Function to write image to SD card
+# Function to write image to SD card using SDM
 write_image_to_sd() {
     local image_file="$1"
     local device="$2"
     local test_mode="${3:-false}"
 
-    echo -e "${YELLOW}Writing image to SD card...${NC}"
+    echo -e "${YELLOW}Writing customized image to SD card...${NC}"
     echo "This will take several minutes..."
 
     if [ "$test_mode" = "true" ]; then
         echo -e "${YELLOW}TEST MODE: Skipping actual image write${NC}"
-        echo "Would decompress and write: $image_file -> $device"
+        echo "Would write: $image_file -> $device"
         echo "Simulating write operation..."
         sleep 2
         echo -e "${GREEN}✓ TEST MODE: Image write simulated${NC}"
@@ -187,20 +219,14 @@ write_image_to_sd() {
         fi
     done
 
-    # Get uncompressed size for progress display
-    # Use --robot flag to get machine-readable output
-    local uncompressed_size=$(xz --robot --list "$image_file" 2>/dev/null | grep '^totals' | awk '{print $5}')
+    # Get image size for progress display
+    local image_size=$(stat -c%s "$image_file")
     
-    if [ -n "$uncompressed_size" ] && [ "$uncompressed_size" != "0" ]; then
-        echo "Uncompressed image size: $((uncompressed_size / 1024 / 1024 / 1024)) GB"
-        echo "Using pv for progress display with accurate ETA..."
-        # Use larger block size (32MB) for better performance
-        xzcat "$image_file" | pv -s "$uncompressed_size" | sudo dd of="$device" bs=32M status=none
-    else
-        echo "Using pv for progress display (size unknown)..."
-        # Fall back to size-less progress display
-        xzcat "$image_file" | pv | sudo dd of="$device" bs=32M status=none
-    fi
+    echo "Image size: $((image_size / 1024 / 1024 / 1024)) GB"
+    echo "Using pv for progress display..."
+    
+    # Write with progress
+    pv -s "$image_size" "$image_file" | sudo dd of="$device" bs=32M status=none
 
     # Ensure all data is written
     sudo sync
@@ -212,243 +238,53 @@ write_image_to_sd() {
     sleep 2
 }
 
-# Function to wait for boot partition
-wait_for_boot_partition() {
-    local device="$1"
-    local test_mode="${2:-false}"
-    
-    if [ "$test_mode" = "true" ]; then
-        echo -e "${YELLOW}TEST MODE: Creating temporary directory for boot partition${NC}" >&2
-        local mount_point=$(mktemp -d)
-        echo "$mount_point"
-        return 0
-    fi
-
-    echo -e "${YELLOW}Waiting for boot partition to mount...${NC}" >&2
-    
-    # Create temporary mount point
-    local mount_point=$(mktemp -d)
-    
-    # Try to mount the boot partition
-    # For Raspberry Pi OS, it's usually the first partition
-    local boot_device="${device}1"
-    if [[ "$device" =~ mmcblk ]]; then
-        boot_device="${device}p1"
-    fi
-    
-    # Mount the boot partition
-    if sudo mount "$boot_device" "$mount_point" 2>/dev/null; then
-        echo -e "${GREEN}✓ Mounted boot partition at $mount_point${NC}" >&2
-        echo "$mount_point"
-        return 0
-    else
-        echo -e "${RED}Error: Failed to mount boot partition${NC}" >&2
-        rmdir "$mount_point"
-        return 1
-    fi
-}
-
-# Function to configure Raspberry Pi OS
-configure_raspios() {
-    local boot_mount="$1"
-    local wifi_ssid="$2"
-    local wifi_password="$3"
-    local wifi_enterprise_user="$4"
-    local wifi_enterprise_pass="$5"
-    local url="$6"
-    local hostname="$7"
-    local username="$8"
-    local password="$9"
+# Create SDM customization script
+create_sdm_customization() {
+    local work_dir="$1"
+    local url="$2"
+    local hostname="$3"
+    local username="$4"
+    local password="$5"
+    local wifi_ssid="$6"
+    local wifi_password="$7"
+    local wifi_enterprise_user="$8"
+    local wifi_enterprise_pass="$9"
     local tailscale_authkey="${10}"
     local ssh_key_file="${11}"
-    local test_mode="${12:-false}"
-
-    echo -e "${YELLOW}Configuring Raspberry Pi OS for automated setup...${NC}"
-
-    # Helper function to write files (uses sudo in real mode, regular write in test mode)
-    write_file() {
-        local file="$1"
-        local content="$2"
-        if [ "$test_mode" = "true" ]; then
-            echo "$content" > "$file"
-        else
-            echo "$content" | sudo tee "$file" > /dev/null
-        fi
-    }
-
-    # Helper function to create files
-    create_file() {
-        local file="$1"
-        if [ "$test_mode" = "true" ]; then
-            touch "$file"
-        else
-            sudo touch "$file"
-        fi
-    }
-
-    # Create userconf for user setup (bypasses first-boot wizard)
-    # Password needs to be encrypted using openssl
-    local encrypted_pass=$(openssl passwd -6 "$password")
-    write_file "$boot_mount/userconf.txt" "${username}:${encrypted_pass}"
-    echo -e "${GREEN}✓ User configuration created${NC}"
-
-    # Enable SSH
-    create_file "$boot_mount/ssh"
-    echo -e "${GREEN}✓ SSH enabled${NC}"
-
-    # Create firstrun.sh for automated configuration
-    if [ "$test_mode" = "true" ]; then
-        cat << 'FIRSTRUN_SCRIPT' > "$boot_mount/firstrun.sh"
+    
+    echo -e "${YELLOW}Creating SDM customization scripts...${NC}"
+    
+    # Create plugin directory
+    local plugin_dir="$work_dir/plugins"
+    mkdir -p "$plugin_dir"
+    
+    # Create the kiosk setup script that will run at first boot
+    cat > "$plugin_dir/kiosk-setup.sh" << 'KIOSK_SCRIPT'
 #!/bin/bash
-# Raspberry Pi OS Bookworm first-run configuration script
-# This script runs once on first boot to set up the kiosk
+# Kiosk Setup Script - runs at first boot
+# This configures the system for kiosk mode
 
 set -e
 
-# Log all output
-exec > >(tee -a /var/log/firstrun.log)
-exec 2>&1
+echo "Starting Kiosk Setup at first boot..."
 
-echo "Starting first-run configuration at $(date)"
-
-# Set variables from boot partition files
-BOOT_PATH="/boot/firmware"
-if [ ! -d "$BOOT_PATH" ]; then
-    BOOT_PATH="/boot"
+# Read configuration from files
+if [ -f /usr/local/sdm/kiosk-config ]; then
+    source /usr/local/sdm/kiosk-config
 fi
 
-# Read configuration
-if [ -f "$BOOT_PATH/kiosk-config.json" ]; then
-    CONFIG_FILE="$BOOT_PATH/kiosk-config.json"
-    KIOSK_URL=$(jq -r '.url' "$CONFIG_FILE")
-    HOSTNAME=$(jq -r '.hostname' "$CONFIG_FILE")
-    WIFI_SSID=$(jq -r '.wifi_ssid // empty' "$CONFIG_FILE")
-    WIFI_PASSWORD=$(jq -r '.wifi_password // empty' "$CONFIG_FILE")
-    WIFI_ENTERPRISE_USER=$(jq -r '.wifi_enterprise_user // empty' "$CONFIG_FILE")
-    WIFI_ENTERPRISE_PASS=$(jq -r '.wifi_enterprise_pass // empty' "$CONFIG_FILE")
-    TAILSCALE_AUTHKEY=$(jq -r '.tailscale_authkey // empty' "$CONFIG_FILE")
-    USERNAME=$(jq -r '.username' "$CONFIG_FILE")
-fi
-
-# Set hostname
-if [ -n "$HOSTNAME" ]; then
-    echo "$HOSTNAME" > /etc/hostname
-    sed -i "s/raspberrypi/$HOSTNAME/g" /etc/hosts
-    echo "Set hostname to: $HOSTNAME"
-fi
-
-# Configure WiFi
-if [ -n "$WIFI_SSID" ]; then
-    echo "Configuring WiFi for SSID: $WIFI_SSID"
-    
-    # Enable WiFi
-    rfkill unblock wifi || true
-    
-    # Configure WiFi country (required for WiFi to work)
-    raspi-config nonint do_wifi_country US
-    
-    # Wait for NetworkManager to be ready
-    systemctl start NetworkManager || true
-    sleep 5
-    
-    if [ -n "$WIFI_ENTERPRISE_USER" ] && [ -n "$WIFI_ENTERPRISE_PASS" ]; then
-        # Enterprise WiFi configuration using nmcli
-        nmcli con add type wifi con-name "$WIFI_SSID" ifname wlan0 ssid "$WIFI_SSID" \
-            wifi-sec.key-mgmt wpa-eap 802-1x.eap peap 802-1x.phase2-auth mschapv2 \
-            802-1x.identity "$WIFI_ENTERPRISE_USER" 802-1x.password "$WIFI_ENTERPRISE_PASS" \
-            connection.autoconnect yes
-    elif [ -n "$WIFI_PASSWORD" ]; then
-        # Regular WPA2 WiFi - create NetworkManager connection file
-        cat > "/etc/NetworkManager/system-connections/${WIFI_SSID}.nmconnection" << EOF
-[connection]
-id=$WIFI_SSID
-uuid=$(uuidgen)
-type=wifi
-interface-name=wlan0
-autoconnect=true
-
-[wifi]
-mode=infrastructure
-ssid=$WIFI_SSID
-
-[wifi-security]
-auth-alg=open
-key-mgmt=wpa-psk
-psk=$WIFI_PASSWORD
-
-[ipv4]
-method=auto
-
-[ipv6]
-method=auto
-EOF
-        chmod 600 "/etc/NetworkManager/system-connections/${WIFI_SSID}.nmconnection"
-        systemctl restart NetworkManager || true
-    fi
-    
-    echo "WiFi configured"
-fi
-
-# Install SSH key if provided
-if [ -f "$BOOT_PATH/authorized_keys" ]; then
-    echo "Installing SSH keys..."
-    USER_HOME="/home/$USERNAME"
-    mkdir -p "$USER_HOME/.ssh"
-    cp "$BOOT_PATH/authorized_keys" "$USER_HOME/.ssh/authorized_keys"
-    chown -R "$USERNAME:$USERNAME" "$USER_HOME/.ssh"
-    chmod 700 "$USER_HOME/.ssh"
-    chmod 600 "$USER_HOME/.ssh/authorized_keys"
-    rm -f "$BOOT_PATH/authorized_keys"
-    echo "SSH keys installed"
-fi
-
-# Update system
-echo "Updating package lists..."
-apt-get update
-
-# Install required packages
-echo "Installing required packages..."
-apt-get install -y \
-    chromium-browser \
-    wayfire \
-    wlr-randr \
-    xwayland \
-    seatd \
-    libgles2-mesa \
-    libgbm1 \
-    libegl1-mesa \
-    libgl1-mesa-dri \
-    mesa-va-drivers \
-    mesa-vdpau-drivers \
-    pulseaudio \
-    pulseaudio-module-bluetooth \
-    network-manager \
-    jq \
-    curl \
-    uuid-runtime
+# Set defaults if not provided
+KIOSK_URL="${KIOSK_URL:-https://panic.fly.dev/}"
+KIOSK_HOSTNAME="${KIOSK_HOSTNAME:-panic-rpi}"
+KIOSK_USERNAME="${KIOSK_USERNAME:-pi}"
 
 # Add user to required groups
-usermod -a -G video,render,input,audio "$USERNAME"
-
-# Install and configure Tailscale if auth key provided
-if [ -n "$TAILSCALE_AUTHKEY" ]; then
-    echo "Installing Tailscale..."
-    curl -fsSL https://tailscale.com/install.sh | sh
-    
-    echo "Configuring Tailscale..."
-    tailscale up --authkey="$TAILSCALE_AUTHKEY" --ssh --hostname="$HOSTNAME" --accept-routes --accept-dns=false
-    
-    # Verify connection
-    if tailscale status >/dev/null 2>&1; then
-        echo "Tailscale connected successfully"
-    else
-        echo "Warning: Tailscale connection pending"
-    fi
-fi
+echo "Adding user to required groups..."
+usermod -a -G video,render,input,audio "$KIOSK_USERNAME" || true
 
 # Configure Wayfire for kiosk mode
 echo "Configuring Wayfire..."
-USER_HOME="/home/$USERNAME"
+USER_HOME="/home/$KIOSK_USERNAME"
 
 # Create Wayfire config directory
 mkdir -p "$USER_HOME/.config/wayfire"
@@ -585,7 +421,7 @@ EOF
 chmod +x /usr/local/bin/fix-displays.sh
 
 # Set ownership
-chown -R "$USERNAME:$USERNAME" "$USER_HOME/.config"
+chown -R "$KIOSK_USERNAME:$KIOSK_USERNAME" "$USER_HOME/.config"
 
 # Create systemd service for kiosk
 cat > /etc/systemd/system/kiosk.service << EOF
@@ -596,8 +432,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=$USERNAME
-Group=$USERNAME
+User=$KIOSK_USERNAME
+Group=$KIOSK_USERNAME
 PAMName=login
 
 # Ensure runtime directory exists
@@ -605,8 +441,8 @@ RuntimeDirectory=user/1000
 RuntimeDirectoryMode=0700
 
 # Environment variables
-Environment="HOME=/home/$USERNAME"
-Environment="USER=$USERNAME"
+Environment="HOME=/home/$KIOSK_USERNAME"
+Environment="USER=$KIOSK_USERNAME"
 Environment="XDG_RUNTIME_DIR=/run/user/1000"
 Environment="XDG_SESSION_TYPE=wayland"
 Environment="XDG_SESSION_CLASS=user"
@@ -622,9 +458,9 @@ Environment="MESA_LOADER_DRIVER_OVERRIDE=v3d"
 
 # Start Wayfire
 ExecStartPre=/bin/mkdir -p /run/user/1000
-ExecStartPre=/bin/chown $USERNAME:$USERNAME /run/user/1000
+ExecStartPre=/bin/chown $KIOSK_USERNAME:$KIOSK_USERNAME /run/user/1000
 ExecStartPre=/bin/chmod 0700 /run/user/1000
-ExecStartPre=/bin/loginctl enable-linger $USERNAME
+ExecStartPre=/bin/loginctl enable-linger $KIOSK_USERNAME
 
 ExecStart=/usr/bin/wayfire
 
@@ -693,7 +529,7 @@ EOF
 chmod +x /usr/local/bin/kiosk-set-url
 
 # Store URL for persistence
-echo "$KIOSK_URL" > /boot/firmware/kiosk-url.txt
+echo "$KIOSK_URL" > /boot/firmware/kiosk-url.txt || echo "$KIOSK_URL" > /boot/kiosk-url.txt
 
 # Enable services
 systemctl daemon-reload
@@ -705,7 +541,7 @@ mkdir -p /etc/systemd/system/getty@tty1.service.d
 cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << EOF
 [Service]
 ExecStart=
-ExecStart=-/sbin/agetty --autologin $USERNAME --noclear %I \$TERM
+ExecStart=-/sbin/agetty --autologin $KIOSK_USERNAME --noclear %I \$TERM
 Type=idle
 EOF
 
@@ -713,7 +549,7 @@ EOF
 systemctl set-default multi-user.target
 
 # Configure GPU settings for RPi 5
-cat >> /boot/firmware/config.txt << EOF
+cat >> /boot/firmware/config.txt << 'EOF'
 
 # GPU Configuration for Kiosk Mode
 gpu_mem=512
@@ -732,94 +568,20 @@ EOF
 # Enable required overlays
 sed -i 's/^#dtparam=i2c_arm=on/dtparam=i2c_arm=on/' /boot/firmware/config.txt || true
 
-# Clean up
-rm -f "$BOOT_PATH/firstrun.sh"
-rm -f "$BOOT_PATH/kiosk-config.json"
-rm -f "$BOOT_PATH/userconf.txt"
-
-# Remove firstrun.sh from cmdline.txt
-if [ -f "$BOOT_PATH/cmdline.txt" ]; then
-    sed -i 's| systemd.run=/boot/firstrun.sh||g' "$BOOT_PATH/cmdline.txt"
-    sed -i 's| systemd.run=/boot/firmware/firstrun.sh||g' "$BOOT_PATH/cmdline.txt"
-    sed -i 's| systemd.run_success_action=reboot||g' "$BOOT_PATH/cmdline.txt"
-    sed -i 's| systemd.unit=kernel-command-line.target||g' "$BOOT_PATH/cmdline.txt"
-elif [ -f "/boot/cmdline.txt" ]; then
-    sed -i 's| systemd.run=/boot/firstrun.sh||g' /boot/cmdline.txt
-    sed -i 's| systemd.run=/boot/firmware/firstrun.sh||g' /boot/cmdline.txt
-    sed -i 's| systemd.run_success_action=reboot||g' /boot/cmdline.txt
-    sed -i 's| systemd.unit=kernel-command-line.target||g' /boot/cmdline.txt
-fi
-
-echo "First-run configuration complete at $(date)"
-echo "System will reboot in 10 seconds..."
-sleep 10
-reboot
-FIRSTRUN_SCRIPT
-    else
-        cat << 'FIRSTRUN_SCRIPT' | sudo tee "$boot_mount/firstrun.sh" > /dev/null
-#!/bin/bash
-# Raspberry Pi OS Bookworm first-run configuration script
-# This script runs once on first boot to set up the kiosk
-
-set -e
-
-# Log all output
-exec > >(tee -a /var/log/firstrun.log)
-exec 2>&1
-
-echo "Starting first-run configuration at $(date)"
-
-# Set variables from boot partition files
-BOOT_PATH="/boot/firmware"
-if [ ! -d "$BOOT_PATH" ]; then
-    BOOT_PATH="/boot"
-fi
-
-# Read configuration
-if [ -f "$BOOT_PATH/kiosk-config.json" ]; then
-    CONFIG_FILE="$BOOT_PATH/kiosk-config.json"
-    KIOSK_URL=$(jq -r '.url' "$CONFIG_FILE")
-    HOSTNAME=$(jq -r '.hostname' "$CONFIG_FILE")
-    WIFI_SSID=$(jq -r '.wifi_ssid // empty' "$CONFIG_FILE")
-    WIFI_PASSWORD=$(jq -r '.wifi_password // empty' "$CONFIG_FILE")
-    WIFI_ENTERPRISE_USER=$(jq -r '.wifi_enterprise_user // empty' "$CONFIG_FILE")
-    WIFI_ENTERPRISE_PASS=$(jq -r '.wifi_enterprise_pass // empty' "$CONFIG_FILE")
-    TAILSCALE_AUTHKEY=$(jq -r '.tailscale_authkey // empty' "$CONFIG_FILE")
-    USERNAME=$(jq -r '.username' "$CONFIG_FILE")
-fi
-
-# Set hostname
-if [ -n "$HOSTNAME" ]; then
-    echo "$HOSTNAME" > /etc/hostname
-    sed -i "s/raspberrypi/$HOSTNAME/g" /etc/hosts
-    echo "Set hostname to: $HOSTNAME"
-fi
-
-# Configure WiFi
-if [ -n "$WIFI_SSID" ]; then
-    echo "Configuring WiFi for SSID: $WIFI_SSID"
+# Handle enterprise WiFi if configured
+if [ -n "${WIFI_SSID}" ] && [ -n "${WIFI_ENTERPRISE_USER}" ] && [ -n "${WIFI_ENTERPRISE_PASS}" ]; then
+    echo "Configuring enterprise WiFi..."
     
     # Enable WiFi
     rfkill unblock wifi || true
     
     # Configure WiFi country (required for WiFi to work)
-    raspi-config nonint do_wifi_country US
+    raspi-config nonint do_wifi_country US || true
     
-    # Wait for NetworkManager to be ready
-    systemctl start NetworkManager || true
-    sleep 5
-    
-    if [ -n "$WIFI_ENTERPRISE_USER" ] && [ -n "$WIFI_ENTERPRISE_PASS" ]; then
-        # Enterprise WiFi configuration using nmcli
-        nmcli con add type wifi con-name "$WIFI_SSID" ifname wlan0 ssid "$WIFI_SSID" \
-            wifi-sec.key-mgmt wpa-eap 802-1x.eap peap 802-1x.phase2-auth mschapv2 \
-            802-1x.identity "$WIFI_ENTERPRISE_USER" 802-1x.password "$WIFI_ENTERPRISE_PASS" \
-            connection.autoconnect yes
-    elif [ -n "$WIFI_PASSWORD" ]; then
-        # Regular WPA2 WiFi - create NetworkManager connection file
-        cat > "/etc/NetworkManager/system-connections/${WIFI_SSID}.nmconnection" << EOF
+    # Create NetworkManager connection for enterprise WiFi
+    cat > "/etc/NetworkManager/system-connections/${WIFI_SSID}.nmconnection" << EOF
 [connection]
-id=$WIFI_SSID
+id=${WIFI_SSID}
 uuid=$(uuidgen)
 type=wifi
 interface-name=wlan0
@@ -827,12 +589,16 @@ autoconnect=true
 
 [wifi]
 mode=infrastructure
-ssid=$WIFI_SSID
+ssid=${WIFI_SSID}
 
 [wifi-security]
-auth-alg=open
-key-mgmt=wpa-psk
-psk=$WIFI_PASSWORD
+key-mgmt=wpa-eap
+
+[802-1x]
+eap=peap
+identity=${WIFI_ENTERPRISE_USER}
+password=${WIFI_ENTERPRISE_PASS}
+phase2-auth=mschapv2
 
 [ipv4]
 method=auto
@@ -840,440 +606,187 @@ method=auto
 [ipv6]
 method=auto
 EOF
-        chmod 600 "/etc/NetworkManager/system-connections/${WIFI_SSID}.nmconnection"
-        systemctl restart NetworkManager || true
-    fi
     
-    echo "WiFi configured"
+    chmod 600 "/etc/NetworkManager/system-connections/${WIFI_SSID}.nmconnection"
 fi
 
-# Install SSH key if provided
-if [ -f "$BOOT_PATH/authorized_keys" ]; then
-    echo "Installing SSH keys..."
-    USER_HOME="/home/$USERNAME"
-    mkdir -p "$USER_HOME/.ssh"
-    cp "$BOOT_PATH/authorized_keys" "$USER_HOME/.ssh/authorized_keys"
-    chown -R "$USERNAME:$USERNAME" "$USER_HOME/.ssh"
-    chmod 700 "$USER_HOME/.ssh"
-    chmod 600 "$USER_HOME/.ssh/authorized_keys"
-    rm -f "$BOOT_PATH/authorized_keys"
-    echo "SSH keys installed"
-fi
+echo "Kiosk setup plugin completed!"
+KIOSK_SCRIPT
 
-# Update system
-echo "Updating package lists..."
-apt-get update
-
-# Install required packages
-echo "Installing required packages..."
-apt-get install -y \
-    chromium-browser \
-    wayfire \
-    wlr-randr \
-    xwayland \
-    seatd \
-    libgles2-mesa \
-    libgbm1 \
-    libegl1-mesa \
-    libgl1-mesa-dri \
-    mesa-va-drivers \
-    mesa-vdpau-drivers \
-    pulseaudio \
-    pulseaudio-module-bluetooth \
-    network-manager \
-    jq \
-    curl \
-    uuid-runtime
-
-# Add user to required groups
-usermod -a -G video,render,input,audio "$USERNAME"
-
-# Install and configure Tailscale if auth key provided
-if [ -n "$TAILSCALE_AUTHKEY" ]; then
-    echo "Installing Tailscale..."
-    curl -fsSL https://tailscale.com/install.sh | sh
+    chmod +x "$plugin_dir/kiosk-setup.sh"
     
-    echo "Configuring Tailscale..."
-    tailscale up --authkey="$TAILSCALE_AUTHKEY" --ssh --hostname="$HOSTNAME" --accept-routes --accept-dns=false
-    
-    # Verify connection
-    if tailscale status >/dev/null 2>&1; then
-        echo "Tailscale connected successfully"
-    else
-        echo "Warning: Tailscale connection pending"
-    fi
-fi
-
-# Configure Wayfire for kiosk mode
-echo "Configuring Wayfire..."
-USER_HOME="/home/$USERNAME"
-
-# Create Wayfire config directory
-mkdir -p "$USER_HOME/.config/wayfire"
-
-# Create Wayfire configuration for kiosk mode
-cat > "$USER_HOME/.config/wayfire/wayfire.ini" << 'EOF'
-[core]
-# List of plugins to load
-plugins = autostart command vswitch
-
-# Preferred decoration mode: server | client
-preferred_decoration_mode = client
-
-# How to position XWayland windows
-xwayland_position = center
-
-[autostart]
-# Start PulseAudio
-pulseaudio = /usr/bin/pulseaudio --start
-
-# Hide cursor after 1 second of inactivity
-hide_cursor = sh -c "sleep 5 && wlr-randr && unclutter -idle 1"
-
-# Start Chromium in kiosk mode
-chromium = /usr/local/bin/chromium-kiosk.sh
-
-# Ensure proper display configuration
-display_fix = /usr/local/bin/fix-displays.sh
-
-[command]
-# Emergency exit
-binding_quit = <super> KEY_Q
-command_quit = killall wayfire
-
-[input]
-# Disable cursor for kiosk mode
-cursor_theme = none
-cursor_size = 1
-
-# Disable all input methods we don't need
-xkb_layout = us
-xkb_variant = 
-xkb_options = 
-
-# Mouse settings
-mouse_accel_profile = flat
-mouse_cursor_speed = 0
-
-[output]
-# Let Wayfire handle the output configuration
-mode = preferred
-position = 0,0
-transform = normal
+    # Create configuration file to be copied to the image
+    cat > "$plugin_dir/kiosk-config" << EOF
+# Kiosk configuration
+KIOSK_URL="$url"
+KIOSK_HOSTNAME="$hostname"
+KIOSK_USERNAME="$username"
+WIFI_SSID="$wifi_ssid"
+WIFI_PASSWORD="$wifi_password"
+WIFI_ENTERPRISE_USER="$wifi_enterprise_user"
+WIFI_ENTERPRISE_PASS="$wifi_enterprise_pass"
+TAILSCALE_AUTHKEY="$tailscale_authkey"
 EOF
-
-# Create chromium kiosk launcher script
-cat > /usr/local/bin/chromium-kiosk.sh << EOF
+    
+    # Create Tailscale setup script (runs at first boot)
+    if [ -n "$tailscale_authkey" ]; then
+        cat > "$plugin_dir/tailscale-setup.sh" << 'TAILSCALE_SCRIPT'
 #!/bin/bash
-# Chromium kiosk launcher script
-
-# Get URL from configuration
-KIOSK_URL="$KIOSK_URL"
-
-# Wait for Wayland to be ready
-sleep 3
-
-# Ensure audio is working
-amixer set Master unmute 2>/dev/null || true
-amixer set Master 80% 2>/dev/null || true
-
-# Launch Chromium with optimal settings for kiosk mode
-exec chromium-browser \\
-    --kiosk \\
-    --no-first-run \\
-    --noerrdialogs \\
-    --disable-infobars \\
-    --disable-translate \\
-    --disable-features=TranslateUI \\
-    --disable-features=OverscrollHistoryNavigation \\
-    --disable-pinch \\
-    --overscroll-history-navigation=0 \\
-    --disable-component-update \\
-    --autoplay-policy=no-user-gesture-required \\
-    --start-fullscreen \\
-    --window-position=0,0 \\
-    --check-for-update-interval=31536000 \\
-    --simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT' \\
-    --disable-software-rasterizer \\
-    --enable-gpu-rasterization \\
-    --enable-accelerated-video-decode \\
-    --ignore-gpu-blocklist \\
-    --enable-features=VaapiVideoDecoder,VaapiVideoEncoder,CanvasOopRasterization \\
-    --use-gl=egl \\
-    --ozone-platform=wayland \\
-    --enable-wayland-ime \\
-    "\$KIOSK_URL"
-EOF
-
-chmod +x /usr/local/bin/chromium-kiosk.sh
-
-# Create display fix script
-cat > /usr/local/bin/fix-displays.sh << 'EOF'
-#!/bin/bash
-# Fix display configuration
-
-sleep 2
-
-# Get current display info
-if command -v wlr-randr >/dev/null 2>&1; then
-    # Log current outputs
-    wlr-randr > /tmp/display-info.log 2>&1
-    
-    # Find the primary display (usually the one with highest resolution)
-    PRIMARY=$(wlr-randr | grep -E "^[A-Z]+-[A-Z]-[0-9]" | head -1 | awk '{print $1}')
-    
-    if [ -n "$PRIMARY" ]; then
-        # Enable primary display at preferred mode
-        wlr-randr --output "$PRIMARY" --on --mode preferred
-        
-        # Disable any phantom displays
-        for output in $(wlr-randr | grep -E "^[A-Z]+-[A-Z]-[0-9]" | awk '{print $1}'); do
-            if [ "$output" != "$PRIMARY" ]; then
-                # Check if it's a phantom display (usually shows as disconnected or has no EDID)
-                if wlr-randr | grep -A5 "$output" | grep -q "Enabled: yes" && \
-                   wlr-randr | grep -A5 "$output" | grep -qE "(unknown|disconnected|\(null\))"; then
-                    wlr-randr --output "$output" --off
-                fi
-            fi
-        done
-    fi
-fi
-EOF
-
-chmod +x /usr/local/bin/fix-displays.sh
-
-# Set ownership
-chown -R "$USERNAME:$USERNAME" "$USER_HOME/.config"
-
-# Create systemd service for kiosk
-cat > /etc/systemd/system/kiosk.service << EOF
-[Unit]
-Description=Wayfire Kiosk
-After=multi-user.target systemd-user-sessions.service plymouth-quit-wait.service
-Wants=network-online.target
-
-[Service]
-Type=simple
-User=$USERNAME
-Group=$USERNAME
-PAMName=login
-
-# Ensure runtime directory exists
-RuntimeDirectory=user/1000
-RuntimeDirectoryMode=0700
-
-# Environment variables
-Environment="HOME=/home/$USERNAME"
-Environment="USER=$USERNAME"
-Environment="XDG_RUNTIME_DIR=/run/user/1000"
-Environment="XDG_SESSION_TYPE=wayland"
-Environment="XDG_SESSION_CLASS=user"
-Environment="XDG_SESSION_ID=1"
-Environment="XDG_SEAT=seat0"
-Environment="XDG_VTNR=1"
-
-# Wayland/GPU settings
-Environment="WLR_BACKENDS=drm"
-Environment="WLR_DRM_NO_MODIFIERS=1"
-Environment="WLR_RENDERER=gles2"
-Environment="MESA_LOADER_DRIVER_OVERRIDE=v3d"
-
-# Start Wayfire
-ExecStartPre=/bin/mkdir -p /run/user/1000
-ExecStartPre=/bin/chown $USERNAME:$USERNAME /run/user/1000
-ExecStartPre=/bin/chmod 0700 /run/user/1000
-ExecStartPre=/bin/loginctl enable-linger $USERNAME
-
-ExecStart=/usr/bin/wayfire
-
-# Restart policy
-Restart=always
-RestartSec=10
-
-# Run on tty1
-StandardInput=tty
-StandardOutput=journal
-StandardError=journal
-TTYPath=/dev/tty1
-TTYReset=yes
-TTYVHangup=yes
-TTYVTDisallocate=yes
-
-[Install]
-WantedBy=graphical.target
-EOF
-
-# Disable conflicting services
-systemctl disable getty@tty1.service
-systemctl disable graphical.target || true
-
-# Create URL management script
-cat > /usr/local/bin/kiosk-set-url << 'EOF'
-#!/bin/bash
-# Script to update the kiosk URL
+# Tailscale Setup Script - runs at first boot
 
 set -e
 
-# Check if URL was provided
-if [ $# -eq 0 ]; then
-    echo "Usage: kiosk-set-url <url>"
-    echo "Example: kiosk-set-url https://example.com"
-    echo ""
-    echo "Current URL:"
-    grep "KIOSK_URL=" /usr/local/bin/chromium-kiosk.sh | cut -d'"' -f2
-    exit 1
+echo "Starting Tailscale Setup at first boot..."
+
+# Read configuration from files
+if [ -f /usr/local/sdm/kiosk-config ]; then
+    source /usr/local/sdm/kiosk-config
 fi
 
-NEW_URL="$1"
+# Install Tailscale
+echo "Installing Tailscale..."
+curl -fsSL https://tailscale.com/install.sh | sh
 
-# Validate URL format
-if ! [[ "$NEW_URL" =~ ^https?:// ]]; then
-    echo "Error: Invalid URL format. URL must start with http:// or https://"
-    exit 1
-fi
-
-# Update the URL in the chromium kiosk script
-echo "Updating URL to: $NEW_URL"
-sed -i "s|KIOSK_URL=\".*\"|KIOSK_URL=\"$NEW_URL\"|" /usr/local/bin/chromium-kiosk.sh
-
-# Also update in boot config for persistence
-if [ -f /boot/firmware/kiosk-url.txt ]; then
-    echo "$NEW_URL" > /boot/firmware/kiosk-url.txt
-fi
-
-# Restart kiosk service
-echo "Restarting kiosk service..."
-systemctl restart kiosk.service
-
-echo "✓ Kiosk URL updated successfully!"
-EOF
-
-chmod +x /usr/local/bin/kiosk-set-url
-
-# Store URL for persistence
-echo "$KIOSK_URL" > /boot/firmware/kiosk-url.txt
-
-# Enable services
-systemctl daemon-reload
-systemctl enable kiosk.service
-
-# Configure boot behavior
-# Enable autologin on console (backup for kiosk service)
-mkdir -p /etc/systemd/system/getty@tty1.service.d
-cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << EOF
-[Service]
-ExecStart=
-ExecStart=-/sbin/agetty --autologin $USERNAME --noclear %I \$TERM
-Type=idle
-EOF
-
-# Set default target
-systemctl set-default multi-user.target
-
-# Configure GPU settings for RPi 5
-cat >> /boot/firmware/config.txt << EOF
-
-# GPU Configuration for Kiosk Mode
-gpu_mem=512
-dtoverlay=vc4-kms-v3d-pi5
-max_framebuffers=2
-
-# Disable unnecessary hardware
-dtparam=audio=on
-dtoverlay=disable-bt
-
-# Display settings
-hdmi_force_hotplug=1
-config_hdmi_boost=7
-EOF
-
-# Enable required overlays
-sed -i 's/^#dtparam=i2c_arm=on/dtparam=i2c_arm=on/' /boot/firmware/config.txt || true
-
-# Clean up
-rm -f "$BOOT_PATH/firstrun.sh"
-rm -f "$BOOT_PATH/kiosk-config.json"
-rm -f "$BOOT_PATH/userconf.txt"
-
-# Remove firstrun.sh from cmdline.txt
-if [ -f "$BOOT_PATH/cmdline.txt" ]; then
-    sed -i 's| systemd.run=/boot/firstrun.sh||g' "$BOOT_PATH/cmdline.txt"
-    sed -i 's| systemd.run=/boot/firmware/firstrun.sh||g' "$BOOT_PATH/cmdline.txt"
-    sed -i 's| systemd.run_success_action=reboot||g' "$BOOT_PATH/cmdline.txt"
-    sed -i 's| systemd.unit=kernel-command-line.target||g' "$BOOT_PATH/cmdline.txt"
-elif [ -f "/boot/cmdline.txt" ]; then
-    sed -i 's| systemd.run=/boot/firstrun.sh||g' /boot/cmdline.txt
-    sed -i 's| systemd.run=/boot/firmware/firstrun.sh||g' /boot/cmdline.txt
-    sed -i 's| systemd.run_success_action=reboot||g' /boot/cmdline.txt
-    sed -i 's| systemd.unit=kernel-command-line.target||g' /boot/cmdline.txt
-fi
-
-echo "First-run configuration complete at $(date)"
-echo "System will reboot in 10 seconds..."
+# Wait for network to be ready
 sleep 10
-reboot
-FIRSTRUN_SCRIPT
-        sudo chmod +x "$boot_mount/firstrun.sh"
-    fi
 
-    if [ "$test_mode" = "true" ]; then
-        chmod +x "$boot_mount/firstrun.sh"
-    else
-        sudo chmod +x "$boot_mount/firstrun.sh"
+# Join Tailscale network
+if [ -n "$TAILSCALE_AUTHKEY" ]; then
+    echo "Joining Tailscale network..."
+    tailscale up --authkey="$TAILSCALE_AUTHKEY" --ssh --hostname="$KIOSK_HOSTNAME" --accept-routes --accept-dns=false
+    
+    # Create marker file
+    touch /var/lib/tailscale/joined
+    
+    echo "Tailscale setup completed!"
+else
+    echo "No Tailscale auth key provided, skipping..."
+fi
+TAILSCALE_SCRIPT
+        chmod +x "$plugin_dir/tailscale-setup.sh"
     fi
-
-    # Create configuration file with all settings
-    local config_content=$(cat << EOF
-{
-    "url": "$url",
-    "hostname": "$hostname",
-    "username": "$username",
-    "wifi_ssid": "$wifi_ssid",
-    "wifi_password": "$wifi_password",
-    "wifi_enterprise_user": "$wifi_enterprise_user",
-    "wifi_enterprise_pass": "$wifi_enterprise_pass",
-    "tailscale_authkey": "$tailscale_authkey"
+    
+    echo -e "${GREEN}✓ SDM customization scripts created${NC}"
 }
-EOF
-)
-    write_file "$boot_mount/kiosk-config.json" "$config_content"
 
-    # Copy SSH key if provided
+# Run SDM customization on the image
+run_sdm_customization() {
+    local work_dir="$1"
+    local image_file="$2"
+    local url="$3"
+    local hostname="$4"
+    local username="$5"
+    local password="$6"
+    local wifi_ssid="$7"
+    local wifi_password="$8"
+    local wifi_enterprise_user="$9"
+    local wifi_enterprise_pass="${10}"
+    local tailscale_authkey="${11}"
+    local ssh_key_file="${12}"
+    local test_mode="${13:-false}"
+    
+    echo -e "${YELLOW}Running SDM customization...${NC}"
+    
+    if [ "$test_mode" = "true" ]; then
+        echo -e "${YELLOW}TEST MODE: Skipping SDM customization${NC}"
+        echo "Would customize image with:"
+        echo "  URL: $url"
+        echo "  Hostname: $hostname"
+        echo "  Username: $username"
+        echo "  WiFi SSID: $wifi_ssid"
+        return 0
+    fi
+    
+    # Set localization defaults
+    local sdm_keymap="us"
+    local sdm_locale="en_US.UTF-8"
+    local sdm_timezone="America/New_York"
+    
+    # Export environment variables for plugins
+    export KIOSK_URL="$url"
+    export KIOSK_HOSTNAME="$hostname"
+    export KIOSK_USERNAME="$username"
+    export TAILSCALE_AUTHKEY="$tailscale_authkey"
+    export WIFI_SSID="$wifi_ssid"
+    export WIFI_PASSWORD="$wifi_password"
+    export WIFI_ENTERPRISE_USER="$wifi_enterprise_user"
+    export WIFI_ENTERPRISE_PASS="$wifi_enterprise_pass"
+    
+    # Run SDM customization
+    echo -e "${YELLOW}Phase 1: Customizing image...${NC}"
+    
+    # Build plugin arguments
+    local plugin_args=()
+    
+    # User plugin for creating user account
+    plugin_args+=("--plugin" "user:adduser=$username|password=$password")
+    
+    # L10n plugin for localization
+    plugin_args+=("--plugin" "L10n:keymap=$sdm_keymap|locale=$sdm_locale|timezone=$sdm_timezone")
+    
+    # network plugin for WiFi (if regular WiFi)
+    if [ -n "$wifi_ssid" ] && [ -z "$wifi_enterprise_user" ]; then
+        plugin_args+=("--plugin" "network:wifissid=$wifi_ssid|wifipassword=$wifi_password|wificountry=US")
+    fi
+    
+    # Apps plugin to install required packages
+    plugin_args+=("--plugin" "apps:apps=@$work_dir/package-list.txt")
+    
+    # Create package list
+    cat > "$work_dir/package-list.txt" << 'EOF'
+chromium-browser
+wayfire
+wlr-randr
+xwayland
+seatd
+libgles2-mesa
+libgbm1
+libegl1-mesa
+libgl1-mesa-dri
+mesa-va-drivers
+mesa-vdpau-drivers
+pulseaudio
+pulseaudio-module-bluetooth
+network-manager
+jq
+curl
+uuid-runtime
+unclutter
+EOF
+    
+    # SSH key plugin if provided
     if [ -f "$ssh_key_file" ]; then
-        if [ "$test_mode" = "true" ]; then
-            cp "$ssh_key_file" "$boot_mount/authorized_keys"
-        else
-            sudo cp "$ssh_key_file" "$boot_mount/authorized_keys"
-        fi
-        echo -e "${GREEN}✓ SSH key configured${NC}"
-    fi
-
-    # Modify cmdline.txt to run firstrun.sh
-    local cmdline_file="$boot_mount/cmdline.txt"
-    if [ "$test_mode" = "true" ]; then
-        # In test mode, create a sample cmdline.txt
-        echo "console=serial0,115200 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 fsck.repair=yes rootwait" > "$cmdline_file"
+        plugin_args+=("--plugin" "sshkey:keyfile=$ssh_key_file|authkeys")
     fi
     
-    if [ -f "$cmdline_file" ]; then
-        # Read current cmdline.txt
-        local current_cmdline=$(cat "$cmdline_file")
-        # Append firstrun.sh execution
-        local new_cmdline="$current_cmdline systemd.run=/boot/firmware/firstrun.sh systemd.run_success_action=reboot systemd.unit=kernel-command-line.target"
-        
-        if [ "$test_mode" = "true" ]; then
-            echo -n "$new_cmdline" > "$cmdline_file"
-        else
-            echo -n "$new_cmdline" | sudo tee "$cmdline_file" > /dev/null
-        fi
-        echo -e "${GREEN}✓ Boot configuration updated${NC}"
-    else
-        echo -e "${RED}Error: cmdline.txt not found${NC}"
-        return 1
+    # runatboot plugin for our custom scripts
+    plugin_args+=("--plugin" "runatboot:script=$work_dir/plugins/kiosk-setup.sh|output")
+    
+    # Add Tailscale setup script if configured
+    if [ -n "$tailscale_authkey" ]; then
+        plugin_args+=("--plugin" "runatboot:script=$work_dir/plugins/tailscale-setup.sh|output")
     fi
-
-    echo -e "${GREEN}✓ Raspberry Pi OS configuration complete${NC}"
+    
+    # Copy our plugin scripts and config
+    plugin_args+=("--plugin" "copyfile:from=$work_dir/plugins/kiosk-config|to=/usr/local/sdm/kiosk-config|mkdirif")
+    
+    # Run SDM with all plugins
+    sudo sdm \
+        --customize \
+        --host "$hostname" \
+        "${plugin_args[@]}" \
+        --plugin disables:piwiz \
+        --plugin system:service-enable=ssh \
+        --regen-ssh-host-keys \
+        --expand-root \
+        --restart \
+        --apt-options none \
+        "$image_file"
+    
+    echo -e "${GREEN}✓ SDM customization complete${NC}"
 }
+
+# Print usage
 
 # Print usage
 usage() {
@@ -1490,46 +1003,46 @@ main() {
         fi
     fi
 
-    # Download Raspberry Pi OS image
-    local temp_image="/tmp/raspios-$$.img.xz"
-    download_raspios "$temp_image"
-
-    # Write image to SD card
-    write_image_to_sd "$temp_image" "$device" "$test_mode"
-
-    # Clean up downloaded image
-    rm -f "$temp_image"
-
-    # Wait for boot partition
-    local boot_mount
-    boot_mount=$(wait_for_boot_partition "$device" "$test_mode")
-    if [ -z "$boot_mount" ]; then
-        echo -e "${RED}Error: Could not find boot partition${NC}"
-        exit 1
+    # Check for SDM installation
+    if [ "$test_mode" != "true" ]; then
+        check_sdm
     fi
-
-    # Configure the OS
-    configure_raspios "$boot_mount" "$wifi_ssid" "$wifi_password" \
-        "$wifi_enterprise_user" "$wifi_enterprise_pass" "$url" \
-        "$hostname" "$username" "$password" "$tailscale_authkey" \
+    
+    # Create work directory
+    local work_dir=$(mktemp -d -t raspios-setup-XXXXX)
+    echo -e "${YELLOW}Using work directory: $work_dir${NC}"
+    
+    # Prepare Raspberry Pi OS image
+    local image_file
+    image_file=$(prepare_raspios_image "$work_dir")
+    
+    # Create SDM customization scripts
+    create_sdm_customization "$work_dir" "$url" "$hostname" "$username" \
+        "$password" "$wifi_ssid" "$wifi_password" "$wifi_enterprise_user" \
+        "$wifi_enterprise_pass" "$tailscale_authkey" "$ssh_key_file"
+    
+    # Run SDM customization
+    run_sdm_customization "$work_dir" "$image_file" "$url" "$hostname" \
+        "$username" "$password" "$wifi_ssid" "$wifi_password" \
+        "$wifi_enterprise_user" "$wifi_enterprise_pass" "$tailscale_authkey" \
         "$ssh_key_file" "$test_mode"
+    
+    # Write customized image to SD card
+    if [ "$test_mode" != "true" ]; then
+        write_image_to_sd "$image_file" "$device" "$test_mode"
+    fi
 
     # Cleanup
     if [ "$test_mode" = "true" ]; then
         echo ""
-        echo -e "${YELLOW}TEST MODE: Generated files in: $boot_mount${NC}"
+        echo -e "${YELLOW}TEST MODE: Generated files in: $work_dir${NC}"
         echo "Contents:"
-        ls -la "$boot_mount"
+        ls -la "$work_dir/plugins/"
         echo ""
         echo -e "${GREEN}✓ TEST MODE: Configuration test complete!${NC}"
     else
-        # Unmount boot partition
-        sudo umount "$boot_mount" || true
-        rmdir "$boot_mount" 2>/dev/null || true
-        
-        # Sync and eject
-        echo -e "${YELLOW}Syncing data...${NC}"
-        sudo sync
+        # Clean up work directory
+        rm -rf "$work_dir"
         
         echo -e "${GREEN}✓ SD card ready!${NC}"
         echo -e "${GREEN}You can now safely remove the SD card.${NC}"
@@ -1540,13 +1053,11 @@ main() {
     echo "1. Insert the SD card into your Raspberry Pi 5"
     echo "2. Connect Ethernet cable for initial setup (if using WiFi)"
     echo "3. Power on the Pi"
-    echo "4. Wait 5-10 minutes for Raspberry Pi OS to:"
-    echo "   - Complete first-boot configuration"
-    echo "   - Connect to WiFi (if configured)"
-    echo "   - Install required packages"
-    echo "   - Join Tailscale network (if configured)"
-    echo "   - Configure and start kiosk mode"
-    echo "   - Reboot into kiosk display"
+    echo "4. The Pi will boot directly into kiosk mode"
+    echo "   - First boot may take a few minutes"
+    echo "   - WiFi will connect automatically (if configured)"
+    echo "   - Tailscale will join automatically (if configured)"
+    echo "   - Kiosk service will start automatically"
     echo ""
     if [ -n "$tailscale_authkey" ]; then
         echo "5. Verify the Pi is on Tailscale:"

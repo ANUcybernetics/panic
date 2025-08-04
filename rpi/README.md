@@ -1,20 +1,23 @@
 # Raspberry Pi Kiosk Setup
 
-This directory contains a script to set up Raspberry Pi 5 devices as browser
+This directory contains scripts for setting up Raspberry Pi 5 devices as browser
 kiosks that boot directly into fullscreen Chromium displaying a specified URL.
 
 ## Overview
 
-The `pi-setup.sh` script creates a fully automated [Raspberry Pi OS](https://www.raspberrypi.com/software/)
-installation that:
+The setup process uses:
+- **install-sdm.sh** - Installs SDM (SD Card Image Management tool) - one-time setup
+- **pi-setup.sh** - Creates customized Raspberry Pi OS SD cards with kiosk mode
 
-- boots directly into GPU-accelerated kiosk mode using Wayfire compositor
-- automatically joins your Tailscale network
-- supports native display resolutions including 4K at 60Hz
-- configures WiFi (WPA2 and enterprise 802.1X)
-- includes HDMI audio support
-- optimized specifically for Raspberry Pi 5
-- provides a `kiosk-set-url` utility for easy URL changes
+The resulting installation:
+- Boots directly into GPU-accelerated kiosk mode using Wayfire compositor
+- Automatically joins your Tailscale network
+- Supports native display resolutions including 4K at 60Hz
+- Configures WiFi (WPA2 and enterprise 802.1X)
+- Includes HDMI audio support
+- Optimized specifically for Raspberry Pi 5
+- Provides a `kiosk-set-url` utility for easy URL changes
+- Uses official Raspberry Pi OS Bookworm (64-bit)
 
 ## Prerequisites
 
@@ -26,11 +29,17 @@ installation that:
 
 2. **Software Requirements (Linux/Ubuntu):**
    ```bash
+   # Install required tools
    sudo apt-get update
-   sudo apt-get install curl xz-utils pv jq
+   sudo apt-get install curl xz-utils pv dd mktemp jq git
    ```
 
-3. **Get a Tailscale auth key** (optional) from
+3. **Install SDM** (one-time setup):
+   ```bash
+   ./install-sdm.sh
+   ```
+
+4. **Get a Tailscale auth key** (optional) from
    https://login.tailscale.com/admin/settings/keys (enable "Pre-authorized")
 
 ## Usage Examples
@@ -65,11 +74,15 @@ installation that:
 
 ## Installation Process
 
-1. **Run the script** with your desired configuration
-2. **Insert the SD card** when prompted (the script will detect it automatically)
-3. **Confirm** the SD card device to proceed with flashing
-4. **Wait** for the image to be written (progress bar shows ETA)
-5. **Remove the SD card** when complete
+1. **Install SDM first** (if not already installed):
+   ```bash
+   ./install-sdm.sh
+   ```
+2. **Run the setup script** with your desired configuration
+3. **Insert the SD card** when prompted (the script will detect it automatically)
+4. **Confirm** the SD card device to proceed with flashing
+5. **Wait** for the image to be customized and written (progress bar shows ETA)
+6. **Remove the SD card** when complete
 
 ## First Boot
 
@@ -179,6 +192,7 @@ For macOS users, we recommend:
 ## Technical Details
 
 - **Base OS:** Raspberry Pi OS Bookworm (64-bit)
+- **Image Customization:** SDM (https://github.com/gitbls/sdm)
 - **Compositor:** Wayfire (Wayland)
 - **Browser:** Chromium with hardware acceleration
 - **Init System:** systemd with custom service units
