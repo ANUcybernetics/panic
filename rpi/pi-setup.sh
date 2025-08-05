@@ -1,10 +1,10 @@
 #!/bin/bash
 # Raspberry Pi OS Bookworm automated SD card setup for Raspberry Pi 5 kiosk mode
 # This script creates a fully automated Raspberry Pi OS installation that boots directly into 
-# GPU-accelerated Chromium kiosk mode using Wayland/Wayfire and automatically joins Tailscale
+# GPU-accelerated Chromium kiosk mode using Wayland/labwc and automatically joins Tailscale
 #
 # Features:
-# - Full GPU acceleration with Wayfire Wayland compositor
+# - Full GPU acceleration with labwc Wayland compositor (RPi OS default)
 # - Native 4K display support with auto-detection
 # - Consumer and enterprise WiFi configuration
 # - Automatic Tailscale network join
@@ -78,7 +78,7 @@ check_sdm() {
 find_sd_card() {
     echo -e "${YELLOW}Looking for SD card devices...${NC}" >&2
     
-    # List removable block devices and USB card readers
+    # List removable block devices
     local devices=()
     local device_info=()
     
@@ -88,29 +88,19 @@ find_sd_card() {
         local size=$(lsblk -b -n -o SIZE "$device" 2>/dev/null | head -1 || echo "0")
         local size_gb=$((size / 1024 / 1024 / 1024))
         
-        # Get vendor and model info
-        local vendor=$(cat "/sys/block/$line/device/vendor" 2>/dev/null | tr -d ' ' || echo "")
-        local model=$(cat "/sys/block/$line/device/model" 2>/dev/null | tr -d ' ' || echo "Unknown")
+        # Get model info
+        local model=$(lsblk -n -o MODEL "$device" 2>/dev/null | head -1 | tr -d ' ' || echo "Unknown")
         
-        # Check for USB card readers (often show as Multi-Reader or similar)
-        local is_card_reader=0
-        if [[ "$model" =~ Multi-Reader ]] || [[ "$model" =~ Card-Reader ]] || [[ "$model" =~ SD.*Reader ]]; then
-            is_card_reader=1
-        fi
-        
-        # Include device if:
-        # 1. It's removable with valid size, OR
-        # 2. It's a card reader slot with valid size (card readers show multiple slots, only count ones with cards)
-        if ([ "$removable" = "1" ] || [ "$is_card_reader" = "1" ]) && [ "$size_gb" -ge 2 ] && [ "$size_gb" -le 256 ]; then
+        # Include removable devices between 2GB and 256GB
+        if [ "$removable" = "1" ] && [ "$size_gb" -ge 2 ] && [ "$size_gb" -le 256 ]; then
             devices+=("$device")
-            device_info+=("${size_gb}GB - $vendor $model")
+            device_info+=("${size_gb}GB - $model")
         fi
     done < <(ls /sys/block/ | grep -E '^(sd|mmcblk)[a-z0-9]*$')
     
     if [ ${#devices[@]} -eq 0 ]; then
         echo -e "${RED}Error: No SD card devices found${NC}" >&2
         echo -e "${YELLOW}Please insert an SD card and run the script again${NC}" >&2
-        echo -e "${YELLOW}Note: USB card readers should show up when a card is inserted${NC}" >&2
         return 1
     fi
     
@@ -123,19 +113,15 @@ find_sd_card() {
     # Multiple devices found, ask user to select
     echo -e "${YELLOW}Multiple removable devices found:${NC}" >&2
     for i in "${!devices[@]}"; do
-        local dev="${devices[$i]}"
-        local info="${device_info[$i]}"
-        echo "  $((i+1))) $dev - $info" >&2
+        echo "  $((i+1))) ${devices[$i]} - ${device_info[$i]}" >&2
     done
     
     echo -n "Select device (1-${#devices[@]}): " >&2
     read -r selection
     
     if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le ${#devices[@]} ]; then
-        local selected="${devices[$((selection-1))]}"
-        local selected_info="${device_info[$((selection-1))]}"
-        echo -e "${GREEN}✓ Selected $selected ($selected_info)${NC}" >&2
-        echo "$selected"
+        echo -e "${GREEN}✓ Selected ${devices[$((selection-1))]} (${device_info[$((selection-1))]})${NC}" >&2
+        echo "${devices[$((selection-1))]}"
         return 0
     else
         echo -e "${RED}Error: Invalid selection${NC}" >&2
@@ -276,313 +262,152 @@ fi
 # Set defaults if not provided
 KIOSK_URL="${KIOSK_URL:-https://panic.fly.dev/}"
 KIOSK_HOSTNAME="${KIOSK_HOSTNAME:-panic-rpi}"
-KIOSK_USERNAME="${KIOSK_USERNAME:-pi}"
+KIOSK_USERNAME="${KIOSK_USERNAME:-panic}"
 
 # Add user to required groups
 echo "Adding user to required groups..."
-usermod -a -G video,render,input,audio "$KIOSK_USERNAME" || true
+usermod -a -G video,render,input,audio,tty "$KIOSK_USERNAME" || true
 
-# Configure Wayfire for kiosk mode
-echo "Configuring Wayfire..."
+# Note: Modern Raspberry Pi OS handles GPU permissions automatically via udev rules
+
+# Configure labwc for kiosk mode (Raspberry Pi OS default compositor)
+echo "Configuring labwc..."
 USER_HOME="/home/$KIOSK_USERNAME"
 
-# Create Wayfire config directory
-mkdir -p "$USER_HOME/.config/wayfire"
+# Create labwc config directory
+mkdir -p "$USER_HOME/.config/labwc"
 
-# Create Wayfire configuration for kiosk mode
-cat > "$USER_HOME/.config/wayfire/wayfire.ini" << 'EOF'
-[core]
-# List of plugins to load
-plugins = autostart command vswitch
-
-# Preferred decoration mode: server | client
-preferred_decoration_mode = client
-
-# How to position XWayland windows
-xwayland_position = center
-
-[autostart]
-# Start PulseAudio
-pulseaudio = /usr/bin/pulseaudio --start
-
+# Create labwc autostart for kiosk
+cat > "$USER_HOME/.config/labwc/autostart" << 'EOF'
 # Hide cursor after 1 second of inactivity
-hide_cursor = sh -c "sleep 5 && wlr-randr && unclutter -idle 1"
+unclutter -idle 1 &
 
-# Start Chromium in kiosk mode
-chromium = /usr/local/bin/chromium-kiosk.sh
-
-# Ensure proper display configuration
-display_fix = /usr/local/bin/fix-displays.sh
-
-[command]
-# Emergency exit
-binding_quit = <super> KEY_Q
-command_quit = killall wayfire
-
-[input]
-# Disable cursor for kiosk mode
-cursor_theme = none
-cursor_size = 1
-
-# Disable all input methods we don't need
-xkb_layout = us
-xkb_variant = 
-xkb_options = 
-
-# Mouse settings
-mouse_accel_profile = flat
-mouse_cursor_speed = 0
-
-[output]
-# Let Wayfire handle the output configuration
-mode = preferred
-position = 0,0
-transform = normal
+# Start Chromium kiosk via systemd user service
+systemctl --user start chromium-kiosk.service &
 EOF
 
-# Create chromium kiosk launcher script
-cat > /usr/local/bin/chromium-kiosk.sh << EOF
-#!/bin/bash
-# Chromium kiosk launcher script
+chmod +x "$USER_HOME/.config/labwc/autostart"
 
-# Get URL from configuration
-KIOSK_URL="$KIOSK_URL"
+# Enable the chromium service for the user
+sudo -u "$KIOSK_USERNAME" systemctl --user enable chromium-kiosk.service
 
-# Wait for Wayland to be ready
-sleep 3
-
-# Ensure audio is working
-amixer set Master unmute 2>/dev/null || true
-amixer set Master 80% 2>/dev/null || true
-
-# Launch Chromium with optimal settings for kiosk mode
-exec chromium-browser \\
-    --kiosk \\
-    --no-first-run \\
-    --noerrdialogs \\
-    --disable-infobars \\
-    --disable-translate \\
-    --disable-features=TranslateUI \\
-    --disable-features=OverscrollHistoryNavigation \\
-    --disable-pinch \\
-    --overscroll-history-navigation=0 \\
-    --disable-component-update \\
-    --autoplay-policy=no-user-gesture-required \\
-    --start-fullscreen \\
-    --window-position=0,0 \\
-    --check-for-update-interval=31536000 \\
-    --simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT' \\
-    --disable-software-rasterizer \\
-    --enable-gpu-rasterization \\
-    --enable-accelerated-video-decode \\
-    --ignore-gpu-blocklist \\
-    --enable-features=VaapiVideoDecoder,VaapiVideoEncoder,CanvasOopRasterization \\
-    --use-gl=egl \\
-    --ozone-platform=wayland \\
-    --enable-wayland-ime \\
-    "\$KIOSK_URL"
+# Create minimal labwc config for kiosk mode
+cat > "$USER_HOME/.config/labwc/rc.xml" << 'EOF'
+<?xml version="1.0"?>
+<labwc_config>
+  <core>
+    <decoration>no</decoration>
+    <gap>0</gap>
+  </core>
+  <keyboard>
+    <keybind key="Super-q">
+      <action name="Exit"/>
+    </keybind>
+  </keyboard>
+</labwc_config>
 EOF
 
-chmod +x /usr/local/bin/chromium-kiosk.sh
+# Create systemd user service for Chromium kiosk
+mkdir -p "$USER_HOME/.config/systemd/user"
+cat > "$USER_HOME/.config/systemd/user/chromium-kiosk.service" << 'EOF'
+[Unit]
+Description=Chromium Kiosk Browser
+After=graphical-session.target
+Requires=graphical-session.target
 
-# Create display fix script
-cat > /usr/local/bin/fix-displays.sh << 'EOF'
-#!/bin/bash
-# Fix display configuration
+[Service]
+Type=simple
+Environment="WAYLAND_DISPLAY=wayland-0"
+ExecStartPre=/bin/bash -c 'while [ ! -S "/run/user/$(id -u)/${WAYLAND_DISPLAY}" ]; do sleep 0.5; done'
+ExecStart=/bin/bash -c 'BOOT_PARTITION=$([ -d /boot/firmware ] && echo "/boot/firmware" || echo "/boot"); KIOSK_URL=$(cat "$BOOT_PARTITION/kiosk-url.txt" 2>/dev/null || echo "https://panic.fly.dev/"); exec chromium-browser --kiosk --no-first-run --noerrdialogs --disable-infobars --disable-translate --disable-pinch --disable-component-update --autoplay-policy=no-user-gesture-required --check-for-update-interval=31536000 --ozone-platform=wayland "$KIOSK_URL"'
+Restart=always
+RestartSec=5
 
-sleep 2
-
-# Get current display info
-if command -v wlr-randr >/dev/null 2>&1; then
-    # Log current outputs
-    wlr-randr > /tmp/display-info.log 2>&1
-    
-    # Find the primary display (usually the one with highest resolution)
-    PRIMARY=$(wlr-randr | grep -E "^[A-Z]+-[A-Z]-[0-9]" | head -1 | awk '{print $1}')
-    
-    if [ -n "$PRIMARY" ]; then
-        # Enable primary display at preferred mode
-        wlr-randr --output "$PRIMARY" --on --mode preferred
-        
-        # Disable any phantom displays
-        for output in $(wlr-randr | grep -E "^[A-Z]+-[A-Z]-[0-9]" | awk '{print $1}'); do
-            if [ "$output" != "$PRIMARY" ]; then
-                # Check if it's a phantom display (usually shows as disconnected or has no EDID)
-                if wlr-randr | grep -A5 "$output" | grep -q "Enabled: yes" && \
-                   wlr-randr | grep -A5 "$output" | grep -qE "(unknown|disconnected|\(null\))"; then
-                    wlr-randr --output "$output" --off
-                fi
-            fi
-        done
-    fi
-fi
+[Install]
+WantedBy=default.target
 EOF
 
-chmod +x /usr/local/bin/fix-displays.sh
 
 # Set ownership
 chown -R "$KIOSK_USERNAME:$KIOSK_USERNAME" "$USER_HOME/.config"
 
-# Create systemd service for kiosk
-cat > /etc/systemd/system/kiosk.service << EOF
-[Unit]
-Description=Wayfire Kiosk
-After=multi-user.target systemd-user-sessions.service plymouth-quit-wait.service
-Wants=network-online.target
-Conflicts=getty@tty1.service
-
-[Service]
-Type=simple
-User=$KIOSK_USERNAME
-Group=$KIOSK_USERNAME
-PAMName=login
-
-# Ensure runtime directory exists
-RuntimeDirectory=user/1000
-RuntimeDirectoryMode=0700
-
-# Environment variables
-Environment="HOME=/home/$KIOSK_USERNAME"
-Environment="USER=$KIOSK_USERNAME"
-Environment="XDG_RUNTIME_DIR=/run/user/1000"
-Environment="XDG_SESSION_TYPE=wayland"
-Environment="XDG_SESSION_CLASS=user"
-Environment="XDG_SESSION_ID=1"
-Environment="XDG_SEAT=seat0"
-Environment="XDG_VTNR=1"
-
-# Wayland/GPU settings
-Environment="WLR_BACKENDS=drm"
-Environment="WLR_DRM_NO_MODIFIERS=1"
-Environment="WLR_RENDERER=gles2"
-Environment="MESA_LOADER_DRIVER_OVERRIDE=v3d"
-
-# Start Wayfire
-ExecStartPre=/bin/mkdir -p /run/user/1000
-ExecStartPre=/bin/chown $KIOSK_USERNAME:$KIOSK_USERNAME /run/user/1000
-ExecStartPre=/bin/chmod 0700 /run/user/1000
-ExecStartPre=/bin/loginctl enable-linger $KIOSK_USERNAME
-
-ExecStart=/usr/bin/wayfire
-
-# Restart policy
-Restart=always
-RestartSec=10
-
-# Run on tty1
-StandardInput=tty
-StandardOutput=journal
-StandardError=journal
-TTYPath=/dev/tty1
-TTYReset=yes
-TTYVHangup=yes
-TTYVTDisallocate=yes
-
-[Install]
-WantedBy=graphical.target
+# Create a custom labwc session for kiosk mode
+cat > /usr/share/wayland-sessions/labwc-kiosk.desktop << EOF
+[Desktop Entry]
+Name=Labwc Kiosk
+Comment=Labwc compositor in kiosk mode
+Exec=/usr/local/bin/labwc-kiosk-session.sh
+Type=Application
+DesktopNames=Labwc
 EOF
 
-# Disable conflicting services and plymouth boot splash
-systemctl disable getty@tty1.service
-systemctl mask plymouth-quit.service
-systemctl mask plymouth-quit-wait.service
+# Create the session launcher script
+cat > /usr/local/bin/labwc-kiosk-session.sh << 'EOF'
+#!/bin/bash
+# Labwc Kiosk Session Launcher
+# This script is executed by LightDM when the user logs in
 
-# Create URL management script
+# Set up environment
+export XDG_SESSION_TYPE=wayland
+export XDG_SESSION_CLASS=user
+export XDG_CURRENT_DESKTOP=Labwc
+
+# Start labwc
+exec labwc
+EOF
+
+chmod +x /usr/local/bin/labwc-kiosk-session.sh
+
+
+# Create simple URL management script
 cat > /usr/local/bin/kiosk-set-url << 'EOF'
 #!/bin/bash
 # Script to update the kiosk URL
 
-set -e
-
-# Check if URL was provided
 if [ $# -eq 0 ]; then
     echo "Usage: kiosk-set-url <url>"
-    echo "Example: kiosk-set-url https://example.com"
-    echo ""
     echo "Current URL:"
-    grep "KIOSK_URL=" /usr/local/bin/chromium-kiosk.sh | cut -d'"' -f2
+    BOOT_PARTITION=$([ -d /boot/firmware ] && echo "/boot/firmware" || echo "/boot")
+    cat "$BOOT_PARTITION/kiosk-url.txt" 2>/dev/null || echo "Not set"
     exit 1
 fi
 
-NEW_URL="$1"
+# Update URL in boot partition
+BOOT_PARTITION=$([ -d /boot/firmware ] && echo "/boot/firmware" || echo "/boot")
+echo "$1" | sudo tee "$BOOT_PARTITION/kiosk-url.txt" > /dev/null
 
-# Validate URL format
-if ! [[ "$NEW_URL" =~ ^https?:// ]]; then
-    echo "Error: Invalid URL format. URL must start with http:// or https://"
-    exit 1
-fi
-
-# Update the URL in the chromium kiosk script
-echo "Updating URL to: $NEW_URL"
-sed -i "s|KIOSK_URL=\".*\"|KIOSK_URL=\"$NEW_URL\"|" /usr/local/bin/chromium-kiosk.sh
-
-# Also update in boot config for persistence
-if [ -f /boot/firmware/kiosk-url.txt ]; then
-    echo "$NEW_URL" > /boot/firmware/kiosk-url.txt
-fi
-
-# Restart kiosk service
-echo "Restarting kiosk service..."
-systemctl restart kiosk.service
-
-echo "✓ Kiosk URL updated successfully!"
+echo "✓ URL updated. Please reboot for changes to take effect."
 EOF
 
 chmod +x /usr/local/bin/kiosk-set-url
 
-# Store URL for persistence
-echo "$KIOSK_URL" > /boot/firmware/kiosk-url.txt || echo "$KIOSK_URL" > /boot/kiosk-url.txt
+# Store URL for persistence  
+BOOT_PARTITION=$([ -d /boot/firmware ] && echo "/boot/firmware" || echo "/boot")
+echo "$KIOSK_URL" > "$BOOT_PARTITION/kiosk-url.txt"
 
-# Enable services
-systemctl daemon-reload
-systemctl enable kiosk.service
+# No need for custom services - LightDM handles everything!
 
-# Configure boot behavior for automatic kiosk start
-# Disable getty on tty1 to prevent login prompt
-systemctl disable getty@tty1.service
-systemctl mask getty@tty1.service
+# Configure LightDM for autologin to kiosk session
+echo "Configuring LightDM autologin..."
 
-# Enable autologin for the user (needed for proper session setup)
-mkdir -p /etc/systemd/system/getty@tty1.service.d
-cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << EOF
-[Service]
-ExecStart=
-ExecStart=-/sbin/agetty --autologin $KIOSK_USERNAME --noclear %I \$TERM
-Type=idle
+# Use raspi-config to enable autologin (non-interactive)
+raspi-config nonint do_boot_behaviour B4 || true  # B4 = Desktop Autologin
+
+# Set the default session for the user
+mkdir -p "$USER_HOME/.dmrc"
+cat > "$USER_HOME/.dmrc" << EOF
+[Desktop]
+Session=labwc-kiosk
 EOF
+chown "$KIOSK_USERNAME:$KIOSK_USERNAME" "$USER_HOME/.dmrc"
 
-# Set graphical target as default to ensure kiosk starts
+# Ensure graphical target is default
 systemctl set-default graphical.target
 
-# Create a drop-in to ensure kiosk starts immediately after boot
-mkdir -p /etc/systemd/system/kiosk.service.d
-cat > /etc/systemd/system/kiosk.service.d/override.conf << EOF
-[Unit]
-After=multi-user.target
+# Enable LightDM
+systemctl enable lightdm.service
 
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Configure GPU settings for RPi 5
-cat >> /boot/firmware/config.txt << 'EOF'
-
-# GPU Configuration for Kiosk Mode
-gpu_mem=512
-dtoverlay=vc4-kms-v3d-pi5
-max_framebuffers=2
-
-# Disable unnecessary hardware
-dtparam=audio=on
-dtoverlay=disable-bt
-
-# Display settings
-hdmi_force_hotplug=1
-config_hdmi_boost=7
-EOF
-
-# Enable required overlays
-sed -i 's/^#dtparam=i2c_arm=on/dtparam=i2c_arm=on/' /boot/firmware/config.txt || true
+# Note: Not modifying /boot/firmware/config.txt - using RPi OS defaults
 
 # Handle enterprise WiFi if configured
 if [ -n "${WIFI_SSID}" ] && [ -n "${WIFI_ENTERPRISE_USER}" ] && [ -n "${WIFI_ENTERPRISE_PASS}" ]; then
@@ -626,6 +451,9 @@ EOF
     chmod 600 "/etc/NetworkManager/system-connections/${WIFI_SSID}.nmconnection"
 fi
 
+# Note: Most configuration is done during SDM customization phase
+# No need for complex first-boot services since everything is already configured
+
 echo "Kiosk setup plugin completed!"
 KIOSK_SCRIPT
 
@@ -654,30 +482,34 @@ set -e
 
 echo "Starting Tailscale Setup at first boot..."
 
-# Read configuration from files
-if [ -f /usr/local/sdm/kiosk-config ]; then
-    source /usr/local/sdm/kiosk-config
-fi
-
 # Install Tailscale
 echo "Installing Tailscale..."
 curl -fsSL https://tailscale.com/install.sh | sh
 
-# Wait for network to be ready
-sleep 10
+# Create systemd service for automatic Tailscale join
+cat > /etc/systemd/system/tailscale-join.service << 'EOF'
+[Unit]
+Description=Join Tailscale Network
+After=network-online.target tailscaled.service
+Wants=network-online.target
+ConditionPathExists=!/var/lib/tailscale/.setup-complete
 
-# Join Tailscale network
-if [ -n "$TAILSCALE_AUTHKEY" ]; then
-    echo "Joining Tailscale network..."
-    tailscale up --authkey="$TAILSCALE_AUTHKEY" --ssh --hostname="$KIOSK_HOSTNAME" --accept-routes --accept-dns=false
-    
-    # Create marker file
-    touch /var/lib/tailscale/joined
-    
-    echo "Tailscale setup completed!"
-else
-    echo "No Tailscale auth key provided, skipping..."
-fi
+[Service]
+Type=oneshot
+EnvironmentFile=/usr/local/sdm/kiosk-config
+ExecStartPre=/bin/bash -c 'test -n "${TAILSCALE_AUTHKEY}"'
+ExecStart=/usr/bin/tailscale up --authkey=${TAILSCALE_AUTHKEY} --ssh --hostname=${KIOSK_HOSTNAME} --accept-routes --accept-dns=false
+ExecStartPost=/bin/mkdir -p /var/lib/tailscale
+ExecStartPost=/bin/touch /var/lib/tailscale/.setup-complete
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable tailscale-join.service
+
+echo "Tailscale setup completed!"
 TAILSCALE_SCRIPT
         chmod +x "$plugin_dir/tailscale-setup.sh"
     fi
@@ -721,16 +553,6 @@ run_sdm_customization() {
     echo "Using host locale: $sdm_locale"
     echo "Using host timezone: $sdm_timezone"
     
-    # Export environment variables for plugins
-    export KIOSK_URL="$url"
-    export KIOSK_HOSTNAME="$hostname"
-    export KIOSK_USERNAME="$username"
-    export TAILSCALE_AUTHKEY="$tailscale_authkey"
-    export WIFI_SSID="$wifi_ssid"
-    export WIFI_PASSWORD="$wifi_password"
-    export WIFI_ENTERPRISE_USER="$wifi_enterprise_user"
-    export WIFI_ENTERPRISE_PASS="$wifi_enterprise_pass"
-    
     # Run SDM customization
     echo -e "${YELLOW}Phase 1: Customizing image...${NC}"
     
@@ -749,29 +571,7 @@ run_sdm_customization() {
     fi
     
     # Apps plugin to install required packages
-    plugin_args+=("--plugin" "apps:apps=@$work_dir/package-list.txt")
-    
-    # Create package list
-    cat > "$work_dir/package-list.txt" << 'EOF'
-chromium-browser
-wayfire
-wlr-randr
-xwayland
-seatd
-libgles2-mesa
-libgbm1
-libegl1-mesa
-libgl1-mesa-dri
-mesa-va-drivers
-mesa-vdpau-drivers
-pulseaudio
-pulseaudio-module-bluetooth
-network-manager
-jq
-curl
-uuid-runtime
-unclutter
-EOF
+    plugin_args+=("--plugin" "apps:apps=jq,curl,uuid-runtime,unclutter")
     
     # SSH key plugin if provided
     if [ -f "$ssh_key_file" ]; then
