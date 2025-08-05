@@ -41,7 +41,7 @@ check_required_tools() {
     local missing_tools=()
     
     # Check for required commands
-    for cmd in curl xz pv dd mktemp jq git; do
+    for cmd in curl xz dd mktemp jq git; do
         if ! command -v "$cmd" >/dev/null 2>&1; then
             missing_tools+=("$cmd")
         fi
@@ -205,14 +205,10 @@ write_image_to_sd() {
         fi
     done
 
-    # Get image size for progress display
-    local image_size=$(stat -c%s "$image_file")
+    echo "Writing image to SD card..."
     
-    echo "Image size: $((image_size / 1024 / 1024 / 1024)) GB"
-    echo "Using pv for progress display..."
-    
-    # Write with progress
-    pv -s "$image_size" "$image_file" | sudo dd of="$device" bs=32M status=none
+    # Write with built-in dd progress display
+    sudo dd if="$image_file" of="$device" bs=4M status=progress oflag=direct
 
     # Ensure all data is written
     sudo sync
@@ -250,9 +246,11 @@ create_sdm_customization() {
 # Kiosk Setup Script - runs at first boot
 # This configures the system for kiosk mode
 
-set -e
+# Don't exit on error - we want to complete as much as possible
+set +e
 
 echo "Starting Kiosk Setup at first boot..."
+exec 2>&1  # Redirect stderr to stdout for logging
 
 # Read configuration from files
 if [ -f /usr/local/sdm/kiosk-config ]; then
@@ -288,8 +286,9 @@ EOF
 
 chmod +x "$USER_HOME/.config/labwc/autostart"
 
-# Enable the chromium service for the user
-sudo -u "$KIOSK_USERNAME" systemctl --user enable chromium-kiosk.service
+# Enable the chromium service for the user by creating symlink
+mkdir -p "$USER_HOME/.config/systemd/user/default.target.wants"
+ln -sf "../chromium-kiosk.service" "$USER_HOME/.config/systemd/user/default.target.wants/"
 
 # Create minimal labwc config for kiosk mode
 cat > "$USER_HOME/.config/labwc/rc.xml" << 'EOF'
@@ -387,11 +386,16 @@ echo "$KIOSK_URL" > "$BOOT_PARTITION/kiosk-url.txt"
 
 # No need for custom services - LightDM handles everything!
 
-# Configure LightDM for autologin to kiosk session
-echo "Configuring LightDM autologin..."
+# Configure the kiosk session
+echo "Configuring kiosk session..."
 
-# Use raspi-config to enable autologin (non-interactive)
-raspi-config nonint do_boot_behaviour B4 || true  # B4 = Desktop Autologin
+# Autologin is handled by the raspiconfig plugin during customization
+# We just need to configure the session to use
+mkdir -p /etc/lightdm/lightdm.conf.d
+cat > /etc/lightdm/lightdm.conf.d/99-kiosk-session.conf << EOF
+[Seat:*]
+autologin-session=labwc-kiosk
+EOF
 
 # Set the default session for the user
 mkdir -p "$USER_HOME/.dmrc"
@@ -453,6 +457,8 @@ fi
 
 # Note: Most configuration is done during SDM customization phase
 # No need for complex first-boot services since everything is already configured
+
+# Autologin is now configured via the raspiconfig plugin during customization
 
 echo "Kiosk setup plugin completed!"
 KIOSK_SCRIPT
@@ -562,6 +568,9 @@ run_sdm_customization() {
     # User plugin for creating user account
     plugin_args+=("--plugin" "user:adduser=$username|password=$password")
     
+    # Configure boot behavior for graphical desktop with autologin (B4)
+    plugin_args+=("--plugin" "raspiconfig:boot_behaviour=B4")
+    
     # L10n plugin for localization
     plugin_args+=("--plugin" "L10n:keymap=$sdm_keymap|locale=$sdm_locale|timezone=$sdm_timezone")
     
@@ -587,7 +596,9 @@ run_sdm_customization() {
     fi
     
     # Copy our plugin scripts and config
-    plugin_args+=("--plugin" "copyfile:from=$work_dir/plugins/kiosk-config|to=/usr/local/sdm/kiosk-config|mkdirif")
+    # The copyfile plugin should copy to a file, not create a directory
+    # Since /usr/local/sdm is created by SDM, we just need to copy the file there
+    plugin_args+=("--plugin" "copyfile:from=$work_dir/plugins/kiosk-config|to=/usr/local/sdm/|chown=root:root")
     
     # Run SDM with all plugins
     sudo sdm \
@@ -595,7 +606,7 @@ run_sdm_customization() {
         --host "$hostname" \
         "${plugin_args[@]}" \
         --plugin disables:piwiz \
-        --plugin system:service-enable=ssh \
+        --plugin system:service-enable=ssh,sdm-firstboot \
         --regen-ssh-host-keys \
         --expand-root \
         --restart \
