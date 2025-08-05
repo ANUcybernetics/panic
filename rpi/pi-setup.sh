@@ -603,6 +603,7 @@ run_sdm_customization() {
     # Run SDM with all plugins
     sudo sdm \
         --customize \
+        --batch \
         --host "$hostname" \
         "${plugin_args[@]}" \
         --plugin disables:piwiz \
