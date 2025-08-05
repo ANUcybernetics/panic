@@ -307,9 +307,11 @@ defmodule Panic.Engine.NetworkRunner do
         # If there are initial_prompt vestaboard watchers, they display the genesis input
         # immediately above, but we delay the actual invocation processing
         # to give users time to read the prompt before it gets processed and replaced
-        # with the output. This matches the vestaboard delay used elsewhere.
+        # with the output. For genesis, we use 2x the normal vestaboard delay.
         if has_initial_prompt_watchers?(watchers) do
-          Process.send_after(self(), {:delayed_invocation, invocation}, @vestaboard_delay)
+          # For genesis invocation with vestaboard watchers, add another 2s delay
+          genesis_delay_ms = @vestaboard_delay + 2000
+          Process.send_after(self(), {:delayed_invocation, invocation}, genesis_delay_ms)
         else
           # Trigger async invocation processing immediately
           trigger_invocation(invocation, new_state)
