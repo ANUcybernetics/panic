@@ -10,7 +10,7 @@ The setup process uses:
 - **pi-setup.sh** - Creates customized Raspberry Pi OS SD cards with kiosk mode
 
 The resulting installation:
-- Boots directly into GPU-accelerated kiosk mode using Wayfire compositor
+- Boots directly into GPU-accelerated kiosk mode using labwc Wayland compositor (RPi OS default)
 - Automatically joins your Tailscale network
 - Supports native display resolutions including 4K at 60Hz
 - Configures WiFi (WPA2 and enterprise 802.1X)
@@ -31,7 +31,7 @@ The resulting installation:
    ```bash
    # Install required tools
    sudo apt-get update
-   sudo apt-get install curl xz-utils pv dd mktemp jq git
+   sudo apt-get install curl xz-utils coreutils jq git
    ```
 
 3. **Install SDM** (one-time setup):
@@ -48,6 +48,7 @@ The resulting installation:
 # Basic setup with WiFi and Tailscale
 ./pi-setup.sh \
   --url "https://example.com" \
+  --hostname "kiosk-pi" \
   --wifi-ssid "MyNetwork" \
   --wifi-password "MyPassword" \
   --tailscale-authkey "tskey-auth-..."
@@ -55,6 +56,7 @@ The resulting installation:
 # Enterprise WiFi
 ./pi-setup.sh \
   --url "https://example.com" \
+  --hostname "kiosk-display" \
   --wifi-ssid "CorpNetwork" \
   --wifi-enterprise-user "username@domain.com" \
   --wifi-enterprise-pass "password" \
@@ -81,40 +83,38 @@ The resulting installation:
 2. **Run the setup script** with your desired configuration
 3. **Insert the SD card** when prompted (the script will detect it automatically)
 4. **Confirm** the SD card device to proceed with flashing
-5. **Wait** for the image to be customized and written (progress bar shows ETA)
+5. **Wait** for the image to be customized and written (shows progress)
 6. **Remove the SD card** when complete
 
 ## First Boot
 
 After flashing, insert the SD card into the Pi and power on. The Pi will:
 
-1. Boot into Raspberry Pi OS
-2. Run the automated first-boot configuration
-3. Set hostname and configure network
-4. Install required packages (Chromium, Wayfire, etc.)
-5. Join Tailscale network (if configured)
-6. Configure kiosk mode
-7. Reboot automatically
+1. Boot into pre-customized Raspberry Pi OS
+2. Run minimal first-boot configuration
+3. Configure enterprise WiFi (if specified)
+4. Join Tailscale network (if configured)
+5. Start the kiosk session automatically
 
-**First boot takes 5-10 minutes** depending on network speed and whether system updates are available.
+**First boot takes 2-3 minutes** as most configuration is done during image customization.
 
 ## Remote Management
 
 ```bash
 # SSH via Tailscale (no password needed if your Tailscale user has access)
-tailscale ssh pi@<hostname>
+tailscale ssh panic@<hostname>
 
 # SSH with password or key (if on same network)
-ssh pi@<hostname or IP>
+ssh panic@<hostname or IP>
 
 # Change kiosk URL
-sudo kiosk-set-url                    # View current URL
+kiosk-set-url                      # View current URL
 sudo kiosk-set-url https://new-url.com # Change URL
 
 # View logs and status
-sudo journalctl -u kiosk -f            # View kiosk logs
-sudo systemctl status kiosk            # Check status
-sudo systemctl restart kiosk           # Restart kiosk
+systemctl --user status chromium-kiosk.service  # Check status
+journalctl --user -u chromium-kiosk -f         # View logs
+systemctl --user restart chromium-kiosk.service # Restart browser
 
 # Check all kiosks on Tailscale
 tailscale status | grep -E "lobby|conference|kiosk"
@@ -128,9 +128,9 @@ tailscale status | grep -E "lobby|conference|kiosk"
 - Check logs: `sudo journalctl -u tailscaled`
 
 **Display issues:**
-- Wayfire automatically detects and uses native resolution
+- labwc automatically detects and uses native resolution
 - For 4K displays, ensure HDMI cable supports 4K@60Hz
-- Check logs: `sudo journalctl -u kiosk -n 50`
+- Check logs: `journalctl --user -u chromium-kiosk -n 50`
 - Verify display: `wlr-randr` (when logged in via SSH)
 
 **Audio not working:**
@@ -153,19 +153,17 @@ tailscale status | grep -E "lobby|conference|kiosk"
 
 ### Customizing the Installation
 
-The script creates several files on the boot partition that control the first-boot process:
+The script uses SDM to pre-customize the image before writing to SD card. Key configuration files:
 
-- `firstrun.sh` - Main configuration script
-- `kiosk-config.json` - Configuration parameters
-- `userconf.txt` - User account setup
-- `ssh` - Enables SSH access
+- `/usr/local/sdm/kiosk-config` - Configuration parameters
+- `/boot/firmware/kiosk-url.txt` (or `/boot/kiosk-url.txt`) - Current kiosk URL
 
 ### Display Configuration
 
-The kiosk uses Wayfire compositor with automatic display detection. To force specific resolutions or handle multiple displays, you can modify the Wayfire configuration post-installation:
+The kiosk uses labwc compositor with automatic display detection. To modify the labwc configuration post-installation:
 
 ```bash
-sudo nano /home/pi/.config/wayfire/wayfire.ini
+sudo nano /home/panic/.config/labwc/rc.xml
 ```
 
 ### Network Configuration
@@ -191,13 +189,14 @@ For macOS users, we recommend:
 
 ## Technical Details
 
-- **Base OS:** Raspberry Pi OS Bookworm (64-bit)
+- **Base OS:** Raspberry Pi OS Bookworm (64-bit) - May 2025 release
 - **Image Customization:** SDM (https://github.com/gitbls/sdm)
-- **Compositor:** Wayfire (Wayland)
-- **Browser:** Chromium with hardware acceleration
-- **Init System:** systemd with custom service units
+- **Compositor:** labwc (Wayland) - Raspberry Pi OS default
+- **Browser:** Chromium with hardware acceleration (--ozone-platform=wayland)
+- **Init System:** systemd with user service for Chromium
 - **Network:** NetworkManager for WiFi/Ethernet
-- **GPU:** Full KMS driver with 512MB GPU memory allocation
+- **Display Manager:** LightDM with auto-login
+- **GPU:** Uses Raspberry Pi OS default GPU configuration
 
 ## Script Options
 
@@ -205,19 +204,19 @@ Run `./pi-setup.sh --help` for complete options:
 
 ```
 Configuration Options:
-    --url <url>                  URL to display in kiosk mode
-    --hostname <name>            Hostname for the Raspberry Pi
-    --username <user>            Username for the admin account
-    --password <pass>            Password for the admin account
+    --url <url>                  URL to display in kiosk mode (default: https://panic.fly.dev/)
+    --hostname <name>            Hostname for the Raspberry Pi (default: panic-rpi)
+    --username <user>            Username for the admin account (default: panic)
+    --password <pass>            Password for the admin account (default: panic)
 
 Network Options (optional):
     --wifi-ssid <ssid>           WiFi network name
     --wifi-password <pass>       WiFi password (for WPA2-PSK networks)
-    --wifi-enterprise-user <u>   Enterprise WiFi username
-    --wifi-enterprise-pass <p>   Enterprise WiFi password
+    --wifi-enterprise-user <u>   Enterprise WiFi username (use with --wifi-ssid)
+    --wifi-enterprise-pass <p>   Enterprise WiFi password (use with --wifi-ssid)
     --tailscale-authkey <key>    Tailscale auth key for automatic join
 
 Optional:
-    --ssh-key <path>             Path to SSH public key
+    --ssh-key <path>             Path to SSH public key for passwordless login
     --test                       Test mode - skip actual SD card write
 ```
