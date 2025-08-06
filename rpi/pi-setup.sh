@@ -277,8 +277,11 @@ mkdir -p "$USER_HOME/.config/labwc"
 
 # Create labwc autostart for kiosk
 cat > "$USER_HOME/.config/labwc/autostart" << 'EOF'
-# Hide cursor after 1 second of inactivity
-unclutter -idle 1 &
+# Hide cursor - unclutter doesn't work with Wayland, so we replace the cursor image
+# This makes the cursor invisible system-wide
+if [ -f /usr/share/icons/PiXflat/cursors/left_ptr ]; then
+    sudo mv /usr/share/icons/PiXflat/cursors/left_ptr /usr/share/icons/PiXflat/cursors/left_ptr.bak
+fi
 
 # Start Chromium kiosk via systemd user service
 systemctl --user start chromium-kiosk.service &
@@ -579,8 +582,8 @@ run_sdm_customization() {
         plugin_args+=("--plugin" "network:wifissid=$wifi_ssid|wifipassword=$wifi_password|wificountry=US")
     fi
     
-    # Apps plugin to install required packages
-    plugin_args+=("--plugin" "apps:apps=jq,curl,uuid-runtime,unclutter")
+    # Apps plugin to install required packages (removed unclutter as it doesn't work with Wayland)
+    plugin_args+=("--plugin" "apps:apps=jq,curl,uuid-runtime")
     
     # SSH key plugin if provided
     if [ -f "$ssh_key_file" ]; then
