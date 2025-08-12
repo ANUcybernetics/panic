@@ -21,6 +21,7 @@ ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 FROM ${BUILDER_IMAGE} as builder
 
 # install build dependencies
+# Note: consider adding a .dockerignore file to exclude unnecessary files from the build context
 RUN apt-get update -y && apt-get install -y \
     build-essential \
     git \
@@ -28,7 +29,7 @@ RUN apt-get update -y && apt-get install -y \
     curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
-    && npm install -g npm@latest \
+    && npm install -g npm@10.9.2 \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # prepare build dir
@@ -43,37 +44,28 @@ ENV MIX_ENV="prod"
 
 # install mix dependencies
 COPY mix.exs mix.lock ./
-RUN mix deps.get --only $MIX_ENV
-RUN mkdir config
-
-# copy compile-time config files before we compile dependencies
-# to ensure any relevant config change will trigger the dependencies
-# to be re-compiled.
 COPY config/config.exs config/${MIX_ENV}.exs config/
-RUN mix deps.compile
+RUN mix deps.get --only $MIX_ENV && \
+    mix deps.compile
 
+# Copy priv for migrations/seeds that might be needed during compile
 COPY priv priv
 
+# Copy application code
 COPY lib lib
 
-# install npm packages
+# Copy and build assets
 COPY assets assets
+RUN cd assets && npm ci --prefer-offline --no-audit --progress=false && cd ..
 
-# npm install in assets directory
-WORKDIR /app/assets
-RUN npm install
-
-WORKDIR /app
-
-# compile assets
-RUN mix assets.deploy
-
-# Compile the release
-RUN mix compile
+# Compile the application and build release
+RUN mix compile && \
+    mix assets.deploy
 
 # Changes to config/runtime.exs don't require recompiling the code
 COPY config/runtime.exs config/
 
+# Copy release configuration and build release
 COPY rel rel
 RUN mix release
 
@@ -81,8 +73,10 @@ RUN mix release
 # the compiled release and other runtime necessities
 FROM ${RUNNER_IMAGE}
 
+# Install runtime dependencies including tini for proper signal handling
 RUN apt-get update -y && \
-    apt-get install -y \
+    apt-get install -y --no-install-recommends \
+    tini \
     libstdc++6 \
     openssl \
     libncurses5 \
@@ -91,10 +85,8 @@ RUN apt-get update -y && \
     # these last two required for Panic.Workers.Archiver
     ffmpeg \
     imagemagick \
+    && sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
-
-# Set the locale
-RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
@@ -111,9 +103,7 @@ COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/panic ./
 
 USER nobody
 
-# If using an environment that doesn't automatically reap zombie processes, it is
-# advised to add an init process such as tini via `apt-get install`
-# above and adding an entrypoint. See https://github.com/krallin/tini for details
-# ENTRYPOINT ["/tini", "--"]
+# Use tini as PID 1 to handle signals properly and reap zombie processes
+ENTRYPOINT ["/usr/bin/tini", "--"]
 
 CMD ["/app/bin/server"]
