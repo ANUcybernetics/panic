@@ -1,23 +1,34 @@
 # Find eligible builder and runner images on Docker Hub. We use Ubuntu/Debian
 # instead of Alpine to avoid DNS resolution issues in production.
 #
-# https://hub.docker.com/_/elixir
-# https://hub.docker.com/_/debian
+# https://hub.docker.com/r/hexpm/elixir/tags?page=1&name=ubuntu
+# https://hub.docker.com/_/ubuntu?tab=tags
 #
 # This file is based on these images:
 #
-#   - https://hub.docker.com/_/elixir - for the build image
-#   - https://hub.docker.com/_/debian - for the release image
+#   - https://hub.docker.com/r/hexpm/elixir/tags - for the build image
+#   - https://hub.docker.com/_/debian?tab=tags&page=1&name=bookworm-20250203-slim - for the release image
 #   - https://pkgs.org/ - resource for finding needed packages
-#   - Ex: elixir:1.18-otp-27
+#   - Ex: hexpm/elixir:1.18.4-erlang-27.2.2-debian-bookworm-20250203-slim
 #
-ARG BUILDER_IMAGE="elixir:1.18-otp-27"
-ARG RUNNER_IMAGE="debian:bookworm-slim"
+ARG ELIXIR_VERSION=1.18.4
+ARG OTP_VERSION=27.2.2
+ARG DEBIAN_VERSION=bookworm-20250203-slim
 
-FROM ${BUILDER_IMAGE} AS builder
+ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
+ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
+
+FROM ${BUILDER_IMAGE} as builder
 
 # install build dependencies
-RUN apt-get update -y && apt-get install -y build-essential git wget npm \
+RUN apt-get update -y && apt-get install -y \
+    build-essential \
+    git \
+    ca-certificates \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g npm@latest \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # prepare build dir
@@ -47,7 +58,12 @@ COPY lib lib
 
 # install npm packages
 COPY assets assets
-RUN cd assets && npm ci --loglevel verbose
+
+# npm install in assets directory
+WORKDIR /app/assets
+RUN npm install
+
+WORKDIR /app
 
 # compile assets
 RUN mix assets.deploy
