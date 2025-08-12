@@ -73,7 +73,7 @@ defmodule PanicWeb.NetworkLive.TerminalTest do
 
       # Check the first invocation (genesis)
       genesis = Enum.find(invocations, fn inv -> inv.sequence_number == 0 end)
-      assert genesis != nil
+      assert genesis
       assert genesis.input == "Hello world"
       assert genesis.network_id == network.id
       assert genesis.state in [:ready, :invoking, :completed]

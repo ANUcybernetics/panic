@@ -396,7 +396,7 @@ defmodule Panic.InstallationTest do
     end
 
     test "user cannot create installation for another user's network", %{user1: user, network2: network} do
-      assert {:error, %Ash.Error.Invalid{}} =
+      assert {:error, %Invalid{}} =
                Installation
                |> Ash.Changeset.for_create(
                  :create,

@@ -1,5 +1,7 @@
 import Config
 
+alias Swoosh.Adapters.Test
+
 # Do NOT set this value for production
 config :bcrypt_elixir, log_rounds: 1
 
@@ -11,10 +13,7 @@ config :bcrypt_elixir, log_rounds: 1
 # Run `mix help test` for more information.
 config :logger, level: :warning
 
-config :panic, Panic.Mailer, adapter: Swoosh.Adapters.Test
-
-# Configure TowerEmail.Mailer to use Test adapter in tests
-config :tower_email, TowerEmail.Mailer, adapter: Swoosh.Adapters.Test
+config :panic, Panic.Mailer, adapter: Test
 
 config :panic, Panic.Repo,
   database: Path.expand("../panic_test.db", __DIR__),
@@ -43,12 +42,16 @@ config :phoenix_live_view,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true
 
-# useful for debugging authorization policy issues
-# config :ash, :policies, log_policy_breakdowns: :error
-
 config :phoenix_test, :endpoint, PanicWeb.Endpoint
 
+# useful for debugging authorization policy issues
+
 # Disable swoosh api client as it is only required for production adapters.
+# config :ash, :policies, log_policy_breakdowns: :error
+
 config :swoosh, :api_client, false
+
+# Configure TowerEmail.Mailer to use Test adapter in tests
+config :tower_email, TowerEmail.Mailer, adapter: Test
 
 import_config "secrets.exs"

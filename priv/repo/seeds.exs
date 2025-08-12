@@ -1,3 +1,5 @@
+alias Panic.Accounts.User
+
 # Script for populating the database. You can run it as:
 #
 #     mix run priv/repo/seeds.exs
@@ -11,12 +13,12 @@
 # and so on) as they will fail if something goes wrong.
 
 # if there's no cybernetics user, create one
-case Ash.get(Panic.Accounts.User, %{email: "socy@anu.edu.au"}) do
+case Ash.get(User, %{email: "socy@anu.edu.au"}) do
   {:error, _} ->
     pass = Application.get_env(:panic, :socy_user_pass)
 
     user =
-      Panic.Accounts.User
+      User
       |> Ash.Changeset.for_create(
         :register_with_password,
         %{email: "socy@anu.edu.au", password: pass, password_confirmation: pass}

@@ -46,7 +46,7 @@ defmodule Panic.Model do
           id: String.t(),
           path: String.t(),
           name: String.t(),
-          platform: Panic.Platforms.OpenAI | Panic.Platforms.Replicate,
+          platform: OpenAI | Replicate,
           input_type: :text | :audio | :image,
           output_type: :text | :audio | :image,
           description: String.t() | nil,

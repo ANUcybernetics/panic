@@ -13,9 +13,9 @@ defmodule Panic.ModelTest do
               image_ouput_model <- Panic.Generators.model(output_type: :image),
               replicate_model <- Panic.Generators.real_model(platform: Replicate)
             ) do
-        assert %Panic.Model{input_type: :text} = text_input_model
-        assert %Panic.Model{output_type: :image} = image_ouput_model
-        assert %Panic.Model{platform: Replicate} = replicate_model
+        assert %Model{input_type: :text} = text_input_model
+        assert %Model{output_type: :image} = image_ouput_model
+        assert %Model{platform: Replicate} = replicate_model
       end
     end
 
@@ -33,7 +33,7 @@ defmodule Panic.ModelTest do
     test "have models with unique ids" do
       # This includes all models: real platforms (OpenAI, Replicate, etc.) and dummy models
       model_ids =
-        Enum.map(Model.all(), fn %Panic.Model{id: id} -> id end)
+        Enum.map(Model.all(), fn %Model{id: id} -> id end)
 
       unique_ids = Enum.uniq(model_ids)
 

@@ -1,5 +1,6 @@
 defmodule Panic.TowerEmailTest do
   use ExUnit.Case, async: false
+
   import Swoosh.TestAssertions
 
   @moduletag :capture_log
@@ -76,12 +77,13 @@ defmodule Panic.TowerEmailTest do
     test "respects Tower configuration for ignored exceptions" do
       # Save original config
       original_ignored = Application.get_env(:tower, :ignored_exceptions, [])
-      
+
       # Configure Tower to ignore a specific exception
       defmodule TestIgnoredException do
+        @moduledoc false
         defexception message: "This should be ignored"
       end
-      
+
       Application.put_env(:tower, :ignored_exceptions, [TestIgnoredException])
 
       # Trigger the ignored exception in a task

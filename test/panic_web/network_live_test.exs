@@ -576,7 +576,7 @@ defmodule PanicWeb.NetworkLiveTest do
 
   defp create_network(user) do
     # Use the fixture helper that properly creates networks
-    Panic.Fixtures.network_with_dummy_models(user)
+    Fixtures.network_with_dummy_models(user)
   end
 
   defp log_out_user(_conn) do

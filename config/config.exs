@@ -7,6 +7,8 @@
 # General application configuration
 import Config
 
+alias Swoosh.Adapters.Local
+
 # because I'm mostly using integer primary keys - better for sqlite
 config :ash, :default_belongs_to_type, :integer
 
@@ -14,8 +16,7 @@ config :ash, :default_belongs_to_type, :integer
 config :esbuild,
   version: "0.17.11",
   panic: [
-    args:
-      ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
+    args: ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]
@@ -37,7 +38,7 @@ config :mime, :types, %{
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :panic, Panic.Mailer, adapter: Swoosh.Adapters.Local
+config :panic, Panic.Mailer, adapter: Local
 
 # Configures the endpoint
 config :panic, PanicWeb.Endpoint,
@@ -59,20 +60,6 @@ config :panic,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-# Configure Tower for error tracking
-config :tower, reporters: [TowerEmail]
-
-# Configure TowerEmail reporter
-config :tower_email,
-  otp_app: :panic,
-  from: {"Panic Error Reporter", "panic@benswift.me"},
-  to: System.get_env("ERROR_EMAIL_TO", "ben@benswift.me"),
-  environment: to_string(config_env())
-
-# Configure TowerEmail.Mailer to use the Local adapter in dev
-# This will be overridden in runtime.exs for production  
-config :tower_email, TowerEmail.Mailer, adapter: Swoosh.Adapters.Local
-
 # Configure tailwind (the version is required)
 config :tailwind,
   version: "3.4.0",
@@ -86,5 +73,19 @@ config :tailwind,
     # of this file so it overrides the configuration defined above.
     cd: Path.expand("../assets", __DIR__)
   ]
+
+# Configure Tower for error tracking
+config :tower, reporters: [TowerEmail]
+
+# Configure TowerEmail.Mailer to use the Local adapter in dev
+# This will be overridden in runtime.exs for production  
+config :tower_email, TowerEmail.Mailer, adapter: Local
+
+# Configure TowerEmail reporter
+config :tower_email,
+  otp_app: :panic,
+  from: {"Panic Error Reporter", "panic@benswift.me"},
+  to: System.get_env("ERROR_EMAIL_TO", "ben@benswift.me"),
+  environment: to_string(config_env())
 
 import_config "#{config_env()}.exs"

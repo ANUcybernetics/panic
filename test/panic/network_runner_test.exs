@@ -94,7 +94,7 @@ defmodule Panic.NetworkRunnerTest do
       # Verify the initial invocation was processed
       completed_invocation = Ash.get!(Engine.Invocation, invocation.id, authorize?: false)
       assert completed_invocation.state == :completed
-      assert completed_invocation.output != nil
+      assert completed_invocation.output
 
       # Stop the run manually
       {:ok, :stopped} = GenServer.call(pid, :stop_run)
@@ -244,7 +244,7 @@ defmodule Panic.NetworkRunnerTest do
       # Verify first invocation properties
       assert completed_first.sequence_number == 0
       assert completed_first.input == "Test input"
-      assert completed_first.output != nil
+      assert completed_first.output
 
       # Test prepare_next creates proper sequence
       case Engine.prepare_next(completed_first, actor: user) do
@@ -282,7 +282,7 @@ defmodule Panic.NetworkRunnerTest do
       # Verify processing completed
       invocation = Ash.get!(Engine.Invocation, genesis.id, authorize?: false)
       assert invocation.state == :completed
-      assert invocation.output != nil
+      assert invocation.output
     end
 
     test "maintains state correctly across operations", %{network: network, user: _user} do

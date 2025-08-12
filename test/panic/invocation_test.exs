@@ -165,7 +165,7 @@ defmodule Panic.InvocationTest do
               input <- Panic.Generators.ascii_sentence()
             ) do
         invocation = Panic.Engine.prepare_first!(network, input, actor: user)
-        refute invocation.input == nil
+        assert invocation.input
         assert invocation.output == nil
         assert invocation.id == invocation.run_number
       end
@@ -188,7 +188,7 @@ defmodule Panic.InvocationTest do
         |> Panic.Engine.prepare_first!(input, actor: user)
         |> Panic.Engine.invoke!(actor: user)
 
-      refute invocation.output == nil
+      assert invocation.output
       assert invocation.state == :completed
       # Dummy image output should start with the dummy URL
       assert String.starts_with?(invocation.output, "https://dummy-images.test/")

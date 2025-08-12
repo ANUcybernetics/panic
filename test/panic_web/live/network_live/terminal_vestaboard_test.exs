@@ -99,7 +99,7 @@ defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
 
       # Check the first invocation (genesis)
       genesis = Enum.find(invocations, fn inv -> inv.sequence_number == 0 end)
-      assert genesis != nil
+      assert genesis
       assert genesis.input == "Hello Vestaboard"
       assert genesis.network_id == network.id
       assert genesis.state in [:ready, :invoking, :completed]

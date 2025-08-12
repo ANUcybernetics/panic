@@ -71,11 +71,11 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponentTest do
 
       # Verify the correct format is a tuple
       assert is_tuple(correct_format)
-      assert not is_map(correct_format)
+      refute is_map(correct_format)
 
       # Document what the incorrect format looked like
       assert is_map(incorrect_format)
-      assert not is_tuple(incorrect_format)
+      refute is_tuple(incorrect_format)
 
       # The correct format should match the pattern AutocompleteInput.to_item/1 expects
       {label, value} = correct_format

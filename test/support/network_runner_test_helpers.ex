@@ -147,8 +147,8 @@ defmodule Panic.NetworkRunnerTestHelpers do
     case Registry.lookup(NetworkRegistry, network_id) do
       [{pid, _}] ->
         state = :sys.get_state(pid)
-        assert state.genesis_invocation != nil
-        assert state.current_invocation != nil
+        assert state.genesis_invocation
+        assert state.current_invocation
 
         state
 
