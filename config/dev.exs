@@ -86,9 +86,6 @@ config :swoosh, :api_client, false
 # useful for debugging authorization policy issues
 # config :ash, :policies, log_policy_breakdowns: :error
 
-if File.exists?("config/secrets.exs") do
-  import_config "secrets.exs"
-end
 
-# Override Panic.Mailer to use Local adapter in dev (after secrets.exs import)
+# Override Panic.Mailer to use Local adapter in dev
 config :panic, Panic.Mailer, adapter: Swoosh.Adapters.Local
