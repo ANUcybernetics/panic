@@ -66,10 +66,11 @@ config :tower, reporters: [TowerEmail]
 config :tower_email,
   otp_app: :panic,
   from: {"Panic Error Reporter", "panic@benswift.me"},
-  to: System.get_env("ERROR_EMAIL_TO", "ben@benswift.me")
+  to: System.get_env("ERROR_EMAIL_TO", "ben@benswift.me"),
+  environment: to_string(config_env())
 
-# Configure TowerEmail.Mailer to use the same adapter as Panic.Mailer
-# This will be overridden in runtime.exs for production
+# Configure TowerEmail.Mailer to use the Local adapter in dev
+# This will be overridden in runtime.exs for production  
 config :tower_email, TowerEmail.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configure tailwind (the version is required)

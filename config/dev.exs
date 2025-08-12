@@ -87,3 +87,6 @@ config :swoosh, :api_client, false
 # config :ash, :policies, log_policy_breakdowns: :error
 
 import_config "secrets.exs"
+
+# Override Panic.Mailer to use Local adapter in dev (after secrets.exs import)
+config :panic, Panic.Mailer, adapter: Swoosh.Adapters.Local

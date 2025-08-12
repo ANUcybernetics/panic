@@ -13,6 +13,9 @@ config :logger, level: :warning
 
 config :panic, Panic.Mailer, adapter: Swoosh.Adapters.Test
 
+# Configure TowerEmail.Mailer to use Test adapter in tests
+config :tower_email, TowerEmail.Mailer, adapter: Swoosh.Adapters.Test
+
 config :panic, Panic.Repo,
   database: Path.expand("../panic_test.db", __DIR__),
   pool_size: 5,
