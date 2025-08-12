@@ -100,10 +100,10 @@ defmodule Panic.TowerEmailTest do
     end
   end
 
-  describe "Panic.trigger_test_crash functions" do
-    test "trigger_async_test_crash/0 sends error notification" do
-      # Call the async crash function
-      assert :ok = Panic.trigger_async_test_crash()
+  describe "Panic.trigger_test_crash function" do
+    test "trigger_test_crash/0 sends error notification" do
+      # Call the crash function
+      assert :ok = Panic.trigger_test_crash()
 
       # Wait for the background task to crash and Tower to process it
       Process.sleep(1500)
@@ -113,21 +113,8 @@ defmodule Panic.TowerEmailTest do
       assert_email_sent(
         from: {"Panic Error Reporter", "panic@benswift.me"},
         to: "ben@benswift.me",
-        subject: ~r/\[panic\]\[test\].*PANIC ASYNC TEST/
+        subject: ~r/\[panic\]\[test\].*PANIC TEST/
       )
-    end
-
-    test "trigger_test_crash/0 raises but doesn't send email when caught" do
-      # When we catch the exception, Tower won't report it
-      assert_raise RuntimeError, ~r/PANIC TEST/, fn ->
-        Panic.trigger_test_crash()
-      end
-
-      # Give Tower a moment to process
-      Process.sleep(100)
-
-      # No email should be sent because we caught the exception
-      refute_email_sent()
     end
   end
 end
