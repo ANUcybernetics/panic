@@ -116,6 +116,11 @@ if config_env() == :prod do
     adapter: Swoosh.Adapters.Brevo,
     api_key: System.get_env("BREVO_API_KEY")
 
+  # Configure TowerEmail.Mailer with the same Brevo adapter
+  config :tower_email, TowerEmail.Mailer,
+    adapter: Swoosh.Adapters.Brevo,
+    api_key: System.get_env("BREVO_API_KEY")
+
   # Configure Swoosh API client to use Finch (already in deps)
   config :swoosh, :api_client, Swoosh.ApiClient.Finch
 end

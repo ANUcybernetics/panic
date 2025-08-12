@@ -14,7 +14,8 @@ config :ash, :default_belongs_to_type, :integer
 config :esbuild,
   version: "0.17.11",
   panic: [
-    args: ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
+    args:
+      ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]
@@ -59,17 +60,17 @@ config :panic,
 config :phoenix, :json_library, Jason
 
 # Configure Tower for error tracking
-config :tower,
-  reporters: [
-    [
-      TowerEmail,
-      [
-        otp_app: :panic,
-        from: {"Panic Error Reporter", "panic@benswift.me"},
-        to: System.get_env("ERROR_EMAIL_TO", "ben@benswift.me")
-      ]
-    ]
-  ]
+config :tower, reporters: [TowerEmail]
+
+# Configure TowerEmail reporter
+config :tower_email,
+  otp_app: :panic,
+  from: {"Panic Error Reporter", "panic@benswift.me"},
+  to: System.get_env("ERROR_EMAIL_TO", "ben@benswift.me")
+
+# Configure TowerEmail.Mailer to use the same adapter as Panic.Mailer
+# This will be overridden in runtime.exs for production
+config :tower_email, TowerEmail.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configure tailwind (the version is required)
 config :tailwind,
