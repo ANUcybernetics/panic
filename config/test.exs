@@ -54,4 +54,6 @@ config :swoosh, :api_client, false
 # Configure TowerEmail.Mailer to use Test adapter in tests
 config :tower_email, TowerEmail.Mailer, adapter: Test
 
-import_config "secrets.exs"
+if File.exists?("config/secrets.exs") do
+  import_config "secrets.exs"
+end
