@@ -58,6 +58,19 @@ config :panic,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# Configure Tower for error tracking
+config :tower,
+  reporters: [
+    [
+      TowerEmail,
+      [
+        otp_app: :panic,
+        from: {"Panic Error Reporter", "panic@benswift.me"},
+        to: System.get_env("ERROR_EMAIL_TO", "ben@benswift.me")
+      ]
+    ]
+  ]
+
 # Configure tailwind (the version is required)
 config :tailwind,
   version: "3.4.0",

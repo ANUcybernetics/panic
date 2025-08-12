@@ -110,4 +110,12 @@ if config_env() == :prod do
   #     config :swoosh, :api_client, Swoosh.ApiClient.Hackney
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
+
+  # Configure Swoosh with Brevo adapter
+  config :panic, Panic.Mailer,
+    adapter: Swoosh.Adapters.Brevo,
+    api_key: System.get_env("BREVO_API_KEY")
+
+  # Configure Swoosh API client to use Finch (already in deps)
+  config :swoosh, :api_client, Swoosh.ApiClient.Finch
 end

@@ -66,6 +66,8 @@ defmodule Panic.MixProject do
       {:bandit, "~> 1.2"},
       {:req, "~> 0.5"},
       {:req_s3, "~> 0.2"},
+      {:tower, "~> 0.6"},
+      {:tower_email, "~> 0.6"},
       {:ash_authentication, "~> 4.0"},
       {:ash_authentication_phoenix, "~> 2.7"},
       {:picosat_elixir, "~> 0.2"},
