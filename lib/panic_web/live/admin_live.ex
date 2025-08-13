@@ -12,6 +12,13 @@ defmodule PanicWeb.AdminLive do
     <.header>
       Admin panel
       <:actions>
+        <%= if @current_user && @current_user.admin do %>
+          <.link href={~p"/admin/backup"} download>
+            <.button>
+              Download backup
+            </.button>
+          </.link>
+        <% end %>
         <.button
           phx-click="stop_all_jobs"
           data-confirm="Are you sure you want to stop all running jobs?"

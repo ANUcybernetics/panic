@@ -67,6 +67,9 @@ defmodule PanicWeb.Router do
 
       live "/admin", AdminLive, :index
 
+      # Database backup endpoint
+      get "/admin/backup", BackupController, :download
+
       # API Token management
       scope "/api_tokens" do
         live "/", APITokenLive.Index, :index

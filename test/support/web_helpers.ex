@@ -49,6 +49,33 @@ defmodule PanicWeb.Helpers do
     }
   end
 
+  def create_and_sign_in_admin_user(%{conn: conn}) do
+    password = "abcd1234"
+    user = Panic.Fixtures.user(password)
+    
+    # Update user to be admin
+    updated_user = 
+      user
+      |> Ash.Changeset.for_update(:set_admin, %{admin: true})
+      |> Ash.update!(authorize?: false)
+
+    strategy = AshAuthentication.Info.strategy!(User, :password)
+
+    {:ok, signed_in_user} =
+      AshAuthentication.Strategy.action(strategy, :sign_in, %{
+        email: updated_user.email,
+        password: password
+      })
+
+    %{
+      conn:
+        conn
+        |> Phoenix.ConnTest.init_test_session(%{})
+        |> Helpers.store_in_session(signed_in_user),
+      user: signed_in_user
+    }
+  end
+
   @doc """
   Stop all NetworkRunner processes for test cleanup.
 
