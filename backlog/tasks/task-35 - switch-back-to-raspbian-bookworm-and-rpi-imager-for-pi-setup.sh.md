@@ -1,7 +1,7 @@
 ---
 id: task-35
 title: switch back to raspbian bookworm and rpi-imager for pi-setup.sh
-status: In Progress
+status: Done
 assignee: []
 created_date: "2025-08-01"
 labels: []
@@ -30,11 +30,14 @@ OS, and not use any deprecated functionality.
 ## Progress
 
 ### Completed
-- Created new `pi-setup.sh.new` script that uses Raspberry Pi OS Bookworm instead of DietPi
+
+- Created new `pi-setup.sh.new` script that uses Raspberry Pi OS Bookworm
+  instead of DietPi
 - Implemented automated configuration using firstrun.sh mechanism
 - Switched from Cage to Wayfire compositor for better compatibility
 - Added support for both regular and enterprise WiFi configuration
-- Implemented NetworkManager-based WiFi setup (replacing deprecated wpa_supplicant method)
+- Implemented NetworkManager-based WiFi setup (replacing deprecated
+  wpa_supplicant method)
 - Added Tailscale and SSH key configuration
 - Created comprehensive kiosk setup with systemd service
 - Added `kiosk-set-url` utility for post-installation URL changes
@@ -43,6 +46,7 @@ OS, and not use any deprecated functionality.
 - Created updated README.md.new with new instructions
 
 ### Implementation Details
+
 - Uses official Raspberry Pi OS Bookworm 64-bit image
 - Configures system via boot partition files:
   - `userconf.txt` for user account setup
@@ -55,10 +59,12 @@ OS, and not use any deprecated functionality.
 - Sets up systemd service for automatic kiosk startup
 
 ### Files Created
+
 - `/home/ben/Code/panic/rpi/pi-setup.sh.new` - New setup script
 - `/home/ben/Code/panic/rpi/README.md.new` - Updated documentation
 
 ### Next Steps
+
 - Test the script with an actual SD card and Raspberry Pi 5
 - Verify WiFi connectivity and Tailscale integration
 - Confirm kiosk mode starts correctly with proper GPU acceleration

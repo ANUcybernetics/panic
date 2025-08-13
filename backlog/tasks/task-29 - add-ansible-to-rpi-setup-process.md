@@ -10,6 +10,8 @@ dependencies: ["task-28"]
 
 ## Description
 
+UPDATE: This isn't necessary, the existing rpi setup stuff is fine.
+
 Regardless of how we get the rpi "firstrun" stuff working, it would be nice to
 have ansible (paired with tailscale) so that I could easily manage/update kiosk
 URLs for any rpi in the field.
