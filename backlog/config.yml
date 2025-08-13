@@ -1,6 +1,6 @@
 project_name: "panic"
 default_status: "To Do"
-statuses: ["To Do", "In Progress", "Done", "Abandoned", "Thought Bubbles"]
+statuses: ["To Do", "In Progress", "Done", "Wontfix"]
 labels: []
 milestones: []
 date_format: yyyy-mm-dd

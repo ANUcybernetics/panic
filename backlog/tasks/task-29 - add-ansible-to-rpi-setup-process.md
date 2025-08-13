@@ -1,7 +1,7 @@
 ---
 id: task-29
 title: add ansible to rpi setup process
-status: Abandoned
+status: Wontfix
 assignee: []
 created_date: "2025-07-14"
 labels: []
