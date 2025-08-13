@@ -6,9 +6,6 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
 
   alias Panic.Model
 
-  # AIDEV-NOTE: Refactored from LiveSelect to AutocompleteInput for model selection
-  # AutocompleteInput provides better UX with search filtering and commit-based selection
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -18,7 +15,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
     """
   end
 
-  # AIDEV-NOTE: AutocompleteInput events must be forwarded from parent LiveView since it doesn't support phx-target
+  # AutocompleteInput events must be forwarded from parent LiveView since it doesn't support phx-target
   @impl true
   def update(%{autocomplete_event: {event, params}} = _assigns, socket) do
     # Handle forwarded autocomplete events from parent LiveView
@@ -69,11 +66,21 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
 
         {:noreply,
          socket
-         |> assign(models: updated_models, next_input: next_input, model_options: model_options, network: updated_network)
+         |> assign(
+           models: updated_models,
+           next_input: next_input,
+           model_options: model_options,
+           network: updated_network
+         )
          |> assign_form()}
 
       {:error, _form} ->
-        {:noreply, assign(socket, models: updated_models, next_input: next_input, model_options: model_options)}
+        {:noreply,
+         assign(socket,
+           models: updated_models,
+           next_input: next_input,
+           model_options: model_options
+         )}
     end
   end
 
@@ -98,11 +105,21 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
 
         {:noreply,
          socket
-         |> assign(models: updated_models, next_input: next_input, model_options: model_options, network: updated_network)
+         |> assign(
+           models: updated_models,
+           next_input: next_input,
+           model_options: model_options,
+           network: updated_network
+         )
          |> assign_form()}
 
       {:error, _form} ->
-        {:noreply, assign(socket, models: updated_models, next_input: next_input, model_options: model_options)}
+        {:noreply,
+         assign(socket,
+           models: updated_models,
+           next_input: next_input,
+           model_options: model_options
+         )}
     end
   end
 
@@ -112,7 +129,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
     {:noreply, assign(socket, model_options: model_options)}
   end
 
-  # AIDEV-NOTE: Returns tuples {label, value} not maps %{label: ..., value: ...} for AutocompleteInput compatibility
+  # Returns tuples {label, value} not maps %{label: ..., value: ...} for AutocompleteInput compatibility
   defp get_model_options(search_term, input_type) do
     [input_type: input_type]
     |> Model.all()

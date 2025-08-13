@@ -4,14 +4,16 @@ defmodule PanicWeb.BackupTest do
   Tests both the UI interaction and the actual backup download.
   """
   use PanicWeb.ConnCase
+
   import PhoenixTest
+
   alias PanicWeb.Helpers
 
   describe "backup download from admin panel" do
     test "non-admin users don't see the backup button", %{conn: conn} do
       # Create and sign in as regular user
       %{conn: conn, user: _user} = Helpers.create_and_sign_in_user(%{conn: conn})
-      
+
       # Navigate to admin panel
       conn
       |> visit("/admin")
@@ -21,7 +23,7 @@ defmodule PanicWeb.BackupTest do
     test "admin users can see the backup button", %{conn: conn} do
       # Create and sign in as admin user
       %{conn: conn, user: _admin} = Helpers.create_and_sign_in_admin_user(%{conn: conn})
-      
+
       # Navigate to admin panel and verify backup button exists
       conn
       |> visit("/admin")
@@ -30,7 +32,7 @@ defmodule PanicWeb.BackupTest do
 
     test "backup endpoint returns 403 for non-admin users", %{conn: conn} do
       %{conn: conn, user: _user} = Helpers.create_and_sign_in_user(%{conn: conn})
-      
+
       conn = get(conn, ~p"/admin/backup")
       assert json_response(conn, 403) == %{"error" => "Forbidden"}
     end
@@ -40,18 +42,18 @@ defmodule PanicWeb.BackupTest do
       # NOTE: This test is skipped because VACUUM INTO cannot run inside a transaction,
       # which is how the test sandbox works. The endpoint works correctly in production.
       %{conn: conn, user: _admin} = Helpers.create_and_sign_in_admin_user(%{conn: conn})
-      
+
       conn = get(conn, ~p"/admin/backup")
-      
+
       # Verify response headers
       assert response(conn, 200)
       assert get_resp_header(conn, "content-type") == ["application/octet-stream"]
-      
+
       [disposition] = get_resp_header(conn, "content-disposition")
       assert disposition =~ "attachment"
       assert disposition =~ "panic_backup_"
       assert disposition =~ ".db"
-      
+
       # Verify we got actual data (SQLite database starts with "SQLite format 3")
       body = response(conn, 200)
       assert byte_size(body) > 0
@@ -67,7 +69,7 @@ defmodule PanicWeb.BackupTest do
   describe "admin panel access" do
     test "regular users can access admin panel but see limited functionality", %{conn: conn} do
       %{conn: conn, user: _user} = Helpers.create_and_sign_in_user(%{conn: conn})
-      
+
       conn
       |> visit("/admin")
       |> assert_has("h1", text: "Admin panel")
@@ -77,7 +79,7 @@ defmodule PanicWeb.BackupTest do
 
     test "admin users see full functionality in admin panel", %{conn: conn} do
       %{conn: conn, user: _admin} = Helpers.create_and_sign_in_admin_user(%{conn: conn})
-      
+
       conn
       |> visit("/admin")
       |> assert_has("h1", text: "Admin panel")

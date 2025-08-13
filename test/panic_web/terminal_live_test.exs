@@ -13,7 +13,7 @@ defmodule PanicWeb.TerminalLiveTest do
      - Anonymous users require valid time-based tokens
      - Invalid, expired, or missing tokens redirect to expired page
      - Tokens for wrong networks are rejected
-     - AIDEV-NOTE: Currently anonymous users with valid tokens get 404 due to
+     - Currently anonymous users with valid tokens get 404 due to
        authorization issues - tests document both current and intended behavior
 
   3. **Token Expiration Behavior**
@@ -115,7 +115,10 @@ defmodule PanicWeb.TerminalLiveTest do
       {:ok, user: user, network: network}
     end
 
-    test "non-logged-in user can scan QR code and start a new run", %{conn: conn, network: network} do
+    test "non-logged-in user can scan QR code and start a new run", %{
+      conn: conn,
+      network: network
+    } do
       # Generate a valid token like what would be in a QR code
       token = TerminalAuth.generate_token(network.id)
 
@@ -177,14 +180,20 @@ defmodule PanicWeb.TerminalLiveTest do
       |> assert_has("input[placeholder='Ready for new input']")
     end
 
-    test "anonymous user without token is redirected to expired page", %{conn: conn, network: network} do
+    test "anonymous user without token is redirected to expired page", %{
+      conn: conn,
+      network: network
+    } do
       conn
       |> visit("/networks/#{network.id}/terminal")
       |> assert_has("h1", text: "QR Code Expired")
       |> assert_has("p", text: "expired for security reasons")
     end
 
-    test "anonymous user with expired token is redirected to expired page", %{conn: conn, network: network} do
+    test "anonymous user with expired token is redirected to expired page", %{
+      conn: conn,
+      network: network
+    } do
       # Generate an expired token by creating one with a timestamp from over an hour ago
       expired_token =
         Phoenix.Token.sign(
@@ -203,14 +212,20 @@ defmodule PanicWeb.TerminalLiveTest do
       |> assert_has("p", text: "expired for security reasons")
     end
 
-    test "anonymous user with invalid token is redirected to expired page", %{conn: conn, network: network} do
+    test "anonymous user with invalid token is redirected to expired page", %{
+      conn: conn,
+      network: network
+    } do
       conn
       |> visit("/networks/#{network.id}/terminal?token=invalid_token_here")
       |> assert_has("h1", text: "QR Code Expired")
       |> assert_has("p", text: "expired for security reasons")
     end
 
-    test "anonymous user with token for wrong network is redirected to expired page", %{conn: conn, network: network} do
+    test "anonymous user with token for wrong network is redirected to expired page", %{
+      conn: conn,
+      network: network
+    } do
       # Create another network and generate a token for it
       other_user = Fixtures.user("otherpassword123")
       other_network = Fixtures.network_with_dummy_models(other_user)

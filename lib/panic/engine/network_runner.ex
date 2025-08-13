@@ -35,7 +35,6 @@ defmodule Panic.Engine.NetworkRunner do
   Each network can have at most one NetworkRunner process at a time.
 
   ## Testing Considerations
-  # AIDEV-NOTE: NetworkRunner persists across tests; requires cleanup in test setup
   NetworkRunner GenServers persist in the NetworkRegistry across test runs. While they
   no longer maintain stale user state (user is loaded dynamically), they should still
   be cleaned up between tests. Use PanicWeb.Helpers.stop_all_network_runners/0 in test setup.
@@ -50,7 +49,7 @@ defmodule Panic.Engine.NetworkRunner do
 
   require Logger
 
-  # AIDEV-NOTE: Task supervisor for async operations to prevent blocking GenServer
+  # for async operations to prevent blocking GenServer
   @task_supervisor Panic.Engine.TaskSupervisor
 
   # add extra latency for vestabords to "catch up"
@@ -71,6 +70,7 @@ defmodule Panic.Engine.NetworkRunner do
   """
   def start_link(opts) do
     network_id = Keyword.fetch!(opts, :network_id)
+
     GenServer.start_link(__MODULE__, network_id, name: {:via, Registry, {NetworkRegistry, network_id}})
   end
 
@@ -265,7 +265,13 @@ defmodule Panic.Engine.NetworkRunner do
   @impl true
   def handle_info({:delayed_invocation, invocation}, state) do
     # Process the delayed invocation
-    new_state = %{state | current_invocation: invocation, next_invocation: nil, next_invocation_time: nil}
+    new_state = %{
+      state
+      | current_invocation: invocation,
+        next_invocation: nil,
+        next_invocation_time: nil
+    }
+
     trigger_invocation(invocation, new_state)
     {:noreply, new_state}
   end
@@ -303,7 +309,7 @@ defmodule Panic.Engine.NetworkRunner do
             network
           )
 
-        # AIDEV-NOTE: initial_prompt watchers need delay between display and processing
+        # initial_prompt watchers need delay between display and processing
         # If there are initial_prompt vestaboard watchers, they display the genesis input
         # immediately above, but we delay the actual invocation processing
         # to give users time to read the prompt before it gets processed and replaced
@@ -385,6 +391,7 @@ defmodule Panic.Engine.NetworkRunner do
       # For tests, stop creating new invocations after the first one completes
       # but keep the genesis_invocation for lockout functionality
       Logger.info("Test mode: preventing infinite loop after invocation #{invocation.sequence_number}")
+
       new_state = %{state | current_invocation: nil}
       {:noreply, new_state}
     else
@@ -412,7 +419,8 @@ defmodule Panic.Engine.NetworkRunner do
         vestaboard_dispatched = maybe_dispatch_watchers(invocation, watchers, network_owner)
 
         # Calculate when the next invocation should happen
-        next_invocation_time = calculate_next_invocation_time(state.genesis_invocation, vestaboard_dispatched)
+        next_invocation_time =
+          calculate_next_invocation_time(state.genesis_invocation, vestaboard_dispatched)
 
         # Calculate delay from now until next invocation time
         now = DateTime.utc_now()
@@ -463,7 +471,10 @@ defmodule Panic.Engine.NetworkRunner do
     lockout_seconds = network.lockout_seconds
     lockout_ms = lockout_seconds * 1000
 
-    case DateTime.compare(DateTime.utc_now(), DateTime.add(genesis_invocation.inserted_at, lockout_ms, :millisecond)) do
+    case DateTime.compare(
+           DateTime.utc_now(),
+           DateTime.add(genesis_invocation.inserted_at, lockout_ms, :millisecond)
+         ) do
       :lt -> true
       _ -> false
     end
@@ -562,7 +573,6 @@ defmodule Panic.Engine.NetworkRunner do
       end)
   end
 
-  # AIDEV-NOTE: Helper to get network and user context - makes NetworkRunner crash-resilient
   defp has_initial_prompt_watchers?(watchers) when is_list(watchers) do
     Enum.any?(watchers, fn watcher ->
       Map.get(watcher, :initial_prompt, false)
@@ -635,7 +645,6 @@ defmodule Panic.Engine.NetworkRunner do
 
   defp maybe_dispatch_watchers(_inv, _watchers, _user), do: false
 
-  # AIDEV-NOTE: Lockout timer management for broadcasting countdown to clients
   defp start_lockout_timer(state, genesis_invocation, network) do
     # Stop any existing timer first
     state = stop_lockout_timer(state)
@@ -676,8 +685,6 @@ defmodule Panic.Engine.NetworkRunner do
     end
   end
 
-  # AIDEV-NOTE: Calculates absolute time for next invocation based on genesis age & vestaboard dispatch
-  # This replaces the old calculate_invocation_delay/calculate_combined_delay approach for cleaner timing
   defp calculate_next_invocation_time(genesis_invocation, vestaboard_dispatched) do
     now = DateTime.utc_now()
     age_ms = DateTime.diff(now, genesis_invocation.inserted_at, :millisecond)

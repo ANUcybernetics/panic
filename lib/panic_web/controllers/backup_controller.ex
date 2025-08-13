@@ -3,6 +3,7 @@ defmodule PanicWeb.BackupController do
   Controller for database backups. Restricted to admin users only.
   """
   use PanicWeb, :controller
+
   require Logger
 
   def download(conn, _params) do
@@ -13,7 +14,7 @@ defmodule PanicWeb.BackupController do
       File.rm(backup_path)
 
       # Send the backup as a download
-      timestamp = DateTime.utc_now() |> DateTime.to_iso8601(:basic)
+      timestamp = DateTime.to_iso8601(DateTime.utc_now(), :basic)
       filename = "panic_backup_#{timestamp}.db"
 
       conn

@@ -128,7 +128,10 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_params(%{"network_id" => network_id}, _session, socket) do
-    case Ash.get(Panic.Engine.Network, network_id, actor: socket.assigns.current_user, load: [:installations]) do
+    case Ash.get(Panic.Engine.Network, network_id,
+           actor: socket.assigns.current_user,
+           load: [:installations]
+         ) do
       {:ok, network} ->
         {:noreply,
          socket
@@ -168,7 +171,7 @@ defmodule PanicWeb.NetworkLive.Show do
     {:noreply, socket}
   end
 
-  # AIDEV-NOTE: AutocompleteInput events bubble to parent LiveView, must forward to ModelSelectComponent
+  # AutocompleteInput events bubble to parent LiveView, must forward to ModelSelectComponent
   # AutocompleteInput doesn't support phx-target, so we forward autocomplete-* events manually
   @impl true
   def handle_event("autocomplete-search", params, socket) do

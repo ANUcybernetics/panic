@@ -52,9 +52,9 @@ defmodule PanicWeb.Helpers do
   def create_and_sign_in_admin_user(%{conn: conn}) do
     password = "abcd1234"
     user = Panic.Fixtures.user(password)
-    
+
     # Update user to be admin
-    updated_user = 
+    updated_user =
       user
       |> Ash.Changeset.for_update(:set_admin, %{admin: true})
       |> Ash.update!(authorize?: false)

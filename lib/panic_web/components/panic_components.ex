@@ -13,8 +13,6 @@ defmodule PanicWeb.PanicComponents do
   alias Panic.Engine.Invocation
   alias Panic.Model
 
-  # AIDEV-NOTE: Simplified model_box component by removing actual_index - models are always appended in order
-
   @doc """
   Renders a model box.
 
@@ -43,8 +41,6 @@ defmodule PanicWeb.PanicComponents do
     </div>
     """
   end
-
-  # AIDEV-NOTE: Fixed Enum.with_index tuple order - returns {element, index} not {index, element}
 
   @doc """
   Renders a list of models in a flexbox layout.

@@ -4,6 +4,12 @@ import Config
 
 config :logger, :console, format: "[$level] $message\n"
 
+# useful for debugging authorization policy issues
+# config :ash, :policies, log_policy_breakdowns: :error
+
+# Override Panic.Mailer to use Local adapter in dev
+config :panic, Panic.Mailer, adapter: Swoosh.Adapters.Local
+
 # Configure your database
 config :panic, Panic.Repo,
   database: Path.expand("../panic_dev.db", __DIR__),
@@ -82,10 +88,3 @@ config :phoenix_live_view,
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
-
-# useful for debugging authorization policy issues
-# config :ash, :policies, log_policy_breakdowns: :error
-
-
-# Override Panic.Mailer to use Local adapter in dev
-config :panic, Panic.Mailer, adapter: Swoosh.Adapters.Local

@@ -47,7 +47,7 @@ defmodule Panic.Engine.Archiver do
             # Upload to S3
             case upload_to_s3(converted_filename) do
               {:ok, s3_url} ->
-                # AIDEV-NOTE: Both invocations need the same S3 URL - current.output and next.input reference same file
+                # both invocations need the same S3 URL - current.output and next.input reference same file
                 # Update both invocations with the S3 URL
                 try do
                   invocation
@@ -100,7 +100,6 @@ defmodule Panic.Engine.Archiver do
   def download_file(url) do
     case Req.get(url) do
       {:ok, %{status: 200, body: body}} ->
-        # AIDEV-NOTE: Extract extension from URL to preserve file type for convert_file/2
         extension = Path.extname(url)
         filename = Path.join(System.tmp_dir(), "download_#{System.unique_integer()}#{extension}")
         File.write!(filename, body)
@@ -199,7 +198,7 @@ defmodule Panic.Engine.Archiver do
 
     req = ReqS3.attach(Req.new())
 
-    # AIDEV-NOTE: Use s3:// URL format for ReqS3 plugin, not direct HTTPS URL
+    # use s3:// URL format for ReqS3 plugin, not direct HTTPS URL
     case Req.put(req, url: "s3://#{bucket}/#{key}", body: File.read!(file_path)) do
       {:ok, %{status: status}} when status in 200..299 ->
         {:ok, "https://fly.storage.tigris.dev/#{bucket}/#{key}"}

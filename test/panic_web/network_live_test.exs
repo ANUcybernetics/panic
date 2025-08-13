@@ -221,8 +221,6 @@ defmodule PanicWeb.NetworkLiveTest do
       {:ok, view, _html} =
         live(conn, ~p"/networks/#{network.id}/terminal?token=#{token}")
 
-      # AIDEV-NOTE: LiveComponent IDs need to be more specific in selectors
-      # The LiveComponent uses the network.id as its id
       assert has_element?(view, ".terminal-container")
       assert render(view) =~ "terminal-container"
     end
@@ -250,13 +248,19 @@ defmodule PanicWeb.NetworkLiveTest do
       assert html =~ "Current run:"
     end
 
-    test "unauthenticated user cannot access terminal without token", %{conn: conn, network: network} do
+    test "unauthenticated user cannot access terminal without token", %{
+      conn: conn,
+      network: network
+    } do
       {:error, {:live_redirect, %{to: path}}} = live(conn, ~p"/networks/#{network.id}/terminal")
 
       assert path == "/networks/#{network.id}/terminal/expired"
     end
 
-    test "unauthenticated user cannot access terminal with expired token", %{conn: conn, network: network} do
+    test "unauthenticated user cannot access terminal with expired token", %{
+      conn: conn,
+      network: network
+    } do
       # Generate an expired token by setting a past timestamp
       expired_token =
         Phoenix.Token.sign(
@@ -274,14 +278,20 @@ defmodule PanicWeb.NetworkLiveTest do
       assert path == "/networks/#{network.id}/terminal/expired"
     end
 
-    test "unauthenticated user cannot access terminal with invalid token", %{conn: conn, network: network} do
+    test "unauthenticated user cannot access terminal with invalid token", %{
+      conn: conn,
+      network: network
+    } do
       {:error, {:live_redirect, %{to: path}}} =
         live(conn, ~p"/networks/#{network.id}/terminal?token=invalid_token_here")
 
       assert path == "/networks/#{network.id}/terminal/expired"
     end
 
-    test "unauthenticated user cannot access terminal with token for different network", %{conn: conn, network: network} do
+    test "unauthenticated user cannot access terminal with token for different network", %{
+      conn: conn,
+      network: network
+    } do
       # Create another network and generate a token for it
       other_user = Fixtures.user("otherpassword123")
       other_network = Fixtures.network_with_dummy_models(other_user)
@@ -475,7 +485,11 @@ defmodule PanicWeb.NetworkLiveTest do
       NetworkRunner.stop_run(network.id)
     end
 
-    test "terminal component handles immediate genesis creation", %{conn: conn, user: _user, network: network} do
+    test "terminal component handles immediate genesis creation", %{
+      conn: conn,
+      user: _user,
+      network: network
+    } do
       # Start an initial run
       {:ok, _genesis} = NetworkRunner.start_run(network.id, "first prompt")
 
@@ -498,7 +512,7 @@ defmodule PanicWeb.NetworkLiveTest do
 
   describe "end-to-end QR code workflow documentation" do
     test "documents the intended QR code terminal access flow", %{conn: conn} do
-      # AIDEV-NOTE: This test documents the intended workflow for QR code terminal access
+      # This test documents the intended workflow for QR code terminal access
       # Currently, some parts don't work as intended due to authorization limitations
 
       # Step 1: Authenticated user creates a network
@@ -538,7 +552,9 @@ defmodule PanicWeb.NetworkLiveTest do
       token = TerminalAuth.generate_token(network.id)
 
       # Step 5: Unauthenticated user accesses terminal with token
-      {:ok, view, html} = live(unauthenticated_conn, ~p"/networks/#{network.id}/terminal?token=#{token}")
+      {:ok, view, html} =
+        live(unauthenticated_conn, ~p"/networks/#{network.id}/terminal?token=#{token}")
+
       assert html =~ "Current run:"
       assert html =~ "terminal-container"
 
@@ -566,7 +582,9 @@ defmodule PanicWeb.NetworkLiveTest do
       assert path == "/networks/#{network.id}/terminal/expired"
 
       # Step 7: Expired page provides helpful information
-      {:ok, _view, expired_html} = live(unauthenticated_conn, ~p"/networks/#{network.id}/terminal/expired")
+      {:ok, _view, expired_html} =
+        live(unauthenticated_conn, ~p"/networks/#{network.id}/terminal/expired")
+
       assert expired_html =~ "QR Code Expired"
       assert expired_html =~ "expired for security reasons"
     end
@@ -580,7 +598,6 @@ defmodule PanicWeb.NetworkLiveTest do
   end
 
   defp log_out_user(_conn) do
-    # AIDEV-NOTE: Simple approach - just build a new conn without auth
     Phoenix.ConnTest.build_conn()
   end
 end

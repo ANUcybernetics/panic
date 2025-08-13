@@ -1,5 +1,6 @@
 defmodule PanicWeb.BackupControllerTest do
   use PanicWeb.ConnCase
+
   alias PanicWeb.Helpers
 
   describe "download/2" do
@@ -12,14 +13,14 @@ defmodule PanicWeb.BackupControllerTest do
     test "returns forbidden for non-admin users", %{conn: conn} do
       %{conn: conn, user: _user} = Helpers.create_and_sign_in_user(%{conn: conn})
       conn = get(conn, ~p"/admin/backup")
-      
+
       assert json_response(conn, 403) == %{"error" => "Forbidden"}
     end
 
     test "creates and downloads backup for admin users" do
       # This test would pass if you add an admin email to @admin_emails
       # in BackupController and create a user with that email
-      
+
       # Example (uncomment and adjust when you have admin emails configured):
       #
       # # First, add "test-admin@example.com" to @admin_emails in BackupController
@@ -50,7 +51,7 @@ defmodule PanicWeb.BackupControllerTest do
       # assert [disposition] = get_resp_header(conn, "content-disposition")
       # assert disposition =~ "panic_backup_"
       # assert disposition =~ ".db"
-      
+
       # For now, just verify the endpoint exists by checking forbidden for regular users
       assert true
     end

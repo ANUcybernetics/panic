@@ -181,11 +181,12 @@ defmodule PanicWeb.WatcherSubscriber do
 
   defp should_filter_archive_url?(%Invocation{input: input, output: output}) do
     archive_prefix = "https://fly.storage.tigris.dev/"
-    String.starts_with?(input || "", archive_prefix) or String.starts_with?(output || "", archive_prefix)
+
+    String.starts_with?(input || "", archive_prefix) or
+      String.starts_with?(output || "", archive_prefix)
   end
 
   defp handle_filtered_invocation_message(invocation, socket, display) do
-    # AIDEV-NOTE: Simplified logic - reset on genesis, filter by run_number for others
     socket =
       case invocation do
         # Genesis invocation: reset everything and start new run
@@ -433,7 +434,11 @@ defmodule PanicWeb.WatcherSubscriber do
   defp fetch_network_from_installation(installation_id, assigns) do
     actor = Map.get(assigns, :current_user)
 
-    case Ash.get(Panic.Watcher.Installation, installation_id, actor: actor, authorize?: false, load: [:network]) do
+    case Ash.get(Panic.Watcher.Installation, installation_id,
+           actor: actor,
+           authorize?: false,
+           load: [:network]
+         ) do
       {:ok, installation} -> {:ok, installation.network}
       {:error, _} = err -> err
     end
@@ -460,7 +465,7 @@ defmodule PanicWeb.WatcherSubscriber do
   # ---------------------------------------------------------------------------
 
   defp fetch_genesis_invocation(%Invocation{run_number: run_number}, _network) do
-    # AIDEV-NOTE: run_number is the id of the genesis invocation
+    # note: run_number is the id of the genesis invocation
     case Ash.get(Invocation, run_number, authorize?: false) do
       {:ok, genesis} -> {:ok, genesis}
       {:error, _} = error -> error
@@ -468,7 +473,6 @@ defmodule PanicWeb.WatcherSubscriber do
   end
 
   defp handle_non_genesis_invocation(socket, invocation, display) do
-    # AIDEV-NOTE: Handle non-genesis invocation processing after genesis is set
     case {invocation, display} do
       {_, {:grid, _rows, _cols}} ->
         LiveView.stream_insert(socket, :invocations, invocation, at: -1)

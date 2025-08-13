@@ -53,4 +53,3 @@ config :swoosh, :api_client, false
 
 # Configure TowerEmail.Mailer to use Test adapter in tests
 config :tower_email, TowerEmail.Mailer, adapter: Test
-

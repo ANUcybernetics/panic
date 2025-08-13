@@ -14,11 +14,12 @@ defmodule Panic.Accounts.User do
     integer_primary_key :id
     attribute :email, :ci_string, allow_nil?: false, public?: true
     attribute :hashed_password, :string, allow_nil?: false, sensitive?: true
-    
+
     attribute :admin, :boolean do
       default false
       allow_nil? false
-      public? false  # Don't expose admin status publicly
+      # Don't expose admin status publicly
+      public? false
     end
   end
 
@@ -28,11 +29,11 @@ defmodule Panic.Accounts.User do
     update :change_email do
       accept [:email]
     end
-    
+
     # Admin-only action to grant/revoke admin status
     update :set_admin do
       accept [:admin]
-      
+
       # Only admins can change admin status
       # We'll add a policy for this
     end

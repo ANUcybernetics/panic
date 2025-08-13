@@ -131,7 +131,7 @@ defmodule Panic.Engine.Invocation do
     end
 
     update :invoke do
-      # AIDEV-NOTE: Model invocation happens in before_transaction to minimize DB contention
+      # Model invocation happens in before_transaction to minimize DB contention
       require_atomic? false
       change Panic.Engine.Changes.InvokeModel
     end
