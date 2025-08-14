@@ -171,48 +171,6 @@ defmodule PanicWeb.NetworkLive.Show do
     {:noreply, socket}
   end
 
-  # AutocompleteInput events bubble to parent LiveView, must forward to ModelSelectComponent
-  # AutocompleteInput doesn't support phx-target, so we forward autocomplete-* events manually
-  @impl true
-  def handle_event("autocomplete-search", params, socket) do
-    send_update(ModelSelectComponent,
-      id: "model-select",
-      autocomplete_event: {"autocomplete-search", params}
-    )
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("autocomplete-commit", params, socket) do
-    send_update(ModelSelectComponent,
-      id: "model-select",
-      autocomplete_event: {"autocomplete-commit", params}
-    )
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("autocomplete-open", params, socket) do
-    send_update(ModelSelectComponent,
-      id: "model-select",
-      autocomplete_event: {"autocomplete-open", params}
-    )
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("autocomplete-close", params, socket) do
-    send_update(ModelSelectComponent,
-      id: "model-select",
-      autocomplete_event: {"autocomplete-close", params}
-    )
-
-    {:noreply, socket}
-  end
-
   defp page_title(:show), do: "Show Network"
   defp page_title(:edit), do: "Edit Network"
 end

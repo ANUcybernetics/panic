@@ -1,86 +1,150 @@
 defmodule PanicWeb.NetworkLive.ModelSelectComponentTest do
-  use Panic.DataCase, async: true
-  use ExUnitProperties
+  @moduledoc """
+  Tests for the ModelSelectComponent UI functionality.
 
-  alias Panic.Model
+  These tests focus on the LiveSelect integration and UI behavior,
+  not the model validation logic (which is tested in model_io_connections_test.exs).
+  """
+  use PanicWeb.ConnCase, async: false
 
-  describe "model options formatting for AutocompleteInput" do
-    test "model options are formatted as tuples, not maps" do
-      # Test the exact format that was causing the FunctionClauseError
-      # AutocompleteInput.to_item/1 expects {label, value} tuples
+  import Phoenix.LiveViewTest
 
-      models = [input_type: :text] |> Model.all() |> Enum.take(3)
+  alias PanicWeb.Helpers
 
-      # This is the correct format (tuples)
-      correct_options = Enum.map(models, fn model -> {model.name, model.id} end)
+  setup do
+    Helpers.stop_all_network_runners()
+    :ok
+  end
 
-      # This was the incorrect format (maps) that caused the error
-      incorrect_options = Enum.map(models, fn model -> %{label: model.name, value: model.id} end)
+  describe "component rendering" do
+    setup {Helpers, :create_and_sign_in_user}
 
-      # Test that we're using the correct format
-      for option <- correct_options do
-        assert is_tuple(option), "Option should be a tuple for AutocompleteInput compatibility"
-        assert tuple_size(option) == 2, "Tuple should have exactly 2 elements"
-        {label, value} = option
-        assert is_binary(label), "Label should be a string"
-        assert is_binary(value), "Value should be a string"
-      end
+    test "renders LiveSelect component with correct attributes", %{conn: conn, user: user} do
+      # Create a network with dummy models for testing
+      network = create_test_network(user)
 
-      # Verify the incorrect format would fail (for documentation purposes)
-      for option <- incorrect_options do
-        assert is_map(option), "This format causes FunctionClauseError in AutocompleteInput"
-        assert Map.has_key?(option, :label), "Map format has :label key"
-        assert Map.has_key?(option, :value), "Map format has :value key"
-      end
+      {:ok, _view, html} = live(conn, ~p"/networks/#{network}")
+
+      # Check that LiveSelect is rendered
+      assert html =~ "model-select-input"
+      assert html =~ "Add model..."
+
+      # Check that validity indicator is present
+      assert html =~ "Valid network"
+      # Check that model initials are shown
+      # Dummy Text-to-Text initials
+      assert html =~ "DT"
     end
 
-    property "model options maintain tuple format with any search filtering" do
-      check all(search_term <- string(:printable, max_length: 10)) do
-        # Simulate the filtering logic used in the component
-        filtered_models =
-          [input_type: :text]
-          |> Model.all()
-          |> Enum.filter(fn model ->
-            String.downcase(model.name) =~ String.downcase(search_term)
-          end)
-          |> Enum.map(fn model -> {model.name, model.id} end)
+    test "shows model chain with arrows", %{conn: conn, user: user} do
+      # Create a valid cycle: text -> image -> text
+      network = create_test_network(user, ["dummy-t2i", "dummy-i2t"])
 
-        # All filtered options should still be tuples
-        for option <- filtered_models do
-          assert is_tuple(option), "Filtered option should remain a tuple"
-          assert tuple_size(option) == 2, "Tuple should have 2 elements"
-          {label, value} = option
-          assert is_binary(label) and is_binary(value), "Both elements should be strings"
-        end
-      end
+      {:ok, _view, html} = live(conn, ~p"/networks/#{network}")
+
+      # Should show the model chain with arrows
+      assert html =~ "hero-arrow-right"
     end
 
-    test "specific regression test for the FunctionClauseError" do
-      # This test specifically prevents the error:
-      # ** (FunctionClauseError) no function clause matching in AutocompleteInput.to_item/1
-      # AutocompleteInput.to_item(%{label: "GPT-4.1", value: "gpt-4.1"})
+    test "displays I/O type indicators with colors", %{conn: conn, user: user} do
+      # Create a valid cycle with both text and image types
+      network = create_test_network(user, ["dummy-t2i", "dummy-i2t"])
 
-      # Get a sample model
-      model = Model.by_id!("gpt-4.1")
+      {:ok, _view, html} = live(conn, ~p"/networks/#{network}")
 
-      # This is the format that was causing the error (map)
-      incorrect_format = %{label: model.name, value: model.id}
-
-      # This is the correct format (tuple)
-      correct_format = {model.name, model.id}
-
-      # Verify the correct format is a tuple
-      assert is_tuple(correct_format)
-      refute is_map(correct_format)
-
-      # Document what the incorrect format looked like
-      assert is_map(incorrect_format)
-      refute is_tuple(incorrect_format)
-
-      # The correct format should match the pattern AutocompleteInput.to_item/1 expects
-      {label, value} = correct_format
-      assert label == model.name
-      assert value == model.id
+      # Should show I/O type colors
+      # text type indicator
+      assert html =~ "bg-orange-500"
+      # image type indicator  
+      assert html =~ "bg-blue-400"
     end
+  end
+
+  describe "model removal" do
+    setup {Helpers, :create_and_sign_in_user}
+
+    test "shows remove button on model items", %{conn: conn, user: user} do
+      network = create_test_network(user, ["dummy-t2t"])
+
+      {:ok, _view, html} = live(conn, ~p"/networks/#{network}")
+
+      # Remove button should be in the HTML
+      assert html =~ "hero-x-mark"
+      assert html =~ "phx-click=\"remove_model\""
+    end
+
+    test "removes model when remove button clicked", %{conn: conn, user: user} do
+      network = create_test_network(user, ["dummy-t2t", "dummy-t2t", "dummy-t2t"])
+
+      {:ok, view, _html} = live(conn, ~p"/networks/#{network}")
+
+      # Remove the first model (index 0)
+      view
+      |> element(~s(button[phx-click="remove_model"][phx-value-index="0"]))
+      |> render_click()
+
+      # Now save the changes
+      view
+      |> element("button[phx-click=\"save_models\"]")
+      |> render_click()
+
+      # Check that the model was removed and saved
+      updated_network = Ash.get!(Panic.Engine.Network, network.id, actor: user)
+      assert updated_network.models == ["dummy-t2t", "dummy-t2t"]
+    end
+  end
+
+  describe "LiveSelect search functionality" do
+    setup {Helpers, :create_and_sign_in_user}
+
+    test "renders LiveSelect dropdown element", %{conn: conn, user: user} do
+      network = create_test_network(user)
+
+      {:ok, view, _html} = live(conn, ~p"/networks/#{network}")
+
+      # Check that the LiveSelect component is rendered
+      assert has_element?(view, "#model-select-input")
+    end
+
+    # These tests are simplified to avoid complex LiveSelect interactions
+    # The core model management functionality is tested in the integration tests
+  end
+
+  # Helper to create a test network with dummy models
+  defp create_test_network(user, models \\ ["dummy-t2t"]) do
+    network =
+      Panic.Engine.create_network!(
+        "Test Network",
+        "Test network for component tests",
+        actor: user
+      )
+
+    # Only update models if a valid configuration is provided
+    # The network starts with empty models by default
+    if models != [] && valid_model_chain?(models) do
+      Panic.Engine.update_models!(network, models, actor: user)
+    else
+      network
+    end
+  end
+
+  # Check if a model chain forms a valid cycle
+  defp valid_model_chain?([]), do: false
+
+  defp valid_model_chain?(model_ids) do
+    models = Enum.map(model_ids, &Panic.Model.by_id!/1)
+
+    # Check sequential connections
+    sequential_valid? =
+      [%{output_type: :text} | models]
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.all?(fn [m1, m2] -> m1.output_type == m2.input_type end)
+
+    # Check cycle
+    first = List.first(models)
+    last = List.last(models)
+    cycle_valid? = last.output_type == first.input_type
+
+    sequential_valid? && cycle_valid?
   end
 end

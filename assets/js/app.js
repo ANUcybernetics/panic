@@ -23,6 +23,7 @@ import { LiveSocket } from "phoenix_live_view";
 import topbar from "../vendor/topbar";
 import "@launchscout/autocomplete-input";
 import PhoenixCustomEventHook from "phoenix-custom-event-hook";
+import live_select from "live_select";
 
 // LiveView hooks
 
@@ -56,6 +57,7 @@ const hooks = {
   AudioVisualizer,
   PhoenixCustomEventHook,
   FocusInput,
+  ...live_select
 };
 
 let csrfToken = document

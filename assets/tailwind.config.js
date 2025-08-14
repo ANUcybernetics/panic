@@ -6,7 +6,12 @@ const fs = require("fs");
 const path = require("path");
 
 module.exports = {
-  content: ["./js/**/*.js", "../lib/panic_web.ex", "../lib/panic_web/**/*.*ex"],
+  content: [
+    "./js/**/*.js", 
+    "../lib/panic_web.ex", 
+    "../lib/panic_web/**/*.*ex",
+    "../deps/live_select/lib/live_select/component.*ex"
+  ],
   safelist: [
     "grid-cols-1",
     "grid-cols-2",

@@ -2,6 +2,15 @@ import Config
 
 # config :ash, :pub_sub, debug?: true
 
+# For development, we disable any cache and enable
+# debugging and code reloading.
+#
+# The watchers configuration can be used to run external
+# watchers to your application. For example, we can use it
+# to bundle .js and .css sources.
+# Get port from environment variable or use default
+http_port = String.to_integer(System.get_env("PHX_PORT") || "4010")
+
 config :logger, :console, format: "[$level] $message\n"
 
 # useful for debugging authorization policy issues
@@ -16,15 +25,6 @@ config :panic, Panic.Repo,
   pool_size: 5,
   stacktrace: true,
   show_sensitive_data_on_connection_error: true
-
-# For development, we disable any cache and enable
-# debugging and code reloading.
-#
-# The watchers configuration can be used to run external
-# watchers to your application. For example, we can use it
-# to bundle .js and .css sources.
-# Get port from environment variable or use default
-http_port = String.to_integer(System.get_env("PHX_PORT") || "4010")
 
 config :panic, PanicWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
