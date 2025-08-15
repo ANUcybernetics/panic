@@ -51,36 +51,44 @@ They could be called e.g. "Image Reproducer I (flux)" and "Image Reproducer II
 
 Added five new models to `lib/panic/model.ex`:
 
-1. **Image Reproducer I (Flux)** (`image-reproducer-i-flux`): 
+1. **Image Reproducer I (Flux)** (`image-reproducer-i-flux`):
+
    - Uses black-forest-labs/flux-kontext-dev for image reproduction
    - Input: text, Output: image
    - Detects if input is URL (image reproduction) or text (genesis)
    - For genesis: calls flux-schnell model to generate initial image
-   - For reproduction: uses "reproduce this image exactly, pixel-for-pixel" prompt
+   - For reproduction: uses "reproduce this image exactly, pixel-for-pixel"
+     prompt
 
 2. **Image Reproducer II (Flux)** (`image-reproducer-ii-flux`):
+
    - Passthrough model to complete the network cycle
    - Input: image, Output: text
    - Simply returns the image URL as text
 
 3. **SeedDream 3** (`seedream-3`):
+
    - Standalone text-to-image model from ByteDance
    - Uses bytedance/seedream-3
    - High-quality image generation with configurable aspect ratio
 
-4. **Image Reproducer I (SeedEdit)** (`image-reproducer-i-seededit`):
+4. **Image Reproducer I (Seed)** (`image-reproducer-i-seed`):
+
    - Uses bytedance/seededit-3.0 for image reproduction
    - For genesis: calls seedream-3 model to generate initial image
-   - For reproduction: uses "reproduce this image exactly, pixel-for-pixel" prompt
+   - For reproduction: uses "reproduce this image exactly, pixel-for-pixel"
+     prompt
 
-5. **Image Reproducer II (SeedEdit)** (`image-reproducer-ii-seededit`):
+5. **Image Reproducer II (Seed)** (`image-reproducer-ii-seed`):
    - Passthrough model for SeedEdit variant
    - Same behaviour as Flux passthrough
 
 The models work together in a network:
+
 - First model takes text input and generates or reproduces images
 - Genesis: calls appropriate text-to-image model (flux-schnell or seedream-3)
 - Reproduction: uses the image editing models with pixel-perfect prompt
 - Second model passes through the image URL as text to complete the cycle
-- Network validation passes since it starts with text and has valid I/O connections
+- Network validation passes since it starts with text and has valid I/O
+  connections
 - All messiness is self-contained within the invoke functions
