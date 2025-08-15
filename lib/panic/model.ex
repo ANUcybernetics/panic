@@ -456,7 +456,7 @@ defmodule Panic.Model do
             safety_filter_level: "block_only_high"
           }
 
-          with {:ok, %{"output" => image_url}} <-
+          with {:ok, %{"output" => image_url}} when is_binary(image_url) and image_url != "" <-
                  Replicate.invoke(model, input_params, token) do
             {:ok, image_url}
           end
