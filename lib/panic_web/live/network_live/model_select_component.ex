@@ -79,7 +79,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
               <%= for {model, index} <- Enum.with_index(@draft_models) do %>
                 <tr class="hover:bg-zinc-800/50">
                   <td class="relative p-0 py-2 pl-4 pr-6 text-zinc-400">
-                    {index + 1}
+                    {index}
                   </td>
                   <td class="relative p-0 py-2 pr-6">
                     {model.name}
