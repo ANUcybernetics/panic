@@ -267,7 +267,8 @@ defmodule Panic.Model do
                    model,
                    %{
                      image: input,
-                     question: "What is shown in the image, and what (artistic) style does the image represent?"
+                     question:
+                       "What is shown in the image, and what (artistic) style does the image represent?"
                    },
                    token
                  ) do
@@ -508,7 +509,8 @@ defmodule Panic.Model do
         platform: Replicate,
         path: "bytedance/dreamina-3.1",
         name: "Dreamina 3.1",
-        description: "4MP cinematic-quality text-to-image generation with precise style control from ByteDance",
+        description:
+          "4MP cinematic-quality text-to-image generation with precise style control from ByteDance",
         input_type: :text,
         output_type: :image,
         invoke: fn model, input, token ->
@@ -530,7 +532,8 @@ defmodule Panic.Model do
         platform: Replicate,
         path: "ideogram-ai/ideogram-v3-turbo",
         name: "Ideogram V3 Turbo",
-        description: "Fast text-to-image generation with stunning realism, creative designs, and consistent styles",
+        description:
+          "Fast text-to-image generation with stunning realism, creative designs, and consistent styles",
         input_type: :text,
         output_type: :image,
         invoke: fn model, input, token ->
@@ -758,7 +761,8 @@ defmodule Panic.Model do
         platform: Replicate,
         path: "google/lyria-2",
         name: "Lyria 2",
-        description: "Lyria 2 is a music generation model that produces 48kHz stereo audio through text-based prompts",
+        description:
+          "Lyria 2 is a music generation model that produces 48kHz stereo audio through text-based prompts",
         input_type: :text,
         output_type: :audio,
         invoke: fn model, input, token ->
@@ -766,30 +770,6 @@ defmodule Panic.Model do
                  Replicate.invoke(model, %{prompt: input}, token) do
             {:ok, audio_url}
           end
-        end
-      },
-      %__MODULE__{
-        id: "music-01",
-        platform: Replicate,
-        path: "minimax/music-01",
-        name: "Music-01",
-        description: "Quickly generate up to 1 minute of music with lyrics and vocals in the style of a reference track",
-        input_type: :audio,
-        output_type: :audio,
-        invoke: fn model, input, token ->
-          Replicate.invoke(
-            model,
-            %{
-              lyrics: """
-              The theme of NIME2025 is entangled NIME.
-              This theme recognises the multilayered contexts of activity and impact involved in music making with new technology.
-              In an era where music creation and performance are increasingly intertwined with social, cultural, and environmental factors, entanglement emphasises how musical interfaces are not simply tools
-              but active agents in the complex web of human and technological relationships.
-              """,
-              song_file: input
-            },
-            token
-          )
         end
       },
       %__MODULE__{
@@ -821,7 +801,8 @@ defmodule Panic.Model do
         platform: Replicate,
         path: "black-forest-labs/flux-kontext-dev",
         name: "Image Reproducer I (Flux)",
-        description: "Image generation/reproduction model that can create images from text or reproduce existing images",
+        description:
+          "Image generation/reproduction model that can create images from text or reproduce existing images",
         input_type: :text,
         output_type: :image,
         invoke: fn model, input, token ->
@@ -887,7 +868,8 @@ defmodule Panic.Model do
         platform: Replicate,
         path: "bytedance/seededit-3.0",
         name: "Image Reproducer I (Seed)",
-        description: "Image generation/reproduction model that can create images from text or reproduce existing images",
+        description:
+          "Image generation/reproduction model that can create images from text or reproduce existing images",
         input_type: :text,
         output_type: :image,
         invoke: fn model, input, token ->
