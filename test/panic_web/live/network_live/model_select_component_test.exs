@@ -31,19 +31,22 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponentTest do
 
       # Check that validity indicator is present
       assert html =~ "Valid network"
-      # Check that model initials are shown
-      # Dummy Text-to-Text initials
-      assert html =~ "DT"
+      # Check that model names are shown in table
+      assert html =~ "Dummy Text-to-Text"
     end
 
-    test "shows model chain with arrows", %{conn: conn, user: user} do
+    test "shows models in table format", %{conn: conn, user: user} do
       # Create a valid cycle: text -> image -> text
       network = create_test_network(user, ["dummy-t2i", "dummy-i2t"])
 
       {:ok, _view, html} = live(conn, ~p"/networks/#{network}")
 
-      # Should show the model chain with arrows
-      assert html =~ "hero-arrow-right"
+      # Should show the models in a table
+      assert html =~ "<table"
+      assert html =~ "Model Name"
+      assert html =~ "Type"
+      assert html =~ "Dummy Text-to-Image"
+      assert html =~ "Dummy Image-to-Text"
     end
 
     test "displays I/O type indicators with colors", %{conn: conn, user: user} do
@@ -52,11 +55,12 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponentTest do
 
       {:ok, _view, html} = live(conn, ~p"/networks/#{network}")
 
-      # Should show I/O type colors
-      # text type indicator
-      assert html =~ "bg-orange-500"
-      # image type indicator  
-      assert html =~ "bg-blue-400"
+      # Should show I/O type badges with type labels
+      assert html =~ "text → image"
+      assert html =~ "image → text"
+      # Check for colored badge styling
+      assert html =~ "text-blue-400"
+      assert html =~ "text-violet-400"
     end
   end
 
@@ -68,8 +72,8 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponentTest do
 
       {:ok, _view, html} = live(conn, ~p"/networks/#{network}")
 
-      # Remove button should be in the HTML
-      assert html =~ "hero-x-mark"
+      # Remove button should be in the HTML (using trash icon now)
+      assert html =~ "hero-trash"
       assert html =~ "phx-click=\"remove_model\""
     end
 

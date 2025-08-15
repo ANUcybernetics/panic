@@ -25,7 +25,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
             <% else %>
               <%= if @draft_models != [] do %>
                 <.icon name="hero-exclamation-circle" class="size-5 text-red-500" />
-                <span class="text-sm text-red-500">Invalid: {@validation_error}</span>
+                <span class="text-sm text-red-500">Invalid</span>
               <% end %>
             <% end %>
           </div>
@@ -61,60 +61,60 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
         <% end %>
       </div>
       
-    <!-- Model list -->
-      <div class="flex items-center flex-wrap gap-6">
-        <div class="size-8 rounded-md grid place-content-center text-center text-xs relative bg-zinc-600 shadow-sm">
-          T
-          <div class={[
-            "size-6 absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 -z-10",
-            io_colour_mapper(:text)
-          ]}>
-          </div>
+      <!-- Model table -->
+      <%= if @draft_models != [] do %>
+        <div class="overflow-y-auto">
+          <table class="w-full">
+            <thead class="text-sm text-left leading-6 text-purple-600">
+              <tr>
+                <th class="p-0 pb-2 pl-4 pr-6 font-normal w-20">Index</th>
+                <th class="p-0 pb-2 pr-6 font-normal">Model Name</th>
+                <th class="p-0 pb-2 pr-6 font-normal w-24">Type</th>
+                <th class="p-0 pb-2 pr-4 w-20">
+                  <span class="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="relative divide-y divide-zinc-800 border-t border-zinc-700 text-sm leading-6 text-purple-300">
+              <%= for {model, index} <- Enum.with_index(@draft_models) do %>
+                <tr class="hover:bg-zinc-800/50">
+                  <td class="relative p-0 py-2 pl-4 pr-6 text-zinc-400">
+                    {index + 1}
+                  </td>
+                  <td class="relative p-0 py-2 pr-6">
+                    {model.name}
+                  </td>
+                  <td class="relative p-0 py-2 pr-6">
+                    <span class={[
+                      "px-2 py-1 text-xs rounded-md inline-block",
+                      type_badge_class(model.input_type, model.output_type)
+                    ]}>
+                      {model.input_type} → {model.output_type}
+                    </span>
+                  </td>
+                  <td class="relative p-0 py-2 pr-4 text-right">
+                    <button
+                      type="button"
+                      phx-click="remove_model"
+                      phx-value-index={index}
+                      phx-target={@myself}
+                      class="text-zinc-400 hover:text-red-500"
+                    >
+                      <.icon name="hero-trash" class="size-4" />
+                    </button>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
         </div>
-
-        <%= for {model, index} <- Enum.with_index(@draft_models) do %>
-          <.icon name="hero-arrow-right" class="size-4 text-white/50" />
-          <button
-            type="button"
-            phx-click="remove_model"
-            phx-value-index={index}
-            phx-target={@myself}
-            class="relative"
-          >
-            <div class="group">
-              <div class="size-8 rounded-md grid place-content-center text-center text-xs relative bg-zinc-600 shadow-sm group-hover:bg-zinc-500">
-                {abbreviate_model_name(model.name)}
-                <div class={[
-                  "size-6 absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 -z-10",
-                  io_colour_mapper(model.output_type)
-                ]}>
-                </div>
-              </div>
-              <.icon
-                name="hero-x-mark"
-                class="size-3 absolute -top-1 -right-1 text-zinc-300 bg-zinc-800 rounded-full p-0.5 hidden group-hover:block"
-              />
-            </div>
-          </button>
-        <% end %>
-
-        <%= if @draft_models != [] do %>
-          <.icon name="hero-arrow-right" class="size-4 text-white/50" />
-          <div class={[
-            "size-8 rounded-md grid place-content-center text-center text-xs relative bg-zinc-600 shadow-sm",
-            "opacity-50"
-          ]}>
-            T
-            <div class={[
-              "size-6 absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 -z-10",
-              io_colour_mapper(@next_input)
-            ]}>
-            </div>
-          </div>
-        <% end %>
-      </div>
+      <% else %>
+        <div class="text-center py-8 text-zinc-500">
+          No models in network. Add a model below to get started.
+        </div>
+      <% end %>
       
-    <!-- LiveSelect input -->
+      <!-- LiveSelect input -->
       <.form for={@form} phx-change="change" phx-target={@myself}>
         <div id="model-select-wrapper" data-refocus={JS.focus(to: "#network_model_select_text_input")}>
           <.live_select
@@ -329,25 +329,20 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
-  defp io_colour_mapper(type) do
-    case type do
-      :text -> "bg-orange-500"
-      :image -> "bg-blue-400"
-      :audio -> "bg-emerald-800"
+  defp type_badge_class(input_type, output_type) do
+    # Determine background color based on input/output types
+    bg_color = case {input_type, output_type} do
+      {:text, :text} -> "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+      {:text, :image} -> "bg-blue-400/20 text-blue-400 border border-blue-400/30"
+      {:text, :audio} -> "bg-emerald-600/20 text-emerald-400 border border-emerald-600/30"
+      {:image, :text} -> "bg-violet-500/20 text-violet-400 border border-violet-500/30"
+      {:audio, :text} -> "bg-pink-500/20 text-pink-400 border border-pink-500/30"
+      {:image, :image} -> "bg-blue-400/20 text-blue-400 border border-blue-400/30"
+      {:audio, :audio} -> "bg-emerald-600/20 text-emerald-400 border border-emerald-600/30"
+      _ -> "bg-zinc-600/20 text-zinc-400 border border-zinc-600/30"
     end
-  end
-
-  defp abbreviate_model_name(name) do
-    # For short names like "GPT-4", just use first 2-3 chars
-    if String.length(name) <= 5 do
-      String.slice(name, 0, 3)
-    else
-      # For longer names, use initials
-      name
-      |> String.split(" ")
-      |> Enum.map_join(&String.at(&1, 0))
-      |> String.upcase()
-    end
+    
+    bg_color
   end
 
   defp assign_form(socket) do
