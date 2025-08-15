@@ -482,6 +482,28 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
+        id: "seedream-3",
+        platform: Replicate,
+        path: "bytedance/seedream-3",
+        name: "SeedDream 3",
+        description: "High-quality text-to-image generation model from ByteDance",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input,
+            aspect_ratio: "16:9",
+            size: "regular",
+            guidance_scale: 2.5
+          }
+
+          with {:ok, %{"output" => image_url}} <-
+                 Replicate.invoke(model, input_params, token) do
+            {:ok, image_url}
+          end
+        end
+      },
+      %__MODULE__{
         id: "claude-4-sonnet",
         platform: Replicate,
         path: "anthropic/claude-4-sonnet",
@@ -746,6 +768,135 @@ defmodule Panic.Model do
                  ) do
             {:ok, text}
           end
+        end
+      },
+      %__MODULE__{
+        id: "image-reproducer-i-flux",
+        platform: Replicate,
+        path: "black-forest-labs/flux-kontext-dev",
+        name: "Image Reproducer I (Flux)",
+        description: "Image generation/reproduction model that can create images from text or reproduce existing images",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          # Check if input looks like a URL (for image reproduction)
+          # or text prompt (for genesis)
+          if String.starts_with?(input, "http") do
+            # Image reproduction mode
+            input_params = %{
+              prompt: "reproduce this image exactly, pixel-for-pixel",
+              input_image: input,
+              guidance: 2.5,
+              num_inference_steps: 30,
+              output_format: "png",
+              aspect_ratio: "16:9"
+            }
+
+            with {:ok, %{"output" => image_url}} <-
+                   Replicate.invoke(model, input_params, token) do
+              {:ok, image_url}
+            end
+          else
+            # Genesis mode - use flux-schnell to generate initial image
+            flux_schnell_model = %__MODULE__{
+              id: "flux-schnell",
+              path: "black-forest-labs/flux-schnell",
+              name: "FLUX.1 [schnell]",
+              platform: Replicate,
+              input_type: :text,
+              output_type: :image,
+              invoke: fn _, _, _ -> {:ok, ""} end
+            }
+            
+            input_params = %{
+              prompt: input,
+              output_format: "png",
+              aspect_ratio: "16:9",
+              disable_safety_checker: true
+            }
+
+            with {:ok, %{"output" => [image_url]}} <-
+                   Replicate.invoke(flux_schnell_model, input_params, token) do
+              {:ok, image_url}
+            end
+          end
+        end
+      },
+      %__MODULE__{
+        id: "image-reproducer-ii-flux",
+        platform: Replicate,
+        path: "black-forest-labs/flux-kontext-dev",
+        name: "Image Reproducer II (Flux)",
+        description: "Image to text passthrough for completing image reproduction networks",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn _model, input, _token ->
+          # Simply pass through the image URL as text
+          # This allows the network to complete the cycle
+          {:ok, input}
+        end
+      },
+      %__MODULE__{
+        id: "image-reproducer-i-seededit",
+        platform: Replicate,
+        path: "bytedance/seededit-3.0",
+        name: "Image Reproducer I (SeedEdit)",
+        description: "Image generation/reproduction model that can create images from text or reproduce existing images",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          # Check if input looks like a URL (for image reproduction)
+          # or text prompt (for genesis)
+          if String.starts_with?(input, "http") do
+            # Image reproduction mode
+            input_params = %{
+              prompt: "reproduce this image exactly, pixel-for-pixel",
+              image: input,
+              guidance_scale: 5.5
+            }
+
+            with {:ok, %{"output" => image_url}} <-
+                   Replicate.invoke(model, input_params, token) do
+              {:ok, image_url}
+            end
+          else
+            # Genesis mode - use seedream-3 to generate initial image
+            seedream_model = %__MODULE__{
+              id: "seedream-3",
+              path: "bytedance/seedream-3",
+              name: "SeedDream 3",
+              platform: Replicate,
+              input_type: :text,
+              output_type: :image,
+              invoke: fn _, _, _ -> {:ok, ""} end
+            }
+            
+            input_params = %{
+              prompt: input,
+              aspect_ratio: "16:9",
+              size: "regular",
+              guidance_scale: 2.5
+            }
+
+            with {:ok, %{"output" => image_url}} <-
+                   Replicate.invoke(seedream_model, input_params, token) do
+              {:ok, image_url}
+            end
+          end
+        end
+      },
+      %__MODULE__{
+        id: "image-reproducer-ii-seededit",
+        platform: Replicate,
+        path: "bytedance/seededit-3.0",
+        name: "Image Reproducer II (SeedEdit)",
+        description: "Image to text passthrough for completing image reproduction networks",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn _model, input, _token ->
+          # Simply pass through the image URL as text
+          # This allows the network to complete the cycle
+          {:ok, input}
         end
       }
     ] ++
