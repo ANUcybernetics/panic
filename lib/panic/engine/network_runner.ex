@@ -205,14 +205,14 @@ defmodule Panic.Engine.NetworkRunner do
   @impl true
   def handle_call(:get_runner_state, _from, state) do
     status = determine_runner_status(state)
-    
+
     response = %{
       status: status,
       genesis_invocation: state.genesis_invocation,
       current_invocation: state.current_invocation,
       next_invocation_time: state.next_invocation_time
     }
-    
+
     {:reply, {:ok, response}, state}
   end
 
@@ -722,14 +722,14 @@ defmodule Panic.Engine.NetworkRunner do
   defp broadcast_runner_state(state) do
     # Broadcast the current runner state to subscribers
     status = determine_runner_status(state)
-    
+
     message = %{
       status: status,
       genesis_invocation: state.genesis_invocation,
       current_invocation: state.current_invocation,
       next_invocation_time: state.next_invocation_time
     }
-    
+
     PanicWeb.Endpoint.broadcast("invocation:#{state.network_id}", "runner_state_changed", message)
   end
 
@@ -737,24 +737,24 @@ defmodule Panic.Engine.NetworkRunner do
     cond do
       is_nil(state.genesis_invocation) ->
         :idle
-      
+
       not is_nil(state.current_invocation) and state.current_invocation.state == :invoking ->
         :processing
-      
+
       not is_nil(state.next_invocation_time) ->
         :waiting
-      
+
       not is_nil(state.lockout_timer) ->
         :in_lockout
-      
+
       not is_nil(state.current_invocation) ->
         # We have a current invocation but it's not invoking - probably pending or completed
         :processing
-      
+
       not is_nil(state.genesis_invocation) ->
         # We have a genesis but no current invocation - between invocations in a run
         :waiting
-      
+
       true ->
         :idle
     end

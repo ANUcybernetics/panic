@@ -1,7 +1,7 @@
 defmodule PanicWeb.NetworkLive.RunnerStatusComponent do
   @moduledoc """
   LiveComponent that displays the current status of a NetworkRunner.
-  
+
   Shows:
   - Current runner status (idle, processing, waiting, in_lockout)
   - Run age (time since genesis invocation)
@@ -22,18 +22,20 @@ defmodule PanicWeb.NetworkLive.RunnerStatusComponent do
               {@status |> format_status()}
             </span>
           </div>
-          
+
           <div :if={@genesis_invocation}>
             <span class="text-sm font-medium text-gray-500">Run age:</span>
             <span class="ml-2 text-sm">{format_run_age(@genesis_invocation)}</span>
           </div>
-          
+
           <div :if={@current_invocation || @genesis_invocation}>
             <span class="text-sm font-medium text-gray-500">Sequence:</span>
-            <span class="ml-2 text-sm">#{get_sequence_number(@current_invocation, @genesis_invocation)}</span>
+            <span class="ml-2 text-sm">
+              #{get_sequence_number(@current_invocation, @genesis_invocation)}
+            </span>
           </div>
         </div>
-        
+
         <div
           :if={@status == :waiting && @next_invocation_time}
           id="countdown-container"
@@ -45,7 +47,7 @@ defmodule PanicWeb.NetworkLive.RunnerStatusComponent do
           <span id="countdown-display" class="font-mono">--</span>
           <span class="text-gray-500"> seconds</span>
         </div>
-        
+
         <div :if={@status == :in_lockout && @lockout_seconds_remaining}>
           <span class="text-sm font-medium text-gray-500">Lockout expires in:</span>
           <span class="ml-2 text-sm font-mono">{@lockout_seconds_remaining}s</span>
@@ -69,40 +71,40 @@ defmodule PanicWeb.NetworkLive.RunnerStatusComponent do
   defp derive_status_from_invocations(socket) do
     genesis = socket.assigns[:genesis_invocation]
     invocations = socket.assigns[:invocations] || []
-    
+
     # Get the most recent invocation from the stream
-    current_invocation = 
+    current_invocation =
       case invocations do
         [{_id, invocation} | _] -> invocation
         _ -> nil
       end
-    
+
     # Determine status based on invocations
-    status = 
+    status =
       cond do
         is_nil(genesis) ->
           :idle
-        
+
         socket.assigns[:lockout_seconds_remaining] && socket.assigns.lockout_seconds_remaining > 0 ->
           :in_lockout
-          
+
         current_invocation && current_invocation.state == :failed ->
           :failed
-          
+
         current_invocation && current_invocation.state == :invoking ->
           :processing
-          
+
         current_invocation && current_invocation.state == :ready ->
           :processing
-          
+
         genesis ->
           # We have a genesis, so a run is active, we're probably waiting
           :waiting
-          
+
         true ->
           :idle
       end
-    
+
     socket
     |> assign(:status, status)
     |> assign(:current_invocation, current_invocation)
@@ -113,7 +115,7 @@ defmodule PanicWeb.NetworkLive.RunnerStatusComponent do
     case Panic.Engine.NetworkRunner.get_runner_state(socket.assigns.network_id) do
       {:ok, state} ->
         assign(socket, :next_invocation_time, state.next_invocation_time)
-        
+
       {:error, :not_running} ->
         assign(socket, :next_invocation_time, nil)
     end
@@ -146,7 +148,7 @@ defmodule PanicWeb.NetworkLive.RunnerStatusComponent do
   defp format_run_age(genesis_invocation) do
     now = DateTime.utc_now()
     inserted_at = Map.get(genesis_invocation, :inserted_at)
-    
+
     # Handle case where inserted_at might not be present
     if inserted_at do
       diff_seconds = DateTime.diff(now, inserted_at, :second)

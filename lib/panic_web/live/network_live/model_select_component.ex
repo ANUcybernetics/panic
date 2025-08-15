@@ -61,7 +61,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
         <% end %>
       </div>
       
-      <!-- Model table -->
+    <!-- Model table -->
       <%= if @draft_models != [] do %>
         <div class="overflow-y-auto">
           <table class="w-full">
@@ -114,7 +114,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
         </div>
       <% end %>
       
-      <!-- LiveSelect input -->
+    <!-- LiveSelect input -->
       <.form for={@form} phx-change="change" phx-target={@myself}>
         <div id="model-select-wrapper" data-refocus={JS.focus(to: "#network_model_select_text_input")}>
           <.live_select
@@ -331,17 +331,18 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
 
   defp type_badge_class(input_type, output_type) do
     # Determine background color based on input/output types
-    bg_color = case {input_type, output_type} do
-      {:text, :text} -> "bg-orange-500/20 text-orange-400 border border-orange-500/30"
-      {:text, :image} -> "bg-blue-400/20 text-blue-400 border border-blue-400/30"
-      {:text, :audio} -> "bg-emerald-600/20 text-emerald-400 border border-emerald-600/30"
-      {:image, :text} -> "bg-violet-500/20 text-violet-400 border border-violet-500/30"
-      {:audio, :text} -> "bg-pink-500/20 text-pink-400 border border-pink-500/30"
-      {:image, :image} -> "bg-blue-400/20 text-blue-400 border border-blue-400/30"
-      {:audio, :audio} -> "bg-emerald-600/20 text-emerald-400 border border-emerald-600/30"
-      _ -> "bg-zinc-600/20 text-zinc-400 border border-zinc-600/30"
-    end
-    
+    bg_color =
+      case {input_type, output_type} do
+        {:text, :text} -> "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+        {:text, :image} -> "bg-blue-400/20 text-blue-400 border border-blue-400/30"
+        {:text, :audio} -> "bg-emerald-600/20 text-emerald-400 border border-emerald-600/30"
+        {:image, :text} -> "bg-violet-500/20 text-violet-400 border border-violet-500/30"
+        {:audio, :text} -> "bg-pink-500/20 text-pink-400 border border-pink-500/30"
+        {:image, :image} -> "bg-blue-400/20 text-blue-400 border border-blue-400/30"
+        {:audio, :audio} -> "bg-emerald-600/20 text-emerald-400 border border-emerald-600/30"
+        _ -> "bg-zinc-600/20 text-zinc-400 border border-zinc-600/30"
+      end
+
     bg_color
   end
 

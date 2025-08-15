@@ -6,6 +6,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   alias PanicWeb.NetworkLive.ModelSelectComponent
   alias PanicWeb.WatcherSubscriber
+  alias Phoenix.Socket.Broadcast
 
   @impl true
   def render(assigns) do
@@ -172,7 +173,7 @@ defmodule PanicWeb.NetworkLive.Show do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _, event: "runner_state_changed"} = _message, socket) do
+  def handle_info(%Broadcast{topic: "invocation:" <> _, event: "runner_state_changed"} = _message, socket) do
     # When runner state changes, update the component to get new timing info
     send_update(PanicWeb.NetworkLive.RunnerStatusComponent,
       id: "runner-status",
@@ -181,11 +182,12 @@ defmodule PanicWeb.NetworkLive.Show do
       invocations: socket.assigns.streams.invocations,
       lockout_seconds_remaining: socket.assigns[:lockout_seconds_remaining]
     )
+
     {:noreply, socket}
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
+  def handle_info(%Broadcast{topic: "invocation:" <> _} = message, socket) do
     WatcherSubscriber.handle_invocation_message(message, socket)
   end
 
