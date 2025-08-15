@@ -444,10 +444,10 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
-        id: "imagen-3-fast",
+        id: "imagen-4-fast",
         platform: Replicate,
-        path: "google/imagen-3-fast",
-        name: "Imagen 3 Fast",
+        path: "google/imagen-4-fast",
+        name: "Imagen 4 Fast",
         input_type: :text,
         output_type: :image,
         invoke: fn model, input, token ->
@@ -519,6 +519,27 @@ defmodule Panic.Model do
             aspect_ratio: "16:9",
             resolution: "2K",
             enhance_prompt: false
+          }
+
+          with {:ok, %{"output" => image_url}} <-
+                 Replicate.invoke(model, input_params, token) do
+            {:ok, image_url}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "ideogram-v3-turbo",
+        platform: Replicate,
+        path: "ideogram-ai/ideogram-v3-turbo",
+        name: "Ideogram V3 Turbo",
+        description:
+          "Fast text-to-image generation with stunning realism, creative designs, and consistent styles",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input,
+            aspect_ratio: "16:9"
           }
 
           with {:ok, %{"output" => image_url}} <-
