@@ -134,33 +134,33 @@ defmodule PanicWeb.AdminLive do
   end
 
   defp invocation_io_link(%{type: :input} = assigns) do
+    model = PanicWeb.NetworkLive.NetworkHelpers.get_model_or_placeholder(assigns.invocation.model)
+    assigns = assign(assigns, :model, model)
+    
     ~H"""
-    <%= case Panic.Model.by_id(@invocation.model) do %>
-      <% nil -> %>
-        <span class="text-gray-500 italic">Model not found</span>
-      <% model -> %>
-        <%= case Map.fetch!(model, :input_type) do %>
-          <% :text -> %>
-            {@invocation.input}
-          <% _ -> %>
-            <.link href={@invocation.input}>external link</.link>
-        <% end %>
+    <%= case @model.input_type do %>
+      <% :text -> %>
+        {@invocation.input}
+      <% :unknown -> %>
+        <span class="text-gray-500 italic">Unknown model type</span>
+      <% _ -> %>
+        <.link href={@invocation.input}>external link</.link>
     <% end %>
     """
   end
 
   defp invocation_io_link(%{type: :output} = assigns) do
+    model = PanicWeb.NetworkLive.NetworkHelpers.get_model_or_placeholder(assigns.invocation.model)
+    assigns = assign(assigns, :model, model)
+    
     ~H"""
-    <%= case Panic.Model.by_id(@invocation.model) do %>
-      <% nil -> %>
-        <span class="text-gray-500 italic">Model not found</span>
-      <% model -> %>
-        <%= case Map.fetch!(model, :output_type) do %>
-          <% :text -> %>
-            {@invocation.output}
-          <% _ -> %>
-            <.link href={@invocation.output}>external link</.link>
-        <% end %>
+    <%= case @model.output_type do %>
+      <% :text -> %>
+        {@invocation.output}
+      <% :unknown -> %>
+        <span class="text-gray-500 italic">Unknown model type</span>
+      <% _ -> %>
+        <.link href={@invocation.output}>external link</.link>
     <% end %>
     """
   end

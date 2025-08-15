@@ -53,25 +53,16 @@ defmodule Panic.Validations.ModelIOConnections do
   end
 
   def network_runnable?(model_ids) do
-    # Convert model ids to {name, input_type, output_type} tuples
-    # Handle missing models gracefully
-    {model_tuples, missing_ids} =
-      Enum.reduce(model_ids, {[], []}, fn id, {tuples, missing} ->
-        case Panic.Model.by_id(id) do
-          nil ->
-            {tuples, [id | missing]}
-          %{name: name, input_type: input, output_type: output} ->
-            {[{name, input, output} | tuples], missing}
-        end
-      end)
-    
-    model_tuples = Enum.reverse(model_tuples)
-    missing_ids = Enum.reverse(missing_ids)
-    
-    # If there are missing models, return error immediately
-    if missing_ids != [] do
-      {:error, "Network contains models that no longer exist: #{Enum.join(missing_ids, ", ")}"}
-    else
+    # Check for missing models first
+    case PanicWeb.NetworkLive.NetworkHelpers.check_network_models(model_ids) do
+      {:error, missing_ids} ->
+        {:error, "Network contains models that no longer exist: #{Enum.join(missing_ids, ", ")}"}
+      
+      {:ok, models} ->
+        # Convert to tuples for validation
+        model_tuples = Enum.map(models, fn model ->
+          {model.name, model.input_type, model.output_type}
+        end)
 
     if model_tuples == [] do
       {:error, "network must contain at least one model"}

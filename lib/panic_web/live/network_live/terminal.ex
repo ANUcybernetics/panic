@@ -68,11 +68,18 @@ defmodule PanicWeb.NetworkLive.Terminal do
     # Load network with its user relationship (no actor needed for read)
     case Ash.get(Panic.Engine.Network, network_id, authorize?: false, load: [:user]) do
       {:ok, network} ->
-        {:noreply,
-         socket
-         |> assign(:page_title, "Network #{network_id} terminal")
-         |> assign(:network_user, network.user)
-         |> WatcherSubscriber.configure_invocation_stream(network, {:single, 0, 1, false})}
+        # Check if network has missing models - redirect to network show if broken
+        case PanicWeb.NetworkLive.NetworkHelpers.check_network_models(network.models) do
+          {:ok, _models} ->
+            {:noreply,
+             socket
+             |> assign(:page_title, "Network #{network_id} terminal")
+             |> assign(:network_user, network.user)
+             |> WatcherSubscriber.configure_invocation_stream(network, {:single, 0, 1, false})}
+          
+          {:error, missing_ids} ->
+            {:noreply, PanicWeb.NetworkLive.NetworkHelpers.handle_broken_network(socket, network, missing_ids)}
+        end
 
       {:error, _error} ->
         {:noreply, push_navigate(socket, to: ~p"/404")}

@@ -39,7 +39,11 @@ defmodule PanicWeb.NetworkLive.Info do
       <ol>
         <%= for model <- all_models(@network) do %>
           <li>
-            <.link href={Panic.Model.model_url(model)} target="_blank">{model.name}</.link>
+            <%= if model.platform do %>
+              <.link href={Panic.Model.model_url(model)} target="_blank">{model.name}</.link>
+            <% else %>
+              <span class="text-gray-500">{model.name}</span>
+            <% end %>
             ({model.input_type} -> {model.output_type})
           </li>
         <% end %>
@@ -128,8 +132,7 @@ defmodule PanicWeb.NetworkLive.Info do
 
   defp all_models(network) do
     network.models
-    |> Enum.map(&Panic.Model.by_id/1)
-    |> Enum.reject(&is_nil/1)
+    |> Enum.map(&PanicWeb.NetworkLive.NetworkHelpers.get_model_or_placeholder/1)
   end
 
   # this is a hack - because these live actions indicate routes that are auth-optional

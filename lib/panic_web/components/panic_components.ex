@@ -11,7 +11,7 @@ defmodule PanicWeb.PanicComponents do
   import AutocompleteInput
 
   alias Panic.Engine.Invocation
-  alias Panic.Model
+  alias PanicWeb.NetworkLive.NetworkHelpers
 
   @doc """
   Renders a model box.
@@ -177,10 +177,9 @@ defmodule PanicWeb.PanicComponents do
       </div>
       <.invocation
         :for={{id, invocation} <- @invocations}
-        :if={Model.by_id(invocation.model)}
         id={id}
         invocation={invocation}
-        model={Model.by_id(invocation.model)}
+        model={NetworkHelpers.get_model_or_placeholder(invocation.model)}
       />
     </div>
     """
