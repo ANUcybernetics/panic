@@ -93,6 +93,17 @@ defmodule PanicWeb.NetworkLive.Show do
       />
     </section>
 
+    <section class="mt-8">
+      <.live_component
+        module={PanicWeb.NetworkLive.RunnerStatusComponent}
+        id="runner-status"
+        network_id={@network.id}
+        genesis_invocation={@genesis_invocation}
+        invocations={@streams.invocations}
+        lockout_seconds_remaining={@lockout_seconds_remaining}
+      />
+    </section>
+
     <section class="mt-16">
       <h2 class="font-semibold mb-8">
         Last prompt <span :if={@genesis_invocation}>: {@genesis_invocation.input}</span>
@@ -158,6 +169,19 @@ defmodule PanicWeb.NetworkLive.Show do
   @impl true
   def handle_info({PanicWeb.NetworkLive.TerminalComponent, {:genesis_invocation, genesis_invocation}}, socket) do
     {:noreply, assign(socket, :genesis_invocation, genesis_invocation)}
+  end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _, event: "runner_state_changed"} = _message, socket) do
+    # When runner state changes, update the component to get new timing info
+    send_update(PanicWeb.NetworkLive.RunnerStatusComponent,
+      id: "runner-status",
+      network_id: socket.assigns.network.id,
+      genesis_invocation: socket.assigns[:genesis_invocation],
+      invocations: socket.assigns.streams.invocations,
+      lockout_seconds_remaining: socket.assigns[:lockout_seconds_remaining]
+    )
+    {:noreply, socket}
   end
 
   @impl true

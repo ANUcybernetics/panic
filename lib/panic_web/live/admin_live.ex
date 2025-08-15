@@ -93,6 +93,12 @@ defmodule PanicWeb.AdminLive do
   end
 
   @impl true
+  def handle_info(%Broadcast{topic: "invocation:" <> _, event: "runner_state_changed"} = _message, socket) do
+    # Ignore runner state changed messages in admin view
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info(%Broadcast{topic: "invocation:" <> _} = message, socket) do
     invocation = message.payload.data
 

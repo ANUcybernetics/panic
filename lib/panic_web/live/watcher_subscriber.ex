@@ -148,9 +148,15 @@ defmodule PanicWeb.WatcherSubscriber do
   Returns `{:noreply, socket}` so callers can simply `handle_invocation_message/2`.
   """
   def handle_invocation_message(message, socket) do
-    # Skip presence_diff events
+    # Skip non-invocation events
     case message.event do
       "presence_diff" ->
+        {:noreply, socket}
+
+      "runner_state_changed" ->
+        {:noreply, socket}
+
+      "lockout_countdown" ->
         {:noreply, socket}
 
       _ ->

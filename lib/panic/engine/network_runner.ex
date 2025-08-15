@@ -128,6 +128,27 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   @doc """
+  Gets the current state of the NetworkRunner.
+
+  ## Parameters
+  - `network_id` - The ID of the network
+
+  ## Returns
+  - `{:ok, state_map}` - Map with current runner state information
+  - `{:error, :not_running}` - NetworkRunner not active
+
+  ## Examples
+      iex> NetworkRunner.get_runner_state(1)
+      {:ok, %{status: :waiting, ...}}
+  """
+  def get_runner_state(network_id) do
+    case Registry.lookup(NetworkRegistry, network_id) do
+      [{pid, _}] -> GenServer.call(pid, :get_runner_state)
+      [] -> {:error, :not_running}
+    end
+  end
+
+  @doc """
   Stops the current run for the given network.
 
   ## Parameters
@@ -182,6 +203,20 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   @impl true
+  def handle_call(:get_runner_state, _from, state) do
+    status = determine_runner_status(state)
+    
+    response = %{
+      status: status,
+      genesis_invocation: state.genesis_invocation,
+      current_invocation: state.current_invocation,
+      next_invocation_time: state.next_invocation_time
+    }
+    
+    {:reply, {:ok, response}, state}
+  end
+
+  @impl true
   def handle_call(:stop_run, _from, state) do
     case state do
       %{genesis_invocation: nil} ->
@@ -200,6 +235,7 @@ defmodule Panic.Engine.NetworkRunner do
               next_invocation_time: nil
           })
 
+        broadcast_runner_state(new_state)
         {:reply, {:ok, :stopped}, new_state}
     end
   end
@@ -247,11 +283,13 @@ defmodule Panic.Engine.NetworkRunner do
           else
             # Lockout expired after broadcasting final 0, stop timer
             new_state = stop_lockout_timer(state)
+            broadcast_runner_state(new_state)
             {:noreply, new_state}
           end
         else
           # Lockout expired, stop broadcasting
           new_state = stop_lockout_timer(state)
+          broadcast_runner_state(new_state)
           {:noreply, new_state}
         end
 
@@ -272,6 +310,7 @@ defmodule Panic.Engine.NetworkRunner do
         next_invocation_time: nil
     }
 
+    broadcast_runner_state(new_state)
     trigger_invocation(invocation, new_state)
     {:noreply, new_state}
   end
@@ -323,6 +362,7 @@ defmodule Panic.Engine.NetworkRunner do
           trigger_invocation(invocation, new_state)
         end
 
+        broadcast_runner_state(new_state)
         {:reply, {:ok, invocation}, new_state}
 
       {:error, error} ->
@@ -371,6 +411,7 @@ defmodule Panic.Engine.NetworkRunner do
 
           # Trigger async invocation processing
           trigger_invocation(invocation, new_state)
+          broadcast_runner_state(new_state)
 
           {:reply, {:ok, invocation}, new_state}
 
@@ -436,6 +477,7 @@ defmodule Panic.Engine.NetworkRunner do
             next_invocation_time: next_invocation_time
         }
 
+        broadcast_runner_state(new_state)
         {:noreply, new_state}
 
       {:error, error} ->
@@ -449,6 +491,7 @@ defmodule Panic.Engine.NetworkRunner do
             next_invocation_time: nil
         }
 
+        broadcast_runner_state(new_state)
         {:noreply, new_state}
     end
   rescue
@@ -464,6 +507,7 @@ defmodule Panic.Engine.NetworkRunner do
             next_invocation_time: nil
         })
 
+      broadcast_runner_state(new_state)
       {:noreply, new_state}
   end
 
@@ -673,6 +717,47 @@ defmodule Panic.Engine.NetworkRunner do
   defp stop_lockout_timer(%{lockout_timer: timer_ref} = state) do
     Process.cancel_timer(timer_ref)
     %{state | lockout_timer: nil}
+  end
+
+  defp broadcast_runner_state(state) do
+    # Broadcast the current runner state to subscribers
+    status = determine_runner_status(state)
+    
+    message = %{
+      status: status,
+      genesis_invocation: state.genesis_invocation,
+      current_invocation: state.current_invocation,
+      next_invocation_time: state.next_invocation_time
+    }
+    
+    PanicWeb.Endpoint.broadcast("invocation:#{state.network_id}", "runner_state_changed", message)
+  end
+
+  defp determine_runner_status(state) do
+    cond do
+      is_nil(state.genesis_invocation) ->
+        :idle
+      
+      not is_nil(state.current_invocation) and state.current_invocation.state == :invoking ->
+        :processing
+      
+      not is_nil(state.next_invocation_time) ->
+        :waiting
+      
+      not is_nil(state.lockout_timer) ->
+        :in_lockout
+      
+      not is_nil(state.current_invocation) ->
+        # We have a current invocation but it's not invoking - probably pending or completed
+        :processing
+      
+      not is_nil(state.genesis_invocation) ->
+        # We have a genesis but no current invocation - between invocations in a run
+        :waiting
+      
+      true ->
+        :idle
+    end
   end
 
   defp calculate_lockout_remaining(genesis_invocation, network) do

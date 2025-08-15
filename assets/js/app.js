@@ -53,10 +53,59 @@ const FocusInput = {
   },
 };
 
+const RunnerCountdown = {
+  mounted() {
+    this.targetTime = new Date(this.el.dataset.targetTime);
+    this.displayEl = this.el.querySelector("#countdown-display");
+    this.startCountdown();
+  },
+
+  destroyed() {
+    if (this.timer) {
+      clearInterval(this.timer);
+    }
+  },
+
+  updated() {
+    // Handle updates to the target time
+    const newTargetTime = new Date(this.el.dataset.targetTime);
+    if (newTargetTime.getTime() !== this.targetTime.getTime()) {
+      this.targetTime = newTargetTime;
+      if (this.timer) {
+        clearInterval(this.timer);
+      }
+      this.startCountdown();
+    }
+  },
+
+  startCountdown() {
+    const updateDisplay = () => {
+      const now = new Date();
+      const diff = Math.max(0, Math.floor((this.targetTime - now) / 1000));
+      
+      if (this.displayEl) {
+        this.displayEl.textContent = diff.toString();
+      }
+      
+      if (diff <= 0 && this.timer) {
+        clearInterval(this.timer);
+        this.timer = null;
+      }
+    };
+
+    // Update immediately
+    updateDisplay();
+
+    // Then update every second
+    this.timer = setInterval(updateDisplay, 1000);
+  }
+};
+
 const hooks = {
   AudioVisualizer,
   PhoenixCustomEventHook,
   FocusInput,
+  RunnerCountdown,
   ...live_select
 };
 
