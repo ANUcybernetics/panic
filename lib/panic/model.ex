@@ -792,7 +792,7 @@ defmodule Panic.Model do
           if String.starts_with?(input, "http") do
             # Image reproduction mode
             input_params = %{
-              prompt: "reproduce this image exactly, pixel-for-pixel",
+              prompt: "reproduce this image exactly",
               input_image: input,
               guidance: 2.5,
               num_inference_steps: 30,
@@ -859,7 +859,7 @@ defmodule Panic.Model do
           if String.starts_with?(input, "http") do
             # Image reproduction mode
             input_params = %{
-              prompt: "reproduce this image exactly, pixel-for-pixel",
+              prompt: "reproduce this image exactly",
               image: input,
               guidance_scale: 5.5
             }
