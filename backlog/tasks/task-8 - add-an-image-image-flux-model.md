@@ -66,7 +66,7 @@ Added five new models to `lib/panic/model.ex`:
    - Input: image, Output: text
    - Simply returns the image URL as text
 
-3. **SeedDream 3** (`seedream-3`):
+3. **Seedream 3** (`seedream-3`):
 
    - Standalone text-to-image model from ByteDance
    - Uses bytedance/seedream-3
