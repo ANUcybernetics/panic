@@ -2,6 +2,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
   @moduledoc false
   use PanicWeb, :live_view
 
+  alias PanicWeb.NetworkLive.NetworkHelpers
   alias PanicWeb.TerminalAuth
   alias PanicWeb.WatcherSubscriber
 
@@ -69,16 +70,16 @@ defmodule PanicWeb.NetworkLive.Terminal do
     case Ash.get(Panic.Engine.Network, network_id, authorize?: false, load: [:user]) do
       {:ok, network} ->
         # Check if network has missing models - redirect to network show if broken
-        case PanicWeb.NetworkLive.NetworkHelpers.check_network_models(network.models) do
+        case NetworkHelpers.check_network_models(network.models) do
           {:ok, _models} ->
             {:noreply,
              socket
              |> assign(:page_title, "Network #{network_id} terminal")
              |> assign(:network_user, network.user)
              |> WatcherSubscriber.configure_invocation_stream(network, {:single, 0, 1, false})}
-          
+
           {:error, missing_ids} ->
-            {:noreply, PanicWeb.NetworkLive.NetworkHelpers.handle_broken_network(socket, network, missing_ids)}
+            {:noreply, NetworkHelpers.handle_broken_network(socket, network, missing_ids)}
         end
 
       {:error, _error} ->

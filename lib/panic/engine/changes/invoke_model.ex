@@ -63,35 +63,41 @@ defmodule Panic.Engine.Changes.InvokeModel do
         changeset
         |> Ash.Changeset.add_error("Model with ID '#{model_id}' no longer exists")
         |> Ash.Changeset.put_context(:invocation_success, false)
-      
+
       model ->
         %Panic.Model{path: _path, invoke: invoke_fn, platform: platform} = model
 
-    # Always use the network owner's tokens, not the current actor's
-    # Load the network and its owner
-    invocation = Ash.load!(changeset.data, [network: :user], authorize?: false)
-    network_owner = invocation.network.user
+        # Always use the network owner's tokens, not the current actor's
+        # Load the network and its owner
+        invocation = Ash.load!(changeset.data, [network: :user], authorize?: false)
+        network_owner = invocation.network.user
 
-    # Resolve token using the network owner
-    token_result = TokenResolver.resolve_token(platform, network_owner)
+        # Resolve token using the network owner
+        token_result = TokenResolver.resolve_token(platform, network_owner)
 
-    case token_result do
-      {:ok, token} ->
-        case invoke_fn.(model, input, token) do
-          {:ok, output} ->
-            changeset
-            |> Ash.Changeset.put_context(:invocation_output, output)
-            |> Ash.Changeset.put_context(:invocation_success, true)
-
-          {:error, :nsfw} ->
-            # NSFW error - retry with sanitized prompt
-            retry_input = nsfw_retry_prompt(input)
-
-            case invoke_fn.(model, retry_input, token) do
+        case token_result do
+          {:ok, token} ->
+            case invoke_fn.(model, input, token) do
               {:ok, output} ->
                 changeset
                 |> Ash.Changeset.put_context(:invocation_output, output)
                 |> Ash.Changeset.put_context(:invocation_success, true)
+
+              {:error, :nsfw} ->
+                # NSFW error - retry with sanitized prompt
+                retry_input = nsfw_retry_prompt(input)
+
+                case invoke_fn.(model, retry_input, token) do
+                  {:ok, output} ->
+                    changeset
+                    |> Ash.Changeset.put_context(:invocation_output, output)
+                    |> Ash.Changeset.put_context(:invocation_success, true)
+
+                  {:error, message} ->
+                    changeset
+                    |> Ash.Changeset.add_error(message)
+                    |> Ash.Changeset.put_context(:invocation_success, false)
+                end
 
               {:error, message} ->
                 changeset
@@ -99,17 +105,11 @@ defmodule Panic.Engine.Changes.InvokeModel do
                 |> Ash.Changeset.put_context(:invocation_success, false)
             end
 
-          {:error, message} ->
+          {:error, reason} ->
             changeset
-            |> Ash.Changeset.add_error(message)
+            |> Ash.Changeset.add_error(reason)
             |> Ash.Changeset.put_context(:invocation_success, false)
         end
-
-      {:error, reason} ->
-        changeset
-        |> Ash.Changeset.add_error(reason)
-        |> Ash.Changeset.put_context(:invocation_success, false)
-    end
     end
   end
 

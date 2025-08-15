@@ -8,7 +8,7 @@ defmodule PanicWeb.NetworkLive.NetworkHelpers do
   use Phoenix.VerifiedRoutes,
     router: PanicWeb.Router,
     endpoint: PanicWeb.Endpoint
-  
+
   alias Panic.Model
   alias Phoenix.LiveView
 
@@ -36,9 +36,9 @@ defmodule PanicWeb.NetworkLive.NetworkHelpers do
   with an appropriate flash message. Used by pages that need a runnable network.
   """
   def handle_broken_network(socket, network, missing_ids) do
-    message = 
+    message =
       "This network contains models that no longer exist: #{Enum.join(missing_ids, ", ")}. " <>
-      "Please fix the network configuration."
+        "Please fix the network configuration."
 
     socket
     |> LiveView.put_flash(:error, message)

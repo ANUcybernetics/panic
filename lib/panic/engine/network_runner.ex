@@ -452,7 +452,7 @@ defmodule Panic.Engine.NetworkRunner do
           nil ->
             # Model doesn't exist, skip archiving
             :ok
-            
+
           model ->
             if model.output_type in [:image, :audio] do
               archive_invocation_async(invocation, next_invocation)

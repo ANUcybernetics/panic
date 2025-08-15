@@ -185,7 +185,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   @impl true
   def update(assigns, socket) do
     # Handle missing models gracefully - filter out any that don't exist
-    saved_models = 
+    saved_models =
       assigns.network.models
       |> Enum.map(&Model.by_id/1)
       |> Enum.reject(&is_nil/1)
@@ -250,7 +250,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
           nil ->
             # Model not found - just ignore the selection
             {:noreply, socket}
-          
+
           model ->
             updated_models = socket.assigns.draft_models ++ [model]
             next_input = model.output_type

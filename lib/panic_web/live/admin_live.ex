@@ -2,6 +2,7 @@ defmodule PanicWeb.AdminLive do
   @moduledoc false
   use PanicWeb, :live_view
 
+  alias PanicWeb.NetworkLive.NetworkHelpers
   alias Phoenix.Socket.Broadcast
 
   @invocation_stream_limit 100
@@ -134,9 +135,9 @@ defmodule PanicWeb.AdminLive do
   end
 
   defp invocation_io_link(%{type: :input} = assigns) do
-    model = PanicWeb.NetworkLive.NetworkHelpers.get_model_or_placeholder(assigns.invocation.model)
+    model = NetworkHelpers.get_model_or_placeholder(assigns.invocation.model)
     assigns = assign(assigns, :model, model)
-    
+
     ~H"""
     <%= case @model.input_type do %>
       <% :text -> %>
@@ -150,9 +151,9 @@ defmodule PanicWeb.AdminLive do
   end
 
   defp invocation_io_link(%{type: :output} = assigns) do
-    model = PanicWeb.NetworkLive.NetworkHelpers.get_model_or_placeholder(assigns.invocation.model)
+    model = NetworkHelpers.get_model_or_placeholder(assigns.invocation.model)
     assigns = assign(assigns, :model, model)
-    
+
     ~H"""
     <%= case @model.output_type do %>
       <% :text -> %>

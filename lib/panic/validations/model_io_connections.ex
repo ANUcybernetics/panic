@@ -57,50 +57,51 @@ defmodule Panic.Validations.ModelIOConnections do
     case PanicWeb.NetworkLive.NetworkHelpers.check_network_models(model_ids) do
       {:error, missing_ids} ->
         {:error, "Network contains models that no longer exist: #{Enum.join(missing_ids, ", ")}"}
-      
+
       {:ok, models} ->
         # Convert to tuples for validation
-        model_tuples = Enum.map(models, fn model ->
-          {model.name, model.input_type, model.output_type}
-        end)
+        model_tuples =
+          Enum.map(models, fn model ->
+            {model.name, model.input_type, model.output_type}
+          end)
 
-    if model_tuples == [] do
-      {:error, "network must contain at least one model"}
-    else
-      # Prepend the initial text input sentinel so the first model's input is checked
-      sequential_errors =
-        [{"Initial input", :text, :text} | model_tuples]
-        |> Enum.chunk_every(2, 1, :discard)
-        |> Enum.reduce([], fn
-          [{name_1, _input_1, output_type_1}, {name_2, input_type_2, _output_2}], errors ->
-            if output_type_1 == input_type_2 do
-              errors
+        if model_tuples == [] do
+          {:error, "network must contain at least one model"}
+        else
+          # Prepend the initial text input sentinel so the first model's input is checked
+          sequential_errors =
+            [{"Initial input", :text, :text} | model_tuples]
+            |> Enum.chunk_every(2, 1, :discard)
+            |> Enum.reduce([], fn
+              [{name_1, _input_1, output_type_1}, {name_2, input_type_2, _output_2}], errors ->
+                if output_type_1 == input_type_2 do
+                  errors
+                else
+                  [
+                    "#{name_1} output (#{output_type_1}) does not match #{name_2} input (#{input_type_2})"
+                    | errors
+                  ]
+                end
+            end)
+
+          # Check if the network forms a valid cycle (last output -> first input)
+          {first_name, first_input, _} = List.first(model_tuples)
+          {last_name, _, last_output} = List.last(model_tuples)
+
+          cycle_errors =
+            if last_output == first_input do
+              []
             else
               [
-                "#{name_1} output (#{output_type_1}) does not match #{name_2} input (#{input_type_2})"
-                | errors
+                "Network doesn't form a valid cycle: #{last_name} output (#{last_output}) doesn't match #{first_name} input (#{first_input})"
               ]
             end
-        end)
 
-      # Check if the network forms a valid cycle (last output -> first input)
-      {first_name, first_input, _} = List.first(model_tuples)
-      {last_name, _, last_output} = List.last(model_tuples)
-
-      cycle_errors =
-        if last_output == first_input do
-          []
-        else
-          [
-            "Network doesn't form a valid cycle: #{last_name} output (#{last_output}) doesn't match #{first_name} input (#{first_input})"
-          ]
+          case sequential_errors ++ cycle_errors do
+            [] -> :ok
+            errs -> {:error, errs |> Enum.reverse() |> Enum.join(", ")}
+          end
         end
-
-      case sequential_errors ++ cycle_errors do
-        [] -> :ok
-        errs -> {:error, errs |> Enum.reverse() |> Enum.join(", ")}
-      end
-    end
     end
   end
 end
