@@ -171,6 +171,53 @@ defmodule Panic.PlatformsTest do
       assert {:ok, output} = invoke_fn.(model, input, api_key)
       assert String.match?(output, ~r/\S/), "Expected non-empty output"
     end
+
+    test "imagen-4-fast generates valid image URLs", %{api_key: api_key} do
+      %Model{invoke: invoke_fn} = model = Model.by_id!("imagen-4-fast")
+      
+      # Verify model configuration
+      assert model.name == "Imagen 4 Fast"
+      assert model.platform == Replicate
+      assert model.path == "google/imagen-4-fast"
+      assert model.input_type == :text
+      assert model.output_type == :image
+      
+      # Test with a simple prompt
+      test_prompt = "a beautiful sunset over mountains"
+      
+      IO.puts("\n=== Testing Imagen 4 Fast ===")
+      IO.puts("Prompt: #{test_prompt}")
+      start_time = System.monotonic_time(:millisecond)
+      
+      # First, let's call Replicate.invoke directly to see the raw response
+      input_params = %{
+        prompt: test_prompt,
+        aspect_ratio: "16:9",
+        safety_filter_level: "block_only_high"
+      }
+      
+      IO.puts("Calling Replicate.invoke directly...")
+      raw_result = Replicate.invoke(model, input_params, api_key)
+      IO.puts("Raw response: #{inspect(raw_result, pretty: true, limit: :infinity)}")
+      
+      # Now test through the model's invoke function
+      IO.puts("\nCalling model.invoke...")
+      result = invoke_fn.(model, test_prompt, api_key)
+      
+      duration = System.monotonic_time(:millisecond) - start_time
+      IO.puts("Completed in #{duration}ms")
+      
+      case result do
+        {:ok, image_url} ->
+          assert is_binary(image_url), "Expected string output"
+          assert String.match?(image_url, ~r|^https://.*$|), "Expected valid HTTPS URL, got: #{image_url}"
+          IO.puts("Successfully generated image: #{image_url}")
+          
+        {:error, reason} ->
+          IO.puts("ERROR: #{inspect(reason)}")
+          flunk("Failed to invoke Imagen 4 Fast: #{inspect(reason)}")
+      end
+    end
   end
 
   describe "OpenAI platform" do
