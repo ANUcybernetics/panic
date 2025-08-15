@@ -1,5 +1,5 @@
 defmodule PanicWeb.AuthControllerTest do
-  use PanicWeb.ConnCase, async: true
+  use PanicWeb.ConnCase, async: false
   use ExUnitProperties
 
   import PanicWeb.Helpers

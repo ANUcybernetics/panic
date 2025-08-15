@@ -3,7 +3,7 @@ defmodule Panic.Validations.NetworkModelIntegrationTest do
   Integration tests for network model validation.
   Uses dummy models to avoid API calls.
   """
-  use Panic.DataCase, async: true
+  use Panic.DataCase, async: false
 
   alias Ash.Error.Invalid
   alias Panic.Fixtures

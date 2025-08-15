@@ -1,5 +1,5 @@
 defmodule Panic.Validations.ModelIOConnectionsTest do
-  use Panic.DataCase, async: true
+  use Panic.DataCase, async: false
 
   alias Panic.Model
   alias Panic.Validations.ModelIOConnections
