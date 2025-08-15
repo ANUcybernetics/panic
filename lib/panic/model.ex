@@ -267,7 +267,8 @@ defmodule Panic.Model do
                    model,
                    %{
                      image: input,
-                     question: "What is shown in the image, and what (artistic) style does the image represent?"
+                     question:
+                       "What is shown in the image, and what (artistic) style does the image represent?"
                    },
                    token
                  ) do
@@ -485,7 +486,7 @@ defmodule Panic.Model do
         id: "seedream-3",
         platform: Replicate,
         path: "bytedance/seedream-3",
-        name: "SeedDream 3",
+        name: "Seedream 3",
         description: "High-quality text-to-image generation model from ByteDance",
         input_type: :text,
         output_type: :image,
@@ -495,6 +496,29 @@ defmodule Panic.Model do
             aspect_ratio: "16:9",
             size: "big",
             guidance_scale: 2.5
+          }
+
+          with {:ok, %{"output" => image_url}} <-
+                 Replicate.invoke(model, input_params, token) do
+            {:ok, image_url}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "dreamina-3.1",
+        platform: Replicate,
+        path: "bytedance/dreamina-3.1",
+        name: "Dreamina 3.1",
+        description:
+          "4MP cinematic-quality text-to-image generation with precise style control from ByteDance",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input,
+            aspect_ratio: "16:9",
+            resolution: "2K",
+            enhance_prompt: false
           }
 
           with {:ok, %{"output" => image_url}} <-
@@ -716,7 +740,8 @@ defmodule Panic.Model do
         platform: Replicate,
         path: "google/lyria-2",
         name: "Lyria 2",
-        description: "Lyria 2 is a music generation model that produces 48kHz stereo audio through text-based prompts",
+        description:
+          "Lyria 2 is a music generation model that produces 48kHz stereo audio through text-based prompts",
         input_type: :text,
         output_type: :audio,
         invoke: fn model, input, token ->
@@ -731,7 +756,8 @@ defmodule Panic.Model do
         platform: Replicate,
         path: "minimax/music-01",
         name: "Music-01",
-        description: "Quickly generate up to 1 minute of music with lyrics and vocals in the style of a reference track",
+        description:
+          "Quickly generate up to 1 minute of music with lyrics and vocals in the style of a reference track",
         input_type: :audio,
         output_type: :audio,
         invoke: fn model, input, token ->
@@ -779,7 +805,8 @@ defmodule Panic.Model do
         platform: Replicate,
         path: "black-forest-labs/flux-kontext-dev",
         name: "Image Reproducer I (Flux)",
-        description: "Image generation/reproduction model that can create images from text or reproduce existing images",
+        description:
+          "Image generation/reproduction model that can create images from text or reproduce existing images",
         input_type: :text,
         output_type: :image,
         invoke: fn model, input, token ->
@@ -845,7 +872,8 @@ defmodule Panic.Model do
         platform: Replicate,
         path: "bytedance/seededit-3.0",
         name: "Image Reproducer I (Seed)",
-        description: "Image generation/reproduction model that can create images from text or reproduce existing images",
+        description:
+          "Image generation/reproduction model that can create images from text or reproduce existing images",
         input_type: :text,
         output_type: :image,
         invoke: fn model, input, token ->
@@ -868,7 +896,7 @@ defmodule Panic.Model do
             seedream_model = %__MODULE__{
               id: "seedream-3",
               path: "bytedance/seedream-3",
-              name: "SeedDream 3",
+              name: "Seedream 3",
               platform: Replicate,
               input_type: :text,
               output_type: :image,
