@@ -16,7 +16,7 @@ import Config
 #
 # Alternatively, you can use `mix phx.gen.release` to generate a `bin/server`
 # script that automatically sets the env var above.
-alias Swoosh.Adapters.Brevo
+alias Swoosh.Adapters.Postmark
 
 if System.get_env("PHX_SERVER") do
   config :panic, PanicWeb.Endpoint, server: true
@@ -90,10 +90,12 @@ if config_env() == :prod do
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 
-  # Configure Swoosh with Brevo adapter
+  # Configure Swoosh with Postmark adapter
   config :panic, Panic.Mailer,
-    adapter: Brevo,
-    api_key: System.get_env("BREVO_API_KEY")
+    adapter: Postmark,
+    api_key: System.get_env("POSTMARK_API_KEY"),
+    message_stream: "outbound",
+    from_email: System.get_env("FROM_EMAIL", "panic@benswift.me")
 
   config :panic, Panic.Repo,
     database: database_path,
@@ -121,8 +123,10 @@ if config_env() == :prod do
   # Configure Swoosh API client to use Finch (already in deps)
   config :swoosh, :api_client, Swoosh.ApiClient.Finch
 
-  # Configure TowerEmail.Mailer with Brevo adapter for production
+  # Configure TowerEmail.Mailer with Postmark adapter for production
   config :tower_email, TowerEmail.Mailer,
-    adapter: Brevo,
-    api_key: System.get_env("BREVO_API_KEY")
+    adapter: Postmark,
+    api_key: System.get_env("POSTMARK_API_KEY"),
+    message_stream: "outbound",
+    from_email: System.get_env("FROM_EMAIL", "panic@benswift.me")
 end
