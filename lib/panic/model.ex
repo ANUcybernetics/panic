@@ -120,20 +120,9 @@ defmodule Panic.Model do
       },
       ## OpenAI
       %__MODULE__{
-        id: "gpt-4.1",
-        path: "gpt-4.1",
-        name: "GPT-4.1",
-        input_type: :text,
-        output_type: :text,
-        platform: OpenAI,
-        invoke: fn model, input, token ->
-          OpenAI.invoke(model, input, token)
-        end
-      },
-      %__MODULE__{
-        id: "gpt-4.1-nano",
-        path: "gpt-4.1-nano",
-        name: "GPT-4.1 nano",
+        id: "gpt-5-chat",
+        path: "gpt-5-chat-latest",
+        name: "GPT-5 Chat",
         input_type: :text,
         output_type: :text,
         platform: OpenAI,

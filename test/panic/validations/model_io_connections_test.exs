@@ -12,16 +12,16 @@ defmodule Panic.Validations.ModelIOConnectionsTest do
 
     test "accepts single text->text model forming valid cycle" do
       # Single text->text model forms a valid cycle
-      assert :ok = ModelIOConnections.network_runnable?(["gpt-4.1"])
+      assert :ok = ModelIOConnections.network_runnable?(["gpt-5-chat"])
     end
 
     test "accepts multiple text->text models forming valid cycle" do
       # All text->text models form a valid cycle
       assert :ok =
                ModelIOConnections.network_runnable?([
-                 "gpt-4.1",
-                 "gpt-4.1-nano",
-                 "gpt-4.1"
+                 "gpt-5-chat",
+                 "dummy-t2t",
+                 "gpt-5-chat"
                ])
     end
 
@@ -33,7 +33,7 @@ defmodule Panic.Validations.ModelIOConnectionsTest do
           # text -> image
           "stable-diffusion",
           # text -> text (needs text input, gets image)
-          "gpt-4.1"
+          "gpt-5-chat"
         ])
 
       assert {:error, _message} = result
@@ -124,7 +124,7 @@ defmodule Panic.Validations.ModelIOConnectionsTest do
       # text -> image
       text_to_image = Model.by_id!("stable-diffusion")
       # text -> text
-      text_to_text = Model.by_id!("gpt-4.1")
+      text_to_text = Model.by_id!("gpt-5-chat")
 
       result =
         ModelIOConnections.network_runnable?([
@@ -164,7 +164,7 @@ defmodule Panic.Validations.ModelIOConnectionsTest do
         Ash.update(network,
           action: :update_models,
           # Invalid: image -> text input mismatch
-          params: %{models: ["stable-diffusion", "gpt-4.1"]},
+          params: %{models: ["stable-diffusion", "gpt-5-chat"]},
           actor: user
         )
 

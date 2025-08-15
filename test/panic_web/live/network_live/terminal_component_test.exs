@@ -68,7 +68,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponentTest do
         |> Ash.Changeset.for_update(
           :update_models,
           %{
-            models: ["gpt-4.1"]
+            models: ["gpt-5-chat"]
           },
           actor: owner
         )

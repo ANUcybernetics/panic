@@ -1,8 +1,8 @@
 defmodule Panic.Platforms.OpenAI do
   # TODO perhaps make these defaults, but also pull from the Model struct?
   @moduledoc false
-  @temperature 0.7
-  @max_tokens 50
+  @temperature 1.0
+  @max_completion_tokens 150
 
   def list_engines(token) do
     [url: "/engines", auth: {:bearer, token}]
@@ -25,15 +25,15 @@ defmodule Panic.Platforms.OpenAI do
     request_body = %{
       model: path,
       messages: [
-        # %{
-        #   "role" => "system",
-        #   "content" =>
-        #     "You are one component of a larger AI artwork system. Your job is to describe what you see."
-        # },
+        %{
+          "role" => "system",
+          "content" =>
+            "You are one component of a larger AI artwork system. When given input, always respond with a creative interpretation, description, or continuation. Never leave a response empty."
+        },
         %{"role" => "user", "content" => input}
       ],
       temperature: @temperature,
-      max_tokens: @max_tokens
+      max_completion_tokens: @max_completion_tokens
     }
 
     [method: :post, url: "/chat/completions", json: request_body, auth: {:bearer, token}]

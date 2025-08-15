@@ -1,7 +1,7 @@
 ---
 id: task-38
 title: update OpenAI model list
-status: To Do
+status: Done
 assignee: []
 created_date: "2025-08-13 22:45"
 labels: []
@@ -21,3 +21,20 @@ sure which of the existing ones (in the OpenAI module) are still available.
    all the GPT4 ones)
 4. update any places in the codebase that the gpt4 ones are mentioned (e.g. in
    "network IO connctions" tests) and ensure that all tests pass
+
+## Completion Notes
+
+✅ Updated OpenAI platform module to support GPT-5 API requirements:
+   - Changed from `max_tokens` to `max_completion_tokens` (150 tokens)
+   - Set temperature to 1.0 (required for GPT-5 models)
+
+✅ Replaced GPT-4 models with GPT-5 models in `lib/panic/model.ex`:
+   - Removed `gpt-4.1` and `gpt-4.1-nano`
+   - Added `gpt-5-mini` (cheap/mini tier)
+   - Added `gpt-5` (mid-tier)
+
+✅ Updated all test references:
+   - `test/panic/validations/model_io_connections_test.exs`
+   - `test/panic_web/live/network_live/terminal_component_test.exs`
+
+✅ All tests pass successfully
