@@ -49,51 +49,45 @@ defmodule Panic.PlatformsTest do
       models = Model.all(platform: Replicate)
       assert length(models) > 0, "Expected to find Replicate models"
 
-      # Process models in batches to avoid overwhelming the API
-      batch_size = 5
+      # Process models with a semaphore-style approach
+      max_concurrency = 10
       timeout_per_model = 120_000
+
+      IO.puts("\nProcessing #{length(models)} models with max concurrency of #{max_concurrency}...")
 
       results =
         models
-        |> Enum.chunk_every(batch_size)
-        |> Enum.flat_map(fn batch ->
-          IO.puts("\nProcessing batch of #{length(batch)} models...")
+        |> Task.async_stream(
+          fn %Model{id: id, invoke: invoke_fn} = model ->
+            input = test_input_for_model(model)
+            IO.puts("  Starting model #{id}...")
+            start_time = System.monotonic_time(:millisecond)
 
-          # Start all tasks in the batch
-          tasks =
-            Enum.map(batch, fn %Model{id: id, invoke: invoke_fn} = model ->
-              input = test_input_for_model(model)
-              IO.write("  Starting model #{id}... ")
+            result =
+              try do
+                invoke_fn.(model, input, api_key)
+              rescue
+                e -> {:error, Exception.message(e)}
+              end
 
-              task =
-                Task.async(fn ->
-                  start_time = System.monotonic_time(:millisecond)
+            duration = System.monotonic_time(:millisecond) - start_time
+            {id, result, duration}
+          end,
+          max_concurrency: max_concurrency,
+          timeout: timeout_per_model,
+          ordered: false
+        )
+        |> Enum.map(fn
+          {:ok, {id, result, duration}} ->
+            {id, result, duration}
 
-                  result =
-                    try do
-                      invoke_fn.(model, input, api_key)
-                    rescue
-                      e -> {:error, Exception.message(e)}
-                    end
+          {:exit, :timeout} ->
+            # When we get a timeout, we don't know which model it was
+            # so we need to track this differently
+            {"unknown", {:error, :timeout}, timeout_per_model}
 
-                  duration = System.monotonic_time(:millisecond) - start_time
-                  {id, result, duration}
-                end)
-
-              {task, id}
-            end)
-
-          # Wait for all tasks in the batch to complete
-          Enum.map(tasks, fn {task, id} ->
-            case Task.yield(task, timeout_per_model) || Task.shutdown(task, :brutal_kill) do
-              {:ok, {^id, result, duration}} ->
-                {id, result, duration}
-
-              nil ->
-                IO.puts("✗ timed out")
-                {id, {:error, :timeout}, timeout_per_model}
-            end
-          end)
+          {:exit, reason} ->
+            {"unknown", {:error, {:exit, reason}}, 0}
         end)
 
       # Print results summary
@@ -106,7 +100,10 @@ defmodule Panic.PlatformsTest do
         |> Enum.reduce({0, 0, 0}, fn {id, result, duration}, {succ, accept, fail} ->
           case result do
             {:ok, output} ->
-              IO.puts("✓ #{id}: succeeded in #{:erlang.float_to_binary(duration / 1000, decimals: 1)}s")
+              IO.puts(
+                "✓ #{id}: succeeded in #{:erlang.float_to_binary(duration / 1000, decimals: 1)}s"
+              )
+
               assert is_binary(output), "Expected string output for model #{id}"
               assert String.match?(output, ~r/\S/), "Expected non-empty output for model #{id}"
               {succ + 1, accept, fail}
@@ -174,45 +171,48 @@ defmodule Panic.PlatformsTest do
 
     test "imagen-4-fast generates valid image URLs", %{api_key: api_key} do
       %Model{invoke: invoke_fn} = model = Model.by_id!("imagen-4-fast")
-      
+
       # Verify model configuration
       assert model.name == "Imagen 4 Fast"
       assert model.platform == Replicate
       assert model.path == "google/imagen-4-fast"
       assert model.input_type == :text
       assert model.output_type == :image
-      
+
       # Test with a simple prompt
       test_prompt = "a beautiful sunset over mountains"
-      
+
       IO.puts("\n=== Testing Imagen 4 Fast ===")
       IO.puts("Prompt: #{test_prompt}")
       start_time = System.monotonic_time(:millisecond)
-      
+
       # First, let's call Replicate.invoke directly to see the raw response
       input_params = %{
         prompt: test_prompt,
         aspect_ratio: "16:9",
         safety_filter_level: "block_only_high"
       }
-      
+
       IO.puts("Calling Replicate.invoke directly...")
       raw_result = Replicate.invoke(model, input_params, api_key)
       IO.puts("Raw response: #{inspect(raw_result, pretty: true, limit: :infinity)}")
-      
+
       # Now test through the model's invoke function
       IO.puts("\nCalling model.invoke...")
       result = invoke_fn.(model, test_prompt, api_key)
-      
+
       duration = System.monotonic_time(:millisecond) - start_time
       IO.puts("Completed in #{duration}ms")
-      
+
       case result do
         {:ok, image_url} ->
           assert is_binary(image_url), "Expected string output"
-          assert String.match?(image_url, ~r|^https://.*$|), "Expected valid HTTPS URL, got: #{image_url}"
+
+          assert String.match?(image_url, ~r|^https://.*$|),
+                 "Expected valid HTTPS URL, got: #{image_url}"
+
           IO.puts("Successfully generated image: #{image_url}")
-          
+
         {:error, reason} ->
           IO.puts("ERROR: #{inspect(reason)}")
           flunk("Failed to invoke Imagen 4 Fast: #{inspect(reason)}")
@@ -264,7 +264,9 @@ defmodule Panic.PlatformsTest do
 
     test "models follow instructions precisely", %{api_key: api_key} do
       models = Model.all(platform: OpenAI)
-      test_prompt = "Respond with just the word 'bananaphone'. Do not include any other content (even punctuation)."
+
+      test_prompt =
+        "Respond with just the word 'bananaphone'. Do not include any other content (even punctuation)."
 
       for %Model{id: id, invoke: invoke_fn} = model <- models do
         assert {:ok, output} = invoke_fn.(model, test_prompt, api_key),
