@@ -70,6 +70,9 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
                 <th class="p-0 pb-2 pl-4 pr-6 font-normal w-20">Index</th>
                 <th class="p-0 pb-2 pr-6 font-normal">Model Name</th>
                 <th class="p-0 pb-2 pr-6 font-normal w-24">Type</th>
+                <th class="p-0 pb-2 pr-4 w-24">
+                  <span class="sr-only">Reorder</span>
+                </th>
                 <th class="p-0 pb-2 pr-4 w-20">
                   <span class="sr-only">Actions</span>
                 </th>
@@ -91,6 +94,44 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
                     ]}>
                       {model.input_type} → {model.output_type}
                     </span>
+                  </td>
+                  <td class="relative p-0 py-2 pr-4">
+                    <div class="flex items-center gap-1">
+                      <button
+                        type="button"
+                        phx-click="move_model_up"
+                        phx-value-index={index}
+                        phx-target={@myself}
+                        disabled={index == 0}
+                        class={[
+                          "text-zinc-400",
+                          if index == 0 do
+                            "opacity-30 cursor-not-allowed"
+                          else
+                            "hover:text-purple-400"
+                          end
+                        ]}
+                      >
+                        <.icon name="hero-chevron-up" class="size-4" />
+                      </button>
+                      <button
+                        type="button"
+                        phx-click="move_model_down"
+                        phx-value-index={index}
+                        phx-target={@myself}
+                        disabled={index == length(@draft_models) - 1}
+                        class={[
+                          "text-zinc-400",
+                          if index == length(@draft_models) - 1 do
+                            "opacity-30 cursor-not-allowed"
+                          else
+                            "hover:text-purple-400"
+                          end
+                        ]}
+                      >
+                        <.icon name="hero-chevron-down" class="size-4" />
+                      </button>
+                    </div>
                   </td>
                   <td class="relative p-0 py-2 pr-4 text-right">
                     <button
@@ -317,6 +358,60 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
      )}
   end
 
+  @impl true
+  def handle_event("move_model_up", %{"index" => index_str}, socket) do
+    index = String.to_integer(index_str)
+
+    if index > 0 do
+      updated_models = swap_models(socket.assigns.draft_models, index, index - 1)
+      next_input = get_next_input_type(updated_models)
+      model_options = get_model_options("", next_input)
+
+      # Validate the updated draft
+      {validation_result, validation_error} = validate_network(updated_models)
+      has_changes = updated_models != socket.assigns.saved_models
+
+      {:noreply,
+       assign(socket,
+         draft_models: updated_models,
+         next_input: next_input,
+         model_options: model_options,
+         validation_result: validation_result,
+         validation_error: validation_error,
+         has_changes: has_changes
+       )}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("move_model_down", %{"index" => index_str}, socket) do
+    index = String.to_integer(index_str)
+
+    if index < length(socket.assigns.draft_models) - 1 do
+      updated_models = swap_models(socket.assigns.draft_models, index, index + 1)
+      next_input = get_next_input_type(updated_models)
+      model_options = get_model_options("", next_input)
+
+      # Validate the updated draft
+      {validation_result, validation_error} = validate_network(updated_models)
+      has_changes = updated_models != socket.assigns.saved_models
+
+      {:noreply,
+       assign(socket,
+         draft_models: updated_models,
+         next_input: next_input,
+         model_options: model_options,
+         validation_result: validation_result,
+         validation_error: validation_error,
+         has_changes: has_changes
+       )}
+    else
+      {:noreply, socket}
+    end
+  end
+
   # Returns tuples {label, value} for LiveSelect compatibility
   defp get_model_options(search_term, input_type) do
     [input_type: input_type]
@@ -325,6 +420,15 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
       String.downcase(model.name) =~ String.downcase(search_term)
     end)
     |> Enum.map(fn model -> {model.name, model.id} end)
+  end
+
+  defp swap_models(models, index1, index2) do
+    model1 = Enum.at(models, index1)
+    model2 = Enum.at(models, index2)
+
+    models
+    |> List.replace_at(index1, model2)
+    |> List.replace_at(index2, model1)
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
