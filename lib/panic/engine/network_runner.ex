@@ -447,11 +447,16 @@ defmodule Panic.Engine.NetworkRunner do
 
     case Engine.prepare_next(invocation, opts) do
       {:ok, next_invocation} ->
-        # Archive if needed (async)
-        model = Panic.Model.by_id!(invocation.model)
-
-        if model.output_type in [:image, :audio] do
-          archive_invocation_async(invocation, next_invocation)
+        # Archive if needed (async) - handle missing models gracefully
+        case Panic.Model.by_id(invocation.model) do
+          nil ->
+            # Model doesn't exist, skip archiving
+            :ok
+            
+          model ->
+            if model.output_type in [:image, :audio] do
+              archive_invocation_async(invocation, next_invocation)
+            end
         end
 
         # Dispatch to Vestaboard watchers and check if any were dispatched

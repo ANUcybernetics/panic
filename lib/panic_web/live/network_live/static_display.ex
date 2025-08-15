@@ -12,11 +12,18 @@ defmodule PanicWeb.NetworkLive.StaticDisplay do
   @impl true
   def render(assigns) do
     ~H"""
-    <.invocation
-      invocation={@invocation}
-      model={Panic.Model.by_id!(@invocation.model)}
-      id={"invocation-#{@invocation.id}"}
-    />
+    <%= if model = Panic.Model.by_id(@invocation.model) do %>
+      <.invocation
+        invocation={@invocation}
+        model={model}
+        id={"invocation-#{@invocation.id}"}
+      />
+    <% else %>
+      <div class="text-center py-8 text-gray-500">
+        <p>This invocation uses a model that no longer exists.</p>
+        <p class="text-sm mt-2">Model ID: {@invocation.model}</p>
+      </div>
+    <% end %>
     """
   end
 

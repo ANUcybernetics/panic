@@ -135,22 +135,32 @@ defmodule PanicWeb.AdminLive do
 
   defp invocation_io_link(%{type: :input} = assigns) do
     ~H"""
-    <%= case Panic.Model.by_id!(@invocation.model) |> Map.fetch!(:input_type) do %>
-      <% :text -> %>
-        {@invocation.input}
-      <% _ -> %>
-        <.link href={@invocation.input}>external link</.link>
+    <%= case Panic.Model.by_id(@invocation.model) do %>
+      <% nil -> %>
+        <span class="text-gray-500 italic">Model not found</span>
+      <% model -> %>
+        <%= case Map.fetch!(model, :input_type) do %>
+          <% :text -> %>
+            {@invocation.input}
+          <% _ -> %>
+            <.link href={@invocation.input}>external link</.link>
+        <% end %>
     <% end %>
     """
   end
 
   defp invocation_io_link(%{type: :output} = assigns) do
     ~H"""
-    <%= case Panic.Model.by_id!(@invocation.model) |> Map.fetch!(:output_type) do %>
-      <% :text -> %>
-        {@invocation.output}
-      <% _ -> %>
-        <.link href={@invocation.output}>external link</.link>
+    <%= case Panic.Model.by_id(@invocation.model) do %>
+      <% nil -> %>
+        <span class="text-gray-500 italic">Model not found</span>
+      <% model -> %>
+        <%= case Map.fetch!(model, :output_type) do %>
+          <% :text -> %>
+            {@invocation.output}
+          <% _ -> %>
+            <.link href={@invocation.output}>external link</.link>
+        <% end %>
     <% end %>
     """
   end

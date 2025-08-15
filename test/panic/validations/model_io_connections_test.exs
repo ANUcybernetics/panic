@@ -176,10 +176,10 @@ defmodule Panic.Validations.ModelIOConnectionsTest do
   describe "edge cases" do
     test "handles model lookup failures gracefully" do
       # Test with invalid model ID
-      # Should raise a RuntimeError when model doesn't exist
-      assert_raise RuntimeError, fn ->
-        ModelIOConnections.network_runnable?(["invalid-model-id"])
-      end
+      # Should return error message when model doesn't exist
+      assert {:error, message} = ModelIOConnections.network_runnable?(["invalid-model-id"])
+      assert message =~ "Network contains models that no longer exist"
+      assert message =~ "invalid-model-id"
     end
 
     test "validates all text->text models properly" do

@@ -57,8 +57,15 @@ defmodule Panic.Engine.Changes.InvokeModel do
   end
 
   defp perform_invocation(changeset, model_id, input, _context) do
-    model = Panic.Model.by_id!(model_id)
-    %Panic.Model{path: _path, invoke: invoke_fn, platform: platform} = model
+    case Panic.Model.by_id(model_id) do
+      nil ->
+        # Model doesn't exist anymore
+        changeset
+        |> Ash.Changeset.add_error("Model with ID '#{model_id}' no longer exists")
+        |> Ash.Changeset.put_context(:invocation_success, false)
+      
+      model ->
+        %Panic.Model{path: _path, invoke: invoke_fn, platform: platform} = model
 
     # Always use the network owner's tokens, not the current actor's
     # Load the network and its owner
@@ -102,6 +109,7 @@ defmodule Panic.Engine.Changes.InvokeModel do
         changeset
         |> Ash.Changeset.add_error(reason)
         |> Ash.Changeset.put_context(:invocation_success, false)
+    end
     end
   end
 

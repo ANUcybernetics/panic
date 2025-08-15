@@ -184,7 +184,11 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
 
   @impl true
   def update(assigns, socket) do
-    saved_models = Enum.map(assigns.network.models, &Model.by_id!/1)
+    # Handle missing models gracefully - filter out any that don't exist
+    saved_models = 
+      assigns.network.models
+      |> Enum.map(&Model.by_id/1)
+      |> Enum.reject(&is_nil/1)
 
     # Initialize draft models from saved models if not already set
     draft_models =
@@ -242,34 +246,40 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
     # LiveSelect sends both text_input and the actual value
     case params do
       %{"network" => %{"model_select" => model_id}} when model_id != "" and model_id != nil ->
-        model = Model.by_id!(model_id)
-        updated_models = socket.assigns.draft_models ++ [model]
-        next_input = model.output_type
-        model_options = get_model_options("", next_input)
+        case Model.by_id(model_id) do
+          nil ->
+            # Model not found - just ignore the selection
+            {:noreply, socket}
+          
+          model ->
+            updated_models = socket.assigns.draft_models ++ [model]
+            next_input = model.output_type
+            model_options = get_model_options("", next_input)
 
-        # Validate the updated draft
-        {validation_result, validation_error} = validate_network(updated_models)
-        has_changes = updated_models != socket.assigns.saved_models
+            # Validate the updated draft
+            {validation_result, validation_error} = validate_network(updated_models)
+            has_changes = updated_models != socket.assigns.saved_models
 
-        # Clear the LiveSelect input and update options for next input type
-        send_update(LiveSelect.Component,
-          id: "model-select-input",
-          value: nil,
-          options: model_options
-        )
+            # Clear the LiveSelect input and update options for next input type
+            send_update(LiveSelect.Component,
+              id: "model-select-input",
+              value: nil,
+              options: model_options
+            )
 
-        {:noreply,
-         socket
-         |> assign(
-           draft_models: updated_models,
-           next_input: next_input,
-           model_options: model_options,
-           validation_result: validation_result,
-           validation_error: validation_error,
-           has_changes: has_changes
-         )
-         |> assign_form()
-         |> push_event("js-exec", %{to: "#model-select-wrapper", attr: "data-refocus"})}
+            {:noreply,
+             socket
+             |> assign(
+               draft_models: updated_models,
+               next_input: next_input,
+               model_options: model_options,
+               validation_result: validation_result,
+               validation_error: validation_error,
+               has_changes: has_changes
+             )
+             |> assign_form()
+             |> push_event("js-exec", %{to: "#model-select-wrapper", attr: "data-refocus"})}
+        end
 
       _ ->
         # Ignore empty selections or text input changes

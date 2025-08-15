@@ -79,6 +79,21 @@ defmodule Panic.ModelTest do
     end
   end
 
+  describe "Model.by_id/1" do
+    test "retrieves specific models by ID" do
+      # Test with a known dummy model
+      model = Model.by_id("dummy-t2t")
+      assert model.id == "dummy-t2t"
+      assert model.platform == Panic.Platforms.Dummy
+      assert model.input_type == :text
+      assert model.output_type == :text
+    end
+
+    test "returns nil for unknown model ID" do
+      assert Model.by_id("nonexistent-model") == nil
+    end
+  end
+
   describe "Model utility functions" do
     test "model_url/1 returns correct URLs for different platforms" do
       dummy_model = Model.by_id!("dummy-t2t")

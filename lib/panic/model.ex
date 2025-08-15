@@ -1082,6 +1082,14 @@ defmodule Panic.Model do
     end)
   end
 
+  def by_id(id) do
+    case all(id: id) do
+      [] -> nil
+      [model] -> model
+      _ -> nil
+    end
+  end
+
   def by_id!(id) do
     case all(id: id) do
       [] -> raise "no model found with id #{id}"

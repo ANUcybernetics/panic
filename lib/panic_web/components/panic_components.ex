@@ -177,9 +177,10 @@ defmodule PanicWeb.PanicComponents do
       </div>
       <.invocation
         :for={{id, invocation} <- @invocations}
+        :if={Model.by_id(invocation.model)}
         id={id}
         invocation={invocation}
-        model={Model.by_id!(invocation.model)}
+        model={Model.by_id(invocation.model)}
       />
     </div>
     """
