@@ -21,6 +21,39 @@ defmodule PanicWeb.AboutLiveTest do
       assert html =~ "About PANIC!"
     end
 
+    test "loads and renders markdown file content", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/about")
+
+      # The initial HTML might not have the content, so we need to get the rendered view
+      rendered = render(view)
+      
+      # Verify the markdown file is loaded and rendered
+      # Check for specific content from the about.md file
+      assert rendered =~ "PANIC!"
+      assert rendered =~ "layground"  # Part of "Playground"
+      assert rendered =~ "nteractive"  # Part of "Interactive"
+      assert rendered =~ "reativity"  # Part of "Creativity"
+      
+      # Verify it's rendered as HTML (markdown converted)
+      assert rendered =~ "prose-purple"
+      
+      # Check that some of the markdown content is present
+      assert rendered =~ "feedback"
+      assert rendered =~ "generative AI" || rendered =~ "GenAI"
+    end
+
+    test "markdown file exists in priv directory" do
+      # This test verifies the file path resolution works correctly
+      file_path = Application.app_dir(:panic, "priv/static/md/about.md")
+      
+      assert File.exists?(file_path),
+             "Expected markdown file to exist at #{file_path}"
+      
+      # Verify we can read the file
+      assert {:ok, content} = File.read(file_path)
+      assert content =~ "PANIC!"
+    end
+
     test "can navigate to about page from home using PhoenixTest", %{conn: conn} do
       conn
       |> visit("/")

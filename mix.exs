@@ -10,7 +10,12 @@ defmodule Panic.MixProject do
       start_permanent: Mix.env() == :prod,
       consolidate_protocols: Mix.env() != :dev,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      releases: [
+        panic: [
+          priv_patterns: ["priv/static/**", "priv/repo/**"]
+        ]
+      ]
     ]
   end
 
