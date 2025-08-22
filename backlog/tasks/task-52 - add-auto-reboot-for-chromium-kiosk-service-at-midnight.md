@@ -1,7 +1,7 @@
 ---
 id: task-52
 title: add auto-reboot for chromium kiosk service at midnight
-status: To Do
+status: Done
 assignee: []
 created_date: "2025-08-18 01:05"
 labels: []

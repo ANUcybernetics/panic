@@ -289,9 +289,11 @@ EOF
 
 chmod +x "$USER_HOME/.config/labwc/autostart"
 
-# Enable the chromium service for the user by creating symlink
+# Enable the chromium service and timer for the user by creating symlinks
 mkdir -p "$USER_HOME/.config/systemd/user/default.target.wants"
+mkdir -p "$USER_HOME/.config/systemd/user/timers.target.wants"
 ln -sf "../chromium-kiosk.service" "$USER_HOME/.config/systemd/user/default.target.wants/"
+ln -sf "../chromium-restart.timer" "$USER_HOME/.config/systemd/user/timers.target.wants/"
 
 # Create minimal labwc config for kiosk mode
 cat > "$USER_HOME/.config/labwc/rc.xml" << 'EOF'
@@ -327,6 +329,30 @@ RestartSec=5
 
 [Install]
 WantedBy=default.target
+EOF
+
+# Create systemd timer to restart chromium at midnight daily
+cat > "$USER_HOME/.config/systemd/user/chromium-restart.service" << 'EOF'
+[Unit]
+Description=Restart Chromium Kiosk Browser
+Requires=chromium-kiosk.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl --user restart chromium-kiosk.service
+EOF
+
+cat > "$USER_HOME/.config/systemd/user/chromium-restart.timer" << 'EOF'
+[Unit]
+Description=Restart Chromium Kiosk at midnight daily
+Requires=chromium-kiosk.service
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=30
+
+[Install]
+WantedBy=timers.target
 EOF
 
 
