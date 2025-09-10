@@ -26,18 +26,15 @@ defmodule PanicWeb.NetworkLive.Show do
       </h2>
       <div class="flex space-x-4">
         <.link navigate={~p"/networks/#{@network}/edit"} phx-click={JS.push_focus()}>
-          <.button>Edit network</.button>
+          <.button>Edit</.button>
         </.link>
         <.link patch={~p"/networks/#{@network}/info/qr"} type="button">
-          <.button>QR code</.button>
+          <.button>QR</.button>
         </.link>
         <.link href={~p"/networks/#{@network}/terminal"} type="button">
           <.button>Terminal</.button>
         </.link>
-        <.link navigate={~p"/sign-out"} type="button">
-          <.button>Sign out</.button>
-        </.link>
-        <.button class="ring-purple-300 ring-2" phx-click="stop">
+        <.button class="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg px-3 py-2" phx-click="stop">
           Stop
         </.button>
       </div>

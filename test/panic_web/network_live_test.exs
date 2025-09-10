@@ -59,7 +59,7 @@ defmodule PanicWeb.NetworkLiveTest do
 
       conn
       |> visit("/networks/#{network.id}")
-      |> click_link("Edit network")
+      |> click_link("Edit")
       |> fill_in("Name", with: "Updated network name")
       |> fill_in("Description", with: "Updated description")
       |> submit()
