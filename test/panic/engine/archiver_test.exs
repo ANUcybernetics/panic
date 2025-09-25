@@ -1,5 +1,6 @@
 defmodule Panic.Engine.ArchiverTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
+  use Repatch.ExUnit
 
   alias Panic.Engine.Archiver
 
@@ -129,23 +130,25 @@ defmodule Panic.Engine.ArchiverTest do
   end
 
   describe "download_file/1" do
-    @tag :external_deps
-    test "downloads file from valid URL" do
-      # Use a simple HTTP service for testing
+    test "downloads file successfully with mocked Req" do
       url = "https://httpbin.org/robots.txt"
+      mock_content = "User-agent: *\nDisallow: /deny\n"
 
-      case Archiver.download_file(url) do
-        {:ok, filename} ->
-          assert File.exists?(filename)
-          content = File.read!(filename)
-          # httpbin.org robots.txt should contain some content
-          assert String.length(content) > 0
-          File.rm(filename)
+      # Use Repatch to mock the external HTTP call
+      Repatch.patch(Req, :get, fn ^url ->
+        {:ok, %{status: 200, body: mock_content}}
+      end)
 
-        {:error, _reason} ->
-          # Network might not be available in test environment
-          :ok
-      end
+      # Test the actual download_file function
+      {:ok, filename} = Archiver.download_file(url)
+
+      # Verify the file was created and has the expected content
+      assert File.exists?(filename)
+      assert File.read!(filename) == mock_content
+      assert Path.extname(filename) == ".txt"
+
+      # Clean up
+      File.rm(filename)
     end
 
     test "handles invalid URLs" do

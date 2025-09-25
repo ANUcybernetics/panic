@@ -107,8 +107,8 @@ defmodule Panic.TowerEmailTest do
       # Call the crash function
       assert :ok = Panic.trigger_test_crash()
 
-      # Wait for the background task to crash and Tower to process it
-      Process.sleep(1500)
+      # Wait for the background task to crash (1s delay) and Tower to process it (100ms)
+      Process.sleep(1100)
 
       # Check that an email was sent with the PANIC test message
       # The subject includes [panic][test] prefix
