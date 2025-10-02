@@ -34,7 +34,9 @@ defmodule PanicWeb.WatcherSubscriberTest do
       assert invocation_should_be_processed?(genesis, nil)
     end
 
-    test "non-genesis invocations should be processed when run_number matches", %{network: network} do
+    test "non-genesis invocations should be processed when run_number matches", %{
+      network: network
+    } do
       # Create genesis invocation first
       genesis = %Invocation{
         id: 1,
@@ -122,7 +124,10 @@ defmodule PanicWeb.WatcherSubscriberTest do
       refute invocation_should_be_processed?(non_genesis, nil)
     end
 
-    test "mid-run join should fetch genesis invocation for processing", %{user: user, network: network} do
+    test "mid-run join should fetch genesis invocation for processing", %{
+      user: user,
+      network: network
+    } do
       # Create a real genesis invocation in the database
       {:ok, genesis_invocation} =
         Ash.create(
@@ -203,7 +208,9 @@ defmodule PanicWeb.WatcherSubscriberTest do
       assert can_fetch_genesis_for_invocation?(second_second, network)
     end
 
-    property "all invocation states should be processed correctly for matching runs", %{network: network} do
+    property "all invocation states should be processed correctly for matching runs", %{
+      network: network
+    } do
       ExUnitProperties.check all(
                                run_number <- positive_integer(),
                                state <- member_of([:ready, :invoking, :completed, :failed])
@@ -333,7 +340,9 @@ defmodule PanicWeb.WatcherSubscriberTest do
   end
 
   describe "functional integration tests" do
-    test "invocation watcher properly handles run transitions in real scenario", %{network: network} do
+    test "invocation watcher properly handles run transitions in real scenario", %{
+      network: network
+    } do
       user = Ash.get!(Panic.Accounts.User, network.user_id, authorize?: false)
 
       # Create some invocations for testing
@@ -396,7 +405,9 @@ defmodule PanicWeb.WatcherSubscriberTest do
       assert should_filter_archive_url?(invocation)
     end
 
-    test "invocations with archive URL in both input and output should be filtered out", %{network: network} do
+    test "invocations with archive URL in both input and output should be filtered out", %{
+      network: network
+    } do
       invocation = %Invocation{
         id: 1,
         sequence_number: 0,
@@ -441,7 +452,9 @@ defmodule PanicWeb.WatcherSubscriberTest do
       refute should_filter_archive_url?(invocation)
     end
 
-    test "invocations with URLs that don't match archive prefix should not be filtered", %{network: network} do
+    test "invocations with URLs that don't match archive prefix should not be filtered", %{
+      network: network
+    } do
       invocation = %Invocation{
         id: 1,
         sequence_number: 0,
@@ -517,7 +530,9 @@ defmodule PanicWeb.WatcherSubscriberTest do
   defp should_filter_archive_url?(%Invocation{input: input, output: output}) do
     # Helper function that mirrors the logic in WatcherSubscriber
     archive_prefix = "https://fly.storage.tigris.dev/"
-    String.starts_with?(input || "", archive_prefix) or String.starts_with?(output || "", archive_prefix)
+
+    String.starts_with?(input || "", archive_prefix) or
+      String.starts_with?(output || "", archive_prefix)
   end
 
   defp should_show_invocation_for_display?(state, sequence_number, display) do

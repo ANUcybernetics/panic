@@ -19,18 +19,30 @@ defmodule Panic.Watcher.Changes.UpdateWatcher do
 
     case {current_watchers, watcher_name, updated_watcher} do
       {nil, _, _} ->
-        Ash.Changeset.add_error(changeset, field: :watchers, message: "watchers attribute is required")
+        Ash.Changeset.add_error(changeset,
+          field: :watchers,
+          message: "watchers attribute is required"
+        )
 
       {_, nil, _} ->
-        Ash.Changeset.add_error(changeset, field: :watcher_name, message: "watcher_name argument is required")
+        Ash.Changeset.add_error(changeset,
+          field: :watcher_name,
+          message: "watcher_name argument is required"
+        )
 
       {_, _, nil} ->
-        Ash.Changeset.add_error(changeset, field: :updated_watcher, message: "updated_watcher argument is required")
+        Ash.Changeset.add_error(changeset,
+          field: :updated_watcher,
+          message: "updated_watcher argument is required"
+        )
 
       {watchers, name, updated} ->
         case Enum.find_index(watchers, &(&1.name == name)) do
           nil ->
-            Ash.Changeset.add_error(changeset, field: :watcher_name, message: "watcher with name '#{name}' not found")
+            Ash.Changeset.add_error(changeset,
+              field: :watcher_name,
+              message: "watcher with name '#{name}' not found"
+            )
 
           index ->
             new_watchers = List.replace_at(watchers, index, updated)

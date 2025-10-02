@@ -18,10 +18,16 @@ defmodule Panic.Watcher.Changes.AddWatcher do
 
     case {current_watchers, watcher} do
       {nil, _} ->
-        Ash.Changeset.add_error(changeset, field: :watchers, message: "watchers attribute is required")
+        Ash.Changeset.add_error(changeset,
+          field: :watchers,
+          message: "watchers attribute is required"
+        )
 
       {_, nil} ->
-        Ash.Changeset.add_error(changeset, field: :watcher, message: "watcher argument is required")
+        Ash.Changeset.add_error(changeset,
+          field: :watcher,
+          message: "watcher argument is required"
+        )
 
       {watchers, watcher} ->
         new_watchers = watchers ++ [watcher]

@@ -82,7 +82,10 @@ defmodule PanicWeb.InstallationLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit Installation")
-    |> assign(:installation, Ash.get!(Installation, id, actor: socket.assigns.current_user, load: [:network]))
+    |> assign(
+      :installation,
+      Ash.get!(Installation, id, actor: socket.assigns.current_user, load: [:network])
+    )
   end
 
   defp apply_action(socket, :new, _params) do

@@ -109,7 +109,10 @@ defmodule PanicWeb.Helpers do
   """
   def stop_all_network_runners do
     # Get all running NetworkRunner processes
-    registry_entries = Registry.select(Panic.Engine.NetworkRegistry, [{{:"$1", :"$2", :"$3"}, [], [{{:"$1", :"$2"}}]}])
+    registry_entries =
+      Registry.select(Panic.Engine.NetworkRegistry, [
+        {{:"$1", :"$2", :"$3"}, [], [{{:"$1", :"$2"}}]}
+      ])
 
     # Stop each NetworkRunner
     pids =

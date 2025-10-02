@@ -29,7 +29,12 @@ defmodule PanicWeb.AdminLiveTest do
   end
 
   describe "stop_all_jobs" do
-    test "stops all running NetworkRunner jobs", %{conn: conn, user: _user, network1: network1, network2: network2} do
+    test "stops all running NetworkRunner jobs", %{
+      conn: conn,
+      user: _user,
+      network1: network1,
+      network2: network2
+    } do
       # Start some NetworkRunner processes
       {:ok, _} = NetworkRunner.start_run(network1.id, "test prompt 1")
       {:ok, _} = NetworkRunner.start_run(network2.id, "test prompt 2")

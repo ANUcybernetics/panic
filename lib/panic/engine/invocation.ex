@@ -22,38 +22,6 @@ defmodule Panic.Engine.Invocation do
     plural_name :invocations
   end
 
-  attributes do
-    integer_primary_key :id
-
-    attribute :input, :string, allow_nil?: false
-
-    attribute :state, :atom do
-      constraints one_of: [:ready, :invoking, :completed, :failed]
-      allow_nil? false
-      default :ready
-    end
-
-    attribute :model, :string, allow_nil?: false
-    attribute :metadata, :map, allow_nil?: false, default: %{}
-    attribute :output, :string
-
-    attribute :sequence_number, :integer do
-      constraints min: 0
-      allow_nil? false
-    end
-
-    attribute :run_number, :integer do
-      constraints min: 0
-    end
-
-    create_timestamp :inserted_at
-    update_timestamp :updated_at
-  end
-
-  identities do
-    identity :unique_in_run, [:network_id, :run_number, :sequence_number]
-  end
-
   actions do
     defaults [:read, :destroy]
 
@@ -143,10 +111,6 @@ defmodule Panic.Engine.Invocation do
     end
   end
 
-  relationships do
-    belongs_to :network, Network, allow_nil?: false
-  end
-
   policies do
     policy action_type(:create) do
       authorize_if always()
@@ -173,5 +137,41 @@ defmodule Panic.Engine.Invocation do
     module PanicWeb.Endpoint
     prefix "invocation"
     publish_all :update, [:network_id]
+  end
+
+  attributes do
+    integer_primary_key :id
+
+    attribute :input, :string, allow_nil?: false
+
+    attribute :state, :atom do
+      constraints one_of: [:ready, :invoking, :completed, :failed]
+      allow_nil? false
+      default :ready
+    end
+
+    attribute :model, :string, allow_nil?: false
+    attribute :metadata, :map, allow_nil?: false, default: %{}
+    attribute :output, :string
+
+    attribute :sequence_number, :integer do
+      constraints min: 0
+      allow_nil? false
+    end
+
+    attribute :run_number, :integer do
+      constraints min: 0
+    end
+
+    create_timestamp :inserted_at
+    update_timestamp :updated_at
+  end
+
+  relationships do
+    belongs_to :network, Network, allow_nil?: false
+  end
+
+  identities do
+    identity :unique_in_run, [:network_id, :run_number, :sequence_number]
   end
 end

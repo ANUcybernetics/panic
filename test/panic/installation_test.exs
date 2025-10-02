@@ -162,7 +162,14 @@ defmodule Panic.InstallationTest do
     test "reorders watchers", %{user: user, network: network} do
       watcher1 = %{type: :grid, name: "reorder-grid", rows: 2, columns: 3}
       watcher2 = %{type: :single, name: "reorder-single", stride: 3, offset: 1}
-      watcher3 = %{type: :vestaboard, name: "reorder-board", stride: 1, offset: 0, vestaboard_name: :panic_1}
+
+      watcher3 = %{
+        type: :vestaboard,
+        name: "reorder-board",
+        stride: 1,
+        offset: 0,
+        vestaboard_name: :panic_1
+      }
 
       {:ok, installation} =
         Installation
@@ -246,7 +253,8 @@ defmodule Panic.InstallationTest do
                |> Ash.Changeset.for_update(:remove_watcher, %{watcher_name: "non-existent"}, actor: user)
                |> Ash.update()
 
-      assert %{watcher_name: ["watcher with name 'non-existent' not found"]} = errors_on(changeset)
+      assert %{watcher_name: ["watcher with name 'non-existent' not found"]} =
+               errors_on(changeset)
     end
 
     test "handles empty watchers list when removing", %{user: user, network: network} do
@@ -308,7 +316,9 @@ defmodule Panic.InstallationTest do
                  %{
                    name: "Test Installation",
                    network_id: network.id,
-                   watchers: [%{type: :vestaboard, name: "missing-vestaboard-name", stride: 1, offset: 0}]
+                   watchers: [
+                     %{type: :vestaboard, name: "missing-vestaboard-name", stride: 1, offset: 0}
+                   ]
                  },
                  actor: user
                )
@@ -395,7 +405,10 @@ defmodule Panic.InstallationTest do
                |> Ash.create()
     end
 
-    test "user cannot create installation for another user's network", %{user1: user, network2: network} do
+    test "user cannot create installation for another user's network", %{
+      user1: user,
+      network2: network
+    } do
       assert {:error, %Invalid{}} =
                Installation
                |> Ash.Changeset.for_create(
@@ -426,7 +439,11 @@ defmodule Panic.InstallationTest do
       assert found.id == installation.id
     end
 
-    test "user cannot read another user's installations", %{user1: user1, user2: user2, network2: network} do
+    test "user cannot read another user's installations", %{
+      user1: user1,
+      user2: user2,
+      network2: network
+    } do
       {:ok, installation} =
         Installation
         |> Ash.Changeset.for_create(
@@ -464,7 +481,11 @@ defmodule Panic.InstallationTest do
       assert updated.name == "Updated Name"
     end
 
-    test "user cannot update another user's installations", %{user1: user1, user2: user2, network2: network} do
+    test "user cannot update another user's installations", %{
+      user1: user1,
+      user2: user2,
+      network2: network
+    } do
       {:ok, installation} =
         Installation
         |> Ash.Changeset.for_create(
@@ -497,7 +518,11 @@ defmodule Panic.InstallationTest do
       assert :ok = Ash.destroy(installation, actor: user)
     end
 
-    test "user cannot destroy another user's installations", %{user1: user1, user2: user2, network2: network} do
+    test "user cannot destroy another user's installations", %{
+      user1: user1,
+      user2: user2,
+      network2: network
+    } do
       {:ok, installation} =
         Installation
         |> Ash.Changeset.for_create(

@@ -34,7 +34,10 @@ defmodule PanicWeb.NetworkLive.Show do
         <.link href={~p"/networks/#{@network}/terminal"} type="button">
           <.button>Terminal</.button>
         </.link>
-        <.button class="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg px-3 py-2" phx-click="stop">
+        <.button
+          class="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg px-3 py-2"
+          phx-click="stop"
+        >
           Stop
         </.button>
       </div>

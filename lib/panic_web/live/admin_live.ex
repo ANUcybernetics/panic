@@ -109,7 +109,10 @@ defmodule PanicWeb.AdminLive do
   @impl true
   def handle_event("stop_all_jobs", _params, socket) do
     # Get all running NetworkRunner processes from the registry
-    registry_entries = Registry.select(Panic.Engine.NetworkRegistry, [{{:"$1", :"$2", :"$3"}, [], [{{:"$1", :"$2"}}]}])
+    registry_entries =
+      Registry.select(Panic.Engine.NetworkRegistry, [
+        {{:"$1", :"$2", :"$3"}, [], [{{:"$1", :"$2"}}]}
+      ])
 
     # Stop each NetworkRunner
     stopped_count =

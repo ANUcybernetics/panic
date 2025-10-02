@@ -99,7 +99,9 @@ defmodule PanicWeb.TerminalAuthTest do
       params = %{"network_id" => "456", "token" => token}
 
       assert {:error, socket} = TerminalAuth.validate_token_in_socket(params, socket)
-      assert socket.redirected == {:live, :redirect, %{kind: :push, to: "/networks/456/terminal/expired"}}
+
+      assert socket.redirected ==
+               {:live, :redirect, %{kind: :push, to: "/networks/456/terminal/expired"}}
     end
 
     test "rejects expired token", %{socket: socket} do
@@ -115,21 +117,27 @@ defmodule PanicWeb.TerminalAuthTest do
       params = %{"network_id" => network_id, "token" => expired_token}
 
       assert {:error, socket} = TerminalAuth.validate_token_in_socket(params, socket)
-      assert socket.redirected == {:live, :redirect, %{kind: :push, to: "/networks/123/terminal/expired"}}
+
+      assert socket.redirected ==
+               {:live, :redirect, %{kind: :push, to: "/networks/123/terminal/expired"}}
     end
 
     test "rejects invalid token", %{socket: socket} do
       params = %{"network_id" => "123", "token" => "invalid"}
 
       assert {:error, socket} = TerminalAuth.validate_token_in_socket(params, socket)
-      assert socket.redirected == {:live, :redirect, %{kind: :push, to: "/networks/123/terminal/expired"}}
+
+      assert socket.redirected ==
+               {:live, :redirect, %{kind: :push, to: "/networks/123/terminal/expired"}}
     end
 
     test "rejects missing token", %{socket: socket} do
       params = %{"network_id" => "123"}
 
       assert {:error, socket} = TerminalAuth.validate_token_in_socket(params, socket)
-      assert socket.redirected == {:live, :redirect, %{kind: :push, to: "/networks/123/terminal/expired"}}
+
+      assert socket.redirected ==
+               {:live, :redirect, %{kind: :push, to: "/networks/123/terminal/expired"}}
     end
 
     test "redirects to 404 for missing network_id", %{socket: socket} do

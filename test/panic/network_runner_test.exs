@@ -25,10 +25,14 @@ defmodule Panic.NetworkRunnerTest do
     user = Ash.Generator.seed!(User)
 
     # Create a test network using the code interface
-    network = Engine.create_network!("Test Network", "Test network for NetworkRunner tests", actor: user)
+    network =
+      Engine.create_network!("Test Network", "Test network for NetworkRunner tests", actor: user)
 
     # Set lockout_seconds to 1 for tests
-    network = network |> Ash.Changeset.for_update(:update, %{lockout_seconds: 1}, actor: user) |> Ash.update!()
+    network =
+      network
+      |> Ash.Changeset.for_update(:update, %{lockout_seconds: 1}, actor: user)
+      |> Ash.update!()
 
     # Update the network with a dummy model (models is flat array)
     network = Engine.update_models!(network, ["dummy-t2t"], actor: user)
@@ -233,7 +237,9 @@ defmodule Panic.NetworkRunnerTest do
       test_network = Engine.create_network!("Test Chaining Network", "Test network", actor: user)
 
       test_network =
-        test_network |> Ash.Changeset.for_update(:update, %{lockout_seconds: 1}, actor: user) |> Ash.update!()
+        test_network
+        |> Ash.Changeset.for_update(:update, %{lockout_seconds: 1}, actor: user)
+        |> Ash.update!()
 
       test_network = Engine.update_models!(test_network, ["dummy-t2t"], actor: user)
 
@@ -386,10 +392,13 @@ defmodule Panic.NetworkRunnerTest do
 
     test "respects network lockout settings", %{user: user} do
       # Create network with longer lockout for testing
-      custom_network = Engine.create_network!("Custom Lockout Network", "Test network", actor: user)
+      custom_network =
+        Engine.create_network!("Custom Lockout Network", "Test network", actor: user)
 
       custom_network =
-        custom_network |> Ash.Changeset.for_update(:update, %{lockout_seconds: 2}, actor: user) |> Ash.update!()
+        custom_network
+        |> Ash.Changeset.for_update(:update, %{lockout_seconds: 2}, actor: user)
+        |> Ash.update!()
 
       custom_network = Engine.update_models!(custom_network, ["dummy-t2t"], actor: user)
 

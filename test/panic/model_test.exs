@@ -145,7 +145,10 @@ defmodule Panic.ModelTest do
         model = Enum.find(dummy_models, &(&1.id == id))
         assert model != nil, "Model #{id} should exist"
         assert model.input_type == input_type, "Model #{id} should have input_type #{input_type}"
-        assert model.output_type == output_type, "Model #{id} should have output_type #{output_type}"
+
+        assert model.output_type == output_type,
+               "Model #{id} should have output_type #{output_type}"
+
         assert model.platform == Dummy
         assert model.path =~ ~r/^dummy\//
         assert model.description =~ ~r/Dummy model for testing/
@@ -219,7 +222,9 @@ defmodule Panic.ModelTest do
       model = Model.by_id!("dummy-i2t")
 
       # Test with a dummy image URL
-      assert {:ok, caption} = model.invoke.(model, "https://dummy-images.test/abc123.png", "token")
+      assert {:ok, caption} =
+               model.invoke.(model, "https://dummy-images.test/abc123.png", "token")
+
       assert String.starts_with?(caption, "DUMMY_CAPTION:")
       assert String.contains?(caption, "abc123")
 

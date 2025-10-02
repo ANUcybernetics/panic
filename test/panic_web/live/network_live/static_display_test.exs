@@ -38,14 +38,20 @@ defmodule PanicWeb.NetworkLive.StaticDisplayTest do
       %{user: user, network: network, invocation: invocation}
     end
 
-    test "displays static invocation page for anonymous users", %{conn: conn, invocation: invocation} do
+    test "displays static invocation page for anonymous users", %{
+      conn: conn,
+      invocation: invocation
+    } do
       {:ok, view, _html} = live(conn, ~p"/display/static/#{invocation.id}")
 
       # The static display shows the invocation
       assert has_element?(view, "#invocation-#{invocation.id}")
     end
 
-    test "displays static invocation page for authenticated users", %{conn: conn, invocation: invocation} do
+    test "displays static invocation page for authenticated users", %{
+      conn: conn,
+      invocation: invocation
+    } do
       %{conn: conn} = create_and_sign_in_user(%{conn: conn})
 
       {:ok, view, _html} = live(conn, ~p"/display/static/#{invocation.id}")

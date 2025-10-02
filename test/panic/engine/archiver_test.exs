@@ -30,7 +30,8 @@ defmodule Panic.Engine.ArchiverTest do
       temp_file = Path.join(System.tmp_dir(), "test_#{System.unique_integer()}.txt")
       File.write!(temp_file, "some text content")
 
-      assert {:error, "Unsupported file format: .txt"} = Archiver.convert_file(temp_file, "output")
+      assert {:error, "Unsupported file format: .txt"} =
+               Archiver.convert_file(temp_file, "output")
 
       File.rm(temp_file)
     end

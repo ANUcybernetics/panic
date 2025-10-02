@@ -13,15 +13,13 @@ alias Panic.Accounts.User
 # and so on) as they will fail if something goes wrong.
 
 # if there's no cybernetics user, create one
-case Ash.get(User, %{email: "socy@anu.edu.au"}) do
-  {:error, _} ->
-    pass = Application.get_env(:panic, :socy_user_pass)
+{:error, _} = Ash.get(User, %{email: "socy@anu.edu.au"})
+pass = Application.get_env(:panic, :socy_user_pass)
 
-    if pass do
-      Ash.create!(
-        User,
-        %{email: "socy@anu.edu.au", password: pass, password_confirmation: pass},
-        action: :register_with_password
-      )
-    end
+if pass do
+  Ash.create!(
+    User,
+    %{email: "socy@anu.edu.au", password: pass, password_confirmation: pass},
+    action: :register_with_password
+  )
 end

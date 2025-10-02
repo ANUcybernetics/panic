@@ -152,7 +152,8 @@ defmodule PanicWeb.InstallationLive.Show do
 
   @impl true
   def handle_params(%{"id" => id} = params, _, socket) do
-    installation = Ash.get!(Installation, id, actor: socket.assigns.current_user, load: [:network])
+    installation =
+      Ash.get!(Installation, id, actor: socket.assigns.current_user, load: [:network])
 
     {:noreply,
      socket
@@ -216,7 +217,8 @@ defmodule PanicWeb.InstallationLive.Show do
 
     # Count viewers that are viewing this specific watcher
     Enum.count(viewers, fn viewer ->
-      viewer[:installation_id] == to_string(installation.id) && viewer[:watcher_name] == watcher.name
+      viewer[:installation_id] == to_string(installation.id) &&
+        viewer[:watcher_name] == watcher.name
     end)
   end
 
@@ -227,6 +229,7 @@ defmodule PanicWeb.InstallationLive.Show do
 
       :single ->
         show_invoking = if watcher.show_invoking, do: " (shows invoking)", else: ""
+
         "Shows every #{ordinalize(watcher.stride)} invocation, offset #{watcher.offset}#{show_invoking}"
 
       :vestaboard ->

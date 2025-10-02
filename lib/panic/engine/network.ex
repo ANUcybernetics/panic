@@ -20,35 +20,6 @@ defmodule Panic.Engine.Network do
     plural_name :networks
   end
 
-  attributes do
-    integer_primary_key :id
-
-    # attribute :owner
-    attribute :name, :string do
-      allow_nil? false
-    end
-
-    attribute :description, :string
-
-    # :models is an ordered array of model id strings
-    attribute :models, {:array, :string} do
-      default []
-      allow_nil? false
-    end
-
-    attribute :slug, :string
-
-    attribute :lockout_seconds, :integer do
-      default 30
-      allow_nil? false
-    end
-
-    create_timestamp :inserted_at
-    update_timestamp :updated_at
-    # attribute :schedule
-    # attribute :backoff
-  end
-
   actions do
     defaults [:read, update: [:name, :description, :lockout_seconds]]
 
@@ -80,12 +51,6 @@ defmodule Panic.Engine.Network do
     end
   end
 
-  relationships do
-    belongs_to :user, Panic.Accounts.User, allow_nil?: false
-    has_many :invocations, Invocation
-    has_many :installations, Panic.Watcher.Installation
-  end
-
   policies do
     policy action_type(:create) do
       authorize_if relating_to_actor(:user)
@@ -102,5 +67,40 @@ defmodule Panic.Engine.Network do
     policy action_type(:destroy) do
       authorize_if relates_to_actor_via(:user)
     end
+  end
+
+  attributes do
+    integer_primary_key :id
+
+    # attribute :owner
+    attribute :name, :string do
+      allow_nil? false
+    end
+
+    attribute :description, :string
+
+    # :models is an ordered array of model id strings
+    attribute :models, {:array, :string} do
+      default []
+      allow_nil? false
+    end
+
+    attribute :slug, :string
+
+    attribute :lockout_seconds, :integer do
+      default 30
+      allow_nil? false
+    end
+
+    create_timestamp :inserted_at
+    update_timestamp :updated_at
+    # attribute :schedule
+    # attribute :backoff
+  end
+
+  relationships do
+    belongs_to :user, Panic.Accounts.User, allow_nil?: false
+    has_many :invocations, Invocation
+    has_many :installations, Panic.Watcher.Installation
   end
 end

@@ -12,18 +12,16 @@ defmodule Panic.Accounts.APIToken do
     authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub]
 
-  pub_sub do
-    module PanicWeb.Endpoint
-    prefix "api_token"
-
-    publish_all :create, ["created"]
-    publish_all :update, ["updated"]
-    publish_all :destroy, ["destroyed"]
-  end
-
   sqlite do
     table "api_tokens"
     repo Panic.Repo
+  end
+
+  code_interface do
+    define :create
+    define :read
+    define :update
+    define :destroy
   end
 
   actions do
@@ -62,6 +60,31 @@ defmodule Panic.Accounts.APIToken do
     destroy :destroy do
       primary? true
     end
+  end
+
+  policies do
+    # Allow users to read and manage tokens they own
+    policy action_type(:read) do
+      authorize_if relates_to_actor_via(:users)
+    end
+
+    # For create, just check that there's an actor
+    policy action_type(:create) do
+      authorize_if actor_present()
+    end
+
+    policy action_type([:update, :destroy]) do
+      authorize_if relates_to_actor_via(:users)
+    end
+  end
+
+  pub_sub do
+    module PanicWeb.Endpoint
+    prefix "api_token"
+
+    publish_all :create, ["created"]
+    publish_all :update, ["updated"]
+    publish_all :destroy, ["destroyed"]
   end
 
   attributes do
@@ -126,28 +149,5 @@ defmodule Panic.Accounts.APIToken do
       source_attribute :id
       destination_attribute :id
     end
-  end
-
-  policies do
-    # Allow users to read and manage tokens they own
-    policy action_type(:read) do
-      authorize_if relates_to_actor_via(:users)
-    end
-
-    # For create, just check that there's an actor
-    policy action_type(:create) do
-      authorize_if actor_present()
-    end
-
-    policy action_type([:update, :destroy]) do
-      authorize_if relates_to_actor_via(:users)
-    end
-  end
-
-  code_interface do
-    define :create
-    define :read
-    define :update
-    define :destroy
   end
 end

@@ -66,7 +66,9 @@ defmodule Panic.NetworkRunnerFileOpsTest do
 
       # Since upload_to_s3 is now private and used in async tasks,
       # we'll verify the URL format instead
-      expected_url = "https://fly.storage.tigris.dev/panic-invocation-outputs/#{Path.basename(tmp_file)}"
+      expected_url =
+        "https://fly.storage.tigris.dev/panic-invocation-outputs/#{Path.basename(tmp_file)}"
+
       assert {:ok, ^expected_url} = {:ok, expected_url}
       url = expected_url
 

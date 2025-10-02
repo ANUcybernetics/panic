@@ -33,26 +33,13 @@ defmodule Panic.Watcher.Installation do
   alias Panic.Engine.Network
   alias Panic.Watcher.Installation.Config
 
-  attributes do
-    integer_primary_key :id
-
-    attribute :name, :string do
-      allow_nil? false
-    end
-
-    attribute :watchers, {:array, Config} do
-      default []
-      allow_nil? false
-    end
-
-    create_timestamp :inserted_at
-    update_timestamp :updated_at
+  sqlite do
+    table "installations"
+    repo Panic.Repo
   end
 
-  relationships do
-    belongs_to :network, Network do
-      allow_nil? false
-    end
+  resource do
+    plural_name :installations
   end
 
   actions do
@@ -102,10 +89,6 @@ defmodule Panic.Watcher.Installation do
     end
   end
 
-  validations do
-    validate Panic.Watcher.Validations.UniqueWatcherNames
-  end
-
   policies do
     policy action_type(:create) do
       authorize_if actor_present()
@@ -116,18 +99,35 @@ defmodule Panic.Watcher.Installation do
     end
   end
 
-  resource do
-    plural_name :installations
-  end
-
   pub_sub do
     module PanicWeb.Endpoint
     prefix "installation"
     publish_all :update, [:id]
   end
 
-  sqlite do
-    table "installations"
-    repo Panic.Repo
+  validations do
+    validate Panic.Watcher.Validations.UniqueWatcherNames
+  end
+
+  attributes do
+    integer_primary_key :id
+
+    attribute :name, :string do
+      allow_nil? false
+    end
+
+    attribute :watchers, {:array, Config} do
+      default []
+      allow_nil? false
+    end
+
+    create_timestamp :inserted_at
+    update_timestamp :updated_at
+  end
+
+  relationships do
+    belongs_to :network, Network do
+      allow_nil? false
+    end
   end
 end

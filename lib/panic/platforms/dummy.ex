@@ -41,7 +41,9 @@ defmodule Panic.Platforms.Dummy do
       {:ok, "DUMMY_CAPTION: Image with hash #{hash}"}
     else
       # For any other image URL, generate a deterministic caption
-      hash = :md5 |> :crypto.hash(input) |> Base.encode16() |> String.downcase() |> String.slice(0..7)
+      hash =
+        :md5 |> :crypto.hash(input) |> Base.encode16() |> String.downcase() |> String.slice(0..7)
+
       {:ok, "DUMMY_CAPTION: A descriptive caption for image #{hash}"}
     end
   end
@@ -60,19 +62,33 @@ defmodule Panic.Platforms.Dummy do
 
   defp generate_output(:audio, :text, %{audio_file: audio_file, prompt: prompt}) do
     # Handle Gemini-style input with prompt
-    hash = :md5 |> :crypto.hash(audio_file <> prompt) |> Base.encode16() |> String.downcase() |> String.slice(0..7)
+    hash =
+      :md5
+      |> :crypto.hash(audio_file <> prompt)
+      |> Base.encode16()
+      |> String.downcase()
+      |> String.slice(0..7)
+
     {:ok, "DUMMY_DESCRIPTION: #{prompt} - Audio #{hash}"}
   end
 
   defp generate_output(:audio, :text, %{audio_file: audio_file}) do
     # Handle map with just audio_file key
-    hash = :md5 |> :crypto.hash(audio_file) |> Base.encode16() |> String.downcase() |> String.slice(0..7)
+    hash =
+      :md5
+      |> :crypto.hash(audio_file)
+      |> Base.encode16()
+      |> String.downcase()
+      |> String.slice(0..7)
+
     {:ok, "DUMMY_TRANSCRIPT: Audio content from #{hash}"}
   end
 
   defp generate_output(:audio, :text, input) when is_binary(input) do
     # Handle direct audio URL input
-    hash = :md5 |> :crypto.hash(input) |> Base.encode16() |> String.downcase() |> String.slice(0..7)
+    hash =
+      :md5 |> :crypto.hash(input) |> Base.encode16() |> String.downcase() |> String.slice(0..7)
+
     {:ok, "DUMMY_TRANSCRIPT: Audio content from #{hash}"}
   end
 

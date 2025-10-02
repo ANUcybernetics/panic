@@ -105,7 +105,10 @@ defmodule PanicWeb.NetworkLive.TerminalComponentTest do
       refute html =~ "Expected to receive either an"
     end
 
-    test "verifies the fix handles different error types correctly", %{conn: conn, network: network} do
+    test "verifies the fix handles different error types correctly", %{
+      conn: conn,
+      network: network
+    } do
       # This test verifies that the error handling in terminal_component.ex
       # properly handles both form errors and exceptions
 

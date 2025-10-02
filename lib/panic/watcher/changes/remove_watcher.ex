@@ -18,15 +18,24 @@ defmodule Panic.Watcher.Changes.RemoveWatcher do
 
     case {current_watchers, watcher_name} do
       {nil, _} ->
-        Ash.Changeset.add_error(changeset, field: :watchers, message: "watchers attribute is required")
+        Ash.Changeset.add_error(changeset,
+          field: :watchers,
+          message: "watchers attribute is required"
+        )
 
       {_, nil} ->
-        Ash.Changeset.add_error(changeset, field: :watcher_name, message: "watcher_name argument is required")
+        Ash.Changeset.add_error(changeset,
+          field: :watcher_name,
+          message: "watcher_name argument is required"
+        )
 
       {watchers, name} ->
         case Enum.find_index(watchers, &(&1.name == name)) do
           nil ->
-            Ash.Changeset.add_error(changeset, field: :watcher_name, message: "watcher with name '#{name}' not found")
+            Ash.Changeset.add_error(changeset,
+              field: :watcher_name,
+              message: "watcher with name '#{name}' not found"
+            )
 
           _index ->
             new_watchers = Enum.reject(watchers, &(&1.name == name))

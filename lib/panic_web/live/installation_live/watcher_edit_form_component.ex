@@ -92,7 +92,10 @@ defmodule PanicWeb.InstallationLive.WatcherEditFormComponent do
 
     form =
       AshPhoenix.Form.for_update(assigns.installation, :update_watcher,
-        params: %{updated_watcher: Map.from_struct(current_watcher), watcher_name: assigns.watcher_name},
+        params: %{
+          updated_watcher: Map.from_struct(current_watcher),
+          watcher_name: assigns.watcher_name
+        },
         actor: assigns.current_user,
         forms: [updated_watcher: [resource: Config, create_action: :create]]
       )

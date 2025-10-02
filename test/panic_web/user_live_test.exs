@@ -104,7 +104,9 @@ defmodule PanicWeb.UserLiveTest do
       # Create an installation for this network (this is enough to trigger FK constraint)
       installation =
         Installation
-        |> Ash.Changeset.for_create(:create, %{network_id: network.id, name: "Test Installation", watchers: []},
+        |> Ash.Changeset.for_create(
+          :create,
+          %{network_id: network.id, name: "Test Installation", watchers: []},
           actor: user
         )
         |> Ash.create!()

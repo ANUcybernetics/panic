@@ -86,7 +86,9 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :grid, name: "grid-with-stride", rows: 2, columns: 3, stride: 1}]
+                   watchers: [
+                     %{type: :grid, name: "grid-with-stride", rows: 2, columns: 3, stride: 1}
+                   ]
                  },
                  actor: user
                )
@@ -120,7 +122,15 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :grid, name: "grid-with-show-invoking", rows: 2, columns: 3, show_invoking: true}]
+                   watchers: [
+                     %{
+                       type: :grid,
+                       name: "grid-with-show-invoking",
+                       rows: 2,
+                       columns: 3,
+                       show_invoking: true
+                     }
+                   ]
                  },
                  actor: user
                )
@@ -177,7 +187,15 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test Single Show Invoking",
                    network_id: network.id,
-                   watchers: [%{type: :single, name: "single-show-invoking", stride: 2, offset: 1, show_invoking: true}]
+                   watchers: [
+                     %{
+                       type: :single,
+                       name: "single-show-invoking",
+                       stride: 2,
+                       offset: 1,
+                       show_invoking: true
+                     }
+                   ]
                  },
                  actor: user
                )
@@ -198,7 +216,15 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test Single No Invoking",
                    network_id: network.id,
-                   watchers: [%{type: :single, name: "single-no-invoking", stride: 1, offset: 0, show_invoking: false}]
+                   watchers: [
+                     %{
+                       type: :single,
+                       name: "single-no-invoking",
+                       stride: 1,
+                       offset: 0,
+                       show_invoking: false
+                     }
+                   ]
                  },
                  actor: user
                )
@@ -257,7 +283,9 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :single, name: "single-with-rows", stride: 3, offset: 1, rows: 2}]
+                   watchers: [
+                     %{type: :single, name: "single-with-rows", stride: 3, offset: 1, rows: 2}
+                   ]
                  },
                  actor: user
                )
@@ -428,7 +456,9 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :vestaboard, name: "missing-vestaboard-name", stride: 1, offset: 0}]
+                   watchers: [
+                     %{type: :vestaboard, name: "missing-vestaboard-name", stride: 1, offset: 0}
+                   ]
                  },
                  actor: user
                )
@@ -448,7 +478,13 @@ defmodule Panic.WatcherTest do
                    name: "Test",
                    network_id: network.id,
                    watchers: [
-                     %{type: :vestaboard, name: "invalid-board", stride: 1, offset: 0, vestaboard_name: :invalid_name}
+                     %{
+                       type: :vestaboard,
+                       name: "invalid-board",
+                       stride: 1,
+                       offset: 0,
+                       vestaboard_name: :invalid_name
+                     }
                    ]
                  },
                  actor: user
@@ -468,7 +504,13 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :vestaboard, name: "missing-stride-offset", vestaboard_name: :panic_1}]
+                   watchers: [
+                     %{
+                       type: :vestaboard,
+                       name: "missing-stride-offset",
+                       vestaboard_name: :panic_1
+                     }
+                   ]
                  },
                  actor: user
                )
@@ -516,7 +558,13 @@ defmodule Panic.WatcherTest do
                    name: "Test",
                    network_id: network.id,
                    watchers: [
-                     %{type: :vestaboard, name: "board-invalid-offset", stride: 2, offset: 2, vestaboard_name: :panic_1}
+                     %{
+                       type: :vestaboard,
+                       name: "board-invalid-offset",
+                       stride: 2,
+                       offset: 2,
+                       vestaboard_name: :panic_1
+                     }
                    ]
                  },
                  actor: user
@@ -536,7 +584,15 @@ defmodule Panic.WatcherTest do
                  %{
                    name: "Test",
                    network_id: network.id,
-                   watchers: [%{type: :single, name: "single-with-prompt", stride: 1, offset: 0, initial_prompt: true}]
+                   watchers: [
+                     %{
+                       type: :single,
+                       name: "single-with-prompt",
+                       stride: 1,
+                       offset: 0,
+                       initial_prompt: true
+                     }
+                   ]
                  },
                  actor: user
                )
@@ -560,7 +616,13 @@ defmodule Panic.WatcherTest do
                    watchers: [
                      %{type: :grid, name: "multi-grid", rows: 2, columns: 3},
                      %{type: :single, name: "multi-single", stride: 3, offset: 1},
-                     %{type: :vestaboard, name: "multi-board", stride: 1, offset: 0, vestaboard_name: :panic_1}
+                     %{
+                       type: :vestaboard,
+                       name: "multi-board",
+                       stride: 1,
+                       offset: 0,
+                       vestaboard_name: :panic_1
+                     }
                    ]
                  },
                  actor: user

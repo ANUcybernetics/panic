@@ -83,7 +83,10 @@ defmodule PanicWeb.Router do
 
     # Routes that need WatcherSubscriber (authenticated)
     ash_authentication_live_session :authentication_required_with_watcher,
-      on_mount: [{PanicWeb.LiveUserAuth, :live_user_required}, {PanicWeb.WatcherSubscriber, :auto}] do
+      on_mount: [
+        {PanicWeb.LiveUserAuth, :live_user_required},
+        {PanicWeb.WatcherSubscriber, :auto}
+      ] do
       scope "/networks" do
         # no "network list" view, because UserLive.Show fulfils that role
         live "/new", NetworkLive.Index, :new
@@ -105,7 +108,10 @@ defmodule PanicWeb.Router do
 
     # Routes that need WatcherSubscriber (optional auth)
     ash_authentication_live_session :authentication_optional_with_watcher,
-      on_mount: [{PanicWeb.LiveUserAuth, :live_user_optional}, {PanicWeb.WatcherSubscriber, :auto}] do
+      on_mount: [
+        {PanicWeb.LiveUserAuth, :live_user_optional},
+        {PanicWeb.WatcherSubscriber, :auto}
+      ] do
       scope "/networks" do
         live "/:network_id/info", NetworkLive.Info, :info
         live "/:network_id/terminal", NetworkLive.Terminal, :terminal

@@ -88,9 +88,9 @@ defmodule Panic.TestPerformance do
   More efficient than creating networks one by one.
   """
   def batch_create_networks(user, count) do
-    1..count
-    |> Enum.map(fn i ->
-      Panic.Generators.network_with_dummy_models(user)
+    Enum.map(1..count, fn i ->
+      user
+      |> Panic.Generators.network_with_dummy_models()
       |> StreamData.map(fn network ->
         Map.put(network, :name, "Test Network #{i}")
       end)

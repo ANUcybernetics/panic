@@ -25,60 +25,37 @@ defmodule Panic.Watcher.Installation.Config do
   use Ash.Resource,
     data_layer: :embedded
 
-  attributes do
-    attribute :type, :atom do
-      allow_nil? false
-      constraints one_of: [:grid, :single, :vestaboard]
-    end
-
-    # Name for all config types - human-readable, alphanumeric + hyphens
-    attribute :name, :string do
-      allow_nil? false
-      constraints match: ~r/^[a-zA-Z0-9-]+$/
-    end
-
-    # Grid-specific attributes
-    attribute :rows, :integer do
-      constraints min: 1
-    end
-
-    attribute :columns, :integer do
-      constraints min: 1
-    end
-
-    # Single/Vestaboard-specific attributes
-    attribute :stride, :integer do
-      constraints min: 1
-    end
-
-    attribute :offset, :integer do
-      constraints min: 0
-    end
-
-    # Single/Vestaboard-specific attributes
-    attribute :show_invoking, :boolean do
-      default false
-    end
-
-    # Vestaboard-specific attributes
-    attribute :vestaboard_name, :atom do
-      constraints one_of: [:panic_1, :panic_2, :panic_3, :panic_4]
-    end
-
-    attribute :initial_prompt, :boolean do
-      default false
-    end
-  end
-
   actions do
     create :create do
       primary? true
-      accept [:type, :name, :rows, :columns, :stride, :offset, :show_invoking, :vestaboard_name, :initial_prompt]
+
+      accept [
+        :type,
+        :name,
+        :rows,
+        :columns,
+        :stride,
+        :offset,
+        :show_invoking,
+        :vestaboard_name,
+        :initial_prompt
+      ]
     end
 
     update :update do
       primary? true
-      accept [:type, :name, :rows, :columns, :stride, :offset, :show_invoking, :vestaboard_name, :initial_prompt]
+
+      accept [
+        :type,
+        :name,
+        :rows,
+        :columns,
+        :stride,
+        :offset,
+        :show_invoking,
+        :vestaboard_name,
+        :initial_prompt
+      ]
     end
   end
 
@@ -122,5 +99,50 @@ defmodule Panic.Watcher.Installation.Config do
 
     # Ensure offset is less than stride for single and vestaboard types
     validate Panic.Watcher.Validations.OffsetLessThanStride
+  end
+
+  attributes do
+    attribute :type, :atom do
+      allow_nil? false
+      constraints one_of: [:grid, :single, :vestaboard]
+    end
+
+    # Name for all config types - human-readable, alphanumeric + hyphens
+    attribute :name, :string do
+      allow_nil? false
+      constraints match: ~r/^[a-zA-Z0-9-]+$/
+    end
+
+    # Grid-specific attributes
+    attribute :rows, :integer do
+      constraints min: 1
+    end
+
+    attribute :columns, :integer do
+      constraints min: 1
+    end
+
+    # Single/Vestaboard-specific attributes
+    attribute :stride, :integer do
+      constraints min: 1
+    end
+
+    attribute :offset, :integer do
+      constraints min: 0
+    end
+
+    # Single/Vestaboard-specific attributes
+    attribute :show_invoking, :boolean do
+      default false
+    end
+
+    # Vestaboard-specific attributes
+    attribute :vestaboard_name, :atom do
+      constraints one_of: [:panic_1, :panic_2, :panic_3, :panic_4]
+    end
+
+    attribute :initial_prompt, :boolean do
+      default false
+    end
   end
 end

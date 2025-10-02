@@ -77,7 +77,12 @@ defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
       %{network: network, user: user, token: token, installation: installation}
     end
 
-    test "can start run with vestaboard watcher configured", %{conn: conn, network: network, token: token, user: user} do
+    test "can start run with vestaboard watcher configured", %{
+      conn: conn,
+      network: network,
+      token: token,
+      user: user
+    } do
       # Access terminal as anonymous user with token
       {:ok, view, _html} =
         live(conn, "/networks/#{network.id}/terminal?token=#{token}")

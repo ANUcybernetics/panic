@@ -202,7 +202,8 @@ defmodule Panic.Validations.ModelIOConnectionsTest do
 
         if model.input_type == model.output_type do
           # Models with same I/O type can form single-model cycles
-          assert result == :ok, "Model #{model.id} with #{model.input_type}->#{model.output_type} should form valid cycle"
+          assert result == :ok,
+                 "Model #{model.id} with #{model.input_type}->#{model.output_type} should form valid cycle"
         else
           # Models with different I/O types cannot form single-model cycles
           assert {:error, _} = result

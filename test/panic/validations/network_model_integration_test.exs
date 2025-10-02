@@ -14,7 +14,9 @@ defmodule Panic.Validations.NetworkModelIntegrationTest do
       network = create_test_network(user, ["dummy-t2t"])
 
       # Update with valid text->text models
-      changeset = Ash.Changeset.for_update(network, :update_models, %{models: ["dummy-t2t", "dummy-t2t"]}, actor: user)
+      changeset =
+        Ash.Changeset.for_update(network, :update_models, %{models: ["dummy-t2t", "dummy-t2t"]}, actor: user)
+
       {:ok, updated} = Ash.update(changeset)
 
       assert updated.models == ["dummy-t2t", "dummy-t2t"]
@@ -26,7 +28,9 @@ defmodule Panic.Validations.NetworkModelIntegrationTest do
 
       # Try to update with incompatible models
       # dummy-t2i outputs image, but dummy-t2t needs text input
-      changeset = Ash.Changeset.for_update(network, :update_models, %{models: ["dummy-t2i", "dummy-t2t"]}, actor: user)
+      changeset =
+        Ash.Changeset.for_update(network, :update_models, %{models: ["dummy-t2i", "dummy-t2t"]}, actor: user)
+
       result = Ash.update(changeset)
 
       assert {:error, %Invalid{}} = result
@@ -38,7 +42,9 @@ defmodule Panic.Validations.NetworkModelIntegrationTest do
 
       # dummy-t2i outputs image, but first model needs text input
       # This doesn't form a valid cycle
-      changeset = Ash.Changeset.for_update(network, :update_models, %{models: ["dummy-t2i", "dummy-i2i"]}, actor: user)
+      changeset =
+        Ash.Changeset.for_update(network, :update_models, %{models: ["dummy-t2i", "dummy-i2i"]}, actor: user)
+
       result = Ash.update(changeset)
 
       assert {:error, %Invalid{}} = result
@@ -60,7 +66,9 @@ defmodule Panic.Validations.NetworkModelIntegrationTest do
       network = create_test_network(user, ["dummy-t2t"])
       models = ["dummy-t2t", "dummy-t2t", "dummy-t2t"]
 
-      changeset = Ash.Changeset.for_update(network, :update_models, %{models: models}, actor: user)
+      changeset =
+        Ash.Changeset.for_update(network, :update_models, %{models: models}, actor: user)
+
       {:ok, updated} = Ash.update(changeset)
 
       assert updated.models == models
@@ -73,7 +81,9 @@ defmodule Panic.Validations.NetworkModelIntegrationTest do
       network = create_test_network(user, ["dummy-t2t"])
 
       # Create a valid text -> image -> text cycle
-      changeset = Ash.Changeset.for_update(network, :update_models, %{models: ["dummy-t2i", "dummy-i2t"]}, actor: user)
+      changeset =
+        Ash.Changeset.for_update(network, :update_models, %{models: ["dummy-t2i", "dummy-i2t"]}, actor: user)
+
       {:ok, updated} = Ash.update(changeset)
 
       assert updated.models == ["dummy-t2i", "dummy-i2t"]
@@ -85,7 +95,12 @@ defmodule Panic.Validations.NetworkModelIntegrationTest do
 
       # Same model repeated (valid for text->text models)
       changeset =
-        Ash.Changeset.for_update(network, :update_models, %{models: ["dummy-t2t", "dummy-t2t", "dummy-t2t"]}, actor: user)
+        Ash.Changeset.for_update(
+          network,
+          :update_models,
+          %{models: ["dummy-t2t", "dummy-t2t", "dummy-t2t"]},
+          actor: user
+        )
 
       {:ok, updated} = Ash.update(changeset)
 
@@ -108,7 +123,9 @@ defmodule Panic.Validations.NetworkModelIntegrationTest do
     if initial_models == [] do
       network
     else
-      changeset = Ash.Changeset.for_update(network, :update_models, %{models: initial_models}, actor: user)
+      changeset =
+        Ash.Changeset.for_update(network, :update_models, %{models: initial_models}, actor: user)
+
       result = Ash.update(changeset)
 
       case result do

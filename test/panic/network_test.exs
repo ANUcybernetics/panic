@@ -4,6 +4,7 @@ defmodule Panic.NetworkTest do
 
   import Panic.Validations.ModelIOConnections
 
+  alias Ash.Error.Invalid
   alias Panic.Accounts.User
   alias Panic.Engine.Network
 
@@ -30,7 +31,9 @@ defmodule Panic.NetworkTest do
 
       network =
         Network
-        |> Ash.Changeset.for_create(:create, %{name: "Test Network", description: "Test", lockout_seconds: 60},
+        |> Ash.Changeset.for_create(
+          :create,
+          %{name: "Test Network", description: "Test", lockout_seconds: 60},
           actor: user
         )
         |> Ash.create!()
@@ -118,8 +121,8 @@ defmodule Panic.NetworkTest do
       check all(network <- Panic.Generators.network(user)) do
         assert network.id == Ash.get!(Network, network.id, actor: user).id
         # there shouldn't ever be a negative ID in the db, so this should always raise
-        assert_raise Ash.Error.Invalid, fn -> Ash.get!(Network, -1, actor: user) end
-        assert_raise Ash.Error.Invalid, fn -> Ash.get!(Network, -1) end
+        assert_raise Invalid, fn -> Ash.get!(Network, -1, actor: user) end
+        assert_raise Invalid, fn -> Ash.get!(Network, -1) end
       end
     end
 
