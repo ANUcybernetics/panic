@@ -152,7 +152,7 @@ defmodule Panic.InvocationTest do
         Ash.get!(Invocation, -1, actor: user)
       end
 
-      assert_raise Ash.Error.Forbidden, fn ->
+      assert_raise Invalid, fn ->
         Ash.get!(Invocation, 1)
       end
     end

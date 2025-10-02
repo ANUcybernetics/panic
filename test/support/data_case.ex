@@ -107,7 +107,8 @@ defmodule Panic.DataCase do
               Map.update(acc, field, [interpolated_message], &[interpolated_message | &1])
           end
 
-        %Ash.Error.Unknown.UnknownError{value: value, path: path} when is_list(value) and is_list(path) ->
+        %Ash.Error.Unknown.UnknownError{value: value, path: path}
+        when is_list(value) and is_list(path) ->
           # Handle custom validation errors that return {:error, field: field, message: message}
           field = Keyword.get(value, :field)
           message = Keyword.get(value, :message)

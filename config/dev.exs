@@ -11,6 +11,8 @@ import Config
 # Get port from environment variable or use default
 http_port = String.to_integer(System.get_env("PHX_PORT") || "4010")
 
+config :ash, policies: [show_policy_breakdowns?: true]
+
 config :logger, :console, format: "[$level] $message\n"
 
 # useful for debugging authorization policy issues
@@ -74,7 +76,7 @@ config :panic, PanicWeb.Endpoint,
   ]
 
 # Enable dev routes for dashboard and mailbox
-config :panic, dev_routes: true
+config :panic, dev_routes: true, token_signing_secret: "g4k+uOEXqhJFjQcIwWRU4z05TU4jlYTL"
 
 # Do not include metadata nor timestamps in development logs
 # Set a higher stacktrace during development. Avoid configuring such

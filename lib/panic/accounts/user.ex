@@ -6,21 +6,36 @@ defmodule Panic.Accounts.User do
     authorizers: [Ash.Policy.Authorizer],
     domain: Panic.Accounts
 
-  resource do
-    plural_name :users
+  sqlite do
+    table "users"
+    repo Panic.Repo
   end
 
-  attributes do
-    integer_primary_key :id
-    attribute :email, :ci_string, allow_nil?: false, public?: true
-    attribute :hashed_password, :string, allow_nil?: false, sensitive?: true
-
-    attribute :admin, :boolean do
-      default false
-      allow_nil? false
-      # Don't expose admin status publicly
-      public? false
+  authentication do
+    strategies do
+      password :password do
+        identity_field :email
+        sign_in_tokens_enabled? false
+      end
     end
+
+    add_ons do
+      log_out_everywhere do
+        apply_on_password_change? true
+      end
+    end
+
+    tokens do
+      enabled? true
+      token_resource Panic.Accounts.Token
+      signing_secret Panic.Secrets
+      store_all_tokens? true
+      require_token_presence_for_authentication? true
+    end
+  end
+
+  resource do
+    plural_name :users
   end
 
   actions do
@@ -37,31 +52,12 @@ defmodule Panic.Accounts.User do
       # Only admins can change admin status
       # We'll add a policy for this
     end
-  end
 
-  authentication do
-    strategies do
-      password :password do
-        identity_field :email
-        sign_in_tokens_enabled? false
-      end
-    end
-  end
-
-  sqlite do
-    table "users"
-    repo Panic.Repo
-  end
-
-  identities do
-    identity :unique_email, [:email]
-  end
-
-  relationships do
-    many_to_many :api_tokens, Panic.Accounts.APIToken do
-      through Panic.Accounts.UserAPIToken
-      source_attribute :id
-      destination_attribute :id
+    read :get_by_subject do
+      description "Get a user by the subject claim in a JWT"
+      argument :subject, :string, allow_nil?: false
+      get? true
+      prepare AshAuthentication.Preparations.FilterBySubject
     end
   end
 
@@ -81,5 +77,30 @@ defmodule Panic.Accounts.User do
       policy action_type(:read), do: authorize_if(always())
       policy action_type(:update), do: authorize_if(always())
     end
+  end
+
+  attributes do
+    integer_primary_key :id
+    attribute :email, :ci_string, allow_nil?: false, public?: true
+    attribute :hashed_password, :string, allow_nil?: false, sensitive?: true
+
+    attribute :admin, :boolean do
+      default false
+      allow_nil? false
+      # Don't expose admin status publicly
+      public? false
+    end
+  end
+
+  relationships do
+    many_to_many :api_tokens, Panic.Accounts.APIToken do
+      through Panic.Accounts.UserAPIToken
+      source_attribute :id
+      destination_attribute :id
+    end
+  end
+
+  identities do
+    identity :unique_email, [:email]
   end
 end

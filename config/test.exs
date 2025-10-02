@@ -2,6 +2,8 @@ import Config
 
 alias Swoosh.Adapters.Test
 
+config :ash, policies: [show_policy_breakdowns?: true], disable_async?: true
+
 # Do NOT set this value for production
 config :bcrypt_elixir, log_rounds: 1
 
@@ -34,6 +36,7 @@ config :panic, PanicWeb.Endpoint,
 
 # Disable vestaboard API calls in tests
 config :panic, :disable_vestaboard, true
+config :panic, token_signing_secret: "lR3r6rkW8nRkChM35qcKl00FNSK95ra5"
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
@@ -46,10 +49,9 @@ config :phoenix_test, :endpoint, PanicWeb.Endpoint
 
 # useful for debugging authorization policy issues
 
-# Disable swoosh api client as it is only required for production adapters.
-# config :ash, :policies, log_policy_breakdowns: :error
-
 config :swoosh, :api_client, false
 
+# Disable swoosh api client as it is only required for production adapters.
+# config :ash, :policies, log_policy_breakdowns: :error
 # Configure TowerEmail.Mailer to use Test adapter in tests
 config :tower_email, TowerEmail.Mailer, adapter: Test

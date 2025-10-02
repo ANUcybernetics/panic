@@ -1,6 +1,8 @@
 [
-  plugins: [Styler, Phoenix.LiveView.HTMLFormatter],
+  plugins: [Spark.Formatter, Styler, Phoenix.LiveView.HTMLFormatter],
   import_deps: [
+    :ash_ai,
+    :reactor,
     :ecto,
     :ecto_sql,
     :phoenix,

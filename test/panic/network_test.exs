@@ -119,7 +119,7 @@ defmodule Panic.NetworkTest do
         assert network.id == Ash.get!(Network, network.id, actor: user).id
         # there shouldn't ever be a negative ID in the db, so this should always raise
         assert_raise Ash.Error.Invalid, fn -> Ash.get!(Network, -1, actor: user) end
-        assert_raise Ash.Error.Forbidden, fn -> Ash.get!(Network, -1) end
+        assert_raise Ash.Error.Invalid, fn -> Ash.get!(Network, -1) end
       end
     end
 

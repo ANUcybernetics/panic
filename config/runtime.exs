@@ -99,7 +99,7 @@ if config_env() == :prod do
 
   config :panic, Panic.Repo,
     database: database_path,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "5")
+    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
 
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
@@ -119,6 +119,11 @@ if config_env() == :prod do
     secret_key_base: secret_key_base
 
   config :panic, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
+
+  config :panic,
+    token_signing_secret:
+      System.get_env("TOKEN_SIGNING_SECRET") ||
+        raise("Missing environment variable `TOKEN_SIGNING_SECRET`!")
 
   # Configure Swoosh API client to use Finch (already in deps)
   config :swoosh, :api_client, Swoosh.ApiClient.Finch

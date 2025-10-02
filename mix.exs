@@ -38,19 +38,20 @@ defmodule Panic.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:sourceror, "~> 1.8", only: [:dev, :test]},
       {:live_select, "~> 1.0"},
       {:autocomplete_input, "~> 0.1"},
       {:repatch, "~> 1.0"},
       {:usage_rules, "~> 0.1", only: [:dev]},
-      {:ash_ai, "~> 0.1"},
+      {:ash_ai, "~> 0.2"},
       {:tidewave, "~> 0.1", only: [:dev]},
       {:igniter, "~> 0.5", only: [:dev, :test]},
       {:phoenix_test, "~> 0.3", only: :test},
       {:phoenix, "~> 1.7.12"},
       {:phoenix_ecto, "~> 4.4"},
       {:ash, "~> 3.0"},
-      {:ash_sqlite, "~> 0.2.0"},
-      {:ash_phoenix, "~> 2.1"},
+      {:ash_sqlite, "~> 0.2"},
+      {:ash_phoenix, "~> 2.0"},
       {:ecto_sql, "~> 3.10"},
       {:ecto_sqlite3, ">= 0.0.0"},
       {:phoenix_html, "~> 4.0"},
@@ -96,14 +97,15 @@ defmodule Panic.MixProject do
       setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
+      test: ["ash.setup --quiet", "test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": ["tailwind panic", "esbuild panic"],
       "assets.deploy": [
         "tailwind panic --minify",
         "esbuild panic --minify",
         "phx.digest"
-      ]
+      ],
+      "ash.setup": ["ash.setup", "run priv/repo/seeds.exs"]
     ]
   end
 end

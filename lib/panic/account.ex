@@ -7,5 +7,6 @@ defmodule Panic.Accounts do
 
     resource Panic.Accounts.APIToken
     resource Panic.Accounts.UserAPIToken
+    resource Panic.Accounts.Token
   end
 end
