@@ -8,6 +8,7 @@ on:
 
 env:
   MIX_ENV: test
+  TOKEN_SIGNING_SECRET: lR3r6rkW8nRkChM35qcKl00FNSK95ra5
 
 permissions:
   contents: read
