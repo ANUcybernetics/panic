@@ -7,8 +7,8 @@
       "source": "jti",
       "references": null,
       "allow_nil?": false,
-      "primary_key?": true,
-      "generated?": false
+      "generated?": false,
+      "primary_key?": true
     },
     {
       "default": "nil",
@@ -17,8 +17,8 @@
       "source": "subject",
       "references": null,
       "allow_nil?": false,
-      "primary_key?": false,
-      "generated?": false
+      "generated?": false,
+      "primary_key?": false
     },
     {
       "default": "nil",
@@ -27,8 +27,8 @@
       "source": "expires_at",
       "references": null,
       "allow_nil?": false,
-      "primary_key?": false,
-      "generated?": false
+      "generated?": false,
+      "primary_key?": false
     },
     {
       "default": "nil",
@@ -37,8 +37,8 @@
       "source": "purpose",
       "references": null,
       "allow_nil?": false,
-      "primary_key?": false,
-      "generated?": false
+      "generated?": false,
+      "primary_key?": false
     },
     {
       "default": "nil",
@@ -47,8 +47,8 @@
       "source": "extra_data",
       "references": null,
       "allow_nil?": true,
-      "primary_key?": false,
-      "generated?": false
+      "generated?": false,
+      "primary_key?": false
     },
     {
       "default": "nil",
@@ -57,8 +57,8 @@
       "source": "created_at",
       "references": null,
       "allow_nil?": false,
-      "primary_key?": false,
-      "generated?": false
+      "generated?": false,
+      "primary_key?": false
     },
     {
       "default": "nil",
@@ -67,12 +67,12 @@
       "source": "updated_at",
       "references": null,
       "allow_nil?": false,
-      "primary_key?": false,
-      "generated?": false
+      "generated?": false,
+      "primary_key?": false
     }
   ],
   "table": "tokens",
-  "hash": "93E2F4337E80AB53E84A45CA17C29B500CF91707CC793D93261904A3E18E220D",
+  "hash": "0203CBBE27784616513A2224B2E087AA50DFB869F3E0C41DBF141104518F4EEF",
   "multitenancy": {
     "global": null,
     "attribute": null,
