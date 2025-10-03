@@ -84,7 +84,7 @@ RUN mix release
 FROM ${RUNNER_IMAGE}
 
 RUN apt-get update -y && \
-    apt-get install -y libstdc++6 openssl libncurses6 locales ca-certificates \
+    apt-get install -y libstdc++6 openssl libncurses6 locales ca-certificates gosu \
     # these last two required for Panic.Workers.Archiver
     ffmpeg \
     imagemagick \
@@ -108,7 +108,12 @@ ENV MIX_ENV="prod"
 # Only copy the final release from the build stage
 COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/panic ./
 
-USER nobody
+# Copy and set up entrypoint script
+COPY rel/overlays/bin/docker-entrypoint.sh /app/bin/docker-entrypoint.sh
+RUN chmod +x /app/bin/docker-entrypoint.sh
+
+# Don't switch to nobody yet - entrypoint will handle permissions then switch user
+ENTRYPOINT ["/app/bin/docker-entrypoint.sh"]
 
 # If using an environment that doesn't automatically reap zombie processes, it is
 # advised to add an init process such as tini via `apt-get install`
