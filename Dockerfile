@@ -112,12 +112,9 @@ COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/panic ./
 COPY rel/overlays/bin/docker-entrypoint.sh /app/bin/docker-entrypoint.sh
 RUN chmod +x /app/bin/docker-entrypoint.sh
 
-# Don't switch to nobody yet - entrypoint will handle permissions then switch user
-ENTRYPOINT ["/app/bin/docker-entrypoint.sh"]
-
 # If using an environment that doesn't automatically reap zombie processes, it is
 # advised to add an init process such as tini via `apt-get install`
 # above and adding an entrypoint. See https://github.com/krallin/tini for details
 # ENTRYPOINT ["/tini", "--"]
 
-CMD ["/app/bin/server"]
+CMD ["/app/bin/docker-entrypoint.sh", "/app/bin/server"]
