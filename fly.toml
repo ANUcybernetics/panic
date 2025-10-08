@@ -10,7 +10,7 @@ kill_signal = 'SIGTERM'
 [build]
 
 [deploy]
-  release_command = '/app/bin/docker-entrypoint.sh /app/bin/migrate'
+  release_command = '/app/bin/migrate'
 
 [env]
 DATABASE_PATH = '/mnt/panic_data/panic_data.db'
