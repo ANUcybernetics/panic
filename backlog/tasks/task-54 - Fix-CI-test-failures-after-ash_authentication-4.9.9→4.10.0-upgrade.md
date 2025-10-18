@@ -1,9 +1,10 @@
 ---
 id: task-54
 title: Fix CI test failures after ash_authentication 4.9.9→4.10.0 upgrade
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-10-02 12:26'
+updated_date: '2025-10-17 23:53'
 labels:
   - bug
   - ci

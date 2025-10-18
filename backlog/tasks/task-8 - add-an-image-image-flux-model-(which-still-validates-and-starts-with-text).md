@@ -1,10 +1,10 @@
 ---
 id: task-8
-title:
-  add an image->image flux model (which still validates and starts with text)
-status: In Progress
+title: add an image->image flux model (which still validates and starts with text)
+status: Done
 assignee: []
-created_date: "2025-07-08"
+created_date: '2025-07-08'
+updated_date: '2025-10-17 23:53'
 labels:
   - feature
   - ai-models
@@ -13,6 +13,7 @@ dependencies: []
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Panic needs to support networks with "image editing" models which (conceptually)
 at least take an initial text input and generate an image, but then repeatedly
 process the image with the text instruction "reproduce this image exactly,
@@ -46,9 +47,11 @@ pipeline
 
 They could be called e.g. "Image Reproducer I (flux)" and "Image Reproducer II
 (flux)" (or "seedit" for the "seededit" model).
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 Added five new models to `lib/panic/model.ex`:
 
 1. **Image Reproducer I (Flux)** (`image-reproducer-i-flux`):
@@ -92,3 +95,4 @@ The models work together in a network:
 - Network validation passes since it starts with text and has valid I/O
   connections
 - All messiness is self-contained within the invoke functions
+<!-- SECTION:NOTES:END -->

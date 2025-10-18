@@ -1,9 +1,10 @@
 ---
 id: task-55
 title: Fix persistent CI test failures after ash_authentication upgrade to 4.10.0
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-10-02 12:35'
+updated_date: '2025-10-17 23:53'
 labels:
   - bug
   - ci

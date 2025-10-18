@@ -1,15 +1,17 @@
 ---
 id: task-41
 title: better sensitive content error handling
-status: In Progress
+status: Done
 assignee: []
-created_date: "2025-08-15 01:46"
+created_date: '2025-08-15 01:46'
+updated_date: '2025-10-17 23:53'
 labels: []
 dependencies: []
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 For the Replicate platform (@lib/panic/platforms/replicate.ex), some of the
 models can return "sensitive/nsfw content" errors, however the specifics of the
 error are different from model-to-model. Currently there's some handling for
@@ -65,3 +67,4 @@ Implemented a centralized NSFW/sensitive content detection system in the Replica
 - **Well-tested**: Comprehensive test coverage ensures reliability
 
 The solution successfully handles the new error format from the seededit-3.0 model while maintaining backward compatibility with existing NSFW error handling.
+<!-- SECTION:DESCRIPTION:END -->
