@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use PANIC! in your research or creative work, please cite it as below."
+title: "PANIC!: An interactive AI playground for creating feedback loops of generative AI models"
+abstract: "PANIC! is an interactive AI playground built with Elixir, Ash Framework, and Phoenix LiveView that allows users to create feedback loops of generative AI models. It enables the creation of cyclic networks where the output of one AI model becomes the input to the next, creating emergent and often surprising results. Originally developed for interactive art installations, PANIC! supports various AI platforms (OpenAI, Replicate, Google Gemini) and can drive physical displays like Vestaboards."
+authors:
+  - family-names: Swift
+    given-names: Ben
+    email: ben.swift@anu.edu.au
+    affiliation: "ANU School of Cybernetics"
+    orcid: "https://orcid.org/0000-0003-2138-5969"
+repository-code: "https://github.com/ANUcybernetics/panic"
+url: "https://panic.fly.dev"
+doi: "10.5281/zenodo.17410748"
+type: software
+license: MIT
+keywords:
+  - generative AI
+  - AI feedback loops
+  - interactive art
+  - installation art
+  - Elixir
+  - Phoenix LiveView
+  - Ash Framework
+  - AI playground
+  - creative coding
+  - machine learning art
+version: 3.0.0
+date-released: "2024-10-02"
