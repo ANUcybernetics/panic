@@ -1,9 +1,10 @@
 ---
 id: task-57
 title: add GitHub releases and zenodo metadata for dois
-status: To Do
+status: Done
 assignee: []
 created_date: "2025-10-21 22:24"
+completed_date: "2025-10-22"
 labels: []
 dependencies: []
 ---
