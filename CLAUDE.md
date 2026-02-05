@@ -72,6 +72,10 @@ For a comprehensive architectural overview, see @OVERVIEW.md
   - Use globally unique values for identity attributes to prevent deadlocks
   - Enable sync mode for NetworkRunner in tests to avoid async timing issues
 
+## Version control
+
+This repo uses jj (Jujutsu) as a colocated repo. **Always use `jj` for version control operations, never raw `git` commands.** The `gh` CLI is still fine for GitHub API operations (PRs, issues, etc.).
+
 ## Development workflow
 
 - use `@moduledoc` and `@doc` attributes to document your code (including examples which can be doctest-ed)

@@ -50,3 +50,4 @@ mise.local.toml
 .sobelow
 
 /config/secrets.exs
+.jj/
