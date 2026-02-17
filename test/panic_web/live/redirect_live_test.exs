@@ -6,7 +6,6 @@ defmodule PanicWeb.RedirectLiveTest do
 
   describe "Redirect functionality" do
     test "redirects static invocation pattern for anonymous users", %{conn: conn} do
-      # Pattern for static invocation: "s" followed by invocation ID
       redirect_param = "s12345"
 
       assert {:error, {:live_redirect, %{to: "/display/static/12345/"}}} =
@@ -22,8 +21,6 @@ defmodule PanicWeb.RedirectLiveTest do
     end
 
     test "redirects network display pattern", %{conn: conn} do
-      # Pattern for network display: [network_id, offset, stride]
-      # Will be split into ["a", "b", "c"]
       redirect_param = "abc"
 
       assert {:error, {:live_redirect, %{to: "/networks/a/display/single/b/c/"}}} =

@@ -69,11 +69,9 @@ defmodule PanicWeb.NetworkLiveTest do
     test "can view network info all view", %{conn: conn, user: user} do
       network = user |> Panic.Generators.network_with_dummy_models() |> pick()
 
-      {:ok, view, html} = live(conn, ~p"/networks/#{network.id}/info/all")
-
-      # The "all" view shows a list of QR codes
-      assert html =~ "QR codes"
-      assert has_element?(view, "div.prose")
+      conn
+      |> visit(~p"/networks/#{network.id}/info/all")
+      |> assert_has("div.prose")
     end
   end
 
@@ -86,25 +84,18 @@ defmodule PanicWeb.NetworkLiveTest do
     end
 
     test "authenticated user can visit QR code page", %{conn: conn, network: network} do
-      {:ok, _view, html} = live(conn, ~p"/networks/#{network.id}/info/qr")
-
-      # The QR modal should be shown with its characteristic text
-      assert html =~ "scan to prompt"
-      assert html =~ network.name
-      # The page should have the qr-modal element
-      assert html =~ "qr-modal"
+      conn
+      |> visit(~p"/networks/#{network.id}/info/qr")
+      |> assert_has("#qr-modal")
+      |> assert_has("#qr-modal", text: "scan to prompt")
+      |> assert_has("h2", text: network.name)
     end
 
     test "generates QR code with token for terminal access", %{conn: conn, network: network} do
-      {:ok, _view, html} = live(conn, ~p"/networks/#{network.id}/info/qr")
-
-      # The QR modal should be shown
-      assert html =~ "qr-modal"
-      assert html =~ "scan to prompt"
-
-      # The core functionality we're testing: the QR generation includes a token
-      # This is verified by the TerminalAuth module tests already
-      # Here we just verify the UI renders the modal
+      conn
+      |> visit(~p"/networks/#{network.id}/info/qr")
+      |> assert_has("#qr-modal")
+      |> assert_has("#qr-modal", text: "scan to prompt")
     end
 
     test "refreshes QR code periodically", %{conn: conn, network: network} do
@@ -168,23 +159,20 @@ defmodule PanicWeb.NetworkLiveTest do
     end
 
     test "allows access without token for authenticated users", %{conn: conn, network: network} do
-      # Authenticated user can access terminal without token
-      {:ok, _view, html} = live(conn, ~p"/networks/#{network.id}/terminal")
-
-      assert html =~ "Current run:"
-      assert html =~ "terminal-container"
-      refute html =~ "QR Code Expired"
+      conn
+      |> visit(~p"/networks/#{network.id}/terminal")
+      |> assert_has(".terminal-container")
+      |> assert_has(".terminal-container", text: "Current run:")
+      |> refute_has(".terminal-container", text: "QR Code Expired")
     end
 
     test "authenticated users can still use token if provided", %{conn: conn, network: network} do
       token = TerminalAuth.generate_token(network.id)
 
-      # Even with a token, authenticated users should have access
-      {:ok, _view, html} =
-        live(conn, ~p"/networks/#{network.id}/terminal?token=#{token}")
-
-      assert html =~ "Current run:"
-      assert html =~ "terminal-container"
+      conn
+      |> visit(~p"/networks/#{network.id}/terminal?token=#{token}")
+      |> assert_has(".terminal-container")
+      |> assert_has(".terminal-container", text: "Current run:")
     end
 
     test "authenticated users can access with expired token", %{conn: conn, network: network} do
@@ -197,32 +185,28 @@ defmodule PanicWeb.NetworkLiveTest do
         })
 
       # Authenticated users should still have access even with expired token
-      {:ok, _view, html} =
-        live(conn, ~p"/networks/#{network.id}/terminal?token=#{expired_token}")
-
-      assert html =~ "Current run:"
-      assert html =~ "terminal-container"
+      conn
+      |> visit(~p"/networks/#{network.id}/terminal?token=#{expired_token}")
+      |> assert_has(".terminal-container")
+      |> assert_has(".terminal-container", text: "Current run:")
     end
 
     test "allows access with valid token", %{conn: conn, network: network} do
       token = TerminalAuth.generate_token(network.id)
 
-      {:ok, _view, html} =
-        live(conn, ~p"/networks/#{network.id}/terminal?token=#{token}")
-
-      assert html =~ "Current run:"
-      assert html =~ "terminal-container"
-      refute html =~ "QR Code Expired"
+      conn
+      |> visit(~p"/networks/#{network.id}/terminal?token=#{token}")
+      |> assert_has(".terminal-container")
+      |> assert_has(".terminal-container", text: "Current run:")
+      |> refute_has(".terminal-container", text: "QR Code Expired")
     end
 
     test "displays terminal component when token is valid", %{conn: conn, network: network} do
       token = TerminalAuth.generate_token(network.id)
 
-      {:ok, view, _html} =
-        live(conn, ~p"/networks/#{network.id}/terminal?token=#{token}")
-
-      assert has_element?(view, ".terminal-container")
-      assert render(view) =~ "terminal-container"
+      conn
+      |> visit(~p"/networks/#{network.id}/terminal?token=#{token}")
+      |> assert_has(".terminal-container")
     end
   end
 
@@ -242,10 +226,10 @@ defmodule PanicWeb.NetworkLiveTest do
       network: network,
       token: token
     } do
-      # Unauthenticated users can now access the terminal with a valid token
-      {:ok, _view, html} = live(conn, ~p"/networks/#{network.id}/terminal?token=#{token}")
-      assert html =~ "terminal-container"
-      assert html =~ "Current run:"
+      conn
+      |> visit(~p"/networks/#{network.id}/terminal?token=#{token}")
+      |> assert_has(".terminal-container")
+      |> assert_has(".terminal-container", text: "Current run:")
     end
 
     test "unauthenticated user cannot access terminal without token", %{
@@ -382,12 +366,12 @@ defmodule PanicWeb.NetworkLiveTest do
     end
 
     test "displays expired message", %{conn: conn, network: network} do
-      {:ok, _view, html} = live(conn, ~p"/networks/#{network.id}/terminal/expired")
-
-      assert html =~ "QR Code Expired"
-      assert html =~ "expired for security reasons"
-      assert html =~ "valid for 1 hour"
-      assert html =~ "How to get a new QR code"
+      conn
+      |> visit(~p"/networks/#{network.id}/terminal/expired")
+      |> assert_has("h1", text: "QR Code Expired")
+      |> assert_has("p", text: "expired for security reasons")
+      |> assert_has("p", text: "valid for 1 hour")
+      |> assert_has("h2", text: "How to get a new QR code")
     end
 
     test "shows link to network details when logged in", %{
@@ -395,24 +379,25 @@ defmodule PanicWeb.NetworkLiveTest do
       network: network,
       user: _user
     } do
-      {:ok, view, html} = live(conn, ~p"/networks/#{network.id}/terminal/expired")
-
-      assert html =~ "View network details"
-      assert has_element?(view, "a[href='/networks/#{network.id}']")
+      conn
+      |> visit(~p"/networks/#{network.id}/terminal/expired")
+      |> assert_has("a", text: "View network details")
+      |> assert_has("a[href='/networks/#{network.id}']")
     end
 
     test "does not show network details link when not logged in", %{conn: conn, network: network} do
       conn = log_out_user(conn)
-      {:ok, view, html} = live(conn, ~p"/networks/#{network.id}/terminal/expired")
 
-      refute html =~ "View network details"
-      refute has_element?(view, "a[href='/networks/#{network.id}']")
+      conn
+      |> visit(~p"/networks/#{network.id}/terminal/expired")
+      |> refute_has("a", text: "View network details")
+      |> refute_has("a[href='/networks/#{network.id}']")
     end
 
     test "shows learn more link", %{conn: conn, network: network} do
-      {:ok, view, _html} = live(conn, ~p"/networks/#{network.id}/terminal/expired")
-
-      assert has_element?(view, "a[href='/about']")
+      conn
+      |> visit(~p"/networks/#{network.id}/terminal/expired")
+      |> assert_has("a[href='/about']")
     end
   end
 

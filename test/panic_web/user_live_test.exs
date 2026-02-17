@@ -1,13 +1,9 @@
 defmodule PanicWeb.UserLiveTest do
   @moduledoc """
   Test the user dashboard
-
-  Code modified from https://elixirforum.com/t/how-to-test-live-views-with-ash-authentication-plugs/59814/
-
-  Thanks @peterhartman and @brunoripa
   """
   use PanicWeb.ConnCase, async: false
-  # import Phoenix.LiveViewTest
+  import Phoenix.LiveViewTest
   alias Panic.Watcher.Installation
 
   describe "user IS logged in" do
@@ -73,22 +69,12 @@ defmodule PanicWeb.UserLiveTest do
       conn: conn,
       user: user
     } do
-      import Phoenix.LiveViewTest
-
-      # Create a network first
       network = Panic.Fixtures.network_with_dummy_models(user)
 
-      # Since PhoenixTest doesn't support JavaScript confirmations, 
-      # we'll use Phoenix.LiveViewTest directly for this test
       {:ok, view, _html} = live(conn, ~p"/users/#{user.id}")
-
-      # Verify the network is displayed
       assert render(view) =~ network.name
 
-      # Trigger the delete event directly (bypassing the JavaScript confirmation)
       render_click(view, "delete_network", %{"id" => network.id})
-
-      # Verify the network is no longer displayed
       refute render(view) =~ network.name
     end
 
@@ -96,12 +82,8 @@ defmodule PanicWeb.UserLiveTest do
       conn: conn,
       user: user
     } do
-      import Phoenix.LiveViewTest
-
-      # Create a network with related data
       network = Panic.Fixtures.network_with_dummy_models(user)
 
-      # Create an installation for this network (this is enough to trigger FK constraint)
       installation =
         Installation
         |> Ash.Changeset.for_create(
@@ -111,19 +93,12 @@ defmodule PanicWeb.UserLiveTest do
         )
         |> Ash.create!()
 
-      # Visit the user page
       {:ok, view, _html} = live(conn, ~p"/users/#{user.id}")
-
-      # Verify the network is displayed
       assert render(view) =~ network.name
 
-      # Trigger the delete event - this should work now with cascade_destroy
       render_click(view, "delete_network", %{"id" => network.id})
-
-      # Verify the network is no longer displayed
       refute render(view) =~ network.name
 
-      # Verify all related records are deleted
       assert {:error, _} = Ash.get(Panic.Engine.Network, network.id, actor: user)
       assert {:error, _} = Ash.get(Installation, installation.id, actor: user)
     end

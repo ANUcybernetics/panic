@@ -2,7 +2,6 @@ defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
   use PanicWeb.ConnCase, async: false
 
   import Panic.Fixtures
-  import Phoenix.LiveViewTest
 
   alias Panic.Engine.Network
   alias Panic.Watcher.Installation
@@ -10,20 +9,16 @@ defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
 
   describe "anonymous user with vestaboard watchers" do
     setup do
-      # Clean up any running NetworkRunners
       PanicWeb.Helpers.stop_all_network_runners()
 
-      # Enable sync mode for predictable tests
       Panic.NetworkRunnerTestHelpers.enable_sync_mode()
 
       on_exit(fn ->
         Panic.NetworkRunnerTestHelpers.disable_sync_mode()
       end)
 
-      # Create a user with vestaboard tokens - API calls are mocked
       user = user_with_vestaboard_tokens()
 
-      # Create a network owned by the user
       {:ok, network} =
         Network
         |> Ash.Changeset.for_create(
@@ -36,7 +31,6 @@ defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
         )
         |> Ash.create()
 
-      # Update the network to add a dummy model
       {:ok, network} =
         network
         |> Ash.Changeset.for_update(
@@ -48,7 +42,6 @@ defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
         )
         |> Ash.update()
 
-      # Create an installation with a Vestaboard watcher
       {:ok, installation} =
         Installation
         |> Ash.Changeset.for_create(
@@ -71,7 +64,6 @@ defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
         )
         |> Ash.create()
 
-      # Generate a valid terminal token
       token = TerminalAuth.generate_token(network.id)
 
       %{network: network, user: user, token: token, installation: installation}
@@ -83,26 +75,17 @@ defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
       token: token,
       user: user
     } do
-      # Access terminal as anonymous user with token
-      {:ok, view, _html} =
-        live(conn, "/networks/#{network.id}/terminal?token=#{token}")
+      conn
+      |> visit("/networks/#{network.id}/terminal?token=#{token}")
+      |> assert_has("[phx-submit=\"start-run\"]")
+      |> fill_in("Prompt", with: "Hello Vestaboard")
+      |> submit()
 
-      # Verify we can see the terminal interface
-      assert has_element?(view, "[phx-submit=\"start-run\"]")
-
-      # Submit a prompt - this should trigger vestaboard dispatch
-      view
-      |> form("[phx-submit=\"start-run\"]", invocation: %{input: "Hello Vestaboard"})
-      |> render_submit()
-
-      # Give the system a moment to process
       Process.sleep(200)
 
-      # Check that invocations were created successfully
       invocations = Ash.read!(Panic.Engine.Invocation, actor: user)
       assert length(invocations) >= 1
 
-      # Check the first invocation (genesis)
       genesis = Enum.find(invocations, fn inv -> inv.sequence_number == 0 end)
       assert genesis
       assert genesis.input == "Hello Vestaboard"
