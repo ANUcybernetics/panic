@@ -2,8 +2,6 @@ defmodule PanicWeb.UserLive.Show do
   @moduledoc false
   use PanicWeb, :live_view
 
-  alias Panic.Engine.Network
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -137,9 +135,9 @@ defmodule PanicWeb.UserLive.Show do
 
   @impl true
   def handle_params(%{"user_id" => id}, _, socket) do
-    case Ash.get(Panic.Accounts.User, id, actor: socket.assigns.current_user) do
+    case Panic.Accounts.get_user(id, actor: socket.assigns.current_user) do
       {:ok, user} ->
-        networks = Ash.read!(Network, actor: socket.assigns.current_user)
+        networks = Panic.Engine.list_networks!(actor: socket.assigns.current_user)
 
         # Load user's API tokens
         user_with_tokens = Ash.load!(user, :api_tokens, actor: socket.assigns.current_user)
@@ -168,11 +166,10 @@ defmodule PanicWeb.UserLive.Show do
 
   @impl true
   def handle_event("delete_network", %{"id" => id}, socket) do
-    network = Ash.get!(Network, id, actor: socket.assigns.current_user)
-    Ash.destroy!(network, actor: socket.assigns.current_user)
+    network = Panic.Engine.get_network!(id, actor: socket.assigns.current_user)
+    Panic.Engine.destroy_network!(network, actor: socket.assigns.current_user)
 
-    # Reload networks after deletion
-    networks = Ash.read!(Network, actor: socket.assigns.current_user)
+    networks = Panic.Engine.list_networks!(actor: socket.assigns.current_user)
 
     {:noreply, assign(socket, :networks, networks)}
   end

@@ -72,7 +72,7 @@ defmodule PanicWeb.AdminLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    networks = Ash.read!(Panic.Engine.Network, authorize?: false)
+    networks = Panic.Engine.list_networks!(authorize?: false)
 
     if connected?(socket) do
       # admin view subscribes to _all_ invocations

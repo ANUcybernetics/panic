@@ -67,7 +67,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
   @impl true
   def handle_params(%{"network_id" => network_id}, _, socket) do
     # Load network with its user relationship (no actor needed for read)
-    case Ash.get(Panic.Engine.Network, network_id, authorize?: false, load: [:user]) do
+    case Panic.Engine.get_network(network_id, authorize?: false, load: [:user]) do
       {:ok, network} ->
         # Check if network has missing models - redirect to network show if broken
         case NetworkHelpers.check_network_models(network.models) do

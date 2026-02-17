@@ -52,7 +52,6 @@ defmodule PanicWeb.WatcherSubscriber do
   """
 
   alias Panic.Engine.Invocation
-  alias Panic.Engine.Network
   alias PanicWeb.Presence
   alias Phoenix.Component
   alias Phoenix.LiveView
@@ -108,7 +107,7 @@ defmodule PanicWeb.WatcherSubscriber do
   Idempotent – if the stream is already configured it does nothing.
   Also tracks presence for this LiveView.
   """
-  def configure_invocation_stream(socket, %Network{} = network, display) do
+  def configure_invocation_stream(socket, %Panic.Engine.Network{} = network, display) do
     configured? =
       socket.assigns
       |> Map.get(:streams)
@@ -431,7 +430,7 @@ defmodule PanicWeb.WatcherSubscriber do
   defp fetch_network(id, assigns) do
     actor = Map.get(assigns, :current_user)
 
-    case Ash.get(Network, id, actor: actor) do
+    case Panic.Engine.get_network(id, actor: actor) do
       {:ok, _} = ok -> ok
       {:error, _} = err -> err
     end
@@ -440,7 +439,7 @@ defmodule PanicWeb.WatcherSubscriber do
   defp fetch_network_from_installation(installation_id, assigns) do
     actor = Map.get(assigns, :current_user)
 
-    case Ash.get(Panic.Watcher.Installation, installation_id,
+    case Panic.Watcher.get_installation(installation_id,
            actor: actor,
            authorize?: false,
            load: [:network]
@@ -472,7 +471,7 @@ defmodule PanicWeb.WatcherSubscriber do
 
   defp fetch_genesis_invocation(%Invocation{run_number: run_number}, _network) do
     # note: run_number is the id of the genesis invocation
-    case Ash.get(Invocation, run_number, authorize?: false) do
+    case Panic.Engine.get_invocation(run_number, authorize?: false) do
       {:ok, genesis} -> {:ok, genesis}
       {:error, _} = error -> error
     end

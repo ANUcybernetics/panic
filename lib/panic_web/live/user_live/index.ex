@@ -2,8 +2,6 @@ defmodule PanicWeb.UserLive.Index do
   @moduledoc false
   use PanicWeb, :live_view
 
-  alias Panic.Accounts.User
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -59,7 +57,7 @@ defmodule PanicWeb.UserLive.Index do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> stream(:users, Ash.read!(User, actor: socket.assigns.current_user))
+     |> stream(:users, Panic.Accounts.list_users!(actor: socket.assigns.current_user))
      |> assign_new(:current_user, fn -> nil end)}
   end
 
@@ -71,7 +69,7 @@ defmodule PanicWeb.UserLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit User")
-    |> assign(:user, Ash.get!(User, id, actor: socket.assigns.current_user))
+    |> assign(:user, Panic.Accounts.get_user!(id, actor: socket.assigns.current_user))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -93,8 +91,8 @@ defmodule PanicWeb.UserLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    user = Ash.get!(User, id, actor: socket.assigns.current_user)
-    Ash.destroy!(user, actor: socket.assigns.current_user)
+    user = Panic.Accounts.get_user!(id, actor: socket.assigns.current_user)
+    Panic.Accounts.destroy_user!(user, actor: socket.assigns.current_user)
 
     {:noreply, stream_delete(socket, :users, user)}
   end

@@ -17,13 +17,6 @@ defmodule Panic.Accounts.APIToken do
     repo Panic.Repo
   end
 
-  code_interface do
-    define :create
-    define :read
-    define :update
-    define :destroy
-  end
-
   actions do
     defaults [:read]
 

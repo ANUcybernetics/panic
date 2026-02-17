@@ -4,7 +4,6 @@ defmodule PanicWeb.NetworkLive.Info do
 
   import PanicWeb.PanicComponents
 
-  alias Panic.Engine.Network
   alias PanicWeb.TerminalAuth
   alias PanicWeb.WatcherSubscriber
 
@@ -13,7 +12,7 @@ defmodule PanicWeb.NetworkLive.Info do
     ~H"""
     <div class="prose prose-purple">
       <h2>QR codes</h2>
-      <%= for network <- Ash.read!(Panic.Engine.Network, actor: @current_user) do %>
+      <%= for network <- Panic.Engine.list_networks!(actor: @current_user) do %>
         <ol>
           <li>
             <.link patch={~p"/networks/#{network.id}/info/qr"}>
@@ -138,10 +137,10 @@ defmodule PanicWeb.NetworkLive.Info do
   # a nicer way to do that would be to have the policy checks know which on_mount
   # hooks had been run, and then to check the policy based on that
   defp get_network(network_id, %{live_action: :info}) do
-    Ash.get(Network, network_id, authorize?: false)
+    Panic.Engine.get_network(network_id, authorize?: false)
   end
 
   defp get_network(network_id, assigns) do
-    Ash.get(Network, network_id, actor: assigns.current_user)
+    Panic.Engine.get_network(network_id, actor: assigns.current_user)
   end
 end

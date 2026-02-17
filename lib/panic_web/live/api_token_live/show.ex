@@ -4,8 +4,6 @@ defmodule PanicWeb.APITokenLive.Show do
   """
   use PanicWeb, :live_view
 
-  alias Panic.Accounts.APIToken
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -133,6 +131,6 @@ defmodule PanicWeb.APITokenLive.Show do
   defp page_title(:edit), do: "Edit API Token"
 
   defp get_api_token!(id, actor) do
-    Ash.get!(APIToken, id, actor: actor)
+    Panic.Accounts.get_api_token!(id, actor: actor)
   end
 end

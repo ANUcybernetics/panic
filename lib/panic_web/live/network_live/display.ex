@@ -10,7 +10,6 @@ defmodule PanicWeb.NetworkLive.Display do
 
   import PanicWeb.PanicComponents
 
-  alias Panic.Engine.Network
   alias PanicWeb.WatcherSubscriber
 
   @impl true
@@ -79,10 +78,10 @@ defmodule PanicWeb.NetworkLive.Display do
   # a nicer way to do that would be to have the policy checks know which on_mount
   # hooks had been run, and then to check the policy based on that
   defp get_network(network_id, %{live_action: live_action}) when live_action in [:grid, :single] do
-    Ash.get(Network, network_id, authorize?: false)
+    Panic.Engine.get_network(network_id, authorize?: false)
   end
 
   defp get_network(network_id, assigns) do
-    Ash.get(Network, network_id, actor: assigns.current_user)
+    Panic.Engine.get_network(network_id, actor: assigns.current_user)
   end
 end

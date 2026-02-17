@@ -7,6 +7,7 @@ defmodule PanicWeb.InstallationLive.Index do
   alias Panic.Watcher.Installation
 
   @impl true
+
   def render(assigns) do
     ~H"""
     <.header>
@@ -84,7 +85,7 @@ defmodule PanicWeb.InstallationLive.Index do
     |> assign(:page_title, "Edit Installation")
     |> assign(
       :installation,
-      Ash.get!(Installation, id, actor: socket.assigns.current_user, load: [:network])
+      Panic.Watcher.get_installation!(id, actor: socket.assigns.current_user, load: [:network])
     )
   end
 
@@ -107,17 +108,17 @@ defmodule PanicWeb.InstallationLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    installation = Ash.get!(Installation, id, actor: socket.assigns.current_user)
-    :ok = Ash.destroy(installation, actor: socket.assigns.current_user)
+    installation = Panic.Watcher.get_installation!(id, actor: socket.assigns.current_user)
+    Panic.Watcher.destroy_installation!(installation, actor: socket.assigns.current_user)
 
     {:noreply, stream_delete(socket, :installations, installation)}
   end
 
   defp list_installations(user) do
-    Ash.read!(Installation, actor: user, load: [:network])
+    Panic.Watcher.list_installations!(actor: user, load: [:network])
   end
 
   defp list_networks(user) do
-    Ash.read!(Panic.Engine.Network, actor: user)
+    Panic.Engine.list_networks!(actor: user)
   end
 end

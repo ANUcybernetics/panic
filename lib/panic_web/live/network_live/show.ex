@@ -142,7 +142,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_params(%{"network_id" => network_id}, _session, socket) do
-    case Ash.get(Panic.Engine.Network, network_id,
+    case Panic.Engine.get_network(network_id,
            actor: socket.assigns.current_user,
            load: [:installations]
          ) do
@@ -172,7 +172,7 @@ defmodule PanicWeb.NetworkLive.Show do
     # Try to get the genesis invocation for the current run
     case NetworkRunner.get_runner_state(network_id) do
       {:ok, %{genesis_id: genesis_id}} when not is_nil(genesis_id) ->
-        case Ash.get(Panic.Engine.Invocation, genesis_id) do
+        case Panic.Engine.get_invocation(genesis_id) do
           {:ok, genesis} ->
             assign(socket, :genesis_invocation, genesis)
 

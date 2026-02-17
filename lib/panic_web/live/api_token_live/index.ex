@@ -7,6 +7,7 @@ defmodule PanicWeb.APITokenLive.Index do
   alias Panic.Accounts.APIToken
 
   @impl true
+
   def render(assigns) do
     ~H"""
     <.header>
@@ -123,16 +124,16 @@ defmodule PanicWeb.APITokenLive.Index do
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     api_token = get_api_token!(id, socket.assigns.current_user)
-    {:ok, _} = Ash.destroy(api_token, actor: socket.assigns.current_user)
+    Panic.Accounts.destroy_api_token!(api_token, actor: socket.assigns.current_user)
 
     {:noreply, stream_delete(socket, :api_tokens, api_token)}
   end
 
   defp list_api_tokens(actor) do
-    Ash.read!(APIToken, actor: actor)
+    Panic.Accounts.list_api_tokens!(actor: actor)
   end
 
   defp get_api_token!(id, actor) do
-    Ash.get!(APIToken, id, actor: actor)
+    Panic.Accounts.get_api_token!(id, actor: actor)
   end
 end

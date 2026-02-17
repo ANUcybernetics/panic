@@ -5,6 +5,9 @@ defmodule Panic.Engine do
   resources do
     resource Panic.Engine.Network do
       define :create_network, args: [:name, :description], action: :create
+      define :list_networks, action: :read
+      define :get_network, action: :read, get_by: [:id]
+      define :destroy_network, action: :destroy
       define :update_models, args: [:models]
       define :stop_run, args: [:network_id]
     end
@@ -20,6 +23,7 @@ defmodule Panic.Engine do
       define :list_run, args: [:network_id, :run_number]
       define :current_run, args: [:network_id, {:optional, :limit}]
       define :most_recent, args: [:network_id], get?: true
+      define :get_invocation, action: :read, get_by: [:id]
     end
   end
 end

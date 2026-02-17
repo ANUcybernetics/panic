@@ -4,7 +4,6 @@ defmodule PanicWeb.InstallationLive.Show do
   """
   use PanicWeb, :live_view
 
-  alias Panic.Watcher.Installation
   alias PanicWeb.WatcherSubscriber
 
   @impl true
@@ -153,7 +152,7 @@ defmodule PanicWeb.InstallationLive.Show do
   @impl true
   def handle_params(%{"id" => id} = params, _, socket) do
     installation =
-      Ash.get!(Installation, id, actor: socket.assigns.current_user, load: [:network])
+      Panic.Watcher.get_installation!(id, actor: socket.assigns.current_user, load: [:network])
 
     {:noreply,
      socket
@@ -180,10 +179,10 @@ defmodule PanicWeb.InstallationLive.Show do
 
   @impl true
   def handle_event("delete_watcher", %{"name" => name}, socket) do
-    {:ok, installation} =
-      socket.assigns.installation
-      |> Ash.Changeset.for_update(:remove_watcher, %{watcher_name: name}, actor: socket.assigns.current_user)
-      |> Ash.update()
+    installation =
+      Panic.Watcher.remove_watcher!(socket.assigns.installation, name,
+        actor: socket.assigns.current_user
+      )
 
     {:noreply, assign(socket, :installation, installation)}
   end
@@ -209,7 +208,7 @@ defmodule PanicWeb.InstallationLive.Show do
   defp page_title(:edit_watcher), do: "Edit Watcher"
 
   defp list_networks(user) do
-    Ash.read!(Panic.Engine.Network, actor: user)
+    Panic.Engine.list_networks!(actor: user)
   end
 
   defp count_viewers_for_watcher(installation, watcher) do

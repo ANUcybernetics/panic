@@ -10,7 +10,6 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
 
   import PanicWeb.PanicComponents
 
-  alias Panic.Watcher.Installation
   alias PanicWeb.WatcherSubscriber
 
   @impl true
@@ -97,8 +96,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
   end
 
   defp get_installation(id, assigns) do
-    # Anyone can view installation displays (no authentication required)
-    Ash.get(Installation, id,
+    Panic.Watcher.get_installation(id,
       actor: assigns[:current_user],
       authorize?: false,
       load: [:network]
