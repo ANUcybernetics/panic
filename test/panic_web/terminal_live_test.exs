@@ -64,7 +64,6 @@ defmodule PanicWeb.TerminalLiveTest do
     setup {PanicWeb.Helpers, :create_and_sign_in_user}
 
     test "logged in user can visit the terminal and start a new run", %{conn: conn, user: user} do
-      # Create a network with dummy models
       network = user |> Panic.Generators.network_with_dummy_models() |> pick()
 
       conn
@@ -72,7 +71,7 @@ defmodule PanicWeb.TerminalLiveTest do
       |> assert_has("span", text: "Current run:")
       |> fill_in("Prompt", with: "a sheep on the grass")
       |> submit()
-      |> assert_has("input[placeholder*='until ready for new input']")
+      |> assert_has("span", text: "a sheep on the grass")
     end
 
     test "logged in user can access terminal without token", %{conn: conn, user: user} do
