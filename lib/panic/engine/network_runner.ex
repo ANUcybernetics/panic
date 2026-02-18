@@ -440,6 +440,22 @@ defmodule Panic.Engine.NetworkRunner do
     end
   end
 
+  defp handle_processing_completed_normal(%{state: :failed} = _invocation, state) do
+    Logger.info("Invocation failed, returning to idle")
+
+    new_state =
+      stop_lockout_timer(%{
+        state
+        | genesis_invocation: nil,
+          current_invocation: nil,
+          next_invocation: nil,
+          next_invocation_time: nil
+      })
+
+    broadcast_runner_state(new_state)
+    {:noreply, new_state}
+  end
+
   defp handle_processing_completed_normal(invocation, state) do
     {network, network_owner} = get_network_and_user!(state.network_id)
 
@@ -499,21 +515,6 @@ defmodule Panic.Engine.NetworkRunner do
         broadcast_runner_state(new_state)
         {:noreply, new_state}
     end
-  rescue
-    e ->
-      Logger.error("Error handling processing completion: #{inspect(e)}")
-      # Return to idle on error
-      new_state =
-        stop_lockout_timer(%{
-          state
-          | genesis_invocation: nil,
-            current_invocation: nil,
-            next_invocation: nil,
-            next_invocation_time: nil
-        })
-
-      broadcast_runner_state(new_state)
-      {:noreply, new_state}
   end
 
   defp under_lockout?(genesis_invocation, network) do
@@ -530,60 +531,27 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   defp trigger_invocation(invocation, state) do
-    # Always use network owner as actor - NetworkRunner acts on behalf of the network owner
     {_network, network_owner} = get_network_and_user!(state.network_id)
-
     opts = [actor: network_owner]
+    genserver_pid = self()
+
+    do_invoke = fn ->
+      with {:ok, invocation} <- Engine.about_to_invoke(invocation, opts),
+           {:ok, processed} <- Engine.invoke(invocation, opts) do
+        send(genserver_pid, {:processing_completed, processed})
+      else
+        {:error, error} ->
+          Logger.error("Invocation processing failed: #{inspect(error)}")
+          Engine.mark_as_failed(invocation, opts)
+          failed = Engine.get_invocation!(invocation.id, opts)
+          send(genserver_pid, {:processing_completed, failed})
+      end
+    end
 
     if Application.get_env(:panic, :sync_network_runner, false) do
-      # Synchronous mode for tests - send message to self but process immediately
-      try do
-        # Make the invocation visible with pending state first
-        invocation = Engine.about_to_invoke!(invocation, opts)
-        processed_invocation = Engine.invoke!(invocation, opts)
-        send(self(), {:processing_completed, processed_invocation})
-      rescue
-        e ->
-          # Mark invocation as failed before logging error
-          try do
-            Engine.mark_as_failed!(invocation, opts)
-          rescue
-            # If marking as failed fails, just continue
-            _mark_error -> nil
-          end
-
-          Logger.error("Invocation processing failed: #{inspect(e)}")
-          # Don't crash - just let the run end
-      end
+      do_invoke.()
     else
-      # Capture the GenServer pid to send messages back to it
-      genserver_pid = self()
-
-      # Process the invocation asynchronously
-      {:ok, _task_pid} =
-        Task.Supervisor.start_child(@task_supervisor, fn ->
-          try do
-            # Make the invocation visible with pending state first
-            invocation = Engine.about_to_invoke!(invocation, opts)
-            # Process the invocation
-            processed_invocation = Engine.invoke!(invocation, opts)
-
-            # Notify completion to the GenServer
-            send(genserver_pid, {:processing_completed, processed_invocation})
-          rescue
-            e ->
-              # Mark invocation as failed before logging error
-              try do
-                Engine.mark_as_failed!(invocation, opts)
-              rescue
-                # If marking as failed fails, just continue
-                _mark_error -> nil
-              end
-
-              Logger.error("Invocation processing failed: #{inspect(e)}")
-              # Don't crash - just let the run end
-          end
-        end)
+      Task.Supervisor.start_child(@task_supervisor, do_invoke)
     end
   end
 
