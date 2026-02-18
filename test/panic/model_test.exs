@@ -62,6 +62,69 @@ defmodule Panic.ModelTest do
     end
   end
 
+  describe "deprecated models" do
+    @deprecated_ids ~w(
+      bunny-phi-2-siglip uform-gen blip-2 blip-3 florence-2-large
+      sdxl icons sdxl-lightning-4step kandinsky-2.2 proteus-v0.2
+      sticker-maker flux-schnell
+    )
+
+    test "deprecated models are still returned by all/0" do
+      all_ids = Enum.map(Model.all(), & &1.id)
+
+      for id <- @deprecated_ids do
+        assert id in all_ids, "deprecated model #{id} should still be in all/0"
+      end
+    end
+
+    test "deprecated models can be resolved by by_id/1" do
+      for id <- @deprecated_ids do
+        model = Model.by_id(id)
+        assert model != nil, "deprecated model #{id} should be resolvable"
+        assert model.deprecated == true
+      end
+    end
+
+    test "deprecated models are excluded when filtering by deprecated: false" do
+      active_models = Model.all(deprecated: false)
+      active_ids = Enum.map(active_models, & &1.id)
+
+      for id <- @deprecated_ids do
+        refute id in active_ids, "deprecated model #{id} should not appear with deprecated: false filter"
+      end
+    end
+
+    test "non-deprecated models have deprecated: false" do
+      active_models = Model.all(deprecated: false)
+
+      for model <- active_models do
+        assert model.deprecated == false
+      end
+    end
+  end
+
+  describe "new models" do
+    test "new T2I models have correct types" do
+      for id <- ~w(flux-2-klein-4b seedream-4.5 z-image-turbo) do
+        model = Model.by_id!(id)
+        assert model.input_type == :text, "#{id} should have text input"
+        assert model.output_type == :image, "#{id} should have image output"
+        assert model.platform == Replicate
+        assert model.deprecated == false
+      end
+    end
+
+    test "new I2T models have correct types" do
+      for id <- ~w(llava-13b qwen2-vl-7b-instruct llama-4-scout-instruct) do
+        model = Model.by_id!(id)
+        assert model.input_type == :image, "#{id} should have image input"
+        assert model.output_type == :text, "#{id} should have text output"
+        assert model.platform == Replicate
+        assert model.deprecated == false
+      end
+    end
+  end
+
   describe "Model.by_id!/1" do
     test "retrieves specific models by ID" do
       # Test with a known dummy model

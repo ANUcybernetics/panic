@@ -426,6 +426,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   defp get_model_options(search_term, input_type) do
     [input_type: input_type]
     |> Model.all()
+    |> Enum.reject(& &1.deprecated)
     |> Enum.filter(fn model ->
       String.downcase(model.name) =~ String.downcase(search_term)
     end)
