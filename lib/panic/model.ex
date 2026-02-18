@@ -320,7 +320,7 @@ defmodule Panic.Model do
                  Replicate.invoke(
                    model,
                    %{
-                     image: input,
+                     media: input,
                      prompt:
                        "Provide an interesting, concise caption for this image. Describe foreground and background elements."
                    },
@@ -368,9 +368,11 @@ defmodule Panic.Model do
             output_format: "png"
           }
 
-          with {:ok, %{"output" => [image_url]}} <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
+          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
+            case output do
+              url when is_binary(url) -> {:ok, url}
+              [url | _] when is_binary(url) -> {:ok, url}
+            end
           end
         end
       },
@@ -542,9 +544,11 @@ defmodule Panic.Model do
             safety_filter_level: "block_only_high"
           }
 
-          with {:ok, %{"output" => image_url}} when is_binary(image_url) and image_url != "" <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
+          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
+            case output do
+              url when is_binary(url) and url != "" -> {:ok, url}
+              [url | _] when is_binary(url) -> {:ok, url}
+            end
           end
         end
       },
@@ -561,9 +565,11 @@ defmodule Panic.Model do
             aspect_ratio: "16:9"
           }
 
-          with {:ok, %{"output" => image_url}} <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
+          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
+            case output do
+              url when is_binary(url) -> {:ok, url}
+              [url | _] when is_binary(url) -> {:ok, url}
+            end
           end
         end
       },
@@ -583,9 +589,11 @@ defmodule Panic.Model do
             guidance_scale: 2.5
           }
 
-          with {:ok, %{"output" => image_url}} <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
+          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
+            case output do
+              url when is_binary(url) -> {:ok, url}
+              [url | _] when is_binary(url) -> {:ok, url}
+            end
           end
         end
       },
@@ -604,9 +612,11 @@ defmodule Panic.Model do
             output_format: "png"
           }
 
-          with {:ok, %{"output" => image_url}} when is_binary(image_url) <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
+          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
+            case output do
+              url when is_binary(url) -> {:ok, url}
+              [url | _] when is_binary(url) -> {:ok, url}
+            end
           end
         end
       },
@@ -622,13 +632,15 @@ defmodule Panic.Model do
           input_params = %{
             prompt: input,
             aspect_ratio: "16:9",
-            size: "big",
+            size: "2K",
             guidance_scale: 2.5
           }
 
-          with {:ok, %{"output" => image_url}} when is_binary(image_url) <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
+          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
+            case output do
+              url when is_binary(url) -> {:ok, url}
+              [url | _] when is_binary(url) -> {:ok, url}
+            end
           end
         end
       },
@@ -646,9 +658,11 @@ defmodule Panic.Model do
             aspect_ratio: "16:9"
           }
 
-          with {:ok, %{"output" => image_url}} when is_binary(image_url) <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
+          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
+            case output do
+              url when is_binary(url) -> {:ok, url}
+              [url | _] when is_binary(url) -> {:ok, url}
+            end
           end
         end
       },
@@ -668,9 +682,11 @@ defmodule Panic.Model do
             enhance_prompt: false
           }
 
-          with {:ok, %{"output" => image_url}} <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
+          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
+            case output do
+              url when is_binary(url) -> {:ok, url}
+              [url | _] when is_binary(url) -> {:ok, url}
+            end
           end
         end
       },
@@ -688,9 +704,11 @@ defmodule Panic.Model do
             aspect_ratio: "16:9"
           }
 
-          with {:ok, %{"output" => image_url}} <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
+          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
+            case output do
+              url when is_binary(url) -> {:ok, url}
+              [url | _] when is_binary(url) -> {:ok, url}
+            end
           end
         end
       },
@@ -927,9 +945,12 @@ defmodule Panic.Model do
               aspect_ratio: "16:9"
             }
 
-            with {:ok, %{"output" => image_url}} <-
+            with {:ok, %{"output" => output}} <-
                    Replicate.invoke(model, input_params, token) do
-              {:ok, image_url}
+              case output do
+                url when is_binary(url) -> {:ok, url}
+                [url | _] when is_binary(url) -> {:ok, url}
+              end
             end
           else
             # Genesis mode - use flux-schnell to generate initial image
@@ -950,9 +971,12 @@ defmodule Panic.Model do
               disable_safety_checker: true
             }
 
-            with {:ok, %{"output" => [image_url]}} <-
+            with {:ok, %{"output" => output}} <-
                    Replicate.invoke(flux_schnell_model, input_params, token) do
-              {:ok, image_url}
+              case output do
+                url when is_binary(url) -> {:ok, url}
+                [url | _] when is_binary(url) -> {:ok, url}
+              end
             end
           end
         end
@@ -971,69 +995,6 @@ defmodule Panic.Model do
           {:ok, input}
         end
       },
-      %__MODULE__{
-        id: "image-reproducer-i-seed",
-        platform: Replicate,
-        path: "bytedance/seededit-3.0",
-        name: "Image Reproducer I (Seed)",
-        description: "Image generation/reproduction model that can create images from text or reproduce existing images",
-        input_type: :text,
-        output_type: :image,
-        invoke: fn model, input, token ->
-          # Check if input looks like a URL (for image reproduction)
-          # or text prompt (for genesis)
-          if String.starts_with?(input, "http") do
-            # Image reproduction mode
-            input_params = %{
-              prompt: "reproduce this image exactly",
-              image: input,
-              guidance_scale: 5.5
-            }
-
-            with {:ok, %{"output" => image_url}} <-
-                   Replicate.invoke(model, input_params, token) do
-              {:ok, image_url}
-            end
-          else
-            # Genesis mode - use seedream-3 to generate initial image
-            seedream_model = %__MODULE__{
-              id: "seedream-3",
-              path: "bytedance/seedream-3",
-              name: "Seedream 3",
-              platform: Replicate,
-              input_type: :text,
-              output_type: :image,
-              invoke: fn _, _, _ -> {:ok, ""} end
-            }
-
-            input_params = %{
-              prompt: input,
-              aspect_ratio: "16:9",
-              size: "big",
-              guidance_scale: 2.5
-            }
-
-            with {:ok, %{"output" => image_url}} <-
-                   Replicate.invoke(seedream_model, input_params, token) do
-              {:ok, image_url}
-            end
-          end
-        end
-      },
-      %__MODULE__{
-        id: "image-reproducer-ii-seed",
-        platform: Replicate,
-        path: "bytedance/seededit-3.0",
-        name: "Image Reproducer II (Seed)",
-        description: "Image to text passthrough for completing image reproduction networks",
-        input_type: :image,
-        output_type: :text,
-        invoke: fn _model, input, _token ->
-          # Simply pass through the image URL as text
-          # This allows the network to complete the cycle
-          {:ok, input}
-        end
-      }
     ] ++
       [
         # Text to Text

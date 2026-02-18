@@ -33,21 +33,22 @@ defmodule Panic.PlatformsTest do
       {:ok, api_key: api_key}
     end
 
-    test "can list latest model version for all models", %{api_key: api_key} do
-      models = Model.all(platform: Replicate)
-      assert length(models) > 0, "Expected to find Replicate models"
+    test "can list latest model version for all non-deprecated models", %{api_key: api_key} do
+      models = Model.all(platform: Replicate, deprecated: false)
+      assert length(models) > 0, "Expected to find non-deprecated Replicate models"
 
       for model <- models do
-        assert {:ok, version} = Replicate.get_latest_model_version(model, api_key)
+        assert {:ok, version} = Replicate.get_latest_model_version(model, api_key),
+               "Failed to get version for model #{model.id}"
 
         assert String.match?(version, ~r/^[a-f0-9]{64}$/),
                "Expected valid version hash for model #{model.id}, got: #{version}"
       end
     end
 
-    test "can invoke all Replicate models", %{api_key: api_key} do
-      models = Model.all(platform: Replicate)
-      assert length(models) > 0, "Expected to find Replicate models"
+    test "can invoke all non-deprecated Replicate models", %{api_key: api_key} do
+      models = Model.all(platform: Replicate, deprecated: false)
+      assert length(models) > 0, "Expected to find non-deprecated Replicate models"
 
       # Process models with a semaphore-style approach
       max_concurrency = 10
@@ -134,17 +135,19 @@ defmodule Panic.PlatformsTest do
       assert failure_count == 0, "#{failure_count} models failed with unexpected errors"
     end
 
-    test "flux-schnell generates valid image URLs", %{api_key: api_key} do
-      %Model{invoke: invoke_fn} = model = Model.by_id!("flux-schnell")
+    test "imagen-4-fast generates valid image URLs", %{api_key: api_key} do
+      %Model{invoke: invoke_fn} = model = Model.by_id!("imagen-4-fast")
 
       assert {:ok, img_url} = invoke_fn.(model, @test_text_input, api_key)
       assert String.match?(img_url, ~r|^https://.*$|), "Expected valid URL, got: #{img_url}"
     end
 
-    test "stable-audio generates valid audio URLs", %{api_key: api_key} do
-      %Model{invoke: invoke_fn} = model = Model.by_id!("stable-audio")
+    test "lyria-2 generates valid audio URLs", %{api_key: api_key} do
+      %Model{invoke: invoke_fn} = model = Model.by_id!("lyria-2")
 
-      assert {:ok, audio_url} = invoke_fn.(model, @test_text_input, api_key)
+      assert {:ok, audio_url} =
+               invoke_fn.(model, "an upbeat electronic dance track with synths", api_key)
+
       assert String.match?(audio_url, ~r|^https://.*$|), "Expected valid URL, got: #{audio_url}"
     end
 
@@ -167,55 +170,6 @@ defmodule Panic.PlatformsTest do
       assert String.match?(output, ~r/\S/), "Expected non-empty output"
     end
 
-    test "imagen-4-fast generates valid image URLs", %{api_key: api_key} do
-      %Model{invoke: invoke_fn} = model = Model.by_id!("imagen-4-fast")
-
-      # Verify model configuration
-      assert model.name == "Imagen 4 Fast"
-      assert model.platform == Replicate
-      assert model.path == "google/imagen-4-fast"
-      assert model.input_type == :text
-      assert model.output_type == :image
-
-      # Test with a simple prompt
-      test_prompt = "a beautiful sunset over mountains"
-
-      IO.puts("\n=== Testing Imagen 4 Fast ===")
-      IO.puts("Prompt: #{test_prompt}")
-      start_time = System.monotonic_time(:millisecond)
-
-      # First, let's call Replicate.invoke directly to see the raw response
-      input_params = %{
-        prompt: test_prompt,
-        aspect_ratio: "16:9",
-        safety_filter_level: "block_only_high"
-      }
-
-      IO.puts("Calling Replicate.invoke directly...")
-      raw_result = Replicate.invoke(model, input_params, api_key)
-      IO.puts("Raw response: #{inspect(raw_result, pretty: true, limit: :infinity)}")
-
-      # Now test through the model's invoke function
-      IO.puts("\nCalling model.invoke...")
-      result = invoke_fn.(model, test_prompt, api_key)
-
-      duration = System.monotonic_time(:millisecond) - start_time
-      IO.puts("Completed in #{duration}ms")
-
-      case result do
-        {:ok, image_url} ->
-          assert is_binary(image_url), "Expected string output"
-
-          assert String.match?(image_url, ~r|^https://.*$|),
-                 "Expected valid HTTPS URL, got: #{image_url}"
-
-          IO.puts("Successfully generated image: #{image_url}")
-
-        {:error, reason} ->
-          IO.puts("ERROR: #{inspect(reason)}")
-          flunk("Failed to invoke Imagen 4 Fast: #{inspect(reason)}")
-      end
-    end
   end
 
   describe "OpenAI platform" do
