@@ -39,7 +39,8 @@ defmodule Panic.Model do
     :output_type,
     :invoke,
     :description,
-    :homepage
+    :homepage,
+    deprecated: false
   ]
 
   @type t :: %__MODULE__{
@@ -51,7 +52,8 @@ defmodule Panic.Model do
           output_type: :text | :audio | :image,
           description: String.t() | nil,
           homepage: String.t() | nil,
-          invoke: (String.t(), String.t() -> {:ok, String.t()} | {:error, String.t()})
+          invoke: (String.t(), String.t() -> {:ok, String.t()} | {:error, String.t()}),
+          deprecated: boolean()
         }
 
   @impl Access
@@ -139,6 +141,7 @@ defmodule Panic.Model do
         name: "Bunny Phi 2 SigLIP",
         input_type: :image,
         output_type: :text,
+        deprecated: true,
         invoke: fn model, input, token ->
           with {:ok, %{"output" => text}} <-
                  Replicate.invoke(
@@ -162,6 +165,7 @@ defmodule Panic.Model do
         name: "Florence 2",
         input_type: :image,
         output_type: :text,
+        deprecated: true,
         invoke: fn model, input, token ->
           with {:ok, %{"output" => %{"text" => text}}} <-
                  Replicate.invoke(model, %{image: input, task_input: "Detailed Caption"}, token),
@@ -177,6 +181,7 @@ defmodule Panic.Model do
         name: "UForm",
         input_type: :image,
         output_type: :text,
+        deprecated: true,
         invoke: fn model, input, token ->
           with {:ok, %{"output" => text}} <-
                  Replicate.invoke(
@@ -239,6 +244,7 @@ defmodule Panic.Model do
         name: "BLIP 2",
         input_type: :image,
         output_type: :text,
+        deprecated: true,
         invoke: fn model, input, token ->
           with {:ok, %{"output" => text}} <-
                  Replicate.invoke(
@@ -261,6 +267,7 @@ defmodule Panic.Model do
         name: "BLIP 3",
         input_type: :image,
         output_type: :text,
+        deprecated: true,
         invoke: fn model, input, token ->
           with {:ok, %{"output" => text}} <-
                  Replicate.invoke(
@@ -272,6 +279,78 @@ defmodule Panic.Model do
                    token
                  ) do
             {:ok, text}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "llava-13b",
+        platform: Replicate,
+        path: "yorickvp/llava-13b",
+        name: "LLaVA 13B",
+        description: "General-purpose visual language model for image captioning and understanding",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => output_list}} when is_list(output_list) <-
+                 Replicate.invoke(
+                   model,
+                   %{
+                     image: input,
+                     prompt:
+                       "Provide an interesting, concise caption for this image. Describe foreground and background elements.",
+                     max_tokens: 100,
+                     temperature: 0.2
+                   },
+                   token
+                 ) do
+            {:ok, output_list |> Enum.join("") |> String.trim()}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "qwen2-vl-7b-instruct",
+        platform: Replicate,
+        path: "lucataco/qwen2-vl-7b-instruct",
+        name: "Qwen2-VL 7B",
+        description: "Modern visual language model with any-resolution image understanding",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => text}} when is_binary(text) <-
+                 Replicate.invoke(
+                   model,
+                   %{
+                     image: input,
+                     prompt:
+                       "Provide an interesting, concise caption for this image. Describe foreground and background elements."
+                   },
+                   token
+                 ) do
+            {:ok, String.trim(text)}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "llama-4-scout-instruct",
+        platform: Replicate,
+        path: "meta/llama-4-scout-instruct",
+        name: "Llama 4 Scout",
+        description: "Natively multimodal 17B-parameter model with 16 experts",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => output_list}} when is_list(output_list) <-
+                 Replicate.invoke(
+                   model,
+                   %{
+                     image: input,
+                     prompt:
+                       "Provide an interesting, concise caption for this image. Describe foreground and background elements.",
+                     max_tokens: 100
+                   },
+                   token
+                 ) do
+            {:ok, output_list |> Enum.join("") |> String.trim()}
           end
         end
       },
@@ -302,6 +381,7 @@ defmodule Panic.Model do
         name: "FLUX.1 [schnell]",
         input_type: :text,
         output_type: :image,
+        deprecated: true,
         invoke: fn model, input, token ->
           input_params = %{
             prompt: input,
@@ -323,6 +403,7 @@ defmodule Panic.Model do
         name: "Stable Diffusion XL",
         input_type: :text,
         output_type: :image,
+        deprecated: true,
         invoke: fn model, input, token ->
           input_params = %{
             prompt: input,
@@ -345,6 +426,7 @@ defmodule Panic.Model do
         name: "SDXL Icons",
         input_type: :text,
         output_type: :image,
+        deprecated: true,
         invoke: fn model, input, token ->
           input_params = %{
             prompt: input,
@@ -366,6 +448,7 @@ defmodule Panic.Model do
         name: "Sticker Maker",
         input_type: :text,
         output_type: :image,
+        deprecated: true,
         invoke: fn model, input, token ->
           input_params = %{
             prompt: input,
@@ -387,6 +470,7 @@ defmodule Panic.Model do
         name: "SDXL Lightning",
         input_type: :text,
         output_type: :image,
+        deprecated: true,
         invoke: fn model, input, token ->
           input_params = %{
             prompt: input,
@@ -407,6 +491,7 @@ defmodule Panic.Model do
         name: "Kandinsky 2.2",
         input_type: :text,
         output_type: :image,
+        deprecated: true,
         invoke: fn model, input, token ->
           input_params = %{
             prompt: input,
@@ -427,6 +512,7 @@ defmodule Panic.Model do
         name: "Proteus v0.2",
         input_type: :text,
         output_type: :image,
+        deprecated: true,
         invoke: fn model, input, token ->
           input_params = %{
             prompt: input,
@@ -498,6 +584,69 @@ defmodule Panic.Model do
           }
 
           with {:ok, %{"output" => image_url}} <-
+                 Replicate.invoke(model, input_params, token) do
+            {:ok, image_url}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "flux-2-klein-4b",
+        platform: Replicate,
+        path: "black-forest-labs/flux-2-klein-4b",
+        name: "FLUX 2 Klein 4B",
+        description: "Sub-second inference T2I with text rendering, successor to FLUX.1 schnell",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input,
+            aspect_ratio: "16:9",
+            output_format: "png"
+          }
+
+          with {:ok, %{"output" => image_url}} when is_binary(image_url) <-
+                 Replicate.invoke(model, input_params, token) do
+            {:ok, image_url}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "seedream-4.5",
+        platform: Replicate,
+        path: "bytedance/seedream-4.5",
+        name: "Seedream 4.5",
+        description: "Successor to Seedream 3 with stronger spatial understanding",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input,
+            aspect_ratio: "16:9",
+            size: "big",
+            guidance_scale: 2.5
+          }
+
+          with {:ok, %{"output" => image_url}} when is_binary(image_url) <-
+                 Replicate.invoke(model, input_params, token) do
+            {:ok, image_url}
+          end
+        end
+      },
+      %__MODULE__{
+        id: "z-image-turbo",
+        platform: Replicate,
+        path: "prunaai/z-image-turbo",
+        name: "Z-Image Turbo",
+        description: "Sub-second photorealistic image generation",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input,
+            aspect_ratio: "16:9"
+          }
+
+          with {:ok, %{"output" => image_url}} when is_binary(image_url) <-
                  Replicate.invoke(model, input_params, token) do
             {:ok, image_url}
           end
