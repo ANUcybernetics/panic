@@ -290,6 +290,7 @@ defmodule Panic.Model do
         description: "General-purpose visual language model for image captioning and understanding",
         input_type: :image,
         output_type: :text,
+        deprecated: true,
         invoke: fn model, input, token ->
           with {:ok, %{"output" => output_list}} when is_list(output_list) <-
                  Replicate.invoke(
@@ -581,6 +582,7 @@ defmodule Panic.Model do
         description: "High-quality text-to-image generation model from ByteDance",
         input_type: :text,
         output_type: :image,
+        deprecated: true,
         invoke: fn model, input, token ->
           input_params = %{
             prompt: input,
@@ -795,6 +797,7 @@ defmodule Panic.Model do
         name: "MusicGen",
         input_type: :text,
         output_type: :audio,
+        deprecated: true,
         invoke: fn model, input, token ->
           with {:ok, %{"output" => audio_url}} <-
                  Replicate.invoke(
@@ -864,6 +867,7 @@ defmodule Panic.Model do
         name: "Riffusion",
         input_type: :text,
         output_type: :audio,
+        deprecated: true,
         invoke: fn model, input, token ->
           with {:ok, %{"output" => %{"audio" => audio_url}}} <-
                  Replicate.invoke(

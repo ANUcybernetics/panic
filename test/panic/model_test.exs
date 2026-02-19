@@ -115,7 +115,7 @@ defmodule Panic.ModelTest do
     end
 
     test "new I2T models have correct types" do
-      for id <- ~w(llava-13b qwen2-vl-7b-instruct llama-4-scout-instruct) do
+      for id <- ~w(qwen2-vl-7b-instruct llama-4-scout-instruct) do
         model = Model.by_id!(id)
         assert model.input_type == :image, "#{id} should have image input"
         assert model.output_type == :text, "#{id} should have text output"
