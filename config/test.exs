@@ -36,6 +36,7 @@ config :panic, PanicWeb.Endpoint,
 
 # Disable vestaboard API calls in tests
 config :panic, :disable_vestaboard, true
+config :panic, :replicate_retry_options, max_retries: 3, base_delay_ms: 1
 config :panic, token_signing_secret: "lR3r6rkW8nRkChM35qcKl00FNSK95ra5"
 
 # Initialize plugs at runtime for faster test compilation

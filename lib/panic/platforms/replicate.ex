@@ -1,5 +1,7 @@
 defmodule Panic.Platforms.Replicate do
   @moduledoc false
+  require Logger
+
   def get_latest_model_version(%Panic.Model{path: path}, token) do
     [url: "models/#{path}", auth: {:bearer, token}]
     |> req_new()
@@ -47,6 +49,9 @@ defmodule Panic.Platforms.Replicate do
               {:error, error}
             end
 
+          %{"status" => "canceled"} ->
+            {:error, "Prediction was canceled"}
+
           %{"status" => status} when status in ~w(starting processing) ->
             ## recursion case; doesn't need a tuple
             get(prediction_id, token)
@@ -64,31 +69,58 @@ defmodule Panic.Platforms.Replicate do
   end
 
   def invoke(model, input, token) do
-    version =
-      case model do
-        %{version: version} -> {:ok, version}
-        _ -> get_latest_model_version(model, token)
+    with_retry(fn ->
+      version =
+        case model do
+          %{version: version} -> {:ok, version}
+          _ -> get_latest_model_version(model, token)
+        end
+
+      with {:ok, version_id} <- version do
+        request_body = %{version: version_id, input: input}
+
+        [url: "predictions", method: :post, json: request_body, auth: {:bearer, token}]
+        |> req_new()
+        |> Req.request()
+        |> case do
+          {:ok, %Req.Response{body: %{"id" => id}, status: 201}} ->
+            get(id, token)
+
+          {:ok, %Req.Response{body: %{"detail" => message}, status: 410}} ->
+            {:error, message}
+
+          {:ok, %Req.Response{body: %{"detail" => message}, status: status}} when status >= 400 ->
+            {:error, message}
+
+          {:error, reason} ->
+            {:error, reason}
+        end
       end
+    end)
+  end
 
-    with {:ok, version_id} <- version do
-      request_body = %{version: version_id, input: input}
+  @doc false
+  def with_retry(fun) do
+    opts = Application.get_env(:panic, :replicate_retry_options, [])
+    max_retries = Keyword.get(opts, :max_retries, 3)
+    base_delay_ms = Keyword.get(opts, :base_delay_ms, 1_000)
 
-      [url: "predictions", method: :post, json: request_body, auth: {:bearer, token}]
-      |> req_new()
-      |> Req.request()
-      |> case do
-        {:ok, %Req.Response{body: %{"id" => id}, status: 201}} ->
-          get(id, token)
+    do_retry(fun, 0, max_retries, base_delay_ms)
+  end
 
-        {:ok, %Req.Response{body: %{"detail" => message}, status: 410}} ->
-          {:error, message}
+  defp do_retry(fun, attempt, max_retries, base_delay_ms) do
+    case fun.() do
+      {:ok, _} = success ->
+        success
 
-        {:ok, %Req.Response{body: %{"detail" => message}, status: status}} when status >= 400 ->
-          {:error, message}
+      {:error, _} = error when attempt >= max_retries ->
+        error
 
-        {:error, reason} ->
-          {:error, reason}
-      end
+      {:error, reason} ->
+        delay = base_delay_ms * Integer.pow(2, attempt)
+        Logger.warning("Replicate invoke failed (attempt #{attempt + 1}): #{inspect(reason)}, retrying in #{delay}ms")
+        Process.sleep(delay)
+        do_retry(fun, attempt + 1, max_retries, base_delay_ms)
     end
   end
 

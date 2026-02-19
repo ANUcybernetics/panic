@@ -3,6 +3,55 @@ defmodule Panic.Platforms.ReplicateTest do
 
   alias Panic.Platforms.Replicate
 
+  describe "with_retry/1" do
+    @describetag :capture_log
+
+    test "retries on error then succeeds" do
+      call_count = :counters.new(1, [:atomics])
+
+      result =
+        Replicate.with_retry(fn ->
+          :counters.add(call_count, 1, 1)
+
+          if :counters.get(call_count, 1) <= 2 do
+            {:error, "transient failure"}
+          else
+            {:ok, "success"}
+          end
+        end)
+
+      assert {:ok, "success"} = result
+      assert :counters.get(call_count, 1) == 3
+    end
+
+    test "gives up after max retries" do
+      call_count = :counters.new(1, [:atomics])
+
+      result =
+        Replicate.with_retry(fn ->
+          :counters.add(call_count, 1, 1)
+          {:error, "persistent failure"}
+        end)
+
+      assert {:error, "persistent failure"} = result
+      # 1 initial + 3 retries = 4 total calls
+      assert :counters.get(call_count, 1) == 4
+    end
+
+    test "no retry on first success" do
+      call_count = :counters.new(1, [:atomics])
+
+      result =
+        Replicate.with_retry(fn ->
+          :counters.add(call_count, 1, 1)
+          {:ok, "immediate success"}
+        end)
+
+      assert {:ok, "immediate success"} = result
+      assert :counters.get(call_count, 1) == 1
+    end
+  end
+
   describe "detect_nsfw/1" do
     test "detects error messages starting with NSFW" do
       assert Replicate.detect_nsfw("NSFW content detected")

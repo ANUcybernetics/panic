@@ -15,6 +15,30 @@ defmodule Panic.Platforms.Dummy do
     generate_output(input_type, output_type, input)
   end
 
+  @doc """
+  Invoke with controlled error behaviour for testing retry logic.
+
+  Accepts an `error_spec` parameter:
+  - `{:fail_n_times, n}` --- uses process dictionary counter to fail `n` times then succeed
+  - `:always_fail` --- always returns `{:error, ...}`
+  """
+  def invoke_with_errors(%Panic.Model{} = model, input, token, error_spec) do
+    case error_spec do
+      {:fail_n_times, n} ->
+        count = Process.get(:dummy_error_count, 0)
+
+        if count < n do
+          Process.put(:dummy_error_count, count + 1)
+          {:error, "simulated transient error (attempt #{count + 1})"}
+        else
+          invoke(model, input, token)
+        end
+
+      :always_fail ->
+        {:error, "simulated permanent error"}
+    end
+  end
+
   defp generate_output(:text, :text, input) when is_binary(input) do
     # Simple transformation: reverse the input and add a prefix
     output = "DUMMY_TEXT: #{String.reverse(input)}"
