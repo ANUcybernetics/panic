@@ -113,11 +113,6 @@ defmodule PanicWeb.NetworkLive.Info do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
-    WatcherSubscriber.handle_invocation_message(message, socket)
-  end
-
-  @impl true
   def handle_info(:refresh_qr_code, socket) do
     # Only refresh if we're showing the QR modal
     if socket.assigns.live_action == :qr do

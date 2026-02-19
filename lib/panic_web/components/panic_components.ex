@@ -167,8 +167,6 @@ defmodule PanicWeb.PanicComponents do
             <%= case @display do %>
               <% {:grid, _, _} -> %>
                 <span title="Grid view">⊞</span>
-              <% {:single, _, _} -> %>
-                <span title="Single view">□</span>
               <% {:single, _, _, _} -> %>
                 <span title="Single view">□</span>
             <% end %>
@@ -186,7 +184,6 @@ defmodule PanicWeb.PanicComponents do
   end
 
   defp num_cols({:grid, _rows, cols}), do: cols
-  defp num_cols({:single, _, _}), do: 1
   defp num_cols({:single, _, _, _}), do: 1
 
   # individual components

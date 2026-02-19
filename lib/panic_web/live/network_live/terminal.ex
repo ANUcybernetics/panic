@@ -39,7 +39,6 @@ defmodule PanicWeb.NetworkLive.Terminal do
         network={@network}
         genesis_invocation={@genesis_invocation}
         current_user={@network_user}
-        lockout_seconds_remaining={@lockout_seconds_remaining}
         id={@network.id}
       />
     </div>
@@ -85,11 +84,6 @@ defmodule PanicWeb.NetworkLive.Terminal do
       {:error, _error} ->
         {:noreply, push_navigate(socket, to: ~p"/404")}
     end
-  end
-
-  @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
-    WatcherSubscriber.handle_invocation_message(message, socket)
   end
 
   @impl true

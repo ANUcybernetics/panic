@@ -88,22 +88,20 @@ defmodule PanicWeb.AdminLive do
   end
 
   @impl true
-  def handle_info(%Broadcast{topic: "invocation:" <> _, event: "lockout_countdown"} = _message, socket) do
-    # Ignore lockout countdown messages in admin view
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_info(%Broadcast{topic: "invocation:" <> _, event: "runner_state_changed"} = _message, socket) do
-    # Ignore runner state changed messages in admin view
+  def handle_info(%Broadcast{topic: "invocation:" <> _, event: "presence_diff"}, socket) do
     {:noreply, socket}
   end
 
   @impl true
   def handle_info(%Broadcast{topic: "invocation:" <> _} = message, socket) do
-    invocation = message.payload.data
+    case message.payload do
+      %{data: invocation} ->
+        {:noreply,
+         stream_insert(socket, :invocations, invocation, at: 0, limit: @invocation_stream_limit)}
 
-    {:noreply, stream_insert(socket, :invocations, invocation, at: 0, limit: @invocation_stream_limit)}
+      _ ->
+        {:noreply, socket}
+    end
   end
 
   @impl true

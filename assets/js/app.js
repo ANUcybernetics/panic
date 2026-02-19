@@ -28,6 +28,7 @@ import live_select from "live_select";
 // LiveView hooks
 
 import AudioVisualizer from "./hooks/audio_visualizer";
+import TerminalLockoutTimer from "./hooks/terminal_lockout_timer";
 
 const FocusInput = {
   mounted() {
@@ -106,6 +107,7 @@ const hooks = {
   PhoenixCustomEventHook,
   FocusInput,
   RunnerCountdown,
+  TerminalLockoutTimer,
   ...live_select
 };
 

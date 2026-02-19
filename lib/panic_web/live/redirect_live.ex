@@ -14,8 +14,8 @@ defmodule PanicWeb.RedirectLive do
         ["s" | invocation_graphemes] ->
           ~p"/display/static/#{Enum.join(invocation_graphemes)}/"
 
-        [network_id, offset, stride] ->
-          ~p"/networks/#{network_id}/display/single/#{offset}/#{stride}/"
+        _ ->
+          ~p"/"
       end
 
     {:noreply, push_navigate(socket, to: path)}

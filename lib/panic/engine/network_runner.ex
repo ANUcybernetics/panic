@@ -24,7 +24,6 @@ defmodule Panic.Engine.NetworkRunner do
   - `genesis_invocation`: The first invocation of the current run (nil when idle)
   - `current_invocation`: The invocation currently being processed (nil when idle)
   - `watchers`: List of active watchers for this network
-  - `lockout_timer`: Timer reference for broadcasting lockout countdown (nil when not in lockout)
   - `next_invocation`: The next invocation waiting to be processed (nil when no pending invocation)
   - `next_invocation_time`: Absolute DateTime when the next invocation should be processed (nil when no delay)
 
@@ -176,7 +175,6 @@ defmodule Panic.Engine.NetworkRunner do
       genesis_invocation: nil,
       current_invocation: nil,
       watchers: [],
-      lockout_timer: nil,
       next_invocation: nil,
       next_invocation_time: nil
     }
@@ -204,10 +202,7 @@ defmodule Panic.Engine.NetworkRunner do
 
   @impl true
   def handle_call(:get_runner_state, _from, state) do
-    status = determine_runner_status(state)
-
     response = %{
-      status: status,
       genesis_invocation: state.genesis_invocation,
       current_invocation: state.current_invocation,
       next_invocation_time: state.next_invocation_time
@@ -224,18 +219,14 @@ defmodule Panic.Engine.NetworkRunner do
         {:reply, {:ok, :not_running}, state}
 
       %{current_invocation: _current} ->
-        # Stop current run - let current invocation complete naturally
+        new_state = %{
+          state
+          | genesis_invocation: nil,
+            current_invocation: nil,
+            next_invocation: nil,
+            next_invocation_time: nil
+        }
 
-        new_state =
-          stop_lockout_timer(%{
-            state
-            | genesis_invocation: nil,
-              current_invocation: nil,
-              next_invocation: nil,
-              next_invocation_time: nil
-          })
-
-        broadcast_runner_state(new_state)
         {:reply, {:ok, :stopped}, new_state}
     end
   end
@@ -260,47 +251,6 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   @impl true
-  def handle_info(:lockout_tick, state) do
-    case state do
-      %{genesis_invocation: %{} = genesis} ->
-        network = Ash.get!(Engine.Network, state.network_id, authorize?: false)
-        remaining_seconds = calculate_lockout_remaining(genesis, network)
-
-        if remaining_seconds >= 0 do
-          # Only broadcast if there are viewers watching
-          viewers = PanicWeb.WatcherSubscriber.list_viewers(state.network_id)
-
-          if length(viewers) > 0 do
-            PanicWeb.Endpoint.broadcast("invocation:#{state.network_id}", "lockout_countdown", %{
-              seconds_remaining: remaining_seconds
-            })
-          end
-
-          if remaining_seconds > 0 do
-            # Schedule next tick
-            timer_ref = Process.send_after(self(), :lockout_tick, 1000)
-            {:noreply, %{state | lockout_timer: timer_ref}}
-          else
-            # Lockout expired after broadcasting final 0, stop timer
-            new_state = stop_lockout_timer(state)
-            broadcast_runner_state(new_state)
-            {:noreply, new_state}
-          end
-        else
-          # Lockout expired, stop broadcasting
-          new_state = stop_lockout_timer(state)
-          broadcast_runner_state(new_state)
-          {:noreply, new_state}
-        end
-
-      _ ->
-        # No genesis invocation, stop timer
-        new_state = stop_lockout_timer(state)
-        {:noreply, new_state}
-    end
-  end
-
-  @impl true
   def handle_info({:delayed_invocation, invocation}, state) do
     # Process the delayed invocation
     new_state = %{
@@ -310,7 +260,6 @@ defmodule Panic.Engine.NetworkRunner do
         next_invocation_time: nil
     }
 
-    broadcast_runner_state(new_state)
     trigger_invocation(invocation, new_state)
     {:noreply, new_state}
   end
@@ -335,18 +284,13 @@ defmodule Panic.Engine.NetworkRunner do
         # Dispatch watchers for the genesis invocation immediately (synchronous)
         maybe_dispatch_watchers(invocation, watchers, network_owner)
 
-        new_state =
-          start_lockout_timer(
-            %{
-              state
-              | genesis_invocation: invocation,
-                current_invocation: invocation,
-                watchers: watchers,
-                next_invocation: nil
-            },
-            invocation,
-            network
-          )
+        new_state = %{
+          state
+          | genesis_invocation: invocation,
+            current_invocation: invocation,
+            watchers: watchers,
+            next_invocation: nil
+        }
 
         # initial_prompt watchers need delay between display and processing
         # If there are initial_prompt vestaboard watchers, they display the genesis input
@@ -362,7 +306,6 @@ defmodule Panic.Engine.NetworkRunner do
           trigger_invocation(invocation, new_state)
         end
 
-        broadcast_runner_state(new_state)
         {:reply, {:ok, invocation}, new_state}
 
       {:error, error} ->
@@ -398,20 +341,16 @@ defmodule Panic.Engine.NetworkRunner do
           # Dispatch watchers for the genesis invocation immediately (synchronous)
           maybe_dispatch_watchers(invocation, watchers, network_owner)
 
-          new_state =
-            %{
-              state
-              | genesis_invocation: invocation,
-                current_invocation: invocation,
-                watchers: watchers,
-                next_invocation: nil
-            }
-            |> stop_lockout_timer()
-            |> start_lockout_timer(invocation, network)
+          new_state = %{
+            state
+            | genesis_invocation: invocation,
+              current_invocation: invocation,
+              watchers: watchers,
+              next_invocation: nil
+          }
 
           # Trigger async invocation processing
           trigger_invocation(invocation, new_state)
-          broadcast_runner_state(new_state)
 
           {:reply, {:ok, invocation}, new_state}
 
@@ -443,16 +382,14 @@ defmodule Panic.Engine.NetworkRunner do
   defp handle_processing_completed_normal(%{state: :failed} = _invocation, state) do
     Logger.info("Invocation failed, returning to idle")
 
-    new_state =
-      stop_lockout_timer(%{
-        state
-        | genesis_invocation: nil,
-          current_invocation: nil,
-          next_invocation: nil,
-          next_invocation_time: nil
-      })
+    new_state = %{
+      state
+      | genesis_invocation: nil,
+        current_invocation: nil,
+        next_invocation: nil,
+        next_invocation_time: nil
+    }
 
-    broadcast_runner_state(new_state)
     {:noreply, new_state}
   end
 
@@ -498,12 +435,10 @@ defmodule Panic.Engine.NetworkRunner do
             next_invocation_time: next_invocation_time
         }
 
-        broadcast_runner_state(new_state)
         {:noreply, new_state}
 
       {:error, error} ->
         Logger.error("Failed to prepare next invocation: #{inspect(error)}")
-        # Return to idle on error
         new_state = %{
           state
           | genesis_invocation: nil,
@@ -512,7 +447,6 @@ defmodule Panic.Engine.NetworkRunner do
             next_invocation_time: nil
         }
 
-        broadcast_runner_state(new_state)
         {:noreply, new_state}
     end
   end
@@ -661,87 +595,6 @@ defmodule Panic.Engine.NetworkRunner do
   end
 
   defp maybe_dispatch_watchers(_inv, _watchers, _user), do: false
-
-  defp start_lockout_timer(state, genesis_invocation, network) do
-    # Stop any existing timer first
-    state = stop_lockout_timer(state)
-
-    remaining_seconds = calculate_lockout_remaining(genesis_invocation, network)
-
-    if remaining_seconds > 0 do
-      # Only broadcast if there are viewers watching
-      viewers = PanicWeb.WatcherSubscriber.list_viewers(state.network_id)
-
-      if length(viewers) > 0 do
-        PanicWeb.Endpoint.broadcast("invocation:#{state.network_id}", "lockout_countdown", %{
-          seconds_remaining: remaining_seconds
-        })
-      end
-
-      timer_ref = Process.send_after(self(), :lockout_tick, 1000)
-      %{state | lockout_timer: timer_ref}
-    else
-      state
-    end
-  end
-
-  defp stop_lockout_timer(%{lockout_timer: nil} = state), do: state
-
-  defp stop_lockout_timer(%{lockout_timer: timer_ref} = state) do
-    Process.cancel_timer(timer_ref)
-    %{state | lockout_timer: nil}
-  end
-
-  defp broadcast_runner_state(state) do
-    # Broadcast the current runner state to subscribers
-    status = determine_runner_status(state)
-
-    message = %{
-      status: status,
-      genesis_invocation: state.genesis_invocation,
-      current_invocation: state.current_invocation,
-      next_invocation_time: state.next_invocation_time
-    }
-
-    PanicWeb.Endpoint.broadcast("invocation:#{state.network_id}", "runner_state_changed", message)
-  end
-
-  defp determine_runner_status(state) do
-    cond do
-      is_nil(state.genesis_invocation) ->
-        :idle
-
-      not is_nil(state.current_invocation) and state.current_invocation.state == :invoking ->
-        :processing
-
-      not is_nil(state.next_invocation_time) ->
-        :waiting
-
-      not is_nil(state.lockout_timer) ->
-        :in_lockout
-
-      not is_nil(state.current_invocation) ->
-        # We have a current invocation but it's not invoking - probably pending or completed
-        :processing
-
-      not is_nil(state.genesis_invocation) ->
-        # We have a genesis but no current invocation - between invocations in a run
-        :waiting
-
-      true ->
-        :idle
-    end
-  end
-
-  defp calculate_lockout_remaining(genesis_invocation, network) do
-    lockout_seconds = network.lockout_seconds
-    lockout_end = DateTime.add(genesis_invocation.inserted_at, lockout_seconds, :second)
-
-    case DateTime.compare(DateTime.utc_now(), lockout_end) do
-      :lt -> DateTime.diff(lockout_end, DateTime.utc_now(), :second)
-      _ -> 0
-    end
-  end
 
   defp calculate_next_invocation_time(genesis_invocation, vestaboard_dispatched) do
     now = DateTime.utc_now()

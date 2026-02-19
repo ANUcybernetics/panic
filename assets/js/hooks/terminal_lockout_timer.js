@@ -1,21 +1,35 @@
-// TerminalLockoutTimer hook
 const TerminalLockoutTimer = {
   mounted() {
-    this.updateDisplay();
-    this.timer = setInterval(() => {
-      this.updateDisplay();
-    }, 1000);
+    this.startTimer();
+  },
+
+  updated() {
+    this.startTimer();
   },
 
   destroyed() {
-    clearInterval(this.timer);
-    this.timer = null;
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  },
+
+  startTimer() {
+    if (this.timer) {
+      clearInterval(this.timer);
+    }
+    this.updateDisplay();
+    this.timer = setInterval(() => this.updateDisplay(), 1000);
   },
 
   updateDisplay() {
-    const readyAt = new Date(this.el.dataset.readyAt);
-    const now = new Date();
-    const timeLeft = Math.max(0, Math.ceil((readyAt - now) / 1000));
+    const readyAt = this.el.dataset.readyAt;
+    if (!readyAt) {
+      this.el.placeholder = "Ready for new input";
+      this.el.disabled = false;
+      return;
+    }
+    const timeLeft = Math.max(0, Math.ceil((new Date(readyAt) - new Date()) / 1000));
     if (timeLeft > 0) {
       this.el.placeholder = `${timeLeft} second${timeLeft !== 1 ? "s" : ""} until ready for new input`;
       this.el.disabled = true;
@@ -25,8 +39,6 @@ const TerminalLockoutTimer = {
       if (this.el.disabled) {
         this.el.disabled = false;
         this.el.focus();
-      } else {
-        this.el.disabled = false;
       }
     }
   },

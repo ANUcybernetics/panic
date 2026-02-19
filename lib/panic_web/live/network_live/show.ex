@@ -6,9 +6,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   alias Panic.Engine.NetworkRunner
   alias PanicWeb.NetworkLive.ModelSelectComponent
-  alias PanicWeb.NetworkLive.RunnerStatusComponent
   alias PanicWeb.WatcherSubscriber
-  alias Phoenix.Socket.Broadcast
 
   @impl true
   def render(assigns) do
@@ -91,7 +89,6 @@ defmodule PanicWeb.NetworkLive.Show do
         network={@network}
         genesis_invocation={@genesis_invocation}
         current_user={@current_user}
-        lockout_seconds_remaining={@lockout_seconds_remaining}
         id={@network.id}
       />
     </section>
@@ -102,8 +99,7 @@ defmodule PanicWeb.NetworkLive.Show do
         id="runner-status"
         network_id={@network.id}
         genesis_invocation={@genesis_invocation}
-        invocations={@streams.invocations}
-        lockout_seconds_remaining={@lockout_seconds_remaining}
+        current_invocation={@current_invocation}
       />
     </section>
 
@@ -152,14 +148,9 @@ defmodule PanicWeb.NetworkLive.Show do
           |> assign(:page_title, page_title(socket.assigns[:live_action]))
           |> assign(:network, network)
           |> stream(:installations, network.installations)
+          |> assign(:current_invocation, nil)
           |> WatcherSubscriber.configure_invocation_stream(network, {:grid, 2, 3})
           |> fetch_genesis_invocation(network.id)
-
-        # Send initial update to the runner status component after a short delay
-        # to ensure the component is mounted
-        if socket.assigns[:genesis_invocation] do
-          Process.send_after(self(), :update_runner_status, 100)
-        end
 
         {:noreply, socket}
 
@@ -198,39 +189,6 @@ defmodule PanicWeb.NetworkLive.Show do
   @impl true
   def handle_info({PanicWeb.NetworkLive.TerminalComponent, {:genesis_invocation, genesis_invocation}}, socket) do
     {:noreply, assign(socket, :genesis_invocation, genesis_invocation)}
-  end
-
-  @impl true
-  def handle_info(:update_runner_status, socket) do
-    # Update the runner status component with current state
-    send_update(RunnerStatusComponent,
-      id: "runner-status",
-      network_id: socket.assigns.network.id,
-      genesis_invocation: socket.assigns[:genesis_invocation],
-      invocations: socket.assigns.streams.invocations,
-      lockout_seconds_remaining: socket.assigns[:lockout_seconds_remaining]
-    )
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_info(%Broadcast{topic: "invocation:" <> _, event: "runner_state_changed"} = _message, socket) do
-    # When runner state changes, update the component to get new timing info
-    send_update(RunnerStatusComponent,
-      id: "runner-status",
-      network_id: socket.assigns.network.id,
-      genesis_invocation: socket.assigns[:genesis_invocation],
-      invocations: socket.assigns.streams.invocations,
-      lockout_seconds_remaining: socket.assigns[:lockout_seconds_remaining]
-    )
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_info(%Broadcast{topic: "invocation:" <> _} = message, socket) do
-    WatcherSubscriber.handle_invocation_message(message, socket)
   end
 
   @impl true

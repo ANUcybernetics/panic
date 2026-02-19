@@ -26,7 +26,6 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
         network={@network}
         genesis_invocation={@genesis_invocation}
         current_user={@current_user}
-        lockout_seconds_remaining={@lockout_seconds_remaining}
         id={@network.id}
       />
       <p>
@@ -68,11 +67,6 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
          |> put_flash(:error, "Installation not found")
          |> push_navigate(to: ~p"/"), layout: {PanicWeb.Layouts, :app}}
     end
-  end
-
-  @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "invocation:" <> _} = message, socket) do
-    WatcherSubscriber.handle_invocation_message(message, socket)
   end
 
   @impl true

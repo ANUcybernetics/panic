@@ -40,8 +40,9 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
           field={@form[:input]}
           type="text"
           label="Prompt"
-          placeholder={lockout_placeholder(@lockout_seconds_remaining)}
-          disabled={@lockout_seconds_remaining > 0}
+          placeholder="Ready for new input"
+          phx-hook="TerminalLockoutTimer"
+          data-ready-at={lockout_ready_at(@genesis_invocation, @network)}
         />
       </.simple_form>
     </div>
@@ -50,13 +51,9 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
 
   @impl true
   def update(assigns, socket) do
-    # Default lockout_seconds_remaining if not provided
-    lockout_seconds_remaining = Map.get(assigns, :lockout_seconds_remaining, 0)
-
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(lockout_seconds_remaining: lockout_seconds_remaining)
      |> assign_form()}
   end
 
@@ -134,9 +131,13 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
-  defp lockout_placeholder(seconds_remaining) when seconds_remaining > 0 do
-    "#{seconds_remaining} second#{if seconds_remaining == 1, do: "", else: "s"} until ready for new input"
+  defp lockout_ready_at(genesis_invocation, network) when not is_nil(genesis_invocation) do
+    lockout_end = DateTime.add(genesis_invocation.inserted_at, network.lockout_seconds, :second)
+
+    if DateTime.compare(DateTime.utc_now(), lockout_end) == :lt do
+      DateTime.to_iso8601(lockout_end)
+    end
   end
 
-  defp lockout_placeholder(_), do: "Ready for new input"
+  defp lockout_ready_at(_, _), do: nil
 end

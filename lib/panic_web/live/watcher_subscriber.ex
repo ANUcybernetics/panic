@@ -11,7 +11,7 @@ defmodule PanicWeb.WatcherSubscriber do
         • configures the `:invocations` stream
         • attaches a `handle_info` hook so the LiveView itself needs **no**
           boilerplate for invocation broadcasts
-        • handles lockout countdown messages for terminal input state
+        • assigns `current_invocation` from broadcast payloads
     * `configure_invocation_stream/3` – manual set-up (kept for
       backwards-compatibility)
     * `handle_invocation_message/2` – processes a broadcast and updates the
@@ -43,12 +43,10 @@ defmodule PanicWeb.WatcherSubscriber do
 
   ## Single Display Format
 
-  Single display tuples can be either:
-  - `{:single, offset, stride}` (backward compatibility - defaults to show_invoking: false)
-  - `{:single, offset, stride, show_invoking}` where show_invoking is a boolean
-
-  When show_invoking is false, invocations in the `:invoking` state are filtered out
-  to prevent constantly displaying the red "invoking" indicator.
+  Single display tuples are `{:single, offset, stride, show_invoking}` where
+  show_invoking is a boolean. When false, invocations in the `:invoking` state
+  are filtered out. The legacy 3-tuple form `{:single, offset, stride}` is
+  normalised to `{:single, offset, stride, false}` at entry.
   """
 
   alias Panic.Engine.Invocation
@@ -108,6 +106,8 @@ defmodule PanicWeb.WatcherSubscriber do
   Also tracks presence for this LiveView.
   """
   def configure_invocation_stream(socket, %Panic.Engine.Network{} = network, display) do
+    display = normalise_display(display)
+
     configured? =
       socket.assigns
       |> Map.get(:streams)
@@ -135,7 +135,6 @@ defmodule PanicWeb.WatcherSubscriber do
         network: network,
         display: display,
         genesis_invocation: nil,
-        lockout_seconds_remaining: 0,
         network_id: network.id
       )
     end
@@ -150,12 +149,6 @@ defmodule PanicWeb.WatcherSubscriber do
     # Skip non-invocation events
     case message.event do
       "presence_diff" ->
-        {:noreply, socket}
-
-      "runner_state_changed" ->
-        {:noreply, socket}
-
-      "lockout_countdown" ->
         {:noreply, socket}
 
       _ ->
@@ -196,22 +189,9 @@ defmodule PanicWeb.WatcherSubscriber do
       case invocation do
         # Genesis invocation: reset everything and start new run
         %Invocation{sequence_number: 0} ->
-          case display do
-            {:grid, _rows, _cols} ->
-              socket
-              |> Component.assign(genesis_invocation: invocation)
-              |> LiveView.stream(:invocations, [invocation], reset: true)
-
-            {:single, _, _} ->
-              socket
-              |> Component.assign(genesis_invocation: invocation)
-              |> LiveView.stream(:invocations, [invocation], reset: true)
-
-            {:single, _, _, _} ->
-              socket
-              |> Component.assign(genesis_invocation: invocation)
-              |> LiveView.stream(:invocations, [invocation], reset: true)
-          end
+          socket
+          |> Component.assign(genesis_invocation: invocation)
+          |> LiveView.stream(:invocations, [invocation], reset: true)
 
         # Non-genesis invocation: handle based on current genesis state
         %Invocation{run_number: run_number} ->
@@ -240,17 +220,6 @@ defmodule PanicWeb.WatcherSubscriber do
           end
       end
 
-    {:noreply, socket}
-  end
-
-  @doc """
-  Handle a lockout countdown broadcast and update the LiveView socket.
-
-  Returns `{:noreply, socket}` so callers can simply use it in handle_info hooks.
-  """
-  def handle_lockout_countdown_message(message, socket) do
-    seconds_remaining = message.payload.seconds_remaining
-    socket = Component.assign(socket, lockout_seconds_remaining: seconds_remaining)
     {:noreply, socket}
   end
 
@@ -320,6 +289,9 @@ defmodule PanicWeb.WatcherSubscriber do
   # Internal helpers
   # ---------------------------------------------------------------------------
 
+  defp normalise_display({:single, offset, stride}), do: {:single, offset, stride, false}
+  defp normalise_display(display), do: display
+
   defp maybe_subscribe(socket, network, installation_id) do
     if LiveView.connected?(socket) do
       PanicWeb.Endpoint.subscribe("invocation:#{network.id}")
@@ -387,16 +359,21 @@ defmodule PanicWeb.WatcherSubscriber do
       :invocation_watcher,
       :handle_info,
       fn
-        %Broadcast{topic: "invocation:" <> _, event: "lockout_countdown"} = msg, socket ->
-          {:noreply, new_socket} = handle_lockout_countdown_message(msg, socket)
-          {:halt, new_socket}
-
-        # Skip presence_diff events
         %Broadcast{topic: "invocation:" <> _, event: "presence_diff"}, socket ->
-          {:cont, socket}
+          {:halt, socket}
 
         %Broadcast{topic: "invocation:" <> _} = msg, socket ->
           {:noreply, new_socket} = handle_invocation_message(msg, socket)
+
+          new_socket =
+            case msg.payload do
+              %{data: %Invocation{} = invocation} ->
+                Component.assign(new_socket, :current_invocation, invocation)
+
+              _ ->
+                new_socket
+            end
+
           {:halt, new_socket}
 
         %Broadcast{topic: "installation:" <> _} = msg, socket ->
@@ -457,10 +434,6 @@ defmodule PanicWeb.WatcherSubscriber do
     "slot-#{Integer.mod(seq, rows * cols)}"
   end
 
-  defp dom_id(%Invocation{sequence_number: seq}, {:single, offset, stride}) do
-    if rem(seq, stride) == offset, do: "slot-#{offset}"
-  end
-
   defp dom_id(%Invocation{sequence_number: seq}, {:single, offset, stride, _show_invoking}) do
     if rem(seq, stride) == offset, do: "slot-#{offset}"
   end
@@ -482,30 +455,15 @@ defmodule PanicWeb.WatcherSubscriber do
       {_, {:grid, _rows, _cols}} ->
         LiveView.stream_insert(socket, :invocations, invocation, at: -1)
 
-      {%Invocation{sequence_number: seq, state: state}, {:single, offset, stride}}
-      when rem(seq, stride) == offset ->
-        # Backward compatibility: 3-element tuple defaults to show_invoking: false
-        if state == :invoking do
-          socket
-        else
-          LiveView.stream_insert(socket, :invocations, invocation, at: 0, limit: 1)
-        end
-
       {%Invocation{sequence_number: seq, state: state}, {:single, offset, stride, show_invoking}}
       when rem(seq, stride) == offset ->
-        # Use show_invoking flag to determine whether to show :invoking invocations
         if show_invoking or state != :invoking do
           LiveView.stream_insert(socket, :invocations, invocation, at: 0, limit: 1)
         else
           socket
         end
 
-      {_, {:single, _, _}} ->
-        # Not matching the display criteria, don't add to stream
-        socket
-
       {_, {:single, _, _, _}} ->
-        # Not matching the display criteria, don't add to stream
         socket
     end
   end
