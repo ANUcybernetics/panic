@@ -755,6 +755,7 @@ defmodule Panic.Model do
         name: "LLaMa 8B Instruct",
         input_type: :text,
         output_type: :text,
+        deprecated: true,
         invoke: fn model, input, token ->
           with {:ok, %{"output" => output_list}} <-
                  Replicate.invoke(model, %{prompt: input}, token) do
@@ -769,6 +770,7 @@ defmodule Panic.Model do
         name: "LLaMa Songifier",
         input_type: :text,
         output_type: :text,
+        deprecated: true,
         invoke: fn model, input, token ->
           input = """
           You are an expert music producer with skills in an extremely wide range of musical genres and styles.
