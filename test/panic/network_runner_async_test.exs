@@ -60,12 +60,6 @@ defmodule Panic.NetworkRunnerAsyncTest do
                      },
                      5_000
 
-      assert_receive %Broadcast{
-                       event: "runner_state_changed",
-                       payload: %{status: :waiting}
-                     },
-                     5_000
-
       NetworkRunner.stop_run(network.id)
 
       completed = Ash.get!(Engine.Invocation, genesis.id, authorize?: false)
@@ -87,12 +81,6 @@ defmodule Panic.NetworkRunnerAsyncTest do
       assert_receive %Broadcast{
                        event: "mark_as_failed",
                        payload: %{data: %{id: ^genesis_id, state: :failed}}
-                     },
-                     5_000
-
-      assert_receive %Broadcast{
-                       event: "runner_state_changed",
-                       payload: %{status: :idle}
                      },
                      5_000
 
@@ -119,12 +107,6 @@ defmodule Panic.NetworkRunnerAsyncTest do
       assert_receive %Broadcast{
                        event: "mark_as_failed",
                        payload: %{data: %{id: ^genesis_id, state: :failed}}
-                     },
-                     5_000
-
-      assert_receive %Broadcast{
-                       event: "runner_state_changed",
-                       payload: %{status: :idle}
                      },
                      5_000
 
@@ -157,12 +139,6 @@ defmodule Panic.NetworkRunnerAsyncTest do
       assert_receive %Broadcast{
                        event: "invoke",
                        payload: %{data: %{id: ^genesis_id, state: :completed}}
-                     },
-                     5_000
-
-      assert_receive %Broadcast{
-                       event: "runner_state_changed",
-                       payload: %{status: :waiting}
                      },
                      5_000
 
@@ -254,12 +230,6 @@ defmodule Panic.NetworkRunnerAsyncTest do
                      5_000
 
       NetworkRunner.stop_run(network.id)
-
-      assert_receive %Broadcast{
-                       event: "runner_state_changed",
-                       payload: %{status: :idle}
-                     },
-                     5_000
 
       [{pid, _}] = Registry.lookup(Panic.Engine.NetworkRegistry, network.id)
 

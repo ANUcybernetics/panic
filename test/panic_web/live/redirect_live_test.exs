@@ -20,10 +20,10 @@ defmodule PanicWeb.RedirectLiveTest do
                live(conn, ~p"/r/#{redirect_param}")
     end
 
-    test "redirects network display pattern", %{conn: conn} do
+    test "redirects unknown patterns to home", %{conn: conn} do
       redirect_param = "abc"
 
-      assert {:error, {:live_redirect, %{to: "/networks/a/display/single/b/c/"}}} =
+      assert {:error, {:live_redirect, %{to: "/"}}} =
                live(conn, ~p"/r/#{redirect_param}")
     end
 

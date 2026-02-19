@@ -309,18 +309,18 @@ defmodule PanicWeb.WatcherSubscriberTest do
       assert should_show_invocation_for_display?(:completed, 1, display)
     end
 
-    test "backward compatibility: 3-element single tuples default to show_invoking=false" do
-      # Test backward compatibility with 3-element tuples
+    test "3-element single tuples are normalised to 4-element with show_invoking=false" do
       display = {:single, 0, 1}
+      normalised = normalise_display(display)
+      assert normalised == {:single, 0, 1, false}
 
-      # Should ignore :invoking invocations (defaults to show_invoking=false)
-      refute should_show_invocation_for_display?(:invoking, 1, display)
-      refute should_show_invocation_for_display?(:invoking, 5, display)
+      # After normalisation, should behave like show_invoking=false
+      refute should_show_invocation_for_display?(:invoking, 1, normalised)
+      refute should_show_invocation_for_display?(:invoking, 5, normalised)
 
-      # But should still show other states
-      assert should_show_invocation_for_display?(:completed, 1, display)
-      assert should_show_invocation_for_display?(:ready, 1, display)
-      assert should_show_invocation_for_display?(:failed, 1, display)
+      assert should_show_invocation_for_display?(:completed, 1, normalised)
+      assert should_show_invocation_for_display?(:ready, 1, normalised)
+      assert should_show_invocation_for_display?(:failed, 1, normalised)
     end
 
     property "single mode filtering works correctly for all offsets and strides" do
@@ -329,7 +329,7 @@ defmodule PanicWeb.WatcherSubscriberTest do
                                stride <- integer(1..10),
                                sequence_number <- integer(0..50)
                              ) do
-        display = {:single, offset, stride}
+        display = {:single, offset, stride, false}
         expected = rem(sequence_number, stride) == offset
         actual = matches_display_criteria?(sequence_number, display)
 
@@ -512,18 +512,14 @@ defmodule PanicWeb.WatcherSubscriberTest do
     end
   end
 
+  defp normalise_display({:single, offset, stride}), do: {:single, offset, stride, false}
+  defp normalise_display(display), do: display
+
   defp matches_display_criteria?(_sequence_number, {:grid, _rows, _cols}) do
-    # Grid mode accepts all invocations
     true
   end
 
-  defp matches_display_criteria?(sequence_number, {:single, offset, stride}) do
-    # Single mode filters by stride and offset
-    rem(sequence_number, stride) == offset
-  end
-
   defp matches_display_criteria?(sequence_number, {:single, offset, stride, _show_invoking}) do
-    # Single mode filters by stride and offset
     rem(sequence_number, stride) == offset
   end
 
@@ -536,25 +532,14 @@ defmodule PanicWeb.WatcherSubscriberTest do
   end
 
   defp should_show_invocation_for_display?(state, sequence_number, display) do
-    # Helper function that mirrors the logic in WatcherSubscriber
     case display do
       {:grid, _rows, _cols} ->
         true
 
-      {:single, offset, stride} when rem(sequence_number, stride) == offset ->
-        # Backward compatibility: 3-element tuple defaults to show_invoking=false
-        state != :invoking
-
       {:single, offset, stride, show_invoking} when rem(sequence_number, stride) == offset ->
-        # Use show_invoking flag to determine whether to show :invoking invocations
         show_invoking or state != :invoking
 
-      {:single, _, _} ->
-        # Not matching the display criteria, don't show
-        false
-
       {:single, _, _, _} ->
-        # Not matching the display criteria, don't show
         false
     end
   end
