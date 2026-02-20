@@ -434,6 +434,13 @@ defmodule PanicWeb.WatcherSubscriber do
     "slot-#{Integer.mod(seq, rows * cols)}"
   end
 
+  # Genesis invocations (seq 0) must render in all single-mode watchers, not just
+  # offset 0. Without this clause, rem(0, stride) == offset is false for offset > 0,
+  # producing a nil dom_id that silently prevents the "P!" screen from appearing.
+  defp dom_id(%Invocation{sequence_number: 0}, {:single, offset, _stride, _show_invoking}) do
+    "slot-#{offset}"
+  end
+
   defp dom_id(%Invocation{sequence_number: seq}, {:single, offset, stride, _show_invoking}) do
     if rem(seq, stride) == offset, do: "slot-#{offset}"
   end
