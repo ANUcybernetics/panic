@@ -72,10 +72,6 @@ For a comprehensive architectural overview, see @OVERVIEW.md
   - Use globally unique values for identity attributes to prevent deadlocks
   - Enable sync mode for NetworkRunner in tests to avoid async timing issues
 
-## Version control
-
-This repo uses jj (Jujutsu) as a colocated repo. **Always use `jj` for version control operations, never raw `git` commands.** The `gh` CLI is still fine for GitHub API operations (PRs, issues, etc.).
-
 ## Development environment
 
 This project uses `mise` for tool version management (see `.mise.toml`). Always prefix commands with `mise exec --` to ensure the correct Elixir/Erlang versions are used (e.g. `mise exec -- mix test`).
