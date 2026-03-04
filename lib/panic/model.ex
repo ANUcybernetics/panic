@@ -211,7 +211,7 @@ defmodule Panic.Model do
                    },
                    token
                  ) do
-            {:ok, text}
+            {:ok, text |> String.trim() |> String.trim("\"")}
           end
         end
       },
