@@ -136,33 +136,6 @@ This repo includes raspberry pi config scripts in `rpi/` for running PANIC! on R
 - SQLite database with Ecto SQL Sandbox for test isolation
 - Tests increase SQLite busy_timeout to 5000ms to reduce lock conflicts
 
-<-- usage-rules-start --> <-- ash_phoenix-start -->
-
-## ash_phoenix usage
-
-[ash_phoenix usage rules](deps/ash_phoenix/usage-rules.md) <-- ash_phoenix-end
---> <-- ash_authentication-start -->
-
-## ash_authentication usage
-
-[ash_authentication usage rules](deps/ash_authentication/usage-rules.md) <--
-ash_authentication-end --> <-- igniter-start -->
-
-## igniter usage
-
-[igniter usage rules](deps/igniter/usage-rules.md) <-- igniter-end --> <--
-ash_ai-start -->
-
-## ash_ai usage
-
-[ash_ai usage rules](deps/ash_ai/usage-rules.md) <-- ash_ai-end --> <--
-ash-start -->
-
-## ash usage
-
-[ash usage rules](deps/ash/usage-rules.md) <-- ash-end --> <-- usage-rules-end
--->
-
 <!-- usage-rules-start -->
 <!-- usage-rules-header -->
 
@@ -181,12 +154,7 @@ _Authentication extension for the Ash Framework._
 
 @deps/ash_authentication/usage-rules.md
 <!-- ash_authentication-end -->
-<!-- ash_ai-start -->
-## ash_ai usage
-_Integrated LLM features for your Ash application._
 
-@deps/ash_ai/usage-rules.md
-<!-- ash_ai-end -->
 <!-- igniter-start -->
 ## igniter usage
 _A code generation and project patching framework_
