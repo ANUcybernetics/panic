@@ -70,12 +70,12 @@ defmodule Panic.Generators do
     gen all(user <- user(password_generator)) do
       # Read API keys from environment variables
       openai_key = System.get_env("OPENAI_API_KEY")
-      replicate_key = System.get_env("REPLICATE_API_KEY")
+      replicate_key = System.get_env("REPLICATE_API_TOKEN")
       gemini_key = System.get_env("GOOGLE_AI_STUDIO_TOKEN")
 
       # For apikeys tests, fail if keys are not present
       if openai_key == nil || replicate_key == nil || gemini_key == nil do
-        raise "API keys required for this test. Set OPENAI_API_KEY, REPLICATE_API_KEY, and GOOGLE_AI_STUDIO_TOKEN environment variables."
+        raise "API keys required for this test. Set OPENAI_API_KEY, REPLICATE_API_TOKEN, and GOOGLE_AI_STUDIO_TOKEN environment variables."
       end
 
       # Create an APIToken with real tokens

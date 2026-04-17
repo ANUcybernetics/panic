@@ -1,0 +1,7 @@
+[secrets]
+REPLICATE_API_TOKEN = { provider = "onepass", value = "op://Personal/Replicate/credential" }
+OPENAI_API_KEY = { provider = "onepass", value = "op://Personal/OpenAI API/credential" }
+POSTMARK_API_KEY = { provider = "onepass", value = "op://Personal/Postmark API/credential" }
+GOOGLE_AI_STUDIO_TOKEN = { provider = "onepass", value = "op://Personal/Google AI Studio/credential" }
+AWS_ACCESS_KEY_ID = { provider = "onepass", value = "op://Personal/AWS S3 panic/username" }
+AWS_SECRET_ACCESS_KEY = { provider = "onepass", value = "op://Personal/AWS S3 panic/credential" }

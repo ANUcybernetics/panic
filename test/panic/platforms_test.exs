@@ -24,10 +24,10 @@ defmodule Panic.PlatformsTest do
     @describetag timeout: to_timeout(minute: 15)
 
     setup do
-      api_key = System.get_env("REPLICATE_API_KEY")
+      api_key = System.get_env("REPLICATE_API_TOKEN")
 
       if is_nil(api_key) or api_key == "" do
-        raise "REPLICATE_API_KEY environment variable must be set for Replicate platform tests"
+        raise "REPLICATE_API_TOKEN environment variable must be set for Replicate platform tests"
       end
 
       {:ok, api_key: api_key}
