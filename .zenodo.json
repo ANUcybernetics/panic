@@ -36,5 +36,10 @@
       "scheme": "doi",
       "resource_type": "publication-conferencepaper"
     }
+  ],
+  "communities": [
+    {
+      "identifier": "cybernetic-studio"
+    }
   ]
 }
