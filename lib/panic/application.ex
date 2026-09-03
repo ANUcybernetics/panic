@@ -45,7 +45,9 @@ defmodule Panic.Application do
   end
 
   defp skip_migrations? do
-    # By default, sqlite migrations are run when using a release
+    # Releases deliberately skip the boot-time migrator: production migrations
+    # are applied by hand with `fly ssh console -a panic -C /app/bin/migrate`,
+    # so a deploy never rewrites the schema out from under a running install.
     System.get_env("RELEASE_NAME") != nil
   end
 end
