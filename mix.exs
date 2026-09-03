@@ -80,8 +80,7 @@ defmodule Panic.MixProject do
       {:recon, "~> 2.5"},
       {:styler, "~> 1.0", only: [:dev, :test], runtime: false},
       {:mdex, "~> 0.7"},
-      {:qr_code, "~> 3.1"},
-      {:oban, "~> 2.13"}
+      {:qr_code, "~> 3.1"}
     ]
   end
 
