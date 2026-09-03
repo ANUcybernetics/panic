@@ -272,46 +272,7 @@ defmodule Panic.Engine.NetworkRunner do
 
   defp handle_start_run_idle(prompt, state) do
     {network, network_owner} = get_network_and_user!(state.network_id)
-    watchers = vestaboard_watchers(network)
-
-    opts = [actor: network_owner]
-
-    case Engine.prepare_first(network, prompt, opts) do
-      {:ok, invocation} ->
-        # Make the genesis visible immediately via about_to_invoke
-        invocation = Engine.about_to_invoke!(invocation, opts)
-
-        # Dispatch watchers for the genesis invocation immediately (synchronous)
-        maybe_dispatch_watchers(invocation, watchers, network_owner)
-
-        new_state = %{
-          state
-          | genesis_invocation: invocation,
-            current_invocation: invocation,
-            watchers: watchers,
-            next_invocation: nil
-        }
-
-        # initial_prompt watchers need delay between display and processing
-        # If there are initial_prompt vestaboard watchers, they display the genesis input
-        # immediately above, but we delay the actual invocation processing
-        # to give users time to read the prompt before it gets processed and replaced
-        # with the output. For genesis, we use 2x the normal vestaboard delay.
-        if has_initial_prompt_watchers?(watchers) do
-          # For genesis invocation with vestaboard watchers, add another 2s delay
-          genesis_delay_ms = @vestaboard_delay + 2000
-          Process.send_after(self(), {:delayed_invocation, invocation}, genesis_delay_ms)
-        else
-          # Trigger async invocation processing immediately
-          trigger_invocation(invocation, new_state)
-        end
-
-        {:reply, {:ok, invocation}, new_state}
-
-      {:error, error} ->
-        Logger.error("Failed to prepare first invocation: #{inspect(error)}")
-        {:reply, {:error, error}, state}
-    end
+    start_genesis_run(prompt, state, network, network_owner, delay_for_initial_prompt?: true)
   rescue
     e ->
       Logger.error("Error starting run in idle state: #{inspect(e)}")
@@ -324,45 +285,52 @@ defmodule Panic.Engine.NetworkRunner do
     if under_lockout?(genesis, network) do
       {:reply, {:lockout, genesis}, state}
     else
-      # Cancel current run and start new one
+      # cancel the in-flight invocation before the new run replaces it
       if state.current_invocation && state.current_invocation.state == :invoking do
         Engine.mark_as_failed!(state.current_invocation, actor: network_owner)
       end
 
-      watchers = vestaboard_watchers(network)
-
-      opts = [actor: network_owner]
-
-      case Engine.prepare_first(network, prompt, opts) do
-        {:ok, invocation} ->
-          # Make the genesis visible immediately via about_to_invoke
-          invocation = Engine.about_to_invoke!(invocation, opts)
-
-          # Dispatch watchers for the genesis invocation immediately (synchronous)
-          maybe_dispatch_watchers(invocation, watchers, network_owner)
-
-          new_state = %{
-            state
-            | genesis_invocation: invocation,
-              current_invocation: invocation,
-              watchers: watchers,
-              next_invocation: nil
-          }
-
-          # Trigger async invocation processing
-          trigger_invocation(invocation, new_state)
-
-          {:reply, {:ok, invocation}, new_state}
-
-        {:error, error} ->
-          Logger.error("Failed to prepare first invocation: #{inspect(error)}")
-          {:reply, {:error, error}, state}
-      end
+      start_genesis_run(prompt, state, network, network_owner, delay_for_initial_prompt?: false)
     end
   rescue
     e ->
       Logger.error("Error starting run in running state: #{inspect(e)}")
       {:reply, {:error, e}, state}
+  end
+
+  # Prepares the genesis invocation and makes it visible to watchers straight
+  # away. When an idle run has initial_prompt watchers, processing is held back
+  # so the prompt stays readable before its output replaces it; a run started
+  # over the top of another one skips that grace period.
+  defp start_genesis_run(prompt, state, network, network_owner, opts) do
+    ash_opts = [actor: network_owner]
+    watchers = vestaboard_watchers(network)
+
+    case Engine.prepare_first(network, prompt, ash_opts) do
+      {:ok, invocation} ->
+        invocation = Engine.about_to_invoke!(invocation, ash_opts)
+        maybe_dispatch_watchers(invocation, watchers, network_owner)
+
+        new_state = %{
+          state
+          | genesis_invocation: invocation,
+            current_invocation: invocation,
+            watchers: watchers,
+            next_invocation: nil
+        }
+
+        if opts[:delay_for_initial_prompt?] and has_initial_prompt_watchers?(watchers) do
+          Process.send_after(self(), {:delayed_invocation, invocation}, @vestaboard_delay + 2000)
+        else
+          trigger_invocation(invocation, new_state)
+        end
+
+        {:reply, {:ok, invocation}, new_state}
+
+      {:error, error} ->
+        Logger.error("Failed to prepare first invocation: #{inspect(error)}")
+        {:reply, {:error, error}, state}
+    end
   end
 
   defp handle_processing_completed(invocation, state) do
@@ -439,6 +407,7 @@ defmodule Panic.Engine.NetworkRunner do
 
       {:error, error} ->
         Logger.error("Failed to prepare next invocation: #{inspect(error)}")
+
         new_state = %{
           state
           | genesis_invocation: nil,
