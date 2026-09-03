@@ -22,7 +22,9 @@ ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 FROM ${BUILDER_IMAGE} as builder
 
 # install build dependencies
-# Update Node major version in the setup URL as needed (currently v20)
+# Update Node major version in the setup URL as needed (currently v22). Don't
+# add `npm install -g npm@latest` back: npm's latest floats ahead of whatever
+# Node is pinned here and eventually refuses to install on it.
 RUN apt-get update -y && apt-get install -y \
     build-essential \
     git \
@@ -30,9 +32,8 @@ RUN apt-get update -y && apt-get install -y \
     curl \
     pkg-config \
     libssl-dev \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
-    && npm install -g npm@latest \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # prepare build dir
