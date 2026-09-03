@@ -47,7 +47,8 @@ For a comprehensive architectural overview, see @OVERVIEW.md
 - **LiveViews** (`lib/panic_web/live/`)
   - `NetworkLive.Show` - network management and configuration
   - `NetworkLive.Terminal` - terminal interface for running networks
-  - `NetworkLive.Display` - various display modes for viewing invocations
+  - `NetworkLive.StaticDisplay` - single-invocation display for external screens
+  - `NetworkLive.Info` - network metadata and QR codes
   - `InstallationLive.*` - installation management for external displays
 
 ### OTP processes
@@ -74,7 +75,7 @@ For a comprehensive architectural overview, see @OVERVIEW.md
 
 ## Development environment
 
-This project uses `mise` for tool version management (see `.mise.toml`). Always prefix commands with `mise exec --` to ensure the correct Elixir/Erlang versions are used (e.g. `mise exec -- mix test`).
+This project uses `mise` for tool version management (see `mise.toml`). Always prefix commands with `mise exec --` to ensure the correct Elixir/Erlang versions are used (e.g. `mise exec -- mix test`).
 
 ## Development workflow
 
