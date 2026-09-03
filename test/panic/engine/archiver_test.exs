@@ -131,25 +131,39 @@ defmodule Panic.Engine.ArchiverTest do
   end
 
   describe "download_file/1" do
-    test "downloads file successfully with mocked Req" do
+    test "streams the response body to a file" do
       url = "https://httpbin.org/robots.txt"
       mock_content = "User-agent: *\nDisallow: /deny\n"
 
-      # Use Repatch to mock the external HTTP call
-      Repatch.patch(Req, :get, fn ^url ->
-        {:ok, %{status: 200, body: mock_content}}
+      # the body is streamed into the collectable passed as :into, so the mock
+      # writes the chunks the way Req would
+      Repatch.patch(Req, :get, fn ^url, opts ->
+        Enum.into(["User-agent: *\n", "Disallow: /deny\n"], Keyword.fetch!(opts, :into))
+        {:ok, %{status: 200}}
       end)
 
-      # Test the actual download_file function
       {:ok, filename} = Archiver.download_file(url)
 
-      # Verify the file was created and has the expected content
-      assert File.exists?(filename)
       assert File.read!(filename) == mock_content
       assert Path.extname(filename) == ".txt"
 
-      # Clean up
       File.rm(filename)
+    end
+
+    test "returns an error and leaves no file behind on a non-success status" do
+      url = "https://httpbin.org/missing.webp"
+
+      Repatch.patch(Req, :get, fn ^url, opts ->
+        stream = Keyword.fetch!(opts, :into)
+        send(self(), {:download_path, stream.path})
+        Enum.into(["not found"], stream)
+        {:ok, %{status: 404}}
+      end)
+
+      assert {:error, {:unexpected_status, 404}} = Archiver.download_file(url)
+
+      assert_received {:download_path, path}
+      refute File.exists?(path)
     end
 
     test "handles invalid URLs" do

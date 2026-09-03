@@ -98,14 +98,20 @@ defmodule Panic.Engine.Archiver do
   - `{:error, reason}` - Download error
   """
   def download_file(url) do
-    case Req.get(url) do
-      {:ok, %{status: 200, body: body}} ->
-        extension = Path.extname(url)
-        filename = Path.join(System.tmp_dir(), "download_#{System.unique_integer()}#{extension}")
-        File.write!(filename, body)
+    extension = Path.extname(url)
+    filename = Path.join(System.tmp_dir(), "download_#{System.unique_integer()}#{extension}")
+
+    # stream straight to disk rather than buffering the whole body on the heap
+    case Req.get(url, into: File.stream!(filename)) do
+      {:ok, %{status: status}} when status in 200..299 ->
         {:ok, filename}
 
+      {:ok, %{status: status}} ->
+        File.rm(filename)
+        {:error, {:unexpected_status, status}}
+
       {:error, reason} ->
+        File.rm(filename)
         {:error, reason}
     end
   end
