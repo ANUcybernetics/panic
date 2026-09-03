@@ -5,7 +5,8 @@ title: >-
   for changing machines)
 status: To Do
 assignee: []
-created_date: "2025-07-08"
+created_date: '2025-07-08'
+updated_date: '2026-09-03 07:40'
 labels:
   - reliability
   - backup
@@ -14,6 +15,7 @@ dependencies: []
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 This app runs on a fly.io machine and uses the attached storage for the sqlite
 database file (see @fly.toml).
 
@@ -23,9 +25,17 @@ the fly tailscale stuff)? Or to expose it as a web endpoint to download the file
 via the webserver? And what's the best way to download a copy of the "prod"
 sqlite db file for a point-in-time snapshot without corrupting either the
 original or the backup?
+<!-- SECTION:DESCRIPTION:END -->
 
-## Implementation notes
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 A backup of the prod sqlite db is produced on a schedule, without anyone having to trigger it
+- [ ] #2 Restoring a backup onto a fresh machine is documented, with the steps having been followed at least once
+<!-- AC:END -->
 
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
 For SQLite backups, there are a few reliable approaches to consider:
 
 ### Option 1: SQLite backup API (recommended)
@@ -83,3 +93,10 @@ Given the Fly.io deployment and that snapshots are free but capture the full vol
 - Consider encrypting backups at rest
 - Rotate old backups to manage storage costs
 - Test restoration process regularly
+
+## Status as of 2026-09-03
+
+The on-demand half of this is already built: `PanicWeb.BackupController` serves an admin-only, VACUUM INTO-based snapshot at `GET /admin/backup` (`lib/panic_web/controllers/backup_controller.ex`, wired in `lib/panic_web/router.ex`), covered by `test/panic_web/controllers/backup_controller_test.exs` and `test/panic_web/backup_test.exs`. Option 1 below is what shipped.
+
+What remains is the *regular* part of the title --- something that takes a snapshot on a schedule and puts it somewhere durable --- plus a written restore procedure for moving to a new machine. Note that the volume is now forked on host migration (it changed id during a resize on 2026-09-03), which is a reason to want off-machine copies.
+<!-- SECTION:NOTES:END -->
