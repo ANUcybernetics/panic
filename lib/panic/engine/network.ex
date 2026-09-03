@@ -85,8 +85,6 @@ defmodule Panic.Engine.Network do
       allow_nil? false
     end
 
-    attribute :slug, :string
-
     attribute :lockout_seconds, :integer do
       default 30
       allow_nil? false
