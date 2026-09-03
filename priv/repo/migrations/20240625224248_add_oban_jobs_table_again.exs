@@ -1,13 +1,11 @@
 defmodule Panic.Repo.Migrations.AddObanJobsTableAgain do
   use Ecto.Migration
 
-  def up do
-    Oban.Migration.up(version: 12)
-  end
+  # Oban has since been removed from the project, so Oban.Migration is no longer
+  # available to call here. DropObanTables drops these tables again a few
+  # migrations later, so on a fresh database the pair is a no-op; databases that
+  # already ran this keep the result they have.
+  def up, do: :ok
 
-  # We specify `version: 1` in `down`, ensuring that we'll roll all the way back down if
-  # necessary, regardless of which version we've migrated `up` to.
-  def down do
-    Oban.Migration.down(version: 1)
-  end
+  def down, do: :ok
 end
