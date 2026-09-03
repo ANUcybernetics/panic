@@ -19,7 +19,6 @@ defmodule PanicWeb.TerminalLiveTest do
   3. **Token Expiration Behavior**
      - Tokens expire after 1 hour
      - Token verification includes grace period for clock skew
-     - `expires_soon?/1` helper identifies tokens expiring within 10 minutes
      - Terminal URLs include properly formatted tokens
 
   4. **QR Code Generation Workflow**
@@ -273,9 +272,6 @@ defmodule PanicWeb.TerminalLiveTest do
       network_id = to_string(network.id)
       assert {:ok, ^network_id} = TerminalAuth.verify_token(token)
 
-      # Token should not expire soon when just created
-      refute TerminalAuth.expires_soon?(token)
-
       # Create a token that's 55 minutes old (should still be valid but expiring soon)
       almost_expired_token =
         Phoenix.Token.sign(
@@ -291,9 +287,6 @@ defmodule PanicWeb.TerminalLiveTest do
       # Should still be valid
       network_id = to_string(network.id)
       assert {:ok, ^network_id} = TerminalAuth.verify_token(almost_expired_token)
-
-      # But should be expiring soon
-      assert TerminalAuth.expires_soon?(almost_expired_token)
 
       # Create a token that's just over 1 hour old
       expired_token =

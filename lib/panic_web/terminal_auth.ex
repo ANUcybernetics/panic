@@ -178,38 +178,4 @@ defmodule PanicWeb.TerminalAuth do
     # Missing required params
     {:error, Phoenix.LiveView.push_navigate(socket, to: "/404")}
   end
-
-  @doc """
-  Checks if a token will expire soon (within the next 10 minutes).
-
-  Useful for determining when to refresh a QR code.
-
-  ## Parameters
-
-    * `token` - The token to check
-
-  ## Returns
-
-    * `true` - Token will expire within 10 minutes
-    * `false` - Token has more than 10 minutes remaining or is invalid
-
-  ## Examples
-
-      iex> TerminalAuth.expires_soon?(recent_token)
-      false
-
-      iex> TerminalAuth.expires_soon?(old_token)
-      true
-  """
-  def expires_soon?(token) do
-    case Phoenix.Token.verify(PanicWeb.Endpoint, @salt, token, max_age: @max_age + @grace_period) do
-      {:ok, %{generated_at: generated_at}} ->
-        # Check if token will expire within the next 10 minutes
-        age = System.system_time(:second) - generated_at
-        age > @max_age - 600
-
-      {:error, _} ->
-        true
-    end
-  end
 end

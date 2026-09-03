@@ -147,39 +147,4 @@ defmodule PanicWeb.TerminalAuthTest do
       assert socket.redirected == {:live, :redirect, %{kind: :push, to: "/404"}}
     end
   end
-
-  describe "expires_soon?/1" do
-    test "returns false for recently generated token" do
-      token = TerminalAuth.generate_token("123")
-      refute TerminalAuth.expires_soon?(token)
-    end
-
-    test "returns true for invalid token" do
-      assert TerminalAuth.expires_soon?("invalid_token")
-    end
-
-    test "returns true for token close to expiry" do
-      # Create a token that's 55 minutes old (expires in 5 minutes)
-      old_token =
-        Phoenix.Token.sign(PanicWeb.Endpoint, "terminal_access", %{
-          network_id: "123",
-          # 55 minutes ago
-          generated_at: System.system_time(:second) - 3300
-        })
-
-      assert TerminalAuth.expires_soon?(old_token)
-    end
-
-    test "returns false for token with more than 10 minutes remaining" do
-      # Create a token that's 45 minutes old (expires in 15 minutes)
-      token =
-        Phoenix.Token.sign(PanicWeb.Endpoint, "terminal_access", %{
-          network_id: "123",
-          # 45 minutes ago
-          generated_at: System.system_time(:second) - 2700
-        })
-
-      refute TerminalAuth.expires_soon?(token)
-    end
-  end
 end
