@@ -134,27 +134,6 @@ defmodule Panic.Generators do
     end
   end
 
-  def network_with_real_models(user) do
-    gen all(network <- network(user), length <- integer(1..10)) do
-      model_ids =
-        :text
-        |> Stream.unfold(fn input_type ->
-          next_model = [input_type: input_type] |> real_model() |> pick()
-          {next_model, Map.fetch!(next_model, :output_type)}
-        end)
-        |> Stream.transform([], fn model, acc ->
-          if length(acc) >= length && acc |> List.last() |> Map.fetch!(:output_type) == :text do
-            {:halt, acc}
-          else
-            {[model], acc ++ [model]}
-          end
-        end)
-        |> Enum.map(fn %Panic.Model{id: id} -> [id] end)
-
-      Panic.Engine.update_models!(network, model_ids, actor: user)
-    end
-  end
-
   def invocation(network) do
     user = Ash.get!(User, network.user_id, authorize?: false)
 

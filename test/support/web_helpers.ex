@@ -26,29 +26,6 @@ defmodule PanicWeb.Helpers do
     }
   end
 
-  def create_and_sign_in_user_with_real_tokens(%{conn: conn}) do
-    password = "abcd1234"
-
-    # Create user with real tokens for apikeys tests
-    user = Panic.Fixtures.user_with_real_tokens(password)
-
-    strategy = AshAuthentication.Info.strategy!(User, :password)
-
-    {:ok, user} =
-      AshAuthentication.Strategy.action(strategy, :sign_in, %{
-        email: user.email,
-        password: password
-      })
-
-    %{
-      conn:
-        conn
-        |> Phoenix.ConnTest.init_test_session(%{})
-        |> Helpers.store_in_session(user),
-      user: user
-    }
-  end
-
   def create_and_sign_in_admin_user(%{conn: conn}) do
     password = "abcd1234"
     user = Panic.Fixtures.user(password)
@@ -195,34 +172,6 @@ defmodule PanicWeb.Helpers do
     end)
 
     :ok
-  end
-
-  @doc """
-  Allows database access for NetworkRunner processes.
-
-  This helper grants database sandbox access to NetworkRunner GenServers,
-  which is necessary when they need to perform database operations during
-  invocation processing.
-
-  ## Usage
-
-  Call this after creating a network but before starting runs:
-
-      network = create_network(user)
-      PanicWeb.Helpers.allow_network_runner_db_access(network.id)
-
-  ## Parameters
-
-  - `network_id`: The ID of the network whose NetworkRunner process needs database access
-  """
-  def allow_network_runner_db_access(network_id) do
-    alias Ecto.Adapters.SQL.Sandbox
-    alias Panic.Engine.NetworkRegistry
-
-    case Registry.lookup(NetworkRegistry, network_id) do
-      [{pid, _}] -> Sandbox.allow(Panic.Repo, self(), pid)
-      [] -> :ok
-    end
   end
 
   @doc """

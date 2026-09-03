@@ -38,12 +38,6 @@ defmodule Panic.Fixtures do
     |> pick()
   end
 
-  def network_with_real_models(user) do
-    user
-    |> Panic.Generators.network_with_real_models()
-    |> pick()
-  end
-
   def user_with_vestaboard_tokens do
     user = user()
 

@@ -8,134 +8,8 @@ defmodule PanicWeb.PanicComponents do
   """
   use Phoenix.Component
 
-  import PanicWeb.AutocompleteInput
-
   alias Panic.Engine.Invocation
   alias PanicWeb.NetworkLive.NetworkHelpers
-
-  @doc """
-  Renders a model box.
-
-  Useful for displaying a representation of a model (e.g. in a "network list")
-  component.
-  """
-  attr :model, :any, required: true, doc: "Panic.Model struct"
-
-  slot :action, doc: "the slot for showing user actions in the model box"
-
-  def model_box(assigns) do
-    ~H"""
-    <div class="size-16 rounded-md grid place-content-center text-center text-xs relative bg-zinc-600 shadow-sm">
-      <div class={[
-        "size-6 absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 -z-10",
-        io_colour_mapper(@model.input_type)
-      ]}>
-      </div>
-      {@model.name}
-      <div class={[
-        "size-6 absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 -z-10",
-        io_colour_mapper(@model.output_type)
-      ]}>
-      </div>
-      {render_slot(@action)}
-    </div>
-    """
-  end
-
-  @doc """
-  Renders a list of models in a flexbox layout.
-
-  ## Examples
-
-      <.model_list models={@models} />
-  """
-  attr :models, :list, required: true, doc: "List of Panic.Model structs"
-
-  attr :phx_target, :any, default: nil
-
-  def model_list(assigns) do
-    ~H"""
-    <div class="flex items-center flex-wrap gap-6">
-      <div class="size-8 rounded-md grid place-content-center text-center text-xs relative bg-zinc-600 shadow-sm">
-        T
-        <div class={[
-          "size-6 absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 -z-10",
-          io_colour_mapper(:text)
-        ]}>
-        </div>
-      </div>
-      <%= for {model, index} <- Enum.with_index(@models) do %>
-        <.model_box model={model}>
-          <:action>
-            <button
-              phx-click="remove_model"
-              phx-value-index={index}
-              phx-target={@phx_target}
-              class="absolute size-4 top-0 right-0 text-xs text-gray-500 hover:text-gray-700"
-            >
-              ×
-            </button>
-          </:action>
-        </.model_box>
-      <% end %>
-    </div>
-    """
-  end
-
-  @doc """
-  Renders a list of models with integrated add functionality.
-
-  ## Examples
-
-      <.model_list_with_add models={@models} model_options={@model_options} phx_target={@myself} />
-  """
-  attr :models, :list, required: true, doc: "List of Panic.Model structs"
-  attr :model_options, :list, required: true, doc: "List of model options for autocomplete"
-  attr :phx_target, :any, default: nil
-
-  def model_list_with_add(assigns) do
-    ~H"""
-    <div class="space-y-4">
-      <!-- Model list -->
-      <div class="flex items-center flex-wrap gap-6">
-        <div class="size-8 rounded-md grid place-content-center text-center text-xs relative bg-zinc-600 shadow-sm">
-          T
-          <div class={[
-            "size-6 absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 -z-10",
-            io_colour_mapper(:text)
-          ]}>
-          </div>
-        </div>
-        <%= for {model, index} <- Enum.with_index(@models) do %>
-          <.model_box model={model}>
-            <:action>
-              <button
-                phx-click="remove_model"
-                phx-value-index={index}
-                phx-target={@phx_target}
-                class="absolute size-4 top-0 right-0 text-xs text-gray-500 hover:text-gray-700"
-              >
-                ×
-              </button>
-            </:action>
-          </.model_box>
-        <% end %>
-      </div>
-
-    <!-- Autocomplete input -->
-      <div class="autocomplete-wrapper [&_input]:bg-zinc-800 [&_input]:border [&_input]:border-zinc-600 [&_input]:text-zinc-100 [&_input]:placeholder-zinc-500 [&_input]:text-sm [&_input]:rounded-md [&_input]:p-3 [&_input]:w-full [&_input]:transition-all [&_input]:duration-150 [&_input]:ease-in-out [&_input]:appearance-none [&_input:focus]:outline-none [&_input:focus]:border-violet-500 [&_input:focus]:ring-3 [&_input:focus]:ring-violet-500/10">
-        <.autocomplete_input
-          id="network_model_autocomplete"
-          name="model"
-          options={@model_options}
-          value=""
-          display_value="Add model..."
-          min_length={1}
-        />
-      </div>
-    </div>
-    """
-  end
 
   defp io_colour_mapper(type) do
     case type do
@@ -277,18 +151,6 @@ defmodule PanicWeb.PanicComponents do
     </div>
     """
   end
-
-  # def invocation_slot(%{type: :audio} = assigns) do
-  #   ~H"""
-  #   <div class="relative">
-  #     <audio autoplay loop controls={true} src={@value} class="absolute top-0 left-0" />
-  #     <img
-  #       class="object-cover w-full"
-  #       src="https://fly.storage.tigris.dev/panic-invocation-outputs/audio-waveform-image.webp"
-  #     />
-  #   </div>
-  #   """
-  # end
 
   defp parse_text_content(text) when is_binary(text) and text != "" do
     case MDEx.to_html(text) do

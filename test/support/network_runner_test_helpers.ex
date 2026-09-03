@@ -85,32 +85,6 @@ defmodule Panic.NetworkRunnerTestHelpers do
   end
 
   @doc """
-  Allows database access for a NetworkRunner process.
-
-  This grants Ecto Sandbox access to the NetworkRunner GenServer,
-  enabling it to perform database operations during tests.
-
-  ## Parameters
-  - `network_id` - The ID of the network whose runner needs DB access
-
-  ## Usage
-
-      # After starting a network runner
-      {:ok, _invocation} = NetworkRunner.start_run(network.id, "test prompt")
-      NetworkRunnerTestHelpers.allow_network_runner_db_access(network.id)
-  """
-  def allow_network_runner_db_access(network_id) do
-    case Registry.lookup(NetworkRegistry, network_id) do
-      [{pid, _}] when is_pid(pid) ->
-        Sandbox.allow(Panic.Repo, self(), pid)
-        :ok
-
-      [] ->
-        :ok
-    end
-  end
-
-  @doc """
   Asserts that a NetworkRunner is in idle state.
 
   ## Parameters
@@ -130,55 +104,6 @@ defmodule Panic.NetworkRunnerTestHelpers do
       [] ->
         # No runner exists, which is also idle
         :ok
-    end
-  end
-
-  @doc """
-  Asserts that a NetworkRunner is in running state.
-
-  ## Parameters
-  - `network_id` - The network ID to check
-
-  ## Usage
-
-      NetworkRunnerTestHelpers.assert_runner_running(network.id)
-  """
-  def assert_runner_running(network_id) do
-    case Registry.lookup(NetworkRegistry, network_id) do
-      [{pid, _}] ->
-        state = :sys.get_state(pid)
-        assert state.genesis_invocation
-        assert state.current_invocation
-
-        state
-
-      [] ->
-        flunk("Expected NetworkRunner to be running, but none exists for network #{network_id}")
-    end
-  end
-
-  @doc """
-  Gets the current state of a NetworkRunner process.
-
-  ## Parameters
-  - `network_id` - The network ID to get state for
-
-  ## Returns
-  - `{:ok, state}` - The current GenServer state
-  - `{:error, :not_found}` - No runner exists for this network
-
-  ## Usage
-
-      {:ok, state} = NetworkRunnerTestHelpers.get_runner_state(network.id)
-      assert state.genesis_invocation.input == "test prompt"
-  """
-  def get_runner_state(network_id) do
-    case Registry.lookup(NetworkRegistry, network_id) do
-      [{pid, _}] ->
-        {:ok, :sys.get_state(pid)}
-
-      [] ->
-        {:error, :not_found}
     end
   end
 
@@ -221,43 +146,5 @@ defmodule Panic.NetworkRunnerTestHelpers do
       [] ->
         :ok
     end
-  end
-
-  @doc """
-  Sets up a test with synchronous NetworkRunner mode and cleanup.
-
-  This is a convenience function that combines common setup steps:
-  - Enables synchronous mode
-  - Sets up cleanup on exit
-  - Optionally allows DB access for a network
-
-  ## Parameters
-  - `opts` - Options for setup
-    - `:network_id` - If provided, will set up cleanup for this specific network
-    - `:allow_db` - If true, will allow DB access for the network
-
-  ## Usage
-
-      setup %{network: network} do
-        NetworkRunnerTestHelpers.setup_sync_test(network_id: network.id, allow_db: true)
-      end
-  """
-  def setup_sync_test(opts \\ []) do
-    enable_sync_mode()
-
-    on_exit(fn ->
-      disable_sync_mode()
-
-      if network_id = opts[:network_id] do
-        stop_network_runner(network_id)
-      end
-    end)
-
-    if opts[:allow_db] && opts[:network_id] do
-      # Allow DB access after any potential runner start
-      allow_network_runner_db_access(opts[:network_id])
-    end
-
-    :ok
   end
 end

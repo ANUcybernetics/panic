@@ -22,12 +22,4 @@ defmodule PanicWeb.LiveUserAuth do
       {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/sign-in")}
     end
   end
-
-  def on_mount(:live_no_user, _params, _session, socket) do
-    if socket.assigns[:current_user] do
-      {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/")}
-    else
-      {:cont, assign(socket, :current_user, nil)}
-    end
-  end
 end
