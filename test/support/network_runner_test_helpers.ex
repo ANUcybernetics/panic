@@ -5,14 +5,11 @@ defmodule Panic.NetworkRunnerTestHelpers do
   This module provides utilities to:
   - Enable/disable synchronous mode for NetworkRunner
   - Clean up registry entries surgically
-  - Manage database access for async tasks
   - Common assertions for NetworkRunner state
   """
 
   import ExUnit.Assertions
-  import ExUnit.Callbacks
 
-  alias Ecto.Adapters.SQL.Sandbox
   alias Panic.Engine.NetworkRegistry
 
   @doc """
