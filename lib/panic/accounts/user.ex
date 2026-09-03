@@ -41,10 +41,6 @@ defmodule Panic.Accounts.User do
   actions do
     defaults [:read, :destroy]
 
-    update :change_email do
-      accept [:email]
-    end
-
     # Admin-only action to grant/revoke admin status
     update :set_admin do
       accept [:admin]

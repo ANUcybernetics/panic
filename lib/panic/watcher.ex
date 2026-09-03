@@ -12,8 +12,6 @@ defmodule Panic.Watcher do
     resource Panic.Watcher.Installation do
       define :get_installation, action: :read, get_by: [:id]
       define :list_installations, action: :read
-      define :create_installation, action: :create, args: [:network_id]
-      define :update_installation, action: :update
       define :destroy_installation, action: :destroy
 
       define :add_watcher, action: :add_watcher, args: [:watcher]

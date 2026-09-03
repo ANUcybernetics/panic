@@ -25,38 +25,6 @@ defmodule Panic.Engine.Invocation do
   actions do
     defaults [:read, :destroy]
 
-    # TODO could this be a calculation/aggregate
-    read :most_recent do
-      argument :network_id, :integer
-      filter expr(network_id == ^arg(:network_id))
-      prepare build(sort: [updated_at: :desc], limit: 1)
-      get? true
-    end
-
-    read :list_run do
-      argument :network_id, :integer, allow_nil?: false
-      argument :run_number, :integer, allow_nil?: false
-      prepare build(sort: [sequence_number: :asc])
-      filter expr(network_id == ^arg(:network_id) and run_number == ^arg(:run_number))
-    end
-
-    read :current_run do
-      argument :network_id, :integer, allow_nil?: false
-      argument :limit, :integer, default: 100
-      prepare build(sort: [sequence_number: :asc], limit: arg(:limit))
-
-      # FIXME make sure this is done with a db index (perhaps via an identity?) for performance reasons
-      filter expr(
-               network_id == ^arg(:network_id) and
-                 run_number ==
-                   fragment(
-                     "SELECT MAX(run_number) FROM invocations WHERE network_id = ?",
-                     ^arg(:network_id)
-                   ) and
-                 state == :completed
-             )
-    end
-
     # maybe "prepare"?
     create :prepare_first do
       accept [:input]
