@@ -45,9 +45,9 @@ defmodule Panic.Application do
   end
 
   defp skip_migrations? do
-    # Releases deliberately skip the boot-time migrator: production migrations
-    # are applied by hand with `fly ssh console -a panic -C /app/bin/migrate`,
-    # so a deploy never rewrites the schema out from under a running install.
-    System.get_env("RELEASE_NAME") != nil
+    # Releases migrate on boot, which is the sqlite story: the database lives on
+    # the machine's own volume, so there is no separate host for a release
+    # command to reach. Outside a release, mix ecto.migrate does the job.
+    System.get_env("RELEASE_NAME") == nil
   end
 end
