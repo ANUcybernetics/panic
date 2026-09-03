@@ -1,48 +1,62 @@
-# PANIC! Birch Setup
+# PANIC! Birch setup
 
-On any laptop/tablet with a decent web browser:
+The Birch Level 3 installation is four TCL 4K TVs, each driven by a Raspberry Pi
+attached to it, plus four Vestaboards. It runs the "Decoding AI" network
+(network 12) through installation 4, and each display is a watcher on that
+installation:
 
-- go to the [panic landing page](https://panic.fly.dev/) and click on the big
-  red PANIC! button/circle
-- if you're not already logged in, log in
+| display | watcher | URL                             |
+| ------- | ------- | ------------------------------- |
+| TV 1--4 | `tv1`--`tv4` | `https://panic.fly.dev/i/4/tvN` |
+| Vestaboards | `panic1`--`panic4` | driven by the server, no browser |
 
-Then, in the hallway, turn on the two TV screens (the remotes are "behind" the
-TVs). One remote will turn both TVs on/off, but for actually controlling the TV
-while it's on you'll need that TV's specific remote.
+The eight watchers share a stride of 8 and sit at different offsets, so each one
+shows a different step of the run as it cycles.
 
-If the TVs don't go straight to the web browser, then
+## Waking the installation up
 
-- go to settings (gear button on remote)
-- then navigate to All settings > Apps > All apps > Silk Browser (it might be a
-  fair way down)
+The Pis boot straight into their kiosk URL --- there is nothing to type on the
+TVs. If the screens are blank, the kiosks are stopped; bring them back with
 
-Once the Silk browser is running, visit
+```bash
+./rpi/kiosk.sh start
+```
 
-- https://panic.fly.dev/r/204 (on the left-hand TV)
-- https://panic.fly.dev/r/224 (on the right-hand TV)
+from a machine on the tailnet. `./rpi/kiosk.sh status` shows what each Pi is
+doing. The Pis stay on the tailnet whether or not the kiosks are running, and
+rejoin by themselves after a power cycle.
 
-Remember to hit enter once you've typed in the URLs. There will be no feedback
-as you type, so you'll have to remember where you're up to. Which sucks,
-obviously.
+## Starting a run
 
-Then, back on your logged-in-to-the-terminal computer, you can start a run by
-going to the [terminal page](https://panic.fly.dev/networks/2/terminal) and
-input a prompt to kick off a new run (hit enter to start it).
+On any laptop or tablet:
 
-On any other screen/browser you can watch the progress of your run at
-<https://panic.fly.dev/networks/2/display/grid/4/5/>
+- go to the [panic landing page](https://panic.fly.dev/) and log in
+- open the [terminal page](https://panic.fly.dev/networks/12/terminal) and type
+  a prompt to kick off a run (hit enter to start it)
 
-Finally, when you're done, you need to stop it running by going to the
-[control panel](https://panic.fly.dev/networks/2/) view and hitting the "Stop"
-button (towards the top of the page). If you don't do that PANIC! will keep
-running indefinitely, burning through our AI platform credits.
+The TVs and Vestaboards pick the run up on their own.
 
-Other notes:
+## Stopping
 
-- There might be some delays when you first start the it running with a new
-  prompt, because Replicate (where the models are hosted) might need to load
-  them into memory. Once they're in there it should pump through the different
-  text/image outputs pretty quickly.
+Go to the [network page](https://panic.fly.dev/networks/12) and hit "Stop"
+towards the top. **Do this when you're done** --- otherwise PANIC! keeps running
+indefinitely and burns through our AI platform credits.
 
-- The Vestaboards sometimes get "behind" the TVs. You don't need to do anything
-  to fix this, just wait and they'll (hopefully) catch back up.
+If the installation is finished for a while, also stop the kiosks:
+
+```bash
+./rpi/kiosk.sh stop
+```
+
+Each running kiosk holds a websocket open to the server, which keeps the Fly
+machine awake and billing even when no run is going. Stopping them lets it sleep
+until someone visits the site again.
+
+## Other notes
+
+- there might be a delay when you start a run with a new prompt, because
+  Replicate (where the models are hosted) may need to load them into memory.
+  Once they're warm it moves through the text/image outputs pretty quickly.
+
+- the Vestaboards sometimes get "behind" the TVs. You don't need to do anything;
+  they'll catch back up.

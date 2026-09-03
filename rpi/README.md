@@ -100,6 +100,19 @@ After flashing, insert the SD card into the Pi and power on. The Pi will:
 
 ## Remote Management
 
+To start or stop every PANIC! kiosk at once, use `kiosk.sh` from the repo root
+rather than driving systemd on each Pi by hand --- it also keeps them stopped
+across a reboot and the nightly restart timer, which `systemctl stop` alone does
+not:
+
+```bash
+./rpi/kiosk.sh status
+./rpi/kiosk.sh stop     # blank the displays; lets the Fly machine autostop
+./rpi/kiosk.sh start
+```
+
+For one-off work on a single Pi:
+
 ```bash
 # SSH via Tailscale (no password needed if your Tailscale user has access)
 tailscale ssh panic@<hostname>
@@ -117,7 +130,7 @@ journalctl --user -u chromium-kiosk -f         # View logs
 systemctl --user restart chromium-kiosk.service # Restart browser
 
 # Check all kiosks on Tailscale
-tailscale status | grep -E "lobby|conference|kiosk"
+tailscale status | grep panic-tv
 ```
 
 ## Troubleshooting
