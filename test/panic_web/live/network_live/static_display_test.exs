@@ -62,7 +62,7 @@ defmodule PanicWeb.NetworkLive.StaticDisplayTest do
       non_existent_id = Ash.UUID.generate()
 
       assert_raise Ash.Error.Invalid, fn ->
-        conn |> visit(~p"/display/static/#{non_existent_id}")
+        visit(conn, ~p"/display/static/#{non_existent_id}")
       end
     end
 

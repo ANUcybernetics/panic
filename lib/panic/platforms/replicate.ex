@@ -118,7 +118,9 @@ defmodule Panic.Platforms.Replicate do
 
       {:error, reason} ->
         delay = base_delay_ms * Integer.pow(2, attempt)
+
         Logger.warning("Replicate invoke failed (attempt #{attempt + 1}): #{inspect(reason)}, retrying in #{delay}ms")
+
         Process.sleep(delay)
         do_retry(fun, attempt + 1, max_retries, base_delay_ms)
     end

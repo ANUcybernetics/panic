@@ -13,7 +13,9 @@ defmodule Panic.NetworkRunnerAsyncTest do
 
   alias Panic.Accounts.User
   alias Panic.Engine
+  alias Panic.Engine.NetworkRegistry
   alias Panic.Engine.NetworkRunner
+  alias Panic.Platforms.Dummy
   alias Phoenix.Socket.Broadcast
 
   require Ash.Query
@@ -70,7 +72,7 @@ defmodule Panic.NetworkRunnerAsyncTest do
 
   describe "failure handling (async)" do
     test "runner returns to idle when model invocation fails", %{network: network} do
-      Repatch.patch(Panic.Platforms.Dummy, :invoke, [mode: :global], fn _model, _input, _token ->
+      Repatch.patch(Dummy, :invoke, [mode: :global], fn _model, _input, _token ->
         {:error, "simulated failure"}
       end)
 
@@ -90,13 +92,13 @@ defmodule Panic.NetworkRunnerAsyncTest do
     test "runner can start new run after failure", %{network: network} do
       call_count = :counters.new(1, [:atomics])
 
-      Repatch.patch(Panic.Platforms.Dummy, :invoke, [mode: :global], fn model, input, token ->
+      Repatch.patch(Dummy, :invoke, [mode: :global], fn model, input, token ->
         :counters.add(call_count, 1, 1)
 
         if :counters.get(call_count, 1) == 1 do
           {:error, "first call fails"}
         else
-          Repatch.real(Panic.Platforms.Dummy.invoke(model, input, token))
+          Repatch.real(Dummy.invoke(model, input, token))
         end
       end)
 
@@ -181,7 +183,9 @@ defmodule Panic.NetworkRunnerAsyncTest do
 
       assert_receive %Broadcast{
                        event: "invoke",
-                       payload: %{data: %{sequence_number: 1, state: :completed, model: "dummy-i2t"}}
+                       payload: %{
+                         data: %{sequence_number: 1, state: :completed, model: "dummy-i2t"}
+                       }
                      },
                      10_000
 
@@ -231,7 +235,7 @@ defmodule Panic.NetworkRunnerAsyncTest do
 
       NetworkRunner.stop_run(network.id)
 
-      [{pid, _}] = Registry.lookup(Panic.Engine.NetworkRegistry, network.id)
+      [{pid, _}] = Registry.lookup(NetworkRegistry, network.id)
 
       send(pid, {:processing_completed, genesis})
 
@@ -254,7 +258,7 @@ defmodule Panic.NetworkRunnerAsyncTest do
 
       NetworkRunner.stop_run(network.id)
 
-      [{pid, _}] = Registry.lookup(Panic.Engine.NetworkRegistry, network.id)
+      [{pid, _}] = Registry.lookup(NetworkRegistry, network.id)
       DynamicSupervisor.terminate_child(Panic.Engine.NetworkSupervisor, pid)
 
       ref = Process.monitor(pid)

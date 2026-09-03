@@ -43,9 +43,7 @@ defmodule PanicWeb.AdminLiveTest do
 
       Process.sleep(100)
 
-      session
-      |> assert_has("#flash-info", text: "Stopped 2 running jobs")
-
+      assert_has(session, "#flash-info", text: "Stopped 2 running jobs")
       assert [] = Registry.lookup(NetworkRegistry, network1.id)
       assert [] = Registry.lookup(NetworkRegistry, network2.id)
     end
@@ -70,8 +68,7 @@ defmodule PanicWeb.AdminLiveTest do
 
       Process.sleep(100)
 
-      session
-      |> assert_has("#flash-info", text: "Stopped 1 running job")
+      assert_has(session, "#flash-info", text: "Stopped 1 running job")
     end
   end
 

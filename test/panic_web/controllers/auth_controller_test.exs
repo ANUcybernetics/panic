@@ -64,8 +64,7 @@ defmodule PanicWeb.AuthControllerTest do
     test "password reset page renders", %{conn: conn} do
       token = Phoenix.Token.sign(PanicWeb.Endpoint, "reset_token", %{})
 
-      conn
-      |> visit(~p"/password-reset/#{token}")
+      visit(conn, ~p"/password-reset/#{token}")
     end
 
     test "anonymous user cannot access protected routes", %{conn: conn} do

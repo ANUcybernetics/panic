@@ -27,7 +27,11 @@ defmodule PanicWeb.NetworkLive.TerminalComponentTest do
     test "handles exceptions from NetworkRunner gracefully", %{conn: conn, owner: owner} do
       {:ok, network} =
         Panic.Engine.Network
-        |> Ash.Changeset.for_create(:create, %{name: "Test Network with Real Models", lockout_seconds: 0}, actor: owner)
+        |> Ash.Changeset.for_create(
+          :create,
+          %{name: "Test Network with Real Models", lockout_seconds: 0},
+          actor: owner
+        )
         |> Ash.create()
 
       {:ok, network} =

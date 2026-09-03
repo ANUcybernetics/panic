@@ -3,7 +3,9 @@ defmodule PanicWeb.UserLiveTest do
   Test the user dashboard
   """
   use PanicWeb.ConnCase, async: false
+
   import Phoenix.LiveViewTest
+
   alias Panic.Watcher.Installation
 
   describe "user IS logged in" do

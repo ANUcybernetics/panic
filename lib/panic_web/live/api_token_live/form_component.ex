@@ -96,7 +96,10 @@ defmodule PanicWeb.APITokenLive.FormComponent do
 
           {:error, _} ->
             # Clean up the token if association fails
-            Panic.Accounts.destroy_api_token!(api_token, actor: socket.assigns.current_user, authorize?: false)
+            Panic.Accounts.destroy_api_token!(api_token,
+              actor: socket.assigns.current_user,
+              authorize?: false
+            )
 
             {:noreply,
              socket
@@ -110,12 +113,13 @@ defmodule PanicWeb.APITokenLive.FormComponent do
   end
 
   defp associate_token_with_user(api_token, user) do
-    case Panic.Accounts.create_user_api_token(%{
-           user_id: user.id,
-           api_token_id: api_token.id
-         },
-         authorize?: false
-       ) do
+    case Panic.Accounts.create_user_api_token(
+           %{
+             user_id: user.id,
+             api_token_id: api_token.id
+           },
+           authorize?: false
+         ) do
       {:ok, _} -> :ok
       error -> error
     end

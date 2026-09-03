@@ -134,7 +134,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   defp lockout_ready_at(genesis_invocation, network) when not is_nil(genesis_invocation) do
     lockout_end = DateTime.add(genesis_invocation.inserted_at, network.lockout_seconds, :second)
 
-    if DateTime.compare(DateTime.utc_now(), lockout_end) == :lt do
+    if DateTime.before?(DateTime.utc_now(), lockout_end) do
       DateTime.to_iso8601(lockout_end)
     end
   end

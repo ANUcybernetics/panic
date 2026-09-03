@@ -96,8 +96,7 @@ defmodule PanicWeb.AdminLive do
   def handle_info(%Broadcast{topic: "invocation:" <> _} = message, socket) do
     case message.payload do
       %{data: invocation} ->
-        {:noreply,
-         stream_insert(socket, :invocations, invocation, at: 0, limit: @invocation_stream_limit)}
+        {:noreply, stream_insert(socket, :invocations, invocation, at: 0, limit: @invocation_stream_limit)}
 
       _ ->
         {:noreply, socket}

@@ -10,7 +10,11 @@ defmodule Panic.Repo.Migrations.AddInstallations do
   def up do
     create table(:installations, primary_key: false) do
       add :network_id,
-          references(:networks, column: :id, name: "installations_network_id_fkey", type: :bigint),
+          references(:networks,
+            column: :id,
+            name: "installations_network_id_fkey",
+            type: :bigint
+          ),
           null: false
 
       add :updated_at, :utc_datetime_usec, null: false

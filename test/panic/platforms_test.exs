@@ -169,7 +169,6 @@ defmodule Panic.PlatformsTest do
       assert {:ok, output} = invoke_fn.(model, input, api_key)
       assert String.match?(output, ~r/\S/), "Expected non-empty output"
     end
-
   end
 
   describe "OpenAI platform" do

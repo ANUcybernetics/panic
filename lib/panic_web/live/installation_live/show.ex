@@ -180,9 +180,7 @@ defmodule PanicWeb.InstallationLive.Show do
   @impl true
   def handle_event("delete_watcher", %{"name" => name}, socket) do
     installation =
-      Panic.Watcher.remove_watcher!(socket.assigns.installation, name,
-        actor: socket.assigns.current_user
-      )
+      Panic.Watcher.remove_watcher!(socket.assigns.installation, name, actor: socket.assigns.current_user)
 
     {:noreply, assign(socket, :installation, installation)}
   end
