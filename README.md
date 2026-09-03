@@ -33,6 +33,27 @@ going on:
 - **installation** a specific configuration of watchers (probably representing a
   physical install, but not necessarily)
 
+## Running an installation
+
+The physical displays are Raspberry Pi kiosks that boot straight into their
+watcher URL. Start and stop all of them at once from a machine on the tailnet:
+
+```bash
+./rpi/kiosk.sh status
+./rpi/kiosk.sh stop     # blank the displays
+./rpi/kiosk.sh start
+```
+
+Stop them when an installation is finished for a while. Each running kiosk holds
+a websocket open to the server, and that traffic keeps the Fly machine awake
+around the clock even when no run is going --- with the kiosks stopped it
+autostops within a few minutes and starts again on the next visit. The Pis stay
+on the tailnet either way and rejoin by themselves after a power cycle.
+
+See [`docs/birch-setup.md`](docs/birch-setup.md) for running the Birch Level 3
+installation specifically, and [`rpi/README.md`](rpi/README.md) for building a
+new kiosk SD card.
+
 ## About the School of Cybernetics
 
 At the School of Cybernetics we love thinking about the way that feedback loops
