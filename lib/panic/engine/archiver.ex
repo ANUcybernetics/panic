@@ -36,55 +36,61 @@ defmodule Panic.Engine.Archiver do
   - `{:error, reason}` on failure
   """
   def archive_invocation(invocation, next_invocation) do
-    # Download the file from the output URL
     case download_file(invocation.output) do
       {:ok, filename} ->
-        # Convert to appropriate format
-        dest_rootname = "invocation-#{invocation.id}-output"
-
-        case convert_file(filename, dest_rootname) do
-          {:ok, converted_filename} ->
-            # Upload to S3
-            case upload_to_s3(converted_filename) do
-              {:ok, s3_url} ->
-                # both invocations need the same S3 URL - current.output and next.input reference same file
-                # Update both invocations with the S3 URL
-                try do
-                  invocation
-                  |> Ash.Changeset.for_update(:update_output, %{output: s3_url})
-                  |> Ash.update!(authorize?: false)
-
-                  next_invocation
-                  |> Ash.Changeset.for_update(:update_input, %{input: s3_url})
-                  |> Ash.update!(authorize?: false)
-
-                  # Clean up temporary files
-                  File.rm(filename)
-                  if converted_filename != filename, do: File.rm(converted_filename)
-
-                  :ok
-                rescue
-                  e ->
-                    Logger.error("Failed to update invocation records: #{inspect(e)}")
-                    {:error, :update_failed}
-                end
-
-              {:error, reason} ->
-                Logger.error("Failed to upload to S3: #{inspect(reason)}")
-                File.rm(filename)
-                {:error, :upload_failed}
-            end
-
-          {:error, reason} ->
-            Logger.error("Failed to convert file #{filename}: #{inspect(reason)}")
-            File.rm(filename)
-            {:error, :conversion_failed}
+        try do
+          convert_and_upload(filename, invocation, next_invocation)
+        after
+          File.rm(filename)
         end
 
       {:error, reason} ->
         Logger.error("Failed to download file: #{inspect(reason)}")
         {:error, :download_failed}
     end
+  end
+
+  defp convert_and_upload(filename, invocation, next_invocation) do
+    case convert_file(filename, "invocation-#{invocation.id}-output") do
+      {:ok, converted_filename} ->
+        try do
+          upload_and_record(converted_filename, invocation, next_invocation)
+        after
+          if converted_filename != filename, do: File.rm(converted_filename)
+        end
+
+      {:error, reason} ->
+        Logger.error("Failed to convert file #{filename}: #{inspect(reason)}")
+        {:error, :conversion_failed}
+    end
+  end
+
+  defp upload_and_record(filename, invocation, next_invocation) do
+    case upload_to_s3(filename) do
+      {:ok, s3_url} ->
+        record_archived_url(invocation, next_invocation, s3_url)
+
+      {:error, reason} ->
+        Logger.error("Failed to upload to S3: #{inspect(reason)}")
+        {:error, :upload_failed}
+    end
+  end
+
+  # both invocations point at the same file: current.output and next.input
+  defp record_archived_url(invocation, next_invocation, s3_url) do
+    invocation
+    |> Ash.Changeset.for_update(:update_output, %{output: s3_url})
+    |> Ash.update!(authorize?: false)
+
+    next_invocation
+    |> Ash.Changeset.for_update(:update_input, %{input: s3_url})
+    |> Ash.update!(authorize?: false)
+
+    :ok
+  rescue
+    e ->
+      Logger.error("Failed to update invocation records: #{inspect(e)}")
+      {:error, :update_failed}
   end
 
   @doc """

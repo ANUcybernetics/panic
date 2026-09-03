@@ -3,6 +3,9 @@ defmodule Panic.Engine.ArchiverTest do
   use Repatch.ExUnit
 
   alias Panic.Engine.Archiver
+  alias Panic.Engine.Invocation
+
+  @moduletag :capture_log
 
   describe "convert_file/2" do
     test "webp files require no conversion" do
@@ -190,6 +193,47 @@ defmodule Panic.Engine.ArchiverTest do
         assert Path.extname(filename) == expected_extension,
                "Expected extension #{expected_extension} to be preserved in filename #{filename}"
       end
+    end
+  end
+
+  describe "archive_invocation/2" do
+    setup do
+      # a .webp needs no conversion, so these tests exercise download -> upload
+      # without shelling out to ImageMagick
+      url = "https://example.com/output.webp"
+
+      Repatch.patch(Req, :get, fn ^url, opts ->
+        stream = Keyword.fetch!(opts, :into)
+        send(self(), {:download_path, stream.path})
+        Enum.into(["fake webp content"], stream)
+        {:ok, %{status: 200}}
+      end)
+
+      %{invocation: %Invocation{id: 1, output: url}, next_invocation: %Invocation{id: 2}}
+    end
+
+    test "removes the downloaded file when the upload fails", ctx do
+      Repatch.patch(Archiver, :upload_to_s3, fn _file_path -> {:error, :no_bucket} end)
+
+      assert {:error, :upload_failed} =
+               Archiver.archive_invocation(ctx.invocation, ctx.next_invocation)
+
+      assert_received {:download_path, path}
+      refute File.exists?(path)
+    end
+
+    test "removes the downloaded file when recording the archived URL fails", ctx do
+      Repatch.patch(Archiver, :upload_to_s3, fn _file_path ->
+        {:ok, "https://s3.example/out.webp"}
+      end)
+
+      Repatch.patch(Ash, :update!, fn _changeset, _opts -> raise "database is away" end)
+
+      assert {:error, :update_failed} =
+               Archiver.archive_invocation(ctx.invocation, ctx.next_invocation)
+
+      assert_received {:download_path, path}
+      refute File.exists?(path)
     end
   end
 
