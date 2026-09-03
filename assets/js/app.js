@@ -21,7 +21,6 @@ import "phoenix_html";
 import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import topbar from "../vendor/topbar";
-import "@launchscout/autocomplete-input";
 import PhoenixCustomEventHook from "phoenix-custom-event-hook";
 import live_select from "live_select";
 
@@ -29,30 +28,6 @@ import live_select from "live_select";
 
 import AudioVisualizer from "./hooks/audio_visualizer";
 import TerminalLockoutTimer from "./hooks/terminal_lockout_timer";
-
-const FocusInput = {
-  mounted() {
-    this.el.addEventListener("click", () => {
-      const inputId = this.el.dataset.inputId;
-      if (inputId) {
-        // Give the autocomplete element a moment to initialize
-        setTimeout(() => {
-          const autocompleteElement = document.getElementById(inputId);
-          if (autocompleteElement) {
-            // Try to find the actual input within the autocomplete-input custom element
-            const actualInput =
-              autocompleteElement.shadowRoot?.querySelector("input") ||
-              autocompleteElement.querySelector("input");
-            if (actualInput) {
-              actualInput.focus();
-              actualInput.click(); // Also trigger click to open dropdown
-            }
-          }
-        }, 10);
-      }
-    });
-  },
-};
 
 const RunnerCountdown = {
   mounted() {
@@ -105,7 +80,6 @@ const RunnerCountdown = {
 const hooks = {
   AudioVisualizer,
   PhoenixCustomEventHook,
-  FocusInput,
   RunnerCountdown,
   TerminalLockoutTimer,
   ...live_select
