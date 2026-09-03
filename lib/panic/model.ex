@@ -1000,7 +1000,7 @@ defmodule Panic.Model do
           # This allows the network to complete the cycle
           {:ok, input}
         end
-      },
+      }
     ] ++
       [
         # Text to Text
@@ -1125,9 +1125,7 @@ defmodule Panic.Model do
 
   def all(filters) do
     Enum.filter(all(), fn model ->
-      filters
-      |> Enum.map(fn {output, type} -> Map.fetch!(model, output) == type end)
-      |> Enum.all?()
+      Enum.all?(filters, fn {field, value} -> Map.fetch!(model, field) == value end)
     end)
   end
 
@@ -1161,37 +1159,6 @@ defmodule Panic.Model do
 
   def model_url(%__MODULE__{platform: Dummy}) do
     "#dummy-platform"
-  end
-
-  @doc """
-  Transforms a list of models into a list of tuples containing model information with indices.
-
-  This function takes a list of models and returns a list of tuples. Each tuple contains:
-  - The original index of the model in the input list
-  - An "actual index" that matches the original index
-  - The model itself
-
-  ## Parameters
-
-  - `models`: A list of `Panic.Model` structs
-
-  ## Returns
-
-  A list of tuples in the format `{original_index, actual_index, model}`, where:
-  - `original_index` is the index of the model in the input list
-  - `actual_index` is the same as the original index
-  - `model` is the original model struct
-
-  ## Example
-
-      iex> models = [%Panic.Model{}, %Panic.Model{}]
-      iex> Panic.Model.models_with_indices(models)
-      [{0, 0, %Panic.Model{}}, {1, 1, %Panic.Model{}}]
-  """
-  def models_with_indices(models) do
-    models
-    |> Enum.with_index()
-    |> Enum.map(fn {model, index} -> {index, index, model} end)
   end
 end
 

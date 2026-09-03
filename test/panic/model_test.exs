@@ -90,7 +90,8 @@ defmodule Panic.ModelTest do
       active_ids = Enum.map(active_models, & &1.id)
 
       for id <- @deprecated_ids do
-        refute id in active_ids, "deprecated model #{id} should not appear with deprecated: false filter"
+        refute id in active_ids,
+               "deprecated model #{id} should not appear with deprecated: false filter"
       end
     end
 
@@ -170,16 +171,6 @@ defmodule Panic.ModelTest do
         url = Model.model_url(openai_model)
         assert String.starts_with?(url, "https://")
       end
-    end
-
-    test "models_with_indices/1 adds indices to models" do
-      models = [Model.by_id!("dummy-t2t"), Model.by_id!("dummy-i2t")]
-      indexed_models = Model.models_with_indices(models)
-
-      assert indexed_models == [
-               {0, 0, Model.by_id!("dummy-t2t")},
-               {1, 1, Model.by_id!("dummy-i2t")}
-             ]
     end
   end
 

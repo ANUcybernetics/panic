@@ -108,15 +108,7 @@ defmodule PanicWeb.WatcherSubscriber do
   def configure_invocation_stream(socket, %Panic.Engine.Network{} = network, display) do
     display = normalise_display(display)
 
-    configured? =
-      socket.assigns
-      |> Map.get(:streams)
-      |> case do
-        nil -> false
-        streams -> Map.has_key?(streams, :invocations)
-      end
-
-    if configured? do
+    if stream_configured?(socket) do
       # Stream already configured – nothing to (re)configure, just keep assigns fresh
       # But update presence metadata if display mode changed
       if socket.assigns[:display] != display do
@@ -153,15 +145,7 @@ defmodule PanicWeb.WatcherSubscriber do
 
       _ ->
         # Check if invocation stream is configured - if not, ignore the message
-        configured? =
-          socket.assigns
-          |> Map.get(:streams)
-          |> case do
-            nil -> false
-            streams -> Map.has_key?(streams, :invocations)
-          end
-
-        if configured? do
+        if stream_configured?(socket) do
           display = socket.assigns.display
           invocation = message.payload.data
 
@@ -307,50 +291,41 @@ defmodule PanicWeb.WatcherSubscriber do
 
   defp track_presence(socket, network_id, display) do
     if LiveView.connected?(socket) do
-      user = socket.assigns[:current_user]
-      installation_id = socket.assigns[:installation_id]
-      watcher_name = socket.assigns[:watcher_name]
-
-      metadata = %{
-        display: display,
-        user_id: user && user.id,
-        user_email: user && user.email,
-        installation_id: installation_id,
-        watcher_name: watcher_name,
-        joined_at: DateTime.utc_now()
-      }
-
       Presence.track(
         self(),
         "invocation:#{network_id}",
         socket.id,
-        metadata
+        presence_metadata(socket, display)
       )
     end
   end
 
   defp update_presence(socket, network_id, display) do
     if LiveView.connected?(socket) do
-      user = socket.assigns[:current_user]
-      installation_id = socket.assigns[:installation_id]
-      watcher_name = socket.assigns[:watcher_name]
-
-      metadata = %{
-        display: display,
-        user_id: user && user.id,
-        user_email: user && user.email,
-        installation_id: installation_id,
-        watcher_name: watcher_name,
-        joined_at: DateTime.utc_now()
-      }
-
       Presence.update(
         self(),
         "invocation:#{network_id}",
         socket.id,
-        metadata
+        presence_metadata(socket, display)
       )
     end
+  end
+
+  defp stream_configured?(socket) do
+    Map.has_key?(socket.assigns[:streams] || %{}, :invocations)
+  end
+
+  defp presence_metadata(socket, display) do
+    user = socket.assigns[:current_user]
+
+    %{
+      display: display,
+      user_id: user && user.id,
+      user_email: user && user.email,
+      installation_id: socket.assigns[:installation_id],
+      watcher_name: socket.assigns[:watcher_name],
+      joined_at: DateTime.utc_now()
+    }
   end
 
   defp attach_invocation_hook(socket) do
@@ -477,7 +452,7 @@ defmodule PanicWeb.WatcherSubscriber do
 
   defp maybe_reset_stream_for_network_change(socket) do
     # Reset the invocation stream if it's configured
-    if socket.assigns[:streams] && Map.has_key?(socket.assigns.streams, :invocations) do
+    if stream_configured?(socket) do
       socket
       |> LiveView.stream(:invocations, [], reset: true)
       |> Component.assign(genesis_invocation: nil)
