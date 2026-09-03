@@ -1,6 +1,7 @@
 defmodule Panic.TowerEmailTest do
   use ExUnit.Case, async: false
 
+  import ExUnit.CaptureIO
   import Swoosh.TestAssertions
 
   @moduletag :capture_log
@@ -104,8 +105,10 @@ defmodule Panic.TowerEmailTest do
 
   describe "Panic.trigger_test_crash function" do
     test "trigger_test_crash/0 sends error notification" do
-      # Call the crash function
-      assert :ok = Panic.trigger_test_crash()
+      # the function prints operator instructions, which would otherwise be
+      # dumped into the test output
+      assert capture_io(fn -> assert :ok = Panic.trigger_test_crash() end) =~
+               "Triggering test crash"
 
       # Wait for the background task to crash (1s delay) and Tower to process it (100ms)
       Process.sleep(1100)
