@@ -39,7 +39,7 @@ defmodule PanicWeb.InstallationLive.Show do
           class="relative rounded-lg border border-zinc-200 dark:border-zinc-700 p-4"
         >
           <div class="flex justify-between items-start">
-            <div class="flex-grow">
+            <div class="grow">
               <div class="flex items-center gap-3">
                 <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">
                   {watcher.name}

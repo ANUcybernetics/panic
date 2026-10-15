@@ -34,7 +34,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
             type="button"
             phx-click="reset_models"
             phx-target={@myself}
-            class="px-4 py-2 text-sm bg-zinc-700 text-zinc-300 rounded hover:bg-zinc-600"
+            class="px-4 py-2 text-sm bg-zinc-700 text-zinc-300 rounded-sm hover:bg-zinc-600"
           >
             Reset
           </button>
@@ -44,7 +44,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
             phx-target={@myself}
             disabled={@validation_result != :valid}
             class={[
-              "px-4 py-2 text-sm rounded",
+              "px-4 py-2 text-sm rounded-sm",
               if @validation_result == :valid do
                 "bg-green-600 text-white hover:bg-green-700"
               else

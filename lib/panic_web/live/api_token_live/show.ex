@@ -30,7 +30,7 @@ defmodule PanicWeb.APITokenLive.Show do
     <div class="mt-8">
       <h3 class="text-base font-semibold leading-6 text-gray-900">Platform Tokens</h3>
       <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
-        <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
+        <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm sm:p-6">
           <dt class="truncate text-sm font-medium text-gray-500">OpenAI</dt>
           <dd class="mt-1 text-sm text-gray-900">
             <span :if={@api_token.openai_token} class="font-mono">
@@ -39,7 +39,7 @@ defmodule PanicWeb.APITokenLive.Show do
             <span :if={!@api_token.openai_token} class="text-gray-400">Not configured</span>
           </dd>
         </div>
-        <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
+        <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm sm:p-6">
           <dt class="truncate text-sm font-medium text-gray-500">Replicate</dt>
           <dd class="mt-1 text-sm text-gray-900">
             <span :if={@api_token.replicate_token} class="font-mono">
@@ -48,7 +48,7 @@ defmodule PanicWeb.APITokenLive.Show do
             <span :if={!@api_token.replicate_token} class="text-gray-400">Not configured</span>
           </dd>
         </div>
-        <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
+        <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm sm:p-6">
           <dt class="truncate text-sm font-medium text-gray-500">Gemini</dt>
           <dd class="mt-1 text-sm text-gray-900">
             <span :if={@api_token.gemini_token} class="font-mono">
@@ -63,7 +63,7 @@ defmodule PanicWeb.APITokenLive.Show do
     <div class="mt-8">
       <h3 class="text-base font-semibold leading-6 text-gray-900">Vestaboard Tokens</h3>
       <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <div :for={idx <- 1..4} class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
+        <div :for={idx <- 1..4} class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm sm:p-6">
           <dt class="truncate text-sm font-medium text-gray-500">Vestaboard Panic {idx}</dt>
           <dd class="mt-1 text-sm text-gray-900">
             <span

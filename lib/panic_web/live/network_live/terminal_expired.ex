@@ -52,7 +52,7 @@ defmodule PanicWeb.NetworkLive.TerminalExpired do
         <div class="space-y-4">
           <.link
             navigate={~p"/about"}
-            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-purple-900 bg-purple-200 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-purple-900 bg-purple-200 hover:bg-purple-100 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
           >
             Learn more about PANIC!
           </.link>

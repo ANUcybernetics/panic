@@ -29,7 +29,7 @@ defmodule PanicWeb.NetworkLive.RunnerStatusComponent do
         <div class="flex items-center space-x-4">
           <div>
             <span class="text-sm font-medium text-gray-500">Status:</span>
-            <span class={["ml-2 px-2 py-1 rounded text-sm font-semibold", status_class(@status)]}>
+            <span class={["ml-2 px-2 py-1 rounded-sm text-sm font-semibold", status_class(@status)]}>
               {format_status(@status)}
             </span>
           </div>
