@@ -4,6 +4,8 @@ defmodule PanicWeb.InstallationLiveTest do
   """
   use PanicWeb.ConnCase, async: false
 
+  import Phoenix.LiveViewTest
+
   alias Panic.Engine.Network
   alias Panic.Watcher.Installation
 
@@ -203,6 +205,35 @@ defmodule PanicWeb.InstallationLiveTest do
       |> assert_has("h3", text: "board-1")
       |> assert_has("span", text: "vestaboard")
       |> assert_has("div", text: "Panic 1 - every 2nd, offset 0")
+    end
+
+    test "a watcher form error is shown once", %{conn: conn, user: user} do
+      network = Panic.Fixtures.network_with_dummy_models(user)
+
+      installation =
+        Installation
+        |> Ash.Changeset.for_create(
+          :create,
+          %{name: "Errors", network_id: network.id, watchers: []},
+          actor: user
+        )
+        |> Ash.create!()
+
+      {:ok, view, _html} = live(conn, ~p"/installations/#{installation}/show/add_watcher")
+
+      html =
+        view
+        |> element("#watcher-form")
+        |> render_change(%{
+          "form" => %{
+            "watcher" => %{"type" => "single", "name" => "main", "stride" => "2", "offset" => ""}
+          }
+        })
+
+      offset_errors =
+        html |> Floki.parse_document!() |> Floki.find("#form_watcher_0_offset-error p")
+
+      assert length(offset_errors) == 1
     end
 
     test "can edit a watcher in an installation", %{conn: conn, user: user} do
