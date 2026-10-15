@@ -1,37 +1,19 @@
 defmodule Panic.Watcher.Changes.AddWatcher do
   @moduledoc """
-  Change module for adding a config to an installation's watchers array.
-
-  This change takes a watcher argument and appends it to the current watchers list.
+  Appends the `watcher` argument to an installation's watchers.
   """
   use Ash.Resource.Change
 
   @impl true
-  def init(opts) do
-    {:ok, opts}
-  end
-
-  @impl true
   def change(changeset, _opts, _context) do
-    current_watchers = Ash.Changeset.get_attribute(changeset, :watchers)
-    watcher = Ash.Changeset.get_argument(changeset, :watcher)
+    # a missing argument already has a Required error from the action
+    case Ash.Changeset.get_argument(changeset, :watcher) do
+      nil ->
+        changeset
 
-    case {current_watchers, watcher} do
-      {nil, _} ->
-        Ash.Changeset.add_error(changeset,
-          field: :watchers,
-          message: "watchers attribute is required"
-        )
-
-      {_, nil} ->
-        Ash.Changeset.add_error(changeset,
-          field: :watcher,
-          message: "watcher argument is required"
-        )
-
-      {watchers, watcher} ->
-        new_watchers = watchers ++ [watcher]
-        Ash.Changeset.change_attribute(changeset, :watchers, new_watchers)
+      watcher ->
+        watchers = Ash.Changeset.get_attribute(changeset, :watchers)
+        Ash.Changeset.change_attribute(changeset, :watchers, watchers ++ [watcher])
     end
   end
 end
