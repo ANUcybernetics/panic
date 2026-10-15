@@ -4,61 +4,21 @@
 
 /* This file is for your main application CSS */
 
+/* percentages, so the user's browser font size still scales the page */
 :root {
-    font-size: 20px;
+    font-size: 125%;
 }
 
 @media (max-width: 640px) {
     :root {
-        font-size: 16px;
+        font-size: 100%;
     }
 }
 
-/* Autocomplete input styling to match dark theme */
-/* Note: Most input styling is now handled via Tailwind classes in panic_components.ex */
-/* Only keeping styles for dropdown list and options which can't be targeted with Tailwind */
-
-autocomplete-input {
-    display: block;
-    width: 100%;
+body {
+    /* match a fallback monospace font's width to Sometype Mono while it loads */
+    font-size-adjust: ch-width from-font;
 }
-
-/* Style the dropdown list */
-autocomplete-input::part(list) {
-    background-color: #18181b !important;
-    border: 1px solid #3f3f46 !important;
-    border-radius: 0.375rem !important;
-    margin-top: 0.25rem !important;
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
-    max-height: 16rem !important;
-    overflow-y: auto !important;
-}
-
-/* Style the options */
-autocomplete-input::part(option) {
-    color: #f4f4f5 !important;
-    padding: 0.5rem 0.75rem !important;
-    cursor: pointer !important;
-    transition: background-color 0.15s ease !important;
-}
-
-/* Style the selected/hovered option */
-autocomplete-input::part(selected-option) {
-    background-color: #3f3f46 !important;
-    background: #3f3f46 !important;
-    color: #ffffff !important;
-}
-
-/* Override any default selected option styles */
-autocomplete-input [aria-selected="true"],
-autocomplete-input li:hover,
-autocomplete-input li.selected,
-autocomplete-input::part(option):hover {
-    background-color: #3f3f46 !important;
-    background: #3f3f46 !important;
-    color: #ffffff !important;
-}
-
 
 /* CoreComponents.modal/1: a native <dialog> in the top layer */
 
