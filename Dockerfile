@@ -7,14 +7,14 @@
 # This file is based on these images:
 #
 #   - https://hub.docker.com/r/hexpm/elixir/tags - for the build image
-#   - https://hub.docker.com/_/debian?tab=tags&page=1&name=trixie-20260202-slim - for the release image
+#   - https://hub.docker.com/_/debian?tab=tags&page=1&name=trixie-20261005-slim - for the release image
 #   - https://pkgs.org/ - resource for finding needed packages
-#   - Ex: hexpm/elixir:1.19.5-erlang-28.3.1-debian-trixie-20260202-slim
+#   - Ex: hexpm/elixir:1.20.4-erlang-28.5.0.8-debian-trixie-20261005-slim
 #
 # Update these versions as needed - check compatibility first
-ARG ELIXIR_VERSION=1.19.5
-ARG OTP_VERSION=28.3.1
-ARG DEBIAN_VERSION=trixie-20260202-slim
+ARG ELIXIR_VERSION=1.20.4
+ARG OTP_VERSION=28.5.0.8
+ARG DEBIAN_VERSION=trixie-20261005-slim
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
@@ -22,7 +22,7 @@ ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 FROM ${BUILDER_IMAGE} as builder
 
 # install build dependencies
-# Update Node major version in the setup URL as needed (currently v22). Don't
+# Update Node major version in the setup URL as needed (currently v24). Don't
 # add `npm install -g npm@latest` back: npm's latest floats ahead of whatever
 # Node is pinned here and eventually refuses to install on it.
 RUN apt-get update -y && apt-get install -y \
@@ -32,7 +32,7 @@ RUN apt-get update -y && apt-get install -y \
     curl \
     pkg-config \
     libssl-dev \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y nodejs \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
