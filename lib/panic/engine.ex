@@ -9,16 +9,16 @@ defmodule Panic.Engine do
       define :get_network, action: :read, get_by: [:id]
       define :destroy_network, action: :destroy
       define :update_models, args: [:models]
-      define :stop_run, args: [:network_id]
+      define :stop_run
+      define :list_running_networks, action: :running
     end
 
     resource Panic.Engine.Invocation do
-      define :prepare_first, args: [:network, :input]
-      define :prepare_next, args: [:previous_invocation]
+      define :start_run, args: [:network, :input]
       define :invoke, args: []
-      define :about_to_invoke, args: []
       define :mark_as_failed, args: []
       define :get_invocation, action: :read, get_by: [:id]
+      define :current_run_head, args: [:run_number]
     end
   end
 end

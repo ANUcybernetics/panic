@@ -6,9 +6,7 @@ Repatch.setup(enable_global: true, enable_shared: true)
 
 Ecto.Adapters.SQL.Sandbox.mode(Panic.Repo, :manual)
 
-# Apply archiver patches for tests
-# Archiving is now skipped in test environment via Mix.env() check in NetworkRunner
-# These patches are kept for any remaining direct archiver tests
+# Archiver patches avoid real downloads and S3 uploads when archive jobs run
 Panic.Test.ArchiverPatches.apply_patches()
 
 # Apply all external API patches globally to prevent real API calls in tests

@@ -27,7 +27,7 @@ config :ash,
   many_to_many_destroy_destination_on_match?: true,
   infer_generic_action_reactors?: false
 
-config :ash_oban, pro?: false
+config :ash_oban, actor_persister: Panic.Accounts.ActorPersister, pro?: false
 
 # Configure esbuild (the version is required)
 config :esbuild,
@@ -46,7 +46,7 @@ config :logger, :console,
 config :panic, Oban,
   engine: Oban.Engines.Lite,
   notifier: Oban.Notifiers.PG,
-  queues: [default: 10],
+  queues: [default: 10, invocations: 10, archiver: 2, vestaboards: 1],
   lifeline: [rescue_after: {2, :hours}],
   pruner: [max_age: {1, :day}],
   repo: Panic.Repo,

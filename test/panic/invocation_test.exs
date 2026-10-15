@@ -5,12 +5,6 @@ defmodule Panic.InvocationTest do
   alias Ash.Error.Invalid
   alias Panic.Engine.Invocation
 
-  setup do
-    # Stop all network runners to ensure clean state
-    PanicWeb.Helpers.stop_all_network_runners()
-    :ok
-  end
-
   describe "write transactions" do
     test "a failing after_action hook rolls back the insert" do
       user = Panic.Fixtures.user()
@@ -18,7 +12,7 @@ defmodule Panic.InvocationTest do
 
       assert {:error, _} =
                Invocation
-               |> Ash.Changeset.for_create(:prepare_first, %{network: network, input: "rollback"}, actor: user)
+               |> Ash.Changeset.for_create(:start_run, %{network: network, input: "rollback"}, actor: user)
                |> Ash.Changeset.after_action(fn _changeset, _invocation -> {:error, "boom"} end)
                |> Ash.create()
 
@@ -35,7 +29,7 @@ defmodule Panic.InvocationTest do
               input <- Panic.Generators.ascii_sentence()
             ) do
         assert %Ash.Changeset{valid?: true} =
-                 Panic.Engine.changeset_to_prepare_first(
+                 Panic.Engine.changeset_to_start_run(
                    network,
                    input
                  )
@@ -52,7 +46,7 @@ defmodule Panic.InvocationTest do
         # Create the first invocation
         first_invocation =
           Invocation
-          |> Ash.Changeset.for_create(:prepare_first, %{network: network, input: input}, actor: user)
+          |> Ash.Changeset.for_create(:start_run, %{network: network, input: input}, actor: user)
           |> Ash.create!()
 
         # Fetch the invocation using the unique_in_run identity
@@ -80,7 +74,7 @@ defmodule Panic.InvocationTest do
               input <- Panic.Generators.ascii_sentence()
             ) do
         assert %Ash.Changeset{valid?: false} =
-                 Panic.Engine.changeset_to_prepare_first(
+                 Panic.Engine.changeset_to_start_run(
                    network,
                    input
                  )
@@ -95,7 +89,7 @@ defmodule Panic.InvocationTest do
               input <- integer()
             ) do
         assert %Ash.Changeset{valid?: false} =
-                 Panic.Engine.changeset_to_prepare_first(
+                 Panic.Engine.changeset_to_start_run(
                    network,
                    input,
                    actor: user
@@ -103,7 +97,7 @@ defmodule Panic.InvocationTest do
       end
     end
 
-    property "can creates invocation using :prepare_first" do
+    property "can creates invocation using :start_run" do
       user = Panic.Fixtures.user()
 
       check all(
@@ -112,7 +106,7 @@ defmodule Panic.InvocationTest do
             ) do
         invocation =
           Invocation
-          |> Ash.Changeset.for_create(:prepare_first, %{network: network, input: input}, actor: user)
+          |> Ash.Changeset.for_create(:start_run, %{network: network, input: input}, actor: user)
           |> Ash.create!()
 
         assert invocation.network_id == network.id
@@ -132,7 +126,7 @@ defmodule Panic.InvocationTest do
             ) do
         invocation =
           Invocation
-          |> Ash.Changeset.for_create(:prepare_first, %{network: network, input: input}, actor: user)
+          |> Ash.Changeset.for_create(:start_run, %{network: network, input: input}, actor: user)
           |> Ash.create!()
 
         assert invocation.network_id == network.id
@@ -150,7 +144,7 @@ defmodule Panic.InvocationTest do
               network <- Panic.Generators.network_with_dummy_models(user),
               input <- Panic.Generators.ascii_sentence()
             ) do
-        Panic.Engine.prepare_first!(
+        Panic.Engine.start_run!(
           network,
           input,
           actor: user
@@ -179,7 +173,7 @@ defmodule Panic.InvocationTest do
               network <- Panic.Generators.network_with_dummy_models(user),
               input <- Panic.Generators.ascii_sentence()
             ) do
-        invocation = Panic.Engine.prepare_first!(network, input, actor: user)
+        invocation = Panic.Engine.start_run!(network, input, actor: user)
         assert invocation.input
         assert invocation.output == nil
         assert invocation.id == invocation.run_number
@@ -200,7 +194,7 @@ defmodule Panic.InvocationTest do
 
       invocation =
         network
-        |> Panic.Engine.prepare_first!(input, actor: user)
+        |> Panic.Engine.start_run!(input, actor: user)
         |> Panic.Engine.invoke!(actor: user)
 
       assert invocation.output
@@ -223,7 +217,7 @@ defmodule Panic.InvocationTest do
       input = "generate some audio"
 
       # Create and prepare the invocation - should work without any tokens
-      invocation = Panic.Engine.prepare_first!(network, input, actor: user)
+      invocation = Panic.Engine.start_run!(network, input, actor: user)
 
       # Verify the invocation was created successfully
       assert invocation.network_id == network.id
@@ -243,7 +237,7 @@ defmodule Panic.InvocationTest do
       input = "generate some audio"
 
       # Create first invocation and invoke it (dummy model should work without tokens)
-      first_invocation = Panic.Engine.prepare_first!(network, input, actor: user)
+      first_invocation = Panic.Engine.start_run!(network, input, actor: user)
       first_invocation = Panic.Engine.invoke!(first_invocation, actor: user)
 
       # Should succeed without any tokens

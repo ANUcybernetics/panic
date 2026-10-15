@@ -8,12 +8,6 @@ defmodule Panic.NetworkTest do
   alias Panic.Accounts.User
   alias Panic.Engine.Network
 
-  setup do
-    # Stop all network runners to ensure clean state
-    PanicWeb.Helpers.stop_all_network_runners()
-    :ok
-  end
-
   describe "Network CRUD operations" do
     test "lockout_seconds defaults to 30" do
       user = Ash.Generator.seed!(User)
@@ -131,8 +125,8 @@ defmodule Panic.NetworkTest do
 
       check all(
               network <- Panic.Generators.network(user),
-              updated_name <- string(:utf8, min_length: 1),
-              updated_description <- string(:utf8, min_length: 1)
+              updated_name <- non_blank_string(),
+              updated_description <- non_blank_string()
             ) do
         network =
           network
@@ -143,8 +137,9 @@ defmodule Panic.NetworkTest do
           )
           |> Ash.update!()
 
-        assert network.name == updated_name
-        assert network.description == updated_description
+        # string attributes are trimmed
+        assert network.name == String.trim(updated_name)
+        assert network.description == String.trim(updated_description)
       end
     end
 
@@ -174,5 +169,9 @@ defmodule Panic.NetworkTest do
     Ash.Generator.action_input(Network, :create, %{
       description: StreamData.binary()
     })
+  end
+
+  defp non_blank_string do
+    filter(string(:utf8, min_length: 1), &(String.trim(&1) != ""))
   end
 end

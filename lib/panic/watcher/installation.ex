@@ -31,6 +31,8 @@ defmodule Panic.Watcher.Installation do
     notifiers: [Ash.Notifier.PubSub]
 
   alias Panic.Engine.Network
+  alias Panic.Engine.Signals
+  alias Panic.Watcher.Actions.UpdateVestaboards
   alias Panic.Watcher.Installation.Config
 
   sqlite do
@@ -87,6 +89,16 @@ defmodule Panic.Watcher.Installation do
       accept [:watchers]
       require_atomic? false
     end
+
+    action :show_initial_prompt do
+      argument :signal, Signals.RunStarted, allow_nil?: false
+      run UpdateVestaboards
+    end
+
+    action :show_output do
+      argument :signal, Signals.InvocationCompleted, allow_nil?: false
+      run UpdateVestaboards
+    end
   end
 
   policies do
@@ -96,6 +108,10 @@ defmodule Panic.Watcher.Installation do
 
     policy action_type([:read, :update, :destroy]) do
       authorize_if relates_to_actor_via([:network, :user])
+    end
+
+    policy action([:show_initial_prompt, :show_output]) do
+      authorize_if actor_present()
     end
   end
 
@@ -128,6 +144,16 @@ defmodule Panic.Watcher.Installation do
   relationships do
     belongs_to :network, Network do
       allow_nil? false
+    end
+  end
+
+  # Vestaboards are slow, rate limited and external, so they're driven from a
+  # single-concurrency job queue rather than inside the engine's transaction.
+  signals_in do
+    from Signals do
+      on :run_started, :show_initial_prompt, delivery: {AshOban.Signals, queue: :vestaboards, max_attempts: 2}
+
+      on :invocation_completed, :show_output, delivery: {AshOban.Signals, queue: :vestaboards, max_attempts: 2}
     end
   end
 end

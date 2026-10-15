@@ -35,11 +35,9 @@ defmodule PanicWeb.TerminalLiveTest do
 
   - Anonymous users with valid tokens currently get redirected to 404 instead
     of being able to access the terminal (authorization policy needs updating)
-  - Database connection warnings appear due to NetworkRunner cleanup between tests
   """
   use PanicWeb.ConnCase, async: false
   use ExUnitProperties
-  use PanicWeb.Helpers.DatabasePatches
 
   alias Panic.Fixtures
   alias PanicWeb.TerminalAuth
@@ -50,7 +48,6 @@ defmodule PanicWeb.TerminalLiveTest do
       Panic.ExternalAPIPatches.setup()
 
       # Setup web test environment with sync mode and cleanup
-      PanicWeb.Helpers.setup_web_test()
 
       on_exit(fn ->
         # Teardown API patches
@@ -100,7 +97,6 @@ defmodule PanicWeb.TerminalLiveTest do
       Panic.ExternalAPIPatches.setup()
 
       # Setup web test environment with sync mode and cleanup
-      PanicWeb.Helpers.setup_web_test()
 
       user = Fixtures.user("password123")
       network = Fixtures.network_with_dummy_models(user)
@@ -150,7 +146,6 @@ defmodule PanicWeb.TerminalLiveTest do
       Panic.ExternalAPIPatches.setup()
 
       # Setup web test environment with sync mode and cleanup
-      PanicWeb.Helpers.setup_web_test()
 
       # Create a user and network for testing
       user = Fixtures.user("password123")
@@ -251,7 +246,6 @@ defmodule PanicWeb.TerminalLiveTest do
       Panic.ExternalAPIPatches.setup()
 
       # Setup web test environment with sync mode and cleanup
-      PanicWeb.Helpers.setup_web_test()
 
       user = Fixtures.user("password123")
       network = Fixtures.network_with_dummy_models(user)
@@ -325,7 +319,6 @@ defmodule PanicWeb.TerminalLiveTest do
       Panic.ExternalAPIPatches.setup()
 
       # Setup web test environment with sync mode and cleanup
-      PanicWeb.Helpers.setup_web_test()
 
       on_exit(fn ->
         # Teardown API patches
@@ -365,7 +358,6 @@ defmodule PanicWeb.TerminalLiveTest do
       Panic.ExternalAPIPatches.setup()
 
       # Setup web test environment with sync mode and cleanup
-      PanicWeb.Helpers.setup_web_test()
 
       on_exit(fn ->
         # Teardown API patches

@@ -6,10 +6,11 @@ defmodule Panic.Engine.Network do
   use Ash.Resource,
     domain: Panic.Engine,
     data_layer: AshSqlite.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub]
 
   alias Panic.Engine.Invocation
-  alias Panic.Engine.NetworkRunner
+  alias Panic.Engine.Signals
 
   sqlite do
     table "networks"
@@ -42,12 +43,24 @@ defmodule Panic.Engine.Network do
       require_atomic? false
     end
 
-    action :stop_run do
-      argument :network_id, :integer, allow_nil?: false
+    # set by Invocation :start_run, in the same transaction as the genesis invocation
+    update :begin_run do
+      accept [:current_run_number, :run_started_at]
+    end
 
-      run fn input, _context ->
-        NetworkRunner.stop_run(input.arguments.network_id)
-      end
+    read :running do
+      filter expr(not is_nil(current_run_number))
+    end
+
+    update :stop_run do
+      change set_attribute(:current_run_number, nil)
+      change set_attribute(:run_started_at, nil)
+    end
+
+    # listens to :invocation_failed for the network's current run
+    update :end_run do
+      change set_attribute(:current_run_number, nil)
+      change set_attribute(:run_started_at, nil)
     end
   end
 
@@ -67,6 +80,13 @@ defmodule Panic.Engine.Network do
     policy action_type(:destroy) do
       authorize_if relates_to_actor_via(:user)
     end
+  end
+
+  # lets viewers of a network see runs start and stop
+  pub_sub do
+    module PanicWeb.Endpoint
+    prefix "network"
+    publish_all :update, [:id]
   end
 
   attributes do
@@ -90,6 +110,10 @@ defmodule Panic.Engine.Network do
       allow_nil? false
     end
 
+    # the run_number (genesis invocation id) of the run in progress, nil when idle
+    attribute :current_run_number, :integer
+    attribute :run_started_at, :utc_datetime_usec
+
     create_timestamp :inserted_at
     update_timestamp :updated_at
     # attribute :schedule
@@ -100,5 +124,11 @@ defmodule Panic.Engine.Network do
     belongs_to :user, Panic.Accounts.User, allow_nil?: false
     has_many :invocations, Invocation
     has_many :installations, Panic.Watcher.Installation
+  end
+
+  signals_in do
+    from Signals do
+      on :invocation_failed, :end_run, get_by: [id: :network_id, current_run_number: :run_number]
+    end
   end
 end

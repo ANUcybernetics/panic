@@ -1,119 +1,110 @@
 defmodule Panic.Engine.Changes.InvokeModel do
   @moduledoc """
-  Change module for invoking a model and handling the invocation process.
+  Calls the invocation's model and records the outcome.
 
-  This change:
-  1. Performs the actual model invocation in a before_transaction hook to minimize DB contention
-  2. Handles different platform authentication tokens
-  3. Manages invocation success/failure states
-  4. Sets the output and state based on the invocation result
+  1. Before the transaction, the invocation is marked `:invoking` (so watchers
+     see it start) and the model is called, which can take minutes, so it
+     must not hold SQLite's write lock.
+  2. Inside the transaction, the output and `:completed` state are set, or
+     `:failed` if the call failed. A failed call is an outcome, not an action
+     error, so the trigger job doesn't retry a model that rejected its input.
+  3. `:invocation_completed` is emitted only while the invocation is still
+     part of its network's current run, so a stopped or replaced run doesn't
+     continue. `:invocation_failed` is always emitted; its listener ignores
+     runs that are no longer current.
 
-  Important: API tokens are ALWAYS resolved from the network owner, not the current user.
-  This ensures consistent token access regardless of who initiates the invocation
-  (e.g., anonymous users accessing via QR code tokens).
+  API tokens are always resolved from the network owner, whoever started the
+  run (e.g. anonymous users accessing via QR code tokens).
   """
   use Ash.Resource.Change
 
   alias Panic.Accounts.TokenResolver
-
-  @impl true
-  def init(opts) do
-    {:ok, opts}
-  end
+  alias Panic.Engine.Network
+  alias Panic.Engine.Signals
 
   @impl true
   def change(changeset, _opts, context) do
     changeset
-    |> add_before_transaction_hook(context)
-    |> add_before_action_hook()
+    |> Ash.Changeset.before_transaction(&invoke(&1, context))
+    |> Ash.Changeset.before_action(&record_outcome/1)
+    |> Ash.Changeset.after_action(&emit_outcome/2)
   end
 
-  defp add_before_transaction_hook(changeset, context) do
-    Ash.Changeset.before_transaction(changeset, fn changeset ->
-      case changeset do
-        %{data: %{model: model_id, input: input}} ->
-          # Pass the context which contains the actor
-          perform_invocation(changeset, model_id, input, context)
+  defp invoke(changeset, context) do
+    Ash.update!(changeset.data, %{}, action: :about_to_invoke, actor: context.actor)
 
-        _ ->
-          Ash.Changeset.add_error(changeset, "Invalid invocation data")
-      end
-    end)
-  end
+    invocation = Ash.load!(changeset.data, [network: :user], authorize?: false)
 
-  defp add_before_action_hook(changeset) do
-    Ash.Changeset.before_action(changeset, fn changeset ->
-      # Apply the invocation results from context
-      if changeset.context[:invocation_success] do
-        output = changeset.context[:invocation_output]
+    case call_model(invocation, invocation.network.user) do
+      {:ok, output} ->
+        Ash.Changeset.put_context(changeset, :invocation_result, {:ok, output})
 
-        changeset
-        |> Ash.Changeset.force_change_attribute(:output, output)
-        |> Ash.Changeset.force_change_attribute(:state, :completed)
-      else
-        Ash.Changeset.force_change_attribute(changeset, :state, :failed)
-      end
-    end)
-  end
-
-  defp perform_invocation(changeset, model_id, input, _context) do
-    case Panic.Model.by_id(model_id) do
-      nil ->
-        # Model doesn't exist anymore
-        changeset
-        |> Ash.Changeset.add_error("Model with ID '#{model_id}' no longer exists")
-        |> Ash.Changeset.put_context(:invocation_success, false)
-
-      model ->
-        %Panic.Model{path: _path, invoke: invoke_fn, platform: platform} = model
-
-        # Always use the network owner's tokens, not the current actor's
-        # Load the network and its owner
-        invocation = Ash.load!(changeset.data, [network: :user], authorize?: false)
-        network_owner = invocation.network.user
-
-        # Resolve token using the network owner
-        token_result = TokenResolver.resolve_token(platform, network_owner)
-
-        case token_result do
-          {:ok, token} ->
-            case invoke_fn.(model, input, token) do
-              {:ok, output} ->
-                changeset
-                |> Ash.Changeset.put_context(:invocation_output, output)
-                |> Ash.Changeset.put_context(:invocation_success, true)
-
-              {:error, :nsfw} ->
-                # NSFW error - retry with sanitized prompt
-                retry_input = nsfw_retry_prompt(input)
-
-                case invoke_fn.(model, retry_input, token) do
-                  {:ok, output} ->
-                    changeset
-                    |> Ash.Changeset.put_context(:invocation_output, output)
-                    |> Ash.Changeset.put_context(:invocation_success, true)
-
-                  {:error, message} ->
-                    changeset
-                    |> Ash.Changeset.add_error(message)
-                    |> Ash.Changeset.put_context(:invocation_success, false)
-                end
-
-              {:error, message} ->
-                changeset
-                |> Ash.Changeset.add_error(message)
-                |> Ash.Changeset.put_context(:invocation_success, false)
-            end
-
-          {:error, reason} ->
-            changeset
-            |> Ash.Changeset.add_error(reason)
-            |> Ash.Changeset.put_context(:invocation_success, false)
-        end
+      {:error, reason} ->
+        Ash.Changeset.put_context(changeset, :invocation_result, {:error, reason})
     end
   end
 
-  defp nsfw_retry_prompt(_original_prompt) do
-    "a wombat holding a sign that says 'whoops!'"
+  defp call_model(%{model: model_id, input: input}, network_owner) do
+    with {:model, %Panic.Model{} = model} <- {:model, Panic.Model.by_id(model_id)},
+         {:ok, token} <- TokenResolver.resolve_token(model.platform, network_owner) do
+      case model.invoke.(model, input, token) do
+        # retry an NSFW rejection once with a safe prompt
+        {:error, :nsfw} -> model.invoke.(model, nsfw_retry_prompt(), token)
+        result -> result
+      end
+    else
+      {:model, nil} -> {:error, "Model with ID '#{model_id}' no longer exists"}
+      {:error, reason} -> {:error, reason}
+    end
   end
+
+  defp record_outcome(changeset) do
+    case changeset.context[:invocation_result] do
+      {:ok, output} ->
+        changeset
+        |> Ash.Changeset.force_change_attribute(:output, output)
+        |> Ash.Changeset.force_change_attribute(:state, :completed)
+
+      {:error, reason} ->
+        changeset
+        |> Ash.Changeset.force_change_attribute(:state, :failed)
+        |> Ash.Changeset.force_change_attribute(
+          :metadata,
+          Map.put(changeset.data.metadata, "error", inspect(reason))
+        )
+    end
+  end
+
+  defp emit_outcome(changeset, %{state: :completed} = invocation) do
+    if current_run?(invocation) do
+      emit(changeset, :invocation_completed, invocation, %{output: invocation.output})
+    else
+      {:ok, invocation}
+    end
+  end
+
+  defp emit_outcome(changeset, %{state: :failed} = invocation) do
+    emit(changeset, :invocation_failed, invocation, %{})
+  end
+
+  defp emit(changeset, signal, invocation, extra) do
+    payload =
+      Map.merge(extra, %{
+        invocation_id: invocation.id,
+        network_id: invocation.network_id,
+        run_number: invocation.run_number,
+        sequence_number: invocation.sequence_number
+      })
+
+    with :ok <- Ash.Signals.emit(changeset, Signals, signal, payload) do
+      {:ok, invocation}
+    end
+  end
+
+  defp current_run?(invocation) do
+    %{current_run_number: current} = Ash.get!(Network, invocation.network_id, authorize?: false)
+    current == invocation.run_number
+  end
+
+  defp nsfw_retry_prompt, do: "a wombat holding a sign that says 'whoops!'"
 end

@@ -2,8 +2,8 @@ defmodule Panic.ExternalAPIPatches do
   @moduledoc """
   Centralized Repatch definitions for external API calls during testing.
 
-  This module patches external API calls that NetworkRunner makes during
-  invocation processing to avoid actual network requests during tests.
+  This module patches the external API calls models make when an invocation
+  runs to avoid actual network requests during tests.
 
   ## Usage
 
@@ -25,8 +25,8 @@ defmodule Panic.ExternalAPIPatches do
   @doc """
   Sets up all external API patches for testing.
 
-  This should be called in test setup to ensure NetworkRunner
-  doesn't make real external API calls during tests.
+  This should be called in test setup to ensure invocations
+  don't make real external API calls during tests.
   """
   def setup do
     setup_model_patches()

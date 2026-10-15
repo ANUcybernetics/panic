@@ -8,11 +8,6 @@ defmodule PanicWeb.InstallationLiveTest do
   alias Panic.Watcher.Installation
 
   describe "user IS logged in" do
-    setup do
-      PanicWeb.Helpers.stop_all_network_runners()
-      :ok
-    end
-
     setup {PanicWeb.Helpers, :create_and_sign_in_user}
 
     test "can visit the installation index page", %{conn: conn} do

@@ -17,15 +17,12 @@ These are convenience wrappers around the generators for when you need
 deterministic test data rather than property-based testing.
 
 ### `PanicWeb.Helpers`
-Helper functions for Phoenix and LiveView tests:
-- User authentication helpers
-- NetworkRunner process management
-- Database access configuration
-- Synchronous test mode setup
+User authentication helpers for Phoenix and LiveView tests.
 
-### `PanicWeb.Helpers.DatabasePatches`
-Convenience macro for setting up database patches in test modules.
-Use with `use PanicWeb.Helpers.DatabasePatches` in your test module.
+### `Panic.EngineHelpers`
+Runs Oban jobs (invocations, Vestaboard and archiver listeners) in the test
+process. Oban is in `:manual` testing mode, so a run only advances when a test
+calls `run_next_invocation/0`.
 
 ### `Panic.Test.ArchiverPatches`
 Test patches for the Archiver module to avoid real file downloads and S3 uploads.

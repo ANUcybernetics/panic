@@ -3,7 +3,6 @@ defmodule Panic.InstallationTest do
   Tests for the Installation resource.
   """
   use Panic.DataCase, async: false
-  use PanicWeb.Helpers.DatabasePatches
 
   alias Ash.Error.Invalid
   alias Ash.Error.Query.NotFound
@@ -12,8 +11,6 @@ defmodule Panic.InstallationTest do
 
   describe "Installation resource" do
     setup do
-      PanicWeb.Helpers.stop_all_network_runners()
-
       user = Panic.Fixtures.user()
 
       network =
@@ -373,8 +370,6 @@ defmodule Panic.InstallationTest do
 
   describe "Installation policies" do
     setup do
-      PanicWeb.Helpers.stop_all_network_runners()
-
       user1 = Panic.Fixtures.user()
       user2 = Panic.Fixtures.user()
 

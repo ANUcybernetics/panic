@@ -4,8 +4,8 @@ defmodule PanicWeb.NetworkLive.Show do
 
   import PanicWeb.PanicComponents
 
-  alias Panic.Engine.NetworkRunner
   alias PanicWeb.NetworkLive.ModelSelectComponent
+  alias PanicWeb.NetworkLive.RunnerStatusComponent
   alias PanicWeb.WatcherSubscriber
 
   @impl true
@@ -94,10 +94,9 @@ defmodule PanicWeb.NetworkLive.Show do
     </section>
 
     <section class="mt-8">
-      <.live_component
-        module={PanicWeb.NetworkLive.RunnerStatusComponent}
+      <RunnerStatusComponent.runner_status
         id="runner-status"
-        network_id={@network.id}
+        network={@network}
         genesis_invocation={@genesis_invocation}
         current_invocation={@current_invocation}
       />
@@ -140,7 +139,7 @@ defmodule PanicWeb.NetworkLive.Show do
   def handle_params(%{"network_id" => network_id}, _session, socket) do
     case Panic.Engine.get_network(network_id,
            actor: socket.assigns.current_user,
-           load: [:installations]
+           load: [:installations, :user]
          ) do
       {:ok, network} ->
         socket =
@@ -148,9 +147,8 @@ defmodule PanicWeb.NetworkLive.Show do
           |> assign(:page_title, page_title(socket.assigns[:live_action]))
           |> assign(:network, network)
           |> stream(:installations, network.installations)
-          |> assign(:current_invocation, nil)
+          |> assign(:current_invocation, current_run_head(network))
           |> WatcherSubscriber.configure_invocation_stream(network, {:grid, 2, 3})
-          |> fetch_genesis_invocation(network.id)
 
         {:noreply, socket}
 
@@ -159,20 +157,12 @@ defmodule PanicWeb.NetworkLive.Show do
     end
   end
 
-  defp fetch_genesis_invocation(socket, network_id) do
-    # Try to get the genesis invocation for the current run
-    case NetworkRunner.get_runner_state(network_id) do
-      {:ok, %{genesis_id: genesis_id}} when not is_nil(genesis_id) ->
-        case Panic.Engine.get_invocation(genesis_id) do
-          {:ok, genesis} ->
-            assign(socket, :genesis_invocation, genesis)
+  defp current_run_head(%{current_run_number: nil}), do: nil
 
-          _ ->
-            assign(socket, :genesis_invocation, nil)
-        end
-
-      _ ->
-        assign(socket, :genesis_invocation, nil)
+  defp current_run_head(network) do
+    case Panic.Engine.current_run_head(network.current_run_number, authorize?: false) do
+      {:ok, invocation} -> invocation
+      {:error, _} -> nil
     end
   end
 
@@ -193,7 +183,8 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_event("stop", _params, socket) do
-    NetworkRunner.stop_run(socket.assigns.network.id)
+    # the network broadcast updates the run state of every viewer, this one included
+    Panic.Engine.stop_run!(socket.assigns.network, actor: socket.assigns.current_user)
     {:noreply, socket}
   end
 

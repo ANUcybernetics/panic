@@ -3,18 +3,7 @@ defmodule PanicWeb.AdminLiveTest do
 
   import Panic.Fixtures
 
-  alias Panic.Engine.NetworkRegistry
-  alias Panic.Engine.NetworkRunner
-
-  setup do
-    PanicWeb.Helpers.stop_all_network_runners()
-
-    Repatch.patch(NetworkRunner, :archive_invocation_async, [mode: :global], fn _invocation, _next_invocation ->
-      :ok
-    end)
-
-    :ok
-  end
+  alias Panic.Engine
 
   setup {PanicWeb.Helpers, :create_and_sign_in_user}
 
@@ -25,50 +14,37 @@ defmodule PanicWeb.AdminLiveTest do
   end
 
   describe "stop_all_jobs" do
-    test "stops all running NetworkRunner jobs", %{
+    test "stops every running network", %{
       conn: conn,
+      user: user,
       network1: network1,
       network2: network2
     } do
-      {:ok, _} = NetworkRunner.start_run(network1.id, "test prompt 1")
-      {:ok, _} = NetworkRunner.start_run(network2.id, "test prompt 2")
+      Engine.start_run!(network1, "test prompt 1", actor: user)
+      Engine.start_run!(network2, "test prompt 2", actor: user)
 
-      assert [{_, _}] = Registry.lookup(NetworkRegistry, network1.id)
-      assert [{_, _}] = Registry.lookup(NetworkRegistry, network2.id)
+      conn
+      |> visit("/admin")
+      |> click_button("Stop all jobs")
+      |> assert_has("#flash-info", text: "Stopped 2 running jobs")
 
-      session =
-        conn
-        |> visit("/admin")
-        |> click_button("Stop all jobs")
-
-      Process.sleep(100)
-
-      assert_has(session, "#flash-info", text: "Stopped 2 running jobs")
-      assert [] = Registry.lookup(NetworkRegistry, network1.id)
-      assert [] = Registry.lookup(NetworkRegistry, network2.id)
+      assert [] = Engine.list_running_networks!(authorize?: false)
     end
 
     test "shows appropriate message when no jobs are running", %{conn: conn} do
-      PanicWeb.Helpers.stop_all_network_runners()
-
       conn
       |> visit("/admin")
       |> click_button("Stop all jobs")
       |> assert_has("#flash-info", text: "No running jobs found to stop")
     end
 
-    test "shows correct message for single job", %{conn: conn, network1: network1} do
-      {:ok, _} = NetworkRunner.start_run(network1.id, "test prompt")
-      assert [{_, _}] = Registry.lookup(NetworkRegistry, network1.id)
+    test "shows correct message for single job", %{conn: conn, user: user, network1: network1} do
+      Engine.start_run!(network1, "test prompt", actor: user)
 
-      session =
-        conn
-        |> visit("/admin")
-        |> click_button("Stop all jobs")
-
-      Process.sleep(100)
-
-      assert_has(session, "#flash-info", text: "Stopped 1 running job")
+      conn
+      |> visit("/admin")
+      |> click_button("Stop all jobs")
+      |> assert_has("#flash-info", text: "Stopped 1 running job")
     end
   end
 

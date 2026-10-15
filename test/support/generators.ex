@@ -139,7 +139,7 @@ defmodule Panic.Generators do
 
     gen all(input <- Panic.Generators.ascii_sentence()) do
       Invocation
-      |> Ash.Changeset.for_create(:prepare_first, %{input: input, network: network}, actor: user)
+      |> Ash.Changeset.for_create(:start_run, %{input: input, network: network}, actor: user)
       |> Ash.create!()
     end
   end

@@ -2,8 +2,6 @@ defmodule PanicWeb.NetworkLive.TerminalComponentTest do
   use PanicWeb.ConnCase, async: false
 
   setup do
-    on_exit(&PanicWeb.Helpers.stop_all_network_runners/0)
-
     owner = Panic.Fixtures.user()
     network = Panic.Fixtures.network_with_dummy_models(owner)
 
@@ -11,7 +9,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponentTest do
   end
 
   describe "terminal component error handling" do
-    test "handles NetworkRunner exceptions properly", %{conn: conn, network: network} do
+    test "starting a run keeps the terminal usable", %{conn: conn, network: network} do
       auth_token = PanicWeb.TerminalAuth.generate_token(network.id)
 
       conn
@@ -24,7 +22,10 @@ defmodule PanicWeb.NetworkLive.TerminalComponentTest do
   end
 
   describe "error handling for missing API tokens" do
-    test "handles exceptions from NetworkRunner gracefully", %{conn: conn, owner: owner} do
+    test "starting a run without the model's API token keeps the terminal usable", %{
+      conn: conn,
+      owner: owner
+    } do
       {:ok, network} =
         Panic.Engine.Network
         |> Ash.Changeset.for_create(

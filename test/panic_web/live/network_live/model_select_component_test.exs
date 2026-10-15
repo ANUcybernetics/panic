@@ -6,11 +6,6 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponentTest do
 
   alias PanicWeb.Helpers
 
-  setup do
-    Helpers.stop_all_network_runners()
-    :ok
-  end
-
   describe "component rendering" do
     setup {Helpers, :create_and_sign_in_user}
 

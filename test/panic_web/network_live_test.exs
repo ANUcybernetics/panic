@@ -14,7 +14,7 @@ defmodule PanicWeb.NetworkLiveTest do
 
   import Phoenix.LiveViewTest
 
-  alias Panic.Engine.NetworkRunner
+  alias Panic.Engine
   alias Panic.Fixtures
   alias PanicWeb.TerminalAuth
   alias Phoenix.Socket.Broadcast
@@ -22,9 +22,6 @@ defmodule PanicWeb.NetworkLiveTest do
   setup do
     # Setup external API patches to avoid real network calls
     Panic.ExternalAPIPatches.setup()
-
-    # Setup web test environment with sync mode and cleanup
-    PanicWeb.Helpers.setup_web_test()
 
     on_exit(fn ->
       # Teardown API patches
@@ -416,67 +413,58 @@ defmodule PanicWeb.NetworkLiveTest do
     end
 
     test "creates genesis immediately when starting new run while another is active", %{
-      user: _user,
+      user: user,
       network: network
     } do
       # Start an initial run
-      {:ok, first_genesis} = NetworkRunner.start_run(network.id, "first prompt")
+      first_genesis = Engine.start_run!(network, "first prompt", actor: user)
 
       # Subscribe to the network's invocation topic to verify broadcast
       PanicWeb.Endpoint.subscribe("invocation:#{network.id}")
 
       # Start a new run while the first is still processing
       # This should return a new genesis immediately
-      {:ok, second_genesis} = NetworkRunner.start_run(network.id, "second prompt")
+      second_genesis = Engine.start_run!(network, "second prompt", actor: user)
 
       # Should be different invocations
       assert first_genesis.id != second_genesis.id
       assert second_genesis.input == "second prompt"
 
-      # Verify we received the about_to_invoke broadcast for the new genesis
+      # Watchers are told about the new genesis straight away
       second_genesis_id = second_genesis.id
 
       assert_receive %Broadcast{
         topic: "invocation:" <> _,
-        event: "about_to_invoke",
+        event: "start_run",
         payload: %{data: %{id: ^second_genesis_id, input: "second prompt"}}
       }
-
-      # Clean up
-      NetworkRunner.stop_run(network.id)
     end
 
     test "shows immediate feedback in LiveView when new run starts", %{
       conn: conn,
-      user: _user,
+      user: user,
       network: network
     } do
       # Start an initial run
-      {:ok, _genesis} = NetworkRunner.start_run(network.id, "first prompt")
+      _genesis = Engine.start_run!(network, "first prompt", actor: user)
 
       # Open the live view
       {:ok, view, _html} = live(conn, ~p"/networks/#{network}")
 
       # Start a new run - should create genesis immediately
-      {:ok, _second_genesis} = NetworkRunner.start_run(network.id, "second prompt")
-
-      # Give the view a moment to process the broadcast
-      Process.sleep(10)
+      _second_genesis = Engine.start_run!(network, "second prompt", actor: user)
 
       # The view should immediately show the new prompt
       assert render(view) =~ "second prompt"
-
-      # Clean up
-      NetworkRunner.stop_run(network.id)
     end
 
     test "terminal component handles immediate genesis creation", %{
       conn: conn,
-      user: _user,
+      user: user,
       network: network
     } do
       # Start an initial run
-      {:ok, _genesis} = NetworkRunner.start_run(network.id, "first prompt")
+      _genesis = Engine.start_run!(network, "first prompt", actor: user)
 
       # Open the live view
       {:ok, view, _html} = live(conn, ~p"/networks/#{network}")
@@ -489,9 +477,6 @@ defmodule PanicWeb.NetworkLiveTest do
       # The form should be reset and ready for another submission
       # (no error should be shown)
       refute render(view) =~ "alert-danger"
-
-      # Clean up
-      NetworkRunner.stop_run(network.id)
     end
   end
 

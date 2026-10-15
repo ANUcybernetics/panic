@@ -9,14 +9,6 @@ defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
 
   describe "anonymous user with vestaboard watchers" do
     setup do
-      PanicWeb.Helpers.stop_all_network_runners()
-
-      Panic.NetworkRunnerTestHelpers.enable_sync_mode()
-
-      on_exit(fn ->
-        Panic.NetworkRunnerTestHelpers.disable_sync_mode()
-      end)
-
       user = user_with_vestaboard_tokens()
 
       {:ok, network} =
@@ -81,8 +73,6 @@ defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
       |> fill_in("Prompt", with: "Hello Vestaboard")
       |> submit()
 
-      Process.sleep(200)
-
       invocations = Ash.read!(Panic.Engine.Invocation, actor: user)
       assert length(invocations) >= 1
 
@@ -90,7 +80,7 @@ defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
       assert genesis
       assert genesis.input == "Hello Vestaboard"
       assert genesis.network_id == network.id
-      assert genesis.state in [:ready, :invoking, :completed]
+      assert genesis.state == :ready
     end
   end
 end

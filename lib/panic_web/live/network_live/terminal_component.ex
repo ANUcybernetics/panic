@@ -2,8 +2,8 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   @moduledoc false
   use PanicWeb, :live_component
 
+  alias Panic.Engine.Errors.RunLocked
   alias Panic.Engine.Invocation
-  alias Panic.Engine.NetworkRunner
 
   @impl true
   def render(assigns) do
@@ -71,19 +71,17 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   def handle_event("start-run", %{"invocation" => invocation_params}, socket) do
     prompt = invocation_params["input"] || ""
 
-    case NetworkRunner.start_run(socket.assigns.network.id, prompt) do
+    network = socket.assigns.network
+
+    # runs always act as the network owner, whoever typed the prompt
+    case Panic.Engine.start_run(network, prompt, actor: network.user) do
       {:ok, genesis_invocation} ->
         notify_parent({:genesis_invocation, genesis_invocation})
         socket = assign(socket, :genesis_invocation, genesis_invocation)
         {:noreply, assign_form(socket)}
 
-      {:lockout, genesis_invocation} ->
-        socket =
-          socket
-          |> put_flash(:error, "Please wait before starting a new run")
-          |> assign(:genesis_invocation, genesis_invocation)
-
-        {:noreply, socket}
+      {:error, %Ash.Error.Invalid{errors: [%RunLocked{} | _]}} ->
+        {:noreply, put_flash(socket, :error, "Please wait before starting a new run")}
 
       {:error, error} ->
         # Handle both form errors and exceptions
@@ -118,7 +116,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
 
   defp assign_form(%{assigns: %{network: network}} = socket) do
     form =
-      AshPhoenix.Form.for_create(Invocation, :prepare_first,
+      AshPhoenix.Form.for_create(Invocation, :start_run,
         as: "invocation",
         prepare_source: fn changeset ->
           Ash.Changeset.set_argument(changeset, :network, network)

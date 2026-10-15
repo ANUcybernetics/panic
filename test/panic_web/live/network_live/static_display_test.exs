@@ -8,8 +8,6 @@ defmodule PanicWeb.NetworkLive.StaticDisplayTest do
 
   describe "Static Display page" do
     setup do
-      setup_web_test()
-
       user = Fixtures.user("password123")
 
       network =
@@ -21,7 +19,7 @@ defmodule PanicWeb.NetworkLive.StaticDisplayTest do
 
       invocation =
         Panic.Engine.Invocation
-        |> Ash.Changeset.for_create(:prepare_first, %{input: "test input", network: network}, actor: user)
+        |> Ash.Changeset.for_create(:start_run, %{input: "test input", network: network}, actor: user)
         |> Ash.create!()
 
       invocation =

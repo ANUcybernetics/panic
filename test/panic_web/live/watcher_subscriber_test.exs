@@ -6,7 +6,6 @@ defmodule PanicWeb.WatcherSubscriberTest do
 
   setup do
     # Stop all network runners to ensure clean state
-    PanicWeb.Helpers.stop_all_network_runners()
 
     user = Panic.Fixtures.user()
     network = Panic.Fixtures.network_with_dummy_models(user)
@@ -128,82 +127,33 @@ defmodule PanicWeb.WatcherSubscriberTest do
       user: user,
       network: network
     } do
-      # Create a real genesis invocation in the database
-      {:ok, genesis_invocation} =
-        Ash.create(
-          Invocation,
-          %{
-            input: "genesis prompt",
-            network: network
-          },
-          action: :prepare_first,
-          actor: user
-        )
+      genesis = Panic.Engine.start_run!(network, "genesis prompt", actor: user)
+      Panic.EngineHelpers.run_next_invocation()
+      second = Panic.Engine.current_run_head!(genesis.run_number, authorize?: false)
 
-      # Complete the genesis invocation
-      completed_genesis =
-        genesis_invocation
-        |> Ash.Changeset.for_update(:update_output, %{output: "genesis output"}, actor: user)
-        |> Ash.update!()
-
-      # Create a non-genesis invocation in the same run
-      {:ok, second_invocation} =
-        Panic.Engine.prepare_next(completed_genesis, actor: user)
-
-      # Simulate mid-run join scenario: we have a non-genesis invocation but no current genesis
-      # This should trigger fetching the genesis invocation from the database
-      assert second_invocation.sequence_number > 0
-      assert second_invocation.run_number == completed_genesis.run_number
-
-      # Test the fetch_genesis_invocation logic (simulated)
-      assert can_fetch_genesis_for_invocation?(second_invocation, network)
+      assert second.sequence_number > 0
+      assert second.run_number == genesis.run_number
+      assert can_fetch_genesis_for_invocation?(second, network)
     end
 
     test "mid-run join handles different runs correctly", %{user: user, network: network} do
-      # Create first run with genesis and non-genesis
-      {:ok, first_genesis} =
-        Ash.create(
-          Invocation,
-          %{
-            input: "first run genesis",
-            network: network
-          },
-          action: :prepare_first,
-          actor: user
-        )
-
-      completed_first_genesis =
-        first_genesis
-        |> Ash.Changeset.for_update(:update_output, %{output: "first genesis output"}, actor: user)
+      network =
+        network
+        |> Ash.Changeset.for_update(:update, %{lockout_seconds: 0}, actor: user)
         |> Ash.update!()
 
-      {:ok, first_second} = Panic.Engine.prepare_next(completed_first_genesis, actor: user)
+      first_genesis = Panic.Engine.start_run!(network, "first run genesis", actor: user)
+      Panic.EngineHelpers.run_next_invocation()
+      first_second = Panic.Engine.current_run_head!(first_genesis.run_number, authorize?: false)
 
-      # Create second run with different genesis
-      {:ok, second_genesis} =
-        Ash.create(
-          Invocation,
-          %{
-            input: "second run genesis",
-            network: network
-          },
-          action: :prepare_first,
-          actor: user
-        )
+      second_genesis = Panic.Engine.start_run!(network, "second run genesis", actor: user)
+      Panic.EngineHelpers.run_next_invocation()
+      second_second = Panic.Engine.current_run_head!(second_genesis.run_number, authorize?: false)
 
-      completed_second_genesis =
-        second_genesis
-        |> Ash.Changeset.for_update(:update_output, %{output: "second genesis output"}, actor: user)
-        |> Ash.update!()
-
-      {:ok, second_second} = Panic.Engine.prepare_next(completed_second_genesis, actor: user)
-
-      # Verify that invocations from different runs have different run_numbers
-      assert first_second.run_number == completed_first_genesis.id
-      assert second_second.run_number == completed_second_genesis.id
+      assert first_second.run_number == first_genesis.id
+      assert second_second.run_number == second_genesis.id
       assert first_second.run_number != second_second.run_number
 
-      # Both should be able to fetch their respective genesis invocations
       assert can_fetch_genesis_for_invocation?(first_second, network)
       assert can_fetch_genesis_for_invocation?(second_second, network)
     end

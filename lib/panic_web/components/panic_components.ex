@@ -85,7 +85,8 @@ defmodule PanicWeb.PanicComponents do
     """
   end
 
-  def invocation(%{invocation: %Invocation{state: :invoking}} = assigns) do
+  # a genesis invocation is shown while it waits to start, so the run appears straight away
+  def invocation(%{invocation: %Invocation{state: state}} = assigns) when state in [:ready, :invoking] do
     ~H"""
     <.invocation_container id={@id}>
       <div class="size-full grid place-items-center animate-breathe bg-rose-500 @container">

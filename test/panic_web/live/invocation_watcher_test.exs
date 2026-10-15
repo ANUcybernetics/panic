@@ -12,13 +12,12 @@ defmodule PanicWeb.InvocationWatcherTest do
 
   import Phoenix.LiveViewTest
 
-  alias Panic.Engine.NetworkRunner
+  alias Panic.Engine
   alias Panic.Fixtures
   alias Phoenix.Socket.Broadcast
 
   setup do
     Panic.ExternalAPIPatches.setup()
-    PanicWeb.Helpers.setup_web_test()
 
     on_exit(fn ->
       Panic.ExternalAPIPatches.teardown()
@@ -41,42 +40,41 @@ defmodule PanicWeb.InvocationWatcherTest do
       {:ok, network: network}
     end
 
-    test "assigns current_invocation when broadcast arrives", %{conn: conn, network: network} do
+    test "assigns current_invocation when broadcast arrives", %{
+      conn: conn,
+      network: network,
+      user: user
+    } do
       {:ok, view, _html} = live(conn, ~p"/networks/#{network}")
 
-      {:ok, _genesis} = NetworkRunner.start_run(network.id, "watcher test")
-      Process.sleep(50)
+      _genesis = Engine.start_run!(network, "watcher test", actor: user)
 
       html = render(view)
       assert html =~ "watcher test"
-
-      NetworkRunner.stop_run(network.id)
     end
 
-    test "shows runner status component with processing state", %{conn: conn, network: network} do
+    test "shows runner status component with processing state", %{
+      conn: conn,
+      network: network,
+      user: user
+    } do
       {:ok, view, html} = live(conn, ~p"/networks/#{network}")
 
       assert html =~ "Idle"
 
-      {:ok, _genesis} = NetworkRunner.start_run(network.id, "status test")
-      Process.sleep(50)
+      _genesis = Engine.start_run!(network, "status test", actor: user)
 
       html = render(view)
       assert html =~ "Sequence"
-
-      NetworkRunner.stop_run(network.id)
     end
 
-    test "populates invocation stream via hook", %{conn: conn, network: network} do
+    test "populates invocation stream via hook", %{conn: conn, network: network, user: user} do
       {:ok, view, _html} = live(conn, ~p"/networks/#{network}")
 
-      {:ok, _genesis} = NetworkRunner.start_run(network.id, "stream test")
-      Process.sleep(50)
+      _genesis = Engine.start_run!(network, "stream test", actor: user)
 
       html = render(view)
       assert html =~ "stream test"
-
-      NetworkRunner.stop_run(network.id)
     end
 
     test "updates genesis invocation on new run", %{conn: conn, network: network, user: user} do
@@ -87,15 +85,39 @@ defmodule PanicWeb.InvocationWatcherTest do
 
       {:ok, view, _html} = live(conn, ~p"/networks/#{network}")
 
-      {:ok, _genesis1} = NetworkRunner.start_run(network.id, "first run")
-      Process.sleep(50)
+      _genesis1 = Engine.start_run!(network, "first run", actor: user)
       assert render(view) =~ "first run"
 
-      {:ok, _genesis2} = NetworkRunner.start_run(network.id, "second run")
-      Process.sleep(50)
+      _genesis2 = Engine.start_run!(network, "second run", actor: user)
       assert render(view) =~ "second run"
+    end
 
-      NetworkRunner.stop_run(network.id)
+    test "shows a countdown while the next invocation waits", %{
+      conn: conn,
+      network: network,
+      user: user
+    } do
+      {:ok, view, _html} = live(conn, ~p"/networks/#{network}")
+
+      Engine.start_run!(network, "countdown test", actor: user)
+      Panic.EngineHelpers.run_next_invocation()
+
+      assert has_element?(view, "#runner-status", "Waiting")
+      assert has_element?(view, "#countdown-container[data-target-time]")
+    end
+
+    test "stopping the run returns every viewer to idle", %{
+      conn: conn,
+      network: network,
+      user: user
+    } do
+      {:ok, view, _html} = live(conn, ~p"/networks/#{network}")
+      Engine.start_run!(network, "stop test", actor: user)
+      assert has_element?(view, "#runner-status", "Waiting")
+
+      view |> element("button", "Stop") |> render_click()
+
+      assert has_element?(view, "#runner-status", "Idle")
     end
   end
 
@@ -113,18 +135,15 @@ defmodule PanicWeb.InvocationWatcherTest do
       {:ok, network: network}
     end
 
-    test "sets data-ready-at after a run starts", %{conn: conn, network: network} do
+    test "sets data-ready-at after a run starts", %{conn: conn, network: network, user: user} do
       {:ok, view, html} = live(conn, ~p"/networks/#{network}")
 
       refute html =~ "data-ready-at"
 
-      {:ok, _genesis} = NetworkRunner.start_run(network.id, "lockout test")
-      Process.sleep(50)
+      _genesis = Engine.start_run!(network, "lockout test", actor: user)
 
       html = render(view)
       assert html =~ "data-ready-at"
-
-      NetworkRunner.stop_run(network.id)
     end
   end
 
@@ -142,16 +161,13 @@ defmodule PanicWeb.InvocationWatcherTest do
       {:ok, network: network}
     end
 
-    test "shows genesis input after starting a run", %{conn: conn, network: network} do
+    test "shows genesis input after starting a run", %{conn: conn, network: network, user: user} do
       {:ok, view, _html} = live(conn, ~p"/networks/#{network.id}/terminal")
 
-      {:ok, _genesis} = NetworkRunner.start_run(network.id, "terminal watcher test")
-      Process.sleep(50)
+      _genesis = Engine.start_run!(network, "terminal watcher test", actor: user)
 
       html = render(view)
       assert html =~ "terminal watcher test"
-
-      NetworkRunner.stop_run(network.id)
     end
 
     test "submitting prompt updates genesis display", %{conn: conn, network: network} do
@@ -161,12 +177,8 @@ defmodule PanicWeb.InvocationWatcherTest do
       |> form("form", invocation: %{input: "submitted prompt"})
       |> render_submit()
 
-      Process.sleep(50)
-
       html = render(view)
       assert html =~ "submitted prompt"
-
-      NetworkRunner.stop_run(network.id)
     end
   end
 

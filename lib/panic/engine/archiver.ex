@@ -29,7 +29,8 @@ defmodule Panic.Engine.Archiver do
 
   ## Parameters
   - `invocation` - The invocation whose output should be archived
-  - `next_invocation` - The next invocation whose input should point to the archived output
+  - `next_invocation` - The next invocation whose input should point to the archived output,
+    or `nil` if the run stopped before there was one
 
   ## Returns
   - `:ok` on success
@@ -82,9 +83,11 @@ defmodule Panic.Engine.Archiver do
     |> Ash.Changeset.for_update(:update_output, %{output: s3_url})
     |> Ash.update!(authorize?: false)
 
-    next_invocation
-    |> Ash.Changeset.for_update(:update_input, %{input: s3_url})
-    |> Ash.update!(authorize?: false)
+    if next_invocation do
+      next_invocation
+      |> Ash.Changeset.for_update(:update_input, %{input: s3_url})
+      |> Ash.update!(authorize?: false)
+    end
 
     :ok
   rescue

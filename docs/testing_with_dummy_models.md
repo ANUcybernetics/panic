@@ -84,7 +84,7 @@ network =
 # Run the network
 invocation =
   network
-  |> Panic.Engine.prepare_first!("test input", actor: user)
+  |> Panic.Engine.start_run!("test input", actor: user)
   |> Panic.Engine.invoke!(actor: user)
 
 # Output will be a dummy image URL
@@ -104,7 +104,7 @@ property "networks process input correctly" do
     input <- Panic.Generators.ascii_sentence()
   ) do
     # This will use dummy models by default
-    invocation = Panic.Engine.prepare_first!(network, input, actor: user)
+    invocation = Panic.Engine.start_run!(network, input, actor: user)
     assert invocation.input == input
   end
 end

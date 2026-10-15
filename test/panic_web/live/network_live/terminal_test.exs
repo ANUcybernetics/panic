@@ -8,8 +8,6 @@ defmodule PanicWeb.NetworkLive.TerminalTest do
 
   describe "anonymous user with QR code token" do
     setup do
-      PanicWeb.Helpers.stop_all_network_runners()
-
       user = user()
 
       {:ok, network} =
