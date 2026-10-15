@@ -15,8 +15,10 @@ time. It's an Ash + Phoenix LiveView app on SQLite. The domain glossary
   `Panic.Platforms.Dummy` needs no API token, so use `dummy-*` models in tests
 - `Panic.Watcher` --- `Installation`, a set of watcher configs (grid, single,
   vestaboard) for a network's displays
-- `Panic.Accounts` --- users (AshAuthentication), `APIToken` (each user's
-  platform credentials) and `ApiKey` (admins' keys for the JSON API)
+- `Panic.Accounts` --- users (AshAuthentication; no self-registration, see
+  `Panic.Release.create_user_from_env/0`), `PlatformCredentials` (the one
+  app-wide row of platform and Vestaboard keys, AshCloak-encrypted, admin-only)
+  and `ApiKey` (admins' keys for the JSON API)
 - `PanicWeb.WatcherSubscriber` --- LiveView `on_mount` hook that subscribes to a
   network's broadcasts, tracks presence and maintains the `:invocations` stream
 - JSON API --- `ash_json_api` routes are declared in the `json_api` blocks of
@@ -62,6 +64,9 @@ transactions (`Panic.Repo.write_transactions?/0`).
 
 - the dev server (`mix phx.server`, port 4010) hosts tidewave; start it in the
   background if it isn't running, and leave it running if you didn't start it
+- every environment but test needs `PANIC_CLOAK_KEY` (see `config/runtime.exs`);
+  in dev it lives in the untracked `mise.local.toml`, so run mix through
+  `mise exec --`
 - never call `Mix.env()` in application code (it doesn't exist in releases)
 - CI runs `mix compile --warnings-as-errors`, `mix format --check-formatted`
   and `mix test`
