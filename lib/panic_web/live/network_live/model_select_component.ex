@@ -14,146 +14,137 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
       <!-- Validity indicator and action buttons -->
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-4">
-          <%= if @has_changes do %>
-            <span class="text-sm text-zinc-400">Unsaved changes</span>
-          <% end %>
+          <span :if={@has_changes} class="text-sm text-zinc-400">Unsaved changes</span>
 
-          <div class="flex items-center gap-2">
-            <%= if @validation_result == :valid do %>
-              <.icon name="hero-check-circle" class="size-5 text-green-500" />
-              <span class="text-sm text-green-500">Valid network</span>
-            <% else %>
-              <%= if @draft_models != [] do %>
-                <.icon name="hero-exclamation-circle" class="size-5 text-red-500" />
-                <span class="text-sm text-red-500">Invalid</span>
-              <% end %>
-            <% end %>
+          <div :if={@validation_result == :valid} class="flex items-center gap-2">
+            <.icon name="hero-check-circle" class="size-5 text-green-500" />
+            <span class="text-sm text-green-500">Valid network</span>
+          </div>
+          <div
+            :if={@validation_result != :valid and @draft_models != []}
+            class="flex items-center gap-2"
+          >
+            <.icon name="hero-exclamation-circle" class="size-5 text-red-500" />
+            <span class="text-sm text-red-500">Invalid</span>
           </div>
         </div>
 
-        <%= if @has_changes do %>
-          <div class="flex gap-2">
-            <button
-              type="button"
-              phx-click="reset_models"
-              phx-target={@myself}
-              class="px-4 py-2 text-sm bg-zinc-700 text-zinc-300 rounded hover:bg-zinc-600"
-            >
-              Reset
-            </button>
-            <button
-              type="button"
-              phx-click="save_models"
-              phx-target={@myself}
-              disabled={@validation_result != :valid}
-              class={[
-                "px-4 py-2 text-sm rounded",
-                if @validation_result == :valid do
-                  "bg-green-600 text-white hover:bg-green-700"
-                else
-                  "bg-zinc-700 text-zinc-500 cursor-not-allowed"
-                end
-              ]}
-            >
-              Save Network
-            </button>
-          </div>
-        <% end %>
+        <div :if={@has_changes} class="flex gap-2">
+          <button
+            type="button"
+            phx-click="reset_models"
+            phx-target={@myself}
+            class="px-4 py-2 text-sm bg-zinc-700 text-zinc-300 rounded hover:bg-zinc-600"
+          >
+            Reset
+          </button>
+          <button
+            type="button"
+            phx-click="save_models"
+            phx-target={@myself}
+            disabled={@validation_result != :valid}
+            class={[
+              "px-4 py-2 text-sm rounded",
+              if @validation_result == :valid do
+                "bg-green-600 text-white hover:bg-green-700"
+              else
+                "bg-zinc-700 text-zinc-500 cursor-not-allowed"
+              end
+            ]}
+          >
+            Save Network
+          </button>
+        </div>
       </div>
 
       <!-- Model table -->
-      <%= if @draft_models != [] do %>
-        <div class="overflow-y-auto">
-          <table class="w-full">
-            <thead class="text-sm text-left leading-6 text-purple-600">
-              <tr>
-                <th class="p-0 pb-2 pl-4 pr-6 font-normal w-20">Index</th>
-                <th class="p-0 pb-2 pr-6 font-normal">Model Name</th>
-                <th class="p-0 pb-2 pr-6 font-normal w-24">Type</th>
-                <th class="p-0 pb-2 pr-4 w-24">
-                  <span class="sr-only">Reorder</span>
-                </th>
-                <th class="p-0 pb-2 pr-4 w-20">
-                  <span class="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody class="relative divide-y divide-zinc-800 border-t border-zinc-700 text-sm leading-6 text-purple-300">
-              <%= for {model, index} <- Enum.with_index(@draft_models) do %>
-                <tr class="hover:bg-zinc-800/50">
-                  <td class="relative p-0 py-2 pl-4 pr-6 text-zinc-400">
-                    {index}
-                  </td>
-                  <td class="relative p-0 py-2 pr-6">
-                    {model.name}
-                  </td>
-                  <td class="relative p-0 py-2 pr-6">
-                    <span class={[
-                      "px-2 py-1 text-xs rounded-md inline-block",
-                      type_badge_class(model.input_type, model.output_type)
-                    ]}>
-                      {model.input_type} → {model.output_type}
-                    </span>
-                  </td>
-                  <td class="relative p-0 py-2 pr-4">
-                    <div class="flex items-center gap-1">
-                      <button
-                        type="button"
-                        phx-click="move_model_up"
-                        phx-value-index={index}
-                        phx-target={@myself}
-                        disabled={index == 0}
-                        class={[
-                          "text-zinc-400",
-                          if index == 0 do
-                            "opacity-30 cursor-not-allowed"
-                          else
-                            "hover:text-purple-400"
-                          end
-                        ]}
-                      >
-                        <.icon name="hero-chevron-up" class="size-4" />
-                      </button>
-                      <button
-                        type="button"
-                        phx-click="move_model_down"
-                        phx-value-index={index}
-                        phx-target={@myself}
-                        disabled={index == length(@draft_models) - 1}
-                        class={[
-                          "text-zinc-400",
-                          if index == length(@draft_models) - 1 do
-                            "opacity-30 cursor-not-allowed"
-                          else
-                            "hover:text-purple-400"
-                          end
-                        ]}
-                      >
-                        <.icon name="hero-chevron-down" class="size-4" />
-                      </button>
-                    </div>
-                  </td>
-                  <td class="relative p-0 py-2 pr-4 text-right">
-                    <button
-                      type="button"
-                      phx-click="remove_model"
-                      phx-value-index={index}
-                      phx-target={@myself}
-                      class="text-zinc-400 hover:text-red-500"
-                    >
-                      <.icon name="hero-trash" class="size-4" />
-                    </button>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
-      <% else %>
-        <div class="text-center py-8 text-zinc-500">
-          No models in network. Add a model below to get started.
-        </div>
-      <% end %>
+      <div :if={@draft_models != []} class="overflow-y-auto">
+        <table class="w-full">
+          <thead class="text-sm text-left leading-6 text-purple-600">
+            <tr>
+              <th class="p-0 pb-2 pl-4 pr-6 font-normal w-20">Index</th>
+              <th class="p-0 pb-2 pr-6 font-normal">Model Name</th>
+              <th class="p-0 pb-2 pr-6 font-normal w-24">Type</th>
+              <th class="p-0 pb-2 pr-4 w-24">
+                <span class="sr-only">Reorder</span>
+              </th>
+              <th class="p-0 pb-2 pr-4 w-20">
+                <span class="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="relative divide-y divide-zinc-800 border-t border-zinc-700 text-sm leading-6 text-purple-300">
+            <tr :for={{model, index} <- Enum.with_index(@draft_models)} class="hover:bg-zinc-800/50">
+              <td class="relative p-0 py-2 pl-4 pr-6 text-zinc-400">
+                {index}
+              </td>
+              <td class="relative p-0 py-2 pr-6">
+                {model.name}
+              </td>
+              <td class="relative p-0 py-2 pr-6">
+                <span class={[
+                  "px-2 py-1 text-xs rounded-md inline-block",
+                  type_badge_class(model.input_type, model.output_type)
+                ]}>
+                  {model.input_type} → {model.output_type}
+                </span>
+              </td>
+              <td class="relative p-0 py-2 pr-4">
+                <div class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    phx-click="move_model_up"
+                    phx-value-index={index}
+                    phx-target={@myself}
+                    disabled={index == 0}
+                    class={[
+                      "text-zinc-400",
+                      if index == 0 do
+                        "opacity-30 cursor-not-allowed"
+                      else
+                        "hover:text-purple-400"
+                      end
+                    ]}
+                  >
+                    <.icon name="hero-chevron-up" class="size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    phx-click="move_model_down"
+                    phx-value-index={index}
+                    phx-target={@myself}
+                    disabled={index == length(@draft_models) - 1}
+                    class={[
+                      "text-zinc-400",
+                      if index == length(@draft_models) - 1 do
+                        "opacity-30 cursor-not-allowed"
+                      else
+                        "hover:text-purple-400"
+                      end
+                    ]}
+                  >
+                    <.icon name="hero-chevron-down" class="size-4" />
+                  </button>
+                </div>
+              </td>
+              <td class="relative p-0 py-2 pr-4 text-right">
+                <button
+                  type="button"
+                  phx-click="remove_model"
+                  phx-value-index={index}
+                  phx-target={@myself}
+                  class="text-zinc-400 hover:text-red-500"
+                >
+                  <.icon name="hero-trash" class="size-4" />
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div :if={@draft_models == []} class="text-center py-8 text-zinc-500">
+        No models in network. Add a model below to get started.
+      </div>
 
       <!-- LiveSelect input -->
       <.form for={@form} id="model-select-form" phx-change="change" phx-target={@myself}>

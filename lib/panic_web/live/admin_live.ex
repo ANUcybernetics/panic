@@ -96,19 +96,16 @@ defmodule PanicWeb.AdminLive do
     <section class="mt-16">
       <h2 class="text-xl font-semibold">Networks</h2>
 
-      <%= if @networks != [] do %>
-        <.table id="network-table" rows={@networks}>
-          <:col :let={network} label="Name">
-            <.link href={~p"/networks/#{network}/"} phx-click={JS.push_focus()}>
-              {network.name}
-            </.link>
-          </:col>
-          <:col :let={network} label="User ID">{network.user_id}</:col>
-          <:col :let={network} label="Description">{network.description}</:col>
-        </.table>
-      <% else %>
-        <p class="mt-8">No networks found.</p>
-      <% end %>
+      <.table :if={@networks != []} id="network-table" rows={@networks}>
+        <:col :let={network} label="Name">
+          <.link href={~p"/networks/#{network}/"} phx-click={JS.push_focus()}>
+            {network.name}
+          </.link>
+        </:col>
+        <:col :let={network} label="User ID">{network.user_id}</:col>
+        <:col :let={network} label="Description">{network.description}</:col>
+      </.table>
+      <p :if={@networks == []} class="mt-8">No networks found.</p>
     </section>
     """
   end
@@ -215,34 +212,25 @@ defmodule PanicWeb.AdminLive do
   defp expires_at("365"), do: DateTime.shift(DateTime.utc_now(), day: 365)
   defp expires_at(_never), do: nil
 
-  defp invocation_io_link(%{type: :input} = assigns) do
+  defp invocation_io_link(assigns) do
     model = NetworkHelpers.get_model_or_placeholder(assigns.invocation.model)
-    assigns = assign(assigns, :model, model)
+
+    {io_type, value} =
+      case assigns.type do
+        :input -> {model.input_type, assigns.invocation.input}
+        :output -> {model.output_type, assigns.invocation.output}
+      end
+
+    assigns = assign(assigns, io_type: io_type, value: value)
 
     ~H"""
-    <%= case @model.input_type do %>
+    <%= case @io_type do %>
       <% :text -> %>
-        {@invocation.input}
+        {@value}
       <% :unknown -> %>
         <span class="text-gray-500 italic">Unknown model type</span>
       <% _ -> %>
-        <.link href={@invocation.input}>external link</.link>
-    <% end %>
-    """
-  end
-
-  defp invocation_io_link(%{type: :output} = assigns) do
-    model = NetworkHelpers.get_model_or_placeholder(assigns.invocation.model)
-    assigns = assign(assigns, :model, model)
-
-    ~H"""
-    <%= case @model.output_type do %>
-      <% :text -> %>
-        {@invocation.output}
-      <% :unknown -> %>
-        <span class="text-gray-500 italic">Unknown model type</span>
-      <% _ -> %>
-        <.link href={@invocation.output}>external link</.link>
+        <.link href={@value}>external link</.link>
     <% end %>
     """
   end

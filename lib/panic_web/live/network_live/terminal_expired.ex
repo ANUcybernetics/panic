@@ -57,16 +57,14 @@ defmodule PanicWeb.NetworkLive.TerminalExpired do
             Learn more about PANIC!
           </.link>
 
-          <%= if @current_user do %>
-            <div class="mt-4">
-              <.link
-                navigate={~p"/networks/#{@network_id}"}
-                class="text-purple-300 hover:text-purple-100 underline"
-              >
-                View network details
-              </.link>
-            </div>
-          <% end %>
+          <div :if={@current_user} class="mt-4">
+            <.link
+              navigate={~p"/networks/#{@network_id}"}
+              class="text-purple-300 hover:text-purple-100 underline"
+            >
+              View network details
+            </.link>
+          </div>
         </div>
       </div>
     </div>
