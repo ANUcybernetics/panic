@@ -15,56 +15,43 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: Test on OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
-    strategy:
-      matrix:
-        otp: ["27.3.4.2"]
-        elixir: ["1.18.4"]
+    name: Test
     steps:
-      - name: Set up Elixir
-        uses: erlef/setup-beam@v1
-        with:
-          otp-version: ${{matrix.otp}}
-          elixir-version: ${{matrix.elixir}}
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up toolchain from mise.toml
+        uses: jdx/mise-action@v5
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg imagemagick
 
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Cache deps
-        id: cache-deps
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: deps
-          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          key: ${{ runner.os }}-deps-${{ hashFiles('mise.toml', 'mix.lock') }}
           restore-keys: |
-            ${{ runner.os }}-mix-
+            ${{ runner.os }}-deps-
 
       - name: Cache compiled build
-        id: cache-build
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: _build
-          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          key: ${{ runner.os }}-build-${{ hashFiles('mise.toml', 'mix.lock') }}
           restore-keys: |
-            ${{ runner.os }}-mix-
+            ${{ runner.os }}-build-
 
       - name: Install dependencies
         run: mix deps.get
 
+      - name: Check formatting
+        run: mix format --check-formatted
+
       - name: Compiles without warnings
         run: mix compile --warnings-as-errors --force
-
-      - name: Check Formatting
-        run: mix format --check-formatted || echo "::warning::Code formatting issues detected. Run 'mix format' to fix."
-        continue-on-error: true
-
-      - name: Run migrations
-        run: mix ecto.migrate
 
       - name: Run tests
         run: mix test
