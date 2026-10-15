@@ -67,20 +67,12 @@ defmodule PanicWeb.NetworkLive.FormComponent do
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
   defp assign_form(%{assigns: %{network: network}} = socket) do
-    # NOTE: this was the auto-generated "default action" stuff, which currently
-    # isn't what I want, but in the interests of getting it to compile I'll do it like this
+    opts = [as: "network", actor: socket.assigns.current_user]
+
     form =
-      if network do
-        AshPhoenix.Form.for_update(network, :update,
-          as: "network",
-          actor: socket.assigns.current_user
-        )
-      else
-        AshPhoenix.Form.for_create(Panic.Engine.Network, :create,
-          as: "network",
-          actor: socket.assigns.current_user
-        )
-      end
+      if network,
+        do: Panic.Engine.form_to_update_network(network, opts),
+        else: Panic.Engine.form_to_create_network(opts)
 
     assign(socket, form: to_form(form))
   end

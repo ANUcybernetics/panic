@@ -1,6 +1,6 @@
 defmodule Panic.Engine do
   @moduledoc false
-  use Ash.Domain, extensions: [AshJsonApi.Domain]
+  use Ash.Domain, extensions: [AshPhoenix, AshJsonApi.Domain]
 
   alias Panic.Engine.Invocation
   alias Panic.Engine.Network
@@ -34,6 +34,7 @@ defmodule Panic.Engine do
   resources do
     resource Network do
       define :create_network, args: [:name, :description], action: :create
+      define :update_network, action: :update
       define :list_networks, action: :read
       define :get_network, action: :read, get_by: [:id]
       define :destroy_network, action: :destroy

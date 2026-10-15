@@ -132,7 +132,7 @@ defmodule PanicWeb.InstallationLive.Show do
       on_cancel={JS.patch(~p"/installations/#{@installation}")}
     >
       <.live_component
-        module={PanicWeb.InstallationLive.WatcherEditFormComponent}
+        module={PanicWeb.InstallationLive.WatcherFormComponent}
         id={@watcher_name}
         title="Edit Watcher"
         installation={@installation}
@@ -192,11 +192,6 @@ defmodule PanicWeb.InstallationLive.Show do
 
   @impl true
   def handle_info({PanicWeb.InstallationLive.WatcherFormComponent, {:saved, installation}}, socket) do
-    {:noreply, assign(socket, :installation, installation)}
-  end
-
-  @impl true
-  def handle_info({PanicWeb.InstallationLive.WatcherEditFormComponent, {:saved, installation}}, socket) do
     {:noreply, assign(socket, :installation, installation)}
   end
 

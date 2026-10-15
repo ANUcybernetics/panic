@@ -1,6 +1,7 @@
 defmodule PanicWeb.InstallationLive.WatcherFormComponent do
   @moduledoc """
-  Form component for adding watchers to installations.
+  Form component for adding a watcher to an installation, or editing one
+  when `watcher_name` is given.
   """
   use PanicWeb, :live_component
 
@@ -13,7 +14,9 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
       <.header>
         {@title}
         <:subtitle>
-          Configure how invocations should be displayed
+          {if @watcher_name,
+            do: "Update watcher configuration",
+            else: "Configure how invocations should be displayed"}
         </:subtitle>
       </.header>
 
@@ -24,7 +27,7 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.inputs_for :let={watcher_form} field={@form[:watcher]}>
+        <.inputs_for :let={watcher_form} field={@form[@watcher_field]}>
           <.input
             field={watcher_form[:type]}
             type="select"
@@ -79,7 +82,9 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
         </.inputs_for>
 
         <:actions>
-          <.button phx-disable-with="Adding...">Add Watcher</.button>
+          <.button phx-disable-with="Saving...">{if @watcher_name,
+            do: "Update Watcher",
+            else: "Add Watcher"}</.button>
         </:actions>
       </.simple_form>
     </div>
@@ -88,67 +93,70 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
 
   @impl true
   def update(assigns, socket) do
-    form =
-      AshPhoenix.Form.for_update(assigns.installation, :add_watcher,
-        params: %{watcher: %{type: :grid, name: ""}},
-        actor: assigns.current_user,
-        forms: [watcher: [resource: Config, create_action: :create]]
-      )
+    socket =
+      socket
+      |> assign(assigns)
+      |> assign_new(:watcher_name, fn -> nil end)
 
-    {:ok,
-     socket
-     |> assign(assigns)
-     |> assign_form(form)}
+    # keep the user's edits when the parent re-renders
+    socket = if socket.assigns[:form], do: socket, else: assign_form(socket)
+
+    {:ok, socket}
   end
 
   @impl true
   def handle_event("validate", %{"form" => params}, socket) do
-    form =
-      socket.assigns.installation
-      |> AshPhoenix.Form.for_update(:add_watcher,
-        params: params,
-        actor: socket.assigns.current_user,
-        forms: [
-          watcher: [
-            resource: Config,
-            create_action: :create
-          ]
-        ]
-      )
-      |> AshPhoenix.Form.validate(params)
-
-    {:noreply, assign_form(socket, form)}
+    {:noreply, assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, params))}
   end
 
   def handle_event("save", %{"form" => params}, socket) do
-    case socket.assigns.installation
-         |> AshPhoenix.Form.for_update(:add_watcher,
-           params: params,
-           actor: socket.assigns.current_user,
-           forms: [
-             watcher: [
-               resource: Config,
-               create_action: :create
-             ]
-           ]
-         )
-         |> AshPhoenix.Form.submit(params: params) do
+    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
       {:ok, installation} ->
         installation = Ash.load!(installation, [:network], actor: socket.assigns.current_user)
         notify_parent({:saved, installation})
 
         {:noreply,
          socket
-         |> put_flash(:info, "Watcher added successfully")
+         |> put_flash(
+           :info,
+           if(socket.assigns.watcher_name,
+             do: "Watcher updated successfully",
+             else: "Watcher added successfully"
+           )
+         )
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, form} ->
-        {:noreply, assign_form(socket, form)}
+        {:noreply, assign(socket, form: form)}
     end
   end
 
-  defp assign_form(socket, %AshPhoenix.Form{} = form) do
-    assign(socket, :form, to_form(form))
+  defp assign_form(%{assigns: %{installation: installation, current_user: actor}} = socket) do
+    form =
+      case socket.assigns.watcher_name do
+        nil ->
+          Panic.Watcher.form_to_add_watcher(installation,
+            actor: actor,
+            params: %{"watcher" => %{"type" => "grid", "name" => ""}},
+            forms: [watcher: [resource: Config, create_action: :create]]
+          )
+
+        watcher_name ->
+          watcher = Enum.find(installation.watchers, &(&1.name == watcher_name))
+
+          Panic.Watcher.form_to_update_watcher(installation, watcher_name,
+            actor: actor,
+            params: %{"updated_watcher" => Map.from_struct(watcher)},
+            forms: [updated_watcher: [resource: Config, create_action: :create]]
+          )
+      end
+
+    socket
+    |> assign(
+      :watcher_field,
+      if(socket.assigns.watcher_name, do: :updated_watcher, else: :watcher)
+    )
+    |> assign(:form, to_form(form))
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})

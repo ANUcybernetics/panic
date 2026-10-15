@@ -10,6 +10,11 @@ defmodule Panic.Watcher do
 
   alias Panic.Watcher.Installation
 
+  forms do
+    # the watcher being edited comes from the route, not the form
+    form :update_watcher, args: [:watcher_name]
+  end
+
   json_api do
     routes do
       base_route "/installations", Installation do
@@ -27,6 +32,8 @@ defmodule Panic.Watcher do
 
   resources do
     resource Installation do
+      define :create_installation, action: :create
+      define :update_installation, action: :update
       define :get_installation, action: :read, get_by: [:id]
       define :list_installations, action: :read
       define :destroy_installation, action: :destroy

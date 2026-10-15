@@ -4,8 +4,6 @@ defmodule PanicWeb.InstallationLive.FormComponent do
   """
   use PanicWeb, :live_component
 
-  alias Panic.Watcher.Installation
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -42,101 +40,45 @@ defmodule PanicWeb.InstallationLive.FormComponent do
   end
 
   @impl true
-  def update(%{installation: installation} = assigns, socket) do
-    changeset =
-      case assigns.action do
-        :new ->
-          AshPhoenix.Form.for_create(Installation, :create,
-            actor: assigns.current_user,
-            forms: [auto?: true]
-          )
-
-        :edit ->
-          AshPhoenix.Form.for_update(installation, :update,
-            actor: assigns.current_user,
-            forms: [auto?: true]
-          )
-      end
-
-    {:ok,
-     socket
-     |> assign(assigns)
-     |> assign_form(changeset)}
+  def update(assigns, socket) do
+    socket = assign(socket, assigns)
+    socket = if socket.assigns[:form], do: socket, else: assign_form(socket)
+    {:ok, socket}
   end
 
   @impl true
-  def handle_event("validate", %{"form" => installation_params}, socket) do
+  def handle_event("validate", %{"form" => params}, socket) do
+    {:noreply, assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, params))}
+  end
+
+  def handle_event("save", %{"form" => params}, socket) do
+    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+      {:ok, installation} ->
+        notify_parent({:saved, installation})
+
+        {:noreply,
+         socket
+         |> put_flash(
+           :info,
+           "Installation #{if socket.assigns.action == :new, do: "created", else: "updated"} successfully"
+         )
+         |> push_patch(to: socket.assigns.patch)}
+
+      {:error, form} ->
+        {:noreply, assign(socket, form: form)}
+    end
+  end
+
+  defp assign_form(%{assigns: %{action: action, current_user: actor}} = socket) do
     form =
-      case socket.assigns.action do
+      case action do
         :new ->
-          Installation
-          |> AshPhoenix.Form.for_create(:create,
-            params: installation_params,
-            actor: socket.assigns.current_user,
-            forms: [auto?: true]
-          )
-          |> AshPhoenix.Form.validate(installation_params)
+          Panic.Watcher.form_to_create_installation(actor: actor)
 
         :edit ->
-          socket.assigns.installation
-          |> AshPhoenix.Form.for_update(:update,
-            params: installation_params,
-            actor: socket.assigns.current_user,
-            forms: [auto?: true]
-          )
-          |> AshPhoenix.Form.validate(installation_params)
+          Panic.Watcher.form_to_update_installation(socket.assigns.installation, actor: actor)
       end
 
-    {:noreply, assign_form(socket, form)}
-  end
-
-  def handle_event("save", %{"form" => installation_params}, socket) do
-    save_installation(socket, socket.assigns.action, installation_params)
-  end
-
-  defp save_installation(socket, :new, installation_params) do
-    case Installation
-         |> AshPhoenix.Form.for_create(:create,
-           params: installation_params,
-           actor: socket.assigns.current_user,
-           forms: [auto?: true]
-         )
-         |> AshPhoenix.Form.submit(params: installation_params) do
-      {:ok, installation} ->
-        notify_parent({:saved, installation})
-
-        {:noreply,
-         socket
-         |> put_flash(:info, "Installation created successfully")
-         |> push_patch(to: socket.assigns.patch)}
-
-      {:error, form} ->
-        {:noreply, assign_form(socket, form)}
-    end
-  end
-
-  defp save_installation(socket, :edit, installation_params) do
-    case socket.assigns.installation
-         |> AshPhoenix.Form.for_update(:update,
-           params: installation_params,
-           actor: socket.assigns.current_user,
-           forms: [auto?: true]
-         )
-         |> AshPhoenix.Form.submit(params: installation_params) do
-      {:ok, installation} ->
-        notify_parent({:saved, installation})
-
-        {:noreply,
-         socket
-         |> put_flash(:info, "Installation updated successfully")
-         |> push_patch(to: socket.assigns.patch)}
-
-      {:error, form} ->
-        {:noreply, assign_form(socket, form)}
-    end
-  end
-
-  defp assign_form(socket, %AshPhoenix.Form{} = form) do
     assign(socket, :form, to_form(form))
   end
 
