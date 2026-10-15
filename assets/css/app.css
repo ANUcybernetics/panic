@@ -59,3 +59,60 @@ autocomplete-input::part(option):hover {
     color: #ffffff !important;
 }
 
+
+/* CoreComponents.modal/1: a native <dialog> in the top layer */
+
+dialog.modal {
+    margin: auto;
+    opacity: 0;
+    translate: 0 1rem;
+    transition-property: opacity, translate, display, overlay;
+    transition-duration: 0.3s;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+}
+
+dialog.modal[open] {
+    opacity: 1;
+    translate: 0;
+
+    @starting-style {
+        opacity: 0;
+        translate: 0 1rem;
+    }
+}
+
+dialog.modal:modal {
+    /* keep scrolling inside the dialog from chaining to the page */
+    overscroll-behavior: contain;
+}
+
+dialog.modal::backdrop {
+    background-color: rgb(63 63 70 / 0);
+    /* a scroll container, so overscroll-behavior applies over the backdrop */
+    overflow: hidden;
+    overscroll-behavior: contain;
+    transition-property: background-color, display, overlay;
+    transition-duration: 0.3s;
+    transition-behavior: allow-discrete;
+}
+
+dialog.modal[open]::backdrop {
+    background-color: rgb(63 63 70 / 0.9);
+
+    @starting-style {
+        background-color: rgb(63 63 70 / 0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    dialog.modal,
+    dialog.modal[open] {
+        translate: none;
+        transition-duration: 0.1s;
+
+        @starting-style {
+            translate: none;
+        }
+    }
+}

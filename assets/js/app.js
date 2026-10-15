@@ -27,6 +27,7 @@ import live_select from "live_select";
 // LiveView hooks
 
 import AudioVisualizer from "./hooks/audio_visualizer";
+import Modal from "./hooks/modal";
 import TerminalLockoutTimer from "./hooks/terminal_lockout_timer";
 
 const RunnerCountdown = {
@@ -79,6 +80,7 @@ const RunnerCountdown = {
 
 const hooks = {
   AudioVisualizer,
+  Modal,
   PhoenixCustomEventHook,
   RunnerCountdown,
   TerminalLockoutTimer,
