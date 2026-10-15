@@ -77,6 +77,8 @@ defmodule Panic.MixProject do
       {:req, "~> 0.5"},
       {:req_s3, "~> 0.2"},
       {:ash_authentication, "~> 4.0"},
+      {:ash_cloak, "~> 0.4"},
+      {:cloak, "~> 1.1"},
       {:ash_authentication_phoenix, "~> 2.7"},
       {:picosat_elixir, "~> 0.2"},
       {:recon, "~> 2.5"},

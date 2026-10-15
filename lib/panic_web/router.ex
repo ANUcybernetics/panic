@@ -69,16 +69,6 @@ defmodule PanicWeb.Router do
         live "/:id/show/add_watcher", InstallationLive.Show, :add_watcher
         live "/:id/show/edit_watcher/:name", InstallationLive.Show, :edit_watcher
       end
-
-      # API Token management
-      scope "/api_tokens" do
-        live "/", APITokenLive.Index, :index
-        live "/new", APITokenLive.Index, :new
-        live "/:id/edit", APITokenLive.Index, :edit
-
-        live "/:id", APITokenLive.Show, :show
-        live "/:id/show/edit", APITokenLive.Show, :edit
-      end
     end
 
     ash_authentication_live_session :admin_required,

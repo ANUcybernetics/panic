@@ -143,12 +143,6 @@ defmodule Panic.Accounts.User do
   end
 
   relationships do
-    many_to_many :api_tokens, Panic.Accounts.APIToken do
-      through Panic.Accounts.UserAPIToken
-      source_attribute :id
-      destination_attribute :id
-    end
-
     has_many :valid_api_keys, Panic.Accounts.ApiKey do
       filter expr(valid)
     end

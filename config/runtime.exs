@@ -20,6 +20,21 @@ if System.get_env("PHX_SERVER") do
   config :panic, PanicWeb.Endpoint, server: true
 end
 
+# Encrypts the platform credentials. Generate a key with
+#   elixir -e 'IO.puts(Base.encode64(:crypto.strong_rand_bytes(32)))'
+# Tests use a throwaway key, since their database never outlives the run.
+cloak_key =
+  if config_env() == :test do
+    :crypto.strong_rand_bytes(32)
+  else
+    Base.decode64!(
+      System.get_env("PANIC_CLOAK_KEY") ||
+        raise("Missing environment variable `PANIC_CLOAK_KEY`!")
+    )
+  end
+
+config :panic, Panic.Vault, ciphers: [default: {Cloak.Ciphers.AES.GCM, tag: "AES.GCM.V1", key: cloak_key, iv_length: 12}]
+
 if config_env() == :prod do
   database_path =
     System.get_env("DATABASE_PATH") ||

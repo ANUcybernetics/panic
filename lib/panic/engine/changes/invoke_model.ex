@@ -13,12 +13,12 @@ defmodule Panic.Engine.Changes.InvokeModel do
      continue. `:invocation_failed` is always emitted; its listener ignores
      runs that are no longer current.
 
-  API tokens are always resolved from the network owner, whoever started the
-  run (e.g. anonymous users accessing via QR code tokens).
+  Models are called with the app's platform keys
+  (`Panic.Accounts.PlatformCredentials`), whoever started the run.
   """
   use Ash.Resource.Change
 
-  alias Panic.Accounts.TokenResolver
+  alias Panic.Accounts.PlatformCredentials
   alias Panic.Engine.Network
   alias Panic.Engine.Signals
 
@@ -33,9 +33,7 @@ defmodule Panic.Engine.Changes.InvokeModel do
   defp invoke(changeset, context) do
     Ash.update!(changeset.data, %{}, action: :about_to_invoke, actor: context.actor)
 
-    invocation = Ash.load!(changeset.data, [network: :user], authorize?: false)
-
-    case call_model(invocation, invocation.network.user) do
+    case call_model(changeset.data) do
       {:ok, output} ->
         Ash.Changeset.put_context(changeset, :invocation_result, {:ok, output})
 
@@ -44,9 +42,9 @@ defmodule Panic.Engine.Changes.InvokeModel do
     end
   end
 
-  defp call_model(%{model: model_id, input: input}, network_owner) do
+  defp call_model(%{model: model_id, input: input}) do
     with {:model, %Panic.Model{} = model} <- {:model, Panic.Model.by_id(model_id)},
-         {:ok, token} <- TokenResolver.resolve_token(model.platform, network_owner) do
+         {:ok, token} <- PlatformCredentials.fetch_token(model.platform) do
       case model.invoke.(model, input, token) do
         # retry an NSFW rejection once with a safe prompt
         {:error, :nsfw} -> model.invoke.(model, nsfw_retry_prompt(), token)

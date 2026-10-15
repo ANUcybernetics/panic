@@ -66,47 +66,6 @@ defmodule Panic.Generators do
     end
   end
 
-  def user_with_real_tokens(password_generator \\ password()) do
-    gen all(user <- user(password_generator)) do
-      # Read API keys from environment variables
-      openai_key = System.get_env("OPENAI_API_KEY")
-      replicate_key = System.get_env("REPLICATE_API_TOKEN")
-      gemini_key = System.get_env("GOOGLE_AI_STUDIO_TOKEN")
-
-      # For apikeys tests, fail if keys are not present
-      if openai_key == nil || replicate_key == nil || gemini_key == nil do
-        raise "API keys required for this test. Set OPENAI_API_KEY, REPLICATE_API_TOKEN, and GOOGLE_AI_STUDIO_TOKEN environment variables."
-      end
-
-      # Create an APIToken with real tokens
-      {:ok, api_token} =
-        Ash.create(
-          Panic.Accounts.APIToken,
-          %{
-            name: "Test Token with Real Keys",
-            openai_token: openai_key,
-            replicate_token: replicate_key,
-            gemini_token: gemini_key
-          },
-          authorize?: false
-        )
-
-      # Associate with user
-      {:ok, _} =
-        Ash.create(
-          Panic.Accounts.UserAPIToken,
-          %{
-            user_id: user.id,
-            api_token_id: api_token.id
-          },
-          authorize?: false
-        )
-
-      # Return user with loaded tokens
-      Ash.load!(user, :api_tokens, authorize?: false)
-    end
-  end
-
   def network(user) do
     gen all(input <- Ash.Generator.action_input(Network, :create)) do
       # Override lockout_seconds to 1 for tests

@@ -9,6 +9,8 @@ defmodule Panic.Application do
   def start(_type, _args) do
     children = [
       PanicWeb.Telemetry,
+      # before the migrator, which encrypts credentials it migrates
+      Panic.Vault,
       Panic.Repo,
       {Ecto.Migrator, repos: Application.fetch_env!(:panic, :ecto_repos), skip: skip_migrations?()},
       {Oban,

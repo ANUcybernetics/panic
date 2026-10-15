@@ -36,40 +36,6 @@ defmodule PanicWeb.UserLiveTest do
       |> click_link("#users-#{user.id} > td:nth-child(1)", Integer.to_string(user.id))
     end
 
-    test "and can visit their user page and manage API tokens", %{
-      conn: conn,
-      user: user
-    } do
-      token_name = "My Test Tokens"
-      token_value = ";laskdfjhnlkjlkj"
-
-      conn
-      |> visit("/users/#{user.id}")
-      |> click_link("Manage API Tokens")
-      |> click_link("New Token Set")
-      |> fill_in("Name", with: token_name)
-      |> fill_in("Replicate API Token", with: token_value)
-      |> submit()
-      |> assert_has("h1", text: "API Tokens")
-      |> assert_has("#api_tokens", text: token_name)
-    end
-
-    test "and can delete one of their API token sets", %{conn: conn, user: user} do
-      {:ok, api_token} =
-        Ash.create(Panic.Accounts.APIToken, %{name: "Doomed tokens", openai_token: "k"}, authorize?: false)
-
-      Panic.Accounts.create_user_api_token!(%{user_id: user.id, api_token_id: api_token.id},
-        authorize?: false
-      )
-
-      {:ok, view, _html} = live(conn, ~p"/api_tokens")
-      assert render(view) =~ "Doomed tokens"
-
-      render_click(view, "delete", %{"id" => api_token.id})
-      refute render(view) =~ "Doomed tokens"
-      assert {:error, _} = Panic.Accounts.get_api_token(api_token.id, authorize?: false)
-    end
-
     test "and can visit their user page and create a network", %{
       conn: conn,
       user: user

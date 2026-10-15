@@ -17,77 +17,25 @@ defmodule PanicWeb.UserLive.Show do
         </.link>
       </div>
 
-      <%= if @networks != [] do %>
-        <.table id="network-list" rows={@networks}>
-          <:col :let={network} label="Name">
-            <.link href={~p"/networks/#{network}/"} phx-click={JS.push_focus()}>
-              {network.name}
-            </.link>
-          </:col>
-          <:col :let={network} label="Length">{length(network.models)}</:col>
-          <:col :let={network} label="Description">{network.description}</:col>
-          <:action :let={network}>
-            <.link
-              phx-click={JS.push("delete_network", value: %{id: network.id})}
-              data-confirm="Are you sure you want to delete this network?"
-              class="text-red-600 hover:text-red-900"
-            >
-              Delete
-            </.link>
-          </:action>
-        </.table>
-      <% else %>
-        <p class="mt-8">User has no networks.</p>
-      <% end %>
-    </section>
-
-    <section>
-      <div class="flex justify-between items-center mt-16">
-        <h2 class="font-semibold">API Tokens</h2>
-        <.link navigate={~p"/api_tokens"} phx-click={JS.push_focus()}>
-          <.button>Manage API Tokens</.button>
-        </.link>
-      </div>
-
-      <%= if @api_tokens != [] do %>
-        <.table id="api-token-list" rows={@api_tokens}>
-          <:col :let={token} label="Name">
-            <.link href={~p"/api_tokens/#{token}"} phx-click={JS.push_focus()}>
-              {token.name}
-            </.link>
-          </:col>
-          <:col :let={token} label="Platforms">
-            <div class="flex gap-2">
-              <span
-                :if={token.openai_token}
-                class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
-              >
-                OpenAI
-              </span>
-              <span
-                :if={token.replicate_token}
-                class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
-              >
-                Replicate
-              </span>
-              <span
-                :if={token.gemini_token}
-                class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
-              >
-                Gemini
-              </span>
-            </div>
-          </:col>
-        </.table>
-      <% else %>
-        <p class="mt-8">
-          No API tokens configured.
-          <.link navigate={~p"/api_tokens/new"} class="text-blue-600 hover:text-blue-500">
-            Create one
+      <.table :if={@networks != []} id="network-list" rows={@networks}>
+        <:col :let={network} label="Name">
+          <.link href={~p"/networks/#{network}/"} phx-click={JS.push_focus()}>
+            {network.name}
           </.link>
-          to start using the platform.
-        </p>
-      <% end %>
+        </:col>
+        <:col :let={network} label="Length">{length(network.models)}</:col>
+        <:col :let={network} label="Description">{network.description}</:col>
+        <:action :let={network}>
+          <.link
+            phx-click={JS.push("delete_network", value: %{id: network.id})}
+            data-confirm="Are you sure you want to delete this network?"
+            class="text-red-600 hover:text-red-900"
+          >
+            Delete
+          </.link>
+        </:action>
+      </.table>
+      <p :if={@networks == []} class="mt-8">User has no networks.</p>
     </section>
 
     <.back navigate={~p"/users"}>Back to users</.back>
@@ -122,14 +70,10 @@ defmodule PanicWeb.UserLive.Show do
       {:ok, user} ->
         networks = Panic.Engine.list_networks!(actor: socket.assigns.current_user)
 
-        # Load user's API tokens
-        user_with_tokens = Ash.load!(user, :api_tokens, actor: socket.assigns.current_user)
-        api_tokens = user_with_tokens.api_tokens
-
         {:noreply,
          socket
          |> assign(:page_title, page_title(socket.assigns.live_action))
-         |> assign(user: user, networks: networks, api_tokens: api_tokens)}
+         |> assign(user: user, networks: networks)}
 
       {:error, _error} ->
         {:noreply, push_navigate(socket, to: ~p"/404")}

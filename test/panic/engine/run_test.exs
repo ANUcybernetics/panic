@@ -25,7 +25,8 @@ defmodule Panic.Engine.RunTest do
   @moduletag :capture_log
 
   setup do
-    user = Panic.Fixtures.user_with_vestaboard_tokens()
+    user = Panic.Fixtures.user()
+    Panic.Fixtures.vestaboard_credentials()
 
     network =
       "Run test network"

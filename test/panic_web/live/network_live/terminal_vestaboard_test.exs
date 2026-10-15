@@ -9,7 +9,8 @@ defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
 
   describe "anonymous user with vestaboard watchers" do
     setup do
-      user = user_with_vestaboard_tokens()
+      user = Panic.Fixtures.user()
+      Panic.Fixtures.vestaboard_credentials()
 
       {:ok, network} =
         Network
