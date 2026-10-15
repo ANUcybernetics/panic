@@ -1,6 +1,8 @@
 [
   plugins: [Spark.Formatter, Styler, Phoenix.LiveView.HTMLFormatter],
   import_deps: [
+    :ash_oban,
+    :oban,
     :reactor,
     :ecto,
     :ecto_sql,

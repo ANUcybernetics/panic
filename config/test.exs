@@ -15,6 +15,7 @@ config :bcrypt_elixir, log_rounds: 1
 # Run `mix help test` for more information.
 config :logger, level: :warning
 
+config :panic, Oban, testing: :manual
 config :panic, Panic.Mailer, adapter: Test
 
 config :panic, Panic.Repo,

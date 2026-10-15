@@ -11,6 +11,11 @@ defmodule Panic.Application do
       PanicWeb.Telemetry,
       Panic.Repo,
       {Ecto.Migrator, repos: Application.fetch_env!(:panic, :ecto_repos), skip: skip_migrations?()},
+      {Oban,
+       AshOban.config(
+         Application.fetch_env!(:panic, :ash_domains),
+         Application.fetch_env!(:panic, Oban)
+       )},
       # Registry for NetworkRunner GenServers
       {Registry, keys: :unique, name: Panic.Engine.NetworkRegistry},
       # DynamicSupervisor for NetworkRunner GenServers

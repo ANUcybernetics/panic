@@ -39,6 +39,8 @@ defmodule Panic.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:ash_oban, "~> 0.10"},
+      {:oban, "~> 2.24"},
       {:sourceror, "~> 1.8", only: [:dev, :test]},
       {:live_select, "~> 1.0"},
       {:repatch, "~> 1.0"},
