@@ -2,6 +2,7 @@ defmodule PanicWeb.AdminLive do
   @moduledoc false
   use PanicWeb, :live_view
 
+  alias Panic.Accounts.PlatformCredentials
   alias PanicWeb.NetworkLive.NetworkHelpers
   alias Phoenix.Socket.Broadcast
 
@@ -28,7 +29,38 @@ defmodule PanicWeb.AdminLive do
     </.header>
 
     <section class="mt-16">
-      <h2 class="text-xl font-semibold">API keys</h2>
+      <h2 class="text-xl font-semibold">Platform keys</h2>
+      <p class="mt-2 text-sm">
+        The keys every run spends, whoever starts it. They're stored encrypted and never sent back
+        to the browser: leave a field blank to keep its key, or paste a new one to replace it.
+      </p>
+
+      <.simple_form
+        for={@credentials_form}
+        id="credentials-form"
+        phx-change="validate_credentials"
+        phx-submit="save_credentials"
+      >
+        <div :for={key <- PlatformCredentials.keys()}>
+          <.input
+            field={@credentials_form[key]}
+            type="password"
+            value=""
+            autocomplete="off"
+            label={credential_label(key)}
+          />
+          <p id={"#{key}-status"} class="mt-1 text-sm text-purple-500">
+            {credential_status(Map.get(@credentials, key))}
+          </p>
+        </div>
+        <:actions>
+          <.button phx-disable-with="Saving...">Save keys</.button>
+        </:actions>
+      </.simple_form>
+    </section>
+
+    <section class="mt-16">
+      <h2 class="text-xl font-semibold">JSON API keys</h2>
       <p class="mt-2 text-sm">
         Keys for the JSON API at <code>/api</code>
         (<.link href={~p"/api/swaggerui"} class="underline">docs</.link>), sent as <code>Authorization: Bearer &lt;key&gt;</code>. They act as you, and stop working if you stop being an admin.
@@ -124,6 +156,7 @@ defmodule PanicWeb.AdminLive do
     {:ok,
      socket
      |> assign(networks: networks, new_api_key: nil)
+     |> assign_credentials()
      |> assign_api_keys()
      |> stream(:invocations, [])}
   end
@@ -163,6 +196,24 @@ defmodule PanicWeb.AdminLive do
   end
 
   @impl true
+  def handle_event("validate_credentials", %{"form" => params}, socket) do
+    {:noreply,
+     assign(socket,
+       credentials_form: AshPhoenix.Form.validate(socket.assigns.credentials_form, params)
+     )}
+  end
+
+  def handle_event("save_credentials", %{"form" => params}, socket) do
+    case AshPhoenix.Form.submit(socket.assigns.credentials_form, params: params) do
+      {:ok, _credentials} ->
+        {:noreply, socket |> assign_credentials() |> put_flash(:info, "Platform keys saved")}
+
+      {:error, form} ->
+        {:noreply, assign(socket, credentials_form: form)}
+    end
+  end
+
+  @impl true
   def handle_event("create_api_key", %{"api_key" => params}, socket) do
     actor = socket.assigns.current_user
 
@@ -194,6 +245,36 @@ defmodule PanicWeb.AdminLive do
      |> assign_api_keys()
      |> put_flash(:info, "Revoked #{api_key.name}")}
   end
+
+  defp assign_credentials(socket) do
+    actor = socket.assigns.current_user
+
+    credentials =
+      Panic.Accounts.get_platform_credentials!(actor: actor, load: PlatformCredentials.keys())
+
+    assign(socket,
+      credentials: credentials,
+      credentials_form: to_form(Panic.Accounts.form_to_update_platform_credentials(credentials, actor: actor))
+    )
+  end
+
+  defp credential_label(key) do
+    case PlatformCredentials.platform(key) do
+      nil ->
+        key
+        |> Atom.to_string()
+        |> String.replace_suffix("_token", "")
+        |> String.replace("_", " ")
+        |> String.capitalize()
+
+      platform ->
+        PlatformCredentials.platform_name(platform)
+    end
+  end
+
+  # enough to tell keys apart without revealing them
+  defp credential_status(nil), do: "Not set"
+  defp credential_status(key), do: "Set, ending in #{String.slice(key, -4..-1//1)}"
 
   defp assign_api_keys(socket) do
     api_keys =

@@ -11,6 +11,7 @@ defmodule Panic.Engine.Changes.StartRun do
   """
   use Ash.Resource.Change
 
+  alias Panic.Accounts.PlatformCredentials
   alias Panic.Engine.Errors.RunLocked
   alias Panic.Engine.Network
   alias Panic.Engine.Schedule
@@ -25,6 +26,7 @@ defmodule Panic.Engine.Changes.StartRun do
         |> Ash.Changeset.force_change_attribute(:sequence_number, 0)
         |> Ash.Changeset.force_change_attribute(:model, first_model)
         |> Ash.Changeset.manage_relationship(:network, network, type: :append_and_remove)
+        |> Ash.Changeset.before_action(&check_keys/1)
         |> Ash.Changeset.before_action(&check_lockout_and_schedule(&1, network.id))
         |> Ash.Changeset.after_action(&begin_run(&1, &2, context.actor))
 
@@ -33,6 +35,24 @@ defmodule Panic.Engine.Changes.StartRun do
 
       :error ->
         Ash.Changeset.add_error(changeset, "missing :network argument")
+    end
+  end
+
+  # a run whose platforms have no keys would only fail on its first invocation
+  defp check_keys(changeset) do
+    %{models: models} = Ash.Changeset.get_argument(changeset, :network)
+
+    case PlatformCredentials.missing(models) do
+      [] ->
+        changeset
+
+      missing ->
+        names = Enum.map_join(missing, ", ", &PlatformCredentials.platform_name/1)
+
+        Ash.Changeset.add_error(
+          changeset,
+          "No API key set for #{names}: an admin can add one on the admin page"
+        )
     end
   end
 

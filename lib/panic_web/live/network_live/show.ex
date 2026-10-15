@@ -4,6 +4,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   import PanicWeb.PanicComponents
 
+  alias Panic.Accounts.PlatformCredentials
   alias PanicWeb.NetworkLive.ModelSelectComponent
   alias PanicWeb.NetworkLive.RunnerStatusComponent
   alias PanicWeb.WatcherSubscriber
@@ -39,6 +40,11 @@ defmodule PanicWeb.NetworkLive.Show do
           Stop
         </.button>
       </div>
+      <p :if={@missing_keys != []} id="missing-keys" role="alert" class="mt-4 text-rose-400">
+        No API key set for {Enum.map_join(@missing_keys, ", ", &PlatformCredentials.platform_name/1)}, so runs won't start.
+        <.link :if={@current_user.admin} navigate={~p"/admin"} class="underline">Add keys</.link>
+        <span :if={!@current_user.admin}>Ask an admin to add them.</span>
+      </p>
     </section>
 
     <section class="mt-16">
@@ -145,7 +151,7 @@ defmodule PanicWeb.NetworkLive.Show do
         socket =
           socket
           |> assign(:page_title, page_title(socket.assigns[:live_action]))
-          |> assign(:network, network)
+          |> assign_network(network)
           |> stream(:installations, network.installations)
           |> assign(:current_invocation, current_run_head(network))
           |> WatcherSubscriber.configure_invocation_stream(network, {:grid, 2, 3})
@@ -155,6 +161,10 @@ defmodule PanicWeb.NetworkLive.Show do
       {:error, _error} ->
         {:noreply, push_navigate(socket, to: ~p"/404")}
     end
+  end
+
+  defp assign_network(socket, network) do
+    assign(socket, network: network, missing_keys: PlatformCredentials.missing(network.models))
   end
 
   defp current_run_head(%{current_run_number: nil}), do: nil
@@ -168,12 +178,12 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl true
   def handle_info({PanicWeb.NetworkLive.FormComponent, {:saved, network}}, socket) do
-    {:noreply, assign(socket, network: network)}
+    {:noreply, assign_network(socket, network)}
   end
 
   @impl true
   def handle_info({ModelSelectComponent, {:models_updated, network}}, socket) do
-    {:noreply, assign(socket, network: network)}
+    {:noreply, assign_network(socket, network)}
   end
 
   @impl true

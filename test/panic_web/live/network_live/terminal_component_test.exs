@@ -49,8 +49,8 @@ defmodule PanicWeb.NetworkLive.TerminalComponentTest do
     end
   end
 
-  describe "error handling for missing API tokens" do
-    test "starting a run without the model's API token keeps the terminal usable", %{
+  describe "error handling for missing platform keys" do
+    test "starting a run without the model's platform key says so", %{
       conn: conn,
       owner: owner
     } do
@@ -76,8 +76,8 @@ defmodule PanicWeb.NetworkLive.TerminalComponentTest do
       |> fill_in("Prompt", with: "test prompt")
       |> submit()
       |> assert_has("span", text: "Current run:")
+      |> assert_has("[role=alert]", text: "No API key set for OpenAI")
       |> refute_has("body", text: "ArgumentError")
-      |> refute_has("body", text: "Expected to receive either an")
     end
 
     test "verifies the fix handles different error types correctly", %{

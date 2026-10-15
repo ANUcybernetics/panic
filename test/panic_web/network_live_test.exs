@@ -67,6 +67,33 @@ defmodule PanicWeb.NetworkLiveTest do
     end
   end
 
+  describe "missing platform keys" do
+    setup {PanicWeb.Helpers, :create_and_sign_in_user}
+
+    test "a network whose models need a key that isn't set warns its owner", %{
+      conn: conn,
+      user: user
+    } do
+      openai = Enum.find(Panic.Model.all(), &(&1.platform == Panic.Platforms.OpenAI))
+
+      network =
+        user |> Fixtures.network() |> Engine.update_models!([openai.id], actor: user)
+
+      conn
+      |> visit(~p"/networks/#{network}")
+      |> assert_has("#missing-keys", text: "No API key set for OpenAI")
+      |> assert_has("#missing-keys", text: "Ask an admin")
+    end
+
+    test "a network of dummy models doesn't warn", %{conn: conn, user: user} do
+      network = Fixtures.network_with_dummy_models(user)
+
+      conn
+      |> visit(~p"/networks/#{network}")
+      |> refute_has("#missing-keys")
+    end
+  end
+
   describe "QR code functionality - authenticated user" do
     setup {PanicWeb.Helpers, :create_and_sign_in_user}
 
@@ -555,8 +582,6 @@ defmodule PanicWeb.NetworkLiveTest do
     end
   end
 
-  # Helper functions
-
   defp create_network(user) do
     # Use the fixture helper that properly creates networks
     Fixtures.network_with_dummy_models(user)
@@ -565,4 +590,6 @@ defmodule PanicWeb.NetworkLiveTest do
   defp log_out_user(_conn) do
     Phoenix.ConnTest.build_conn()
   end
+
+  # Helper functions
 end

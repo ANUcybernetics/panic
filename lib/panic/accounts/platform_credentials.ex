@@ -104,11 +104,13 @@ defmodule Panic.Accounts.PlatformCredentials do
     Map.get(load!([key]), key)
   end
 
-  @doc "The platforms among `platforms` that have no key set (Dummy never needs one)."
-  def missing(platforms) do
+  @doc "The platforms the models (by id) need that have no key set. Dummy never needs one."
+  def missing(model_ids) do
     credentials = Ash.read_one!(__MODULE__, authorize?: false)
 
-    platforms
+    model_ids
+    |> Enum.flat_map(&List.wrap(Panic.Model.by_id(&1)))
+    |> Enum.map(& &1.platform)
     |> Enum.uniq()
     |> Enum.reject(&(&1 == Dummy))
     |> Enum.filter(fn platform ->

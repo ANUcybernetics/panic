@@ -1,8 +1,6 @@
 defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
   use PanicWeb.ConnCase, async: false
 
-  import Panic.Fixtures
-
   alias Panic.Engine.Network
   alias Panic.Watcher.Installation
   alias PanicWeb.TerminalAuth

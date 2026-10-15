@@ -13,6 +13,34 @@ defmodule PanicWeb.AdminLiveTest do
     %{network1: network1, network2: network2}
   end
 
+  describe "platform keys" do
+    test "saving a key stores it and shows only its last four characters", %{conn: conn} do
+      session =
+        conn
+        |> visit("/admin")
+        |> assert_has("#openai_token-status", text: "Not set")
+        |> within("#credentials-form", &fill_in(&1, "OpenAI", with: "sk-test-abcd1234"))
+        |> click_button("Save keys")
+        |> assert_has("#openai_token-status", text: "Set, ending in 1234")
+
+      refute_has(session, "#credentials-form input[value='sk-test-abcd1234']")
+
+      assert {:ok, "sk-test-abcd1234"} =
+               Panic.Accounts.PlatformCredentials.fetch_token(Panic.Platforms.OpenAI)
+    end
+
+    test "saving with a field left blank keeps that key", %{conn: conn} do
+      set_credentials(replicate_token: "r8_keepme")
+
+      conn
+      |> visit("/admin")
+      |> within("#credentials-form", &fill_in(&1, "Gemini", with: "gemini-new"))
+      |> click_button("Save keys")
+      |> assert_has("#replicate_token-status", text: "Set, ending in epme")
+      |> assert_has("#gemini_token-status", text: "Set, ending in -new")
+    end
+  end
+
   describe "stop_all_jobs" do
     test "stops every running network", %{
       conn: conn,

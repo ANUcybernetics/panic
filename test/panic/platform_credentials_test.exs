@@ -42,10 +42,12 @@ defmodule Panic.PlatformCredentialsTest do
     assert {:ok, _} = PlatformCredentials.fetch_token(Dummy)
   end
 
-  test "missing/1 lists the platforms without keys" do
+  test "missing/1 lists the platforms a network's models need that have no key" do
     Panic.Fixtures.set_credentials(gemini_token: "gemini-key")
+    openai = Enum.find(Panic.Model.all(), &(&1.platform == OpenAI))
+    gemini = Enum.find(Panic.Model.all(), &(&1.platform == Gemini))
 
-    assert PlatformCredentials.missing([OpenAI, Gemini, Dummy, OpenAI]) == [OpenAI]
+    assert PlatformCredentials.missing([openai.id, gemini.id, "dummy-t2t", openai.id]) == [OpenAI]
   end
 
   test "Vestaboard keys are looked up by board" do
