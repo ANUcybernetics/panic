@@ -297,9 +297,11 @@ defmodule PanicWeb.CoreComponents do
   slot :inner_block
 
   def input(%{field: %FormField{} = field} = assigns) do
+    errors = if used_input?(field), do: field.errors, else: []
+
     assigns
     |> assign(field: nil, id: assigns.id || field.id)
-    |> assign(:errors, Enum.map(field.errors, &translate_error(&1)))
+    |> assign(:errors, Enum.map(errors, &translate_error(&1)))
     |> assign_new(:name, fn -> if assigns.multiple, do: field.name <> "[]", else: field.name end)
     |> assign_new(:value, fn -> field.value end)
     |> input()
@@ -312,7 +314,7 @@ defmodule PanicWeb.CoreComponents do
       end)
 
     ~H"""
-    <div phx-feedback-for={@name}>
+    <div>
       <label class="flex items-center gap-4 text-sm leading-6 text-purple-500">
         <input type="hidden" name={@name} value="false" />
         <input
@@ -322,50 +324,55 @@ defmodule PanicWeb.CoreComponents do
           value="true"
           checked={@checked}
           class="rounded border-zinc-300 text-purple-300 focus:ring-0"
+          aria-invalid={@errors != [] && "true"}
+          aria-describedby={error_id(@id, @errors)}
           {@rest}
         />
         {@label}
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <.field_errors id={error_id(@id, @errors)} errors={@errors} />
     </div>
     """
   end
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div phx-feedback-for={@name}>
+    <div>
       <.label for={@id}>{@label}</.label>
       <select
         id={@id}
         name={@name}
         class="mt-2 block w-full rounded-md border border-gray-300 bg-zinc-900 shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
         multiple={@multiple}
+        aria-invalid={@errors != [] && "true"}
+        aria-describedby={error_id(@id, @errors)}
         {@rest}
       >
         <option :if={@prompt} value="">{@prompt}</option>
         {Phoenix.HTML.Form.options_for_select(@options, @value)}
       </select>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <.field_errors id={error_id(@id, @errors)} errors={@errors} />
     </div>
     """
   end
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div phx-feedback-for={@name}>
+    <div>
       <.label for={@id}>{@label}</.label>
       <textarea
         id={@id}
         name={@name}
         class={[
-          "mt-2 block w-full rounded-lg text-purple-300 bg-zinc-800 focus:ring-0 sm:text-sm sm:leading-6",
-          "min-h-[6rem] phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400",
+          "mt-2 block w-full rounded-lg text-purple-300 bg-zinc-800 focus:ring-0 sm:text-sm sm:leading-6 min-h-[6rem]",
           @errors == [] && "border-zinc-300 focus:border-zinc-400",
           @errors != [] && "border-rose-400 focus:border-rose-400"
         ]}
+        aria-invalid={@errors != [] && "true"}
+        aria-describedby={error_id(@id, @errors)}
         {@rest}
       ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <.field_errors id={error_id(@id, @errors)} errors={@errors} />
     </div>
     """
   end
@@ -373,7 +380,7 @@ defmodule PanicWeb.CoreComponents do
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <div phx-feedback-for={@name}>
+    <div>
       <.label for={@id}>{@label}</.label>
       <input
         type={@type}
@@ -383,13 +390,29 @@ defmodule PanicWeb.CoreComponents do
         class={[
           "mt-2 block w-full rounded-lg text-purple-300 bg-zinc-800 focus:ring-0 sm:text-sm sm:leading-6",
           "placeholder:text-purple-300/70 disabled:placeholder:text-purple-300/50",
-          "phx-no-feedback:border-zinc-700 phx-no-feedback:focus:border-purple-500",
-          "phx-no-feedback:focus:ring-purple-300 phx-no-feedback:focus:ring-2",
-          @errors == [] && "border-zinc-300 focus:border-zinc-400",
+          @errors == [] &&
+            "border-zinc-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-300",
           @errors != [] && "border-rose-400 focus:border-rose-400"
         ]}
+        aria-invalid={@errors != [] && "true"}
+        aria-describedby={error_id(@id, @errors)}
         {@rest}
       />
+      <.field_errors id={error_id(@id, @errors)} errors={@errors} />
+    </div>
+    """
+  end
+
+  defp error_id(nil, _errors), do: nil
+  defp error_id(_id, []), do: nil
+  defp error_id(id, _errors), do: "#{id}-error"
+
+  attr :id, :string, default: nil
+  attr :errors, :list, required: true
+
+  defp field_errors(assigns) do
+    ~H"""
+    <div :if={@errors != []} id={@id}>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
@@ -416,7 +439,7 @@ defmodule PanicWeb.CoreComponents do
 
   def error(assigns) do
     ~H"""
-    <p class="mt-3 flex gap-3 text-sm leading-6 text-rose-600 phx-no-feedback:hidden">
+    <p class="mt-3 flex gap-3 text-sm leading-6 text-rose-600">
       <.icon name="hero-exclamation-circle-mini" class="mt-0.5 h-5 w-5 flex-none" />
       {render_slot(@inner_block)}
     </p>
