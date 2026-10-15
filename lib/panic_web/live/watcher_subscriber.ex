@@ -482,8 +482,11 @@ defmodule PanicWeb.WatcherSubscriber do
 
       {%Invocation{sequence_number: seq, state: state}, {:single, offset, stride, show_invoking}}
       when rem(seq, stride) == offset ->
+        # every invocation a single watcher shows has the same dom id, so this
+        # replaces the one on screen (a stream limit would count #display-info
+        # and remove it instead)
         if show_invoking or state != :invoking do
-          LiveView.stream_insert(socket, :invocations, invocation, at: 0, limit: 1)
+          LiveView.stream_insert(socket, :invocations, invocation, at: 0)
         else
           socket
         end
