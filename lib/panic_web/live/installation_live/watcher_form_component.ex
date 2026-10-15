@@ -110,9 +110,11 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
   end
 
   def handle_event("save", %{"form" => params}, socket) do
-    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+    case AshPhoenix.Form.submit(socket.assigns.form,
+           params: params,
+           action_opts: [load: [:network]]
+         ) do
       {:ok, installation} ->
-        installation = Ash.load!(installation, [:network], actor: socket.assigns.current_user)
         notify_parent({:saved, installation})
 
         {:noreply,
