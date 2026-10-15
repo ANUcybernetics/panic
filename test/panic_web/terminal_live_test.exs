@@ -246,14 +246,8 @@ defmodule PanicWeb.TerminalLiveTest do
 
       # Create a token that's 55 minutes old (should still be valid but expiring soon)
       almost_expired_token =
-        Phoenix.Token.sign(
-          PanicWeb.Endpoint,
-          "terminal_access",
-          %{
-            network_id: to_string(network.id),
-            # 55 minutes ago
-            generated_at: System.system_time(:second) - 3300
-          }
+        Phoenix.Token.sign(PanicWeb.Endpoint, "terminal_access", to_string(network.id),
+          signed_at: System.system_time(:second) - 3300
         )
 
       # Should still be valid
@@ -262,14 +256,8 @@ defmodule PanicWeb.TerminalLiveTest do
 
       # Create a token that's just over 1 hour old
       expired_token =
-        Phoenix.Token.sign(
-          PanicWeb.Endpoint,
-          "terminal_access",
-          %{
-            network_id: to_string(network.id),
-            # 1 hour and 1 second ago
-            generated_at: System.system_time(:second) - 3601
-          }
+        Phoenix.Token.sign(PanicWeb.Endpoint, "terminal_access", to_string(network.id),
+          signed_at: System.system_time(:second) - 3601
         )
 
       # Should be expired

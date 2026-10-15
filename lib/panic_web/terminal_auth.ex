@@ -29,8 +29,6 @@ defmodule PanicWeb.TerminalAuth do
   @salt "terminal_access"
   # 1 hour in seconds
   @max_age 3600
-  # 5 minutes grace period for clock skew
-  @grace_period 300
 
   @doc """
   Generates a time-based token for terminal access to a specific network.
@@ -49,10 +47,7 @@ defmodule PanicWeb.TerminalAuth do
       "SFMyNTY..."
   """
   def generate_token(network_id) do
-    Phoenix.Token.sign(PanicWeb.Endpoint, @salt, %{
-      network_id: to_string(network_id),
-      generated_at: System.system_time(:second)
-    })
+    Phoenix.Token.sign(PanicWeb.Endpoint, @salt, to_string(network_id))
   end
 
   @doc """
@@ -77,22 +72,10 @@ defmodule PanicWeb.TerminalAuth do
       {:error, :expired}
   """
   def verify_token(token) do
-    case Phoenix.Token.verify(PanicWeb.Endpoint, @salt, token, max_age: @max_age + @grace_period) do
-      {:ok, %{network_id: network_id, generated_at: generated_at}} ->
-        # Check if token is older than max_age (without grace period)
-        age = System.system_time(:second) - generated_at
-
-        if age > @max_age do
-          {:error, :expired}
-        else
-          {:ok, network_id}
-        end
-
-      {:error, :expired} ->
-        {:error, :expired}
-
-      {:error, _} ->
-        {:error, :invalid}
+    case Phoenix.Token.verify(PanicWeb.Endpoint, @salt, token, max_age: @max_age) do
+      {:ok, network_id} -> {:ok, network_id}
+      {:error, :expired} -> {:error, :expired}
+      {:error, _} -> {:error, :invalid}
     end
   end
 
@@ -154,17 +137,11 @@ defmodule PanicWeb.TerminalAuth do
   """
   def validate_token_in_socket(%{"network_id" => network_id, "token" => token}, socket) do
     case verify_token(token) do
-      {:ok, token_network_id} when token_network_id == network_id ->
+      {:ok, ^network_id} ->
         {:ok, socket}
 
-      {:ok, _different_network_id} ->
-        # Token is for a different network
-        {:error, Phoenix.LiveView.push_navigate(socket, to: "/networks/#{network_id}/terminal/expired")}
-
-      {:error, :expired} ->
-        {:error, Phoenix.LiveView.push_navigate(socket, to: "/networks/#{network_id}/terminal/expired")}
-
-      {:error, :invalid} ->
+      # expired, invalid, or for a different network
+      _ ->
         {:error, Phoenix.LiveView.push_navigate(socket, to: "/networks/#{network_id}/terminal/expired")}
     end
   end

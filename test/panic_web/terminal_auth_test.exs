@@ -37,15 +37,10 @@ defmodule PanicWeb.TerminalAuthTest do
     end
 
     test "returns error for expired token" do
-      # This is a bit tricky to test without mocking time
-      # We'll test that the function handles expired tokens correctly
-      # by using Phoenix.Token directly with a very short max_age
+      two_hours_ago = System.system_time(:second) - 7200
+
       expired_token =
-        Phoenix.Token.sign(PanicWeb.Endpoint, "terminal_access", %{
-          network_id: "123",
-          # 2 hours ago
-          generated_at: System.system_time(:second) - 7200
-        })
+        Phoenix.Token.sign(PanicWeb.Endpoint, "terminal_access", "123", signed_at: two_hours_ago)
 
       assert {:error, :expired} = TerminalAuth.verify_token(expired_token)
     end
