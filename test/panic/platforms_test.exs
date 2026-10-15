@@ -185,19 +185,6 @@ defmodule Panic.PlatformsTest do
       {:ok, api_key: api_key}
     end
 
-    test "can list available engines", %{api_key: api_key} do
-      engines = OpenAI.list_engines(api_key)
-
-      case engines do
-        {:error, reason} ->
-          flunk("Failed to list OpenAI engines: #{inspect(reason)}")
-
-        engines when is_list(engines) ->
-          assert length(engines) > 0, "Expected to find available engines"
-          assert Enum.all?(engines, &is_map/1), "Expected all engines to be maps"
-      end
-    end
-
     test "can invoke all OpenAI models", %{api_key: api_key} do
       models = Model.all(platform: OpenAI)
       assert length(models) > 0, "Expected to find OpenAI models"

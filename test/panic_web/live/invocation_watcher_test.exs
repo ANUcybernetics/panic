@@ -19,10 +19,6 @@ defmodule PanicWeb.InvocationWatcherTest do
   setup do
     Panic.ExternalAPIPatches.setup()
 
-    on_exit(fn ->
-      Panic.ExternalAPIPatches.teardown()
-    end)
-
     :ok
   end
 

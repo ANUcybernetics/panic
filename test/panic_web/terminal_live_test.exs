@@ -47,13 +47,6 @@ defmodule PanicWeb.TerminalLiveTest do
       # Setup external API patches to avoid real network calls
       Panic.ExternalAPIPatches.setup()
 
-      # Setup web test environment with sync mode and cleanup
-
-      on_exit(fn ->
-        # Teardown API patches
-        Panic.ExternalAPIPatches.teardown()
-      end)
-
       :ok
     end
 
@@ -101,11 +94,6 @@ defmodule PanicWeb.TerminalLiveTest do
       user = Fixtures.user("password123")
       network = Fixtures.network_with_dummy_models(user)
 
-      on_exit(fn ->
-        # Teardown API patches
-        Panic.ExternalAPIPatches.teardown()
-      end)
-
       {:ok, user: user, network: network}
     end
 
@@ -150,11 +138,6 @@ defmodule PanicWeb.TerminalLiveTest do
       # Create a user and network for testing
       user = Fixtures.user("password123")
       network = Fixtures.network_with_dummy_models(user)
-
-      on_exit(fn ->
-        # Teardown API patches
-        Panic.ExternalAPIPatches.teardown()
-      end)
 
       {:ok, user: user, network: network}
     end
@@ -250,11 +233,6 @@ defmodule PanicWeb.TerminalLiveTest do
       user = Fixtures.user("password123")
       network = Fixtures.network_with_dummy_models(user)
 
-      on_exit(fn ->
-        # Teardown API patches
-        Panic.ExternalAPIPatches.teardown()
-      end)
-
       {:ok, user: user, network: network}
     end
 
@@ -318,13 +296,6 @@ defmodule PanicWeb.TerminalLiveTest do
       # Setup external API patches to avoid real network calls
       Panic.ExternalAPIPatches.setup()
 
-      # Setup web test environment with sync mode and cleanup
-
-      on_exit(fn ->
-        # Teardown API patches
-        Panic.ExternalAPIPatches.teardown()
-      end)
-
       :ok
     end
 
@@ -356,13 +327,6 @@ defmodule PanicWeb.TerminalLiveTest do
     setup do
       # Setup external API patches to avoid real network calls
       Panic.ExternalAPIPatches.setup()
-
-      # Setup web test environment with sync mode and cleanup
-
-      on_exit(fn ->
-        # Teardown API patches
-        Panic.ExternalAPIPatches.teardown()
-      end)
 
       :ok
     end

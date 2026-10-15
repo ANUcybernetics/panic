@@ -19,19 +19,6 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
-  def get_status(prediction_id, token) do
-    [url: "predictions/#{prediction_id}", auth: {:bearer, token}]
-    |> req_new()
-    |> Req.request()
-    |> case do
-      {:ok, %Req.Response{body: body, status: 200}} ->
-        body
-
-      {:ok, %Req.Response{body: %{"detail" => message}, status: status}} when status >= 400 ->
-        {:error, message}
-    end
-  end
-
   def get(prediction_id, token) do
     [url: "predictions/#{prediction_id}", auth: {:bearer, token}]
     |> req_new()
@@ -60,12 +47,6 @@ defmodule Panic.Platforms.Replicate do
       {:error, reason} ->
         {:error, reason}
     end
-  end
-
-  def cancel(prediction_id, token) do
-    [method: :post, url: "predictions/#{prediction_id}/cancel", auth: {:bearer, token}]
-    |> req_new()
-    |> Req.request()
   end
 
   def invoke(model, input, token) do

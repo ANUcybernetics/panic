@@ -23,11 +23,6 @@ defmodule PanicWeb.NetworkLiveTest do
     # Setup external API patches to avoid real network calls
     Panic.ExternalAPIPatches.setup()
 
-    on_exit(fn ->
-      # Teardown API patches
-      Panic.ExternalAPIPatches.teardown()
-    end)
-
     :ok
   end
 

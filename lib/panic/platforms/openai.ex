@@ -4,23 +4,6 @@ defmodule Panic.Platforms.OpenAI do
   @temperature 1.0
   @max_completion_tokens 150
 
-  def list_engines(token) do
-    [url: "/engines", auth: {:bearer, token}]
-    |> req_new()
-    |> Req.request()
-    |> case do
-      {:ok, %Req.Response{body: body, status: 200}} ->
-        %{"data" => data} = body
-        data
-
-      {:ok, %Req.Response{body: %{"error" => %{"message" => message}}}} ->
-        {:error, message}
-
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
-
   def invoke(%Panic.Model{path: path}, input, token) do
     request_body = %{
       model: path,

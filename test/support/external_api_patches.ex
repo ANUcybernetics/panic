@@ -9,8 +9,10 @@ defmodule Panic.ExternalAPIPatches do
 
       setup do
         Panic.ExternalAPIPatches.setup()
-        on_exit(&Panic.ExternalAPIPatches.teardown/0)
       end
+
+  Repatch resets patches after each test, so tests that run invocations call
+  this in their own setup.
 
   ## Patched APIs
 
@@ -32,17 +34,6 @@ defmodule Panic.ExternalAPIPatches do
     setup_model_patches()
     # Archiver patches are already applied in test_helper.exs via ArchiverPatches module
     # Vestaboard is disabled via config :disable_vestaboard in test.exs
-    :ok
-  end
-
-  @doc """
-  Tears down all external API patches.
-
-  This should be called in test cleanup to restore original behavior.
-  """
-  def teardown do
-    # Repatch automatically handles cleanup when patches go out of scope
-    # This is mainly for explicit cleanup if needed
     :ok
   end
 
