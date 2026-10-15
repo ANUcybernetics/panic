@@ -44,7 +44,8 @@ defmodule PanicWeb.AboutLive do
         Panic is the work of <a href="https://benswift.me">Dr. Ben Swift</a>
         as part of his job at
         the <a href="https://cybernetics.anu.edu.au">ANU School of Cybernetics</a>. The core
-        "engine" is an (<a href="https://hexdocs.pm/ash/">Ash</a> + <a href="https://hexdocs.pm/phoenix_live_view/">Phoenix LiveView</a>)
+        "engine" is an (<a href="https://hexdocs.pm/ash/">Ash</a>
+        + <a href="https://hexdocs.pm/phoenix_live_view/">Phoenix LiveView</a>)
         <a href="https://elixir-lang.org">Elixir</a>
         app, and it talks to various different hosted
         GenAI platforms (e.g. <a href="https://replicate.com">Replicate</a>) to run GenAI models

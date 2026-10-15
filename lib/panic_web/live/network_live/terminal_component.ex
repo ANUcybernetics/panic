@@ -132,7 +132,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
   defp lockout_ready_at(genesis_invocation, network) when not is_nil(genesis_invocation) do
-    lockout_end = DateTime.add(genesis_invocation.inserted_at, network.lockout_seconds, :second)
+    lockout_end = DateTime.shift(genesis_invocation.inserted_at, second: network.lockout_seconds)
 
     if DateTime.before?(DateTime.utc_now(), lockout_end) do
       DateTime.to_iso8601(lockout_end)

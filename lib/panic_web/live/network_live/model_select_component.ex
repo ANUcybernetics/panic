@@ -60,8 +60,8 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
           </div>
         <% end %>
       </div>
-      
-    <!-- Model table -->
+
+      <!-- Model table -->
       <%= if @draft_models != [] do %>
         <div class="overflow-y-auto">
           <table class="w-full">
@@ -154,8 +154,8 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
           No models in network. Add a model below to get started.
         </div>
       <% end %>
-      
-    <!-- LiveSelect input -->
+
+      <!-- LiveSelect input -->
       <.form for={@form} id="model-select-form" phx-change="change" phx-target={@myself}>
         <div id="model-select-wrapper" data-refocus={JS.focus(to: "#network_model_select_text_input")}>
           <.live_select
