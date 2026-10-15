@@ -1,15 +1,17 @@
 ---
 id: task-53
 title: network runner state management
-status: To Do
+status: Done
 assignee: []
-created_date: "2025-08-18 06:54"
+created_date: '2025-08-18 06:54'
+updated_date: '2026-10-15 00:54'
 labels: []
 dependencies: []
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Look at the "State management" section in the
 @lib/panic/engine/network_runner.ex moduledoc (and the code in that module). Are
 there any simplifications which could be made to the state management logic?
@@ -131,3 +133,10 @@ Consolidate all timer handling into a single `active_timer` field that gets set/
 4. Migrate all `handle_call` and `handle_info` clauses to pattern match on status
 5. Remove old state fields once migration complete
 6. Update tests to assert on status field
+<!-- SECTION:DESCRIPTION:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Run state moved into the database (Network.current_run_number/run_started_at, Invocation.invoke_after); LiveViews read status and next invocation time from it (a6a7bd17).
+<!-- SECTION:FINAL_SUMMARY:END -->
