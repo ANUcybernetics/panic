@@ -18,6 +18,14 @@ defmodule PanicWeb.UserLiveTest do
       |> assert_has("#users", text: Ash.CiString.value(user.email))
     end
 
+    test "and the removed user form routes show the 404 page", %{conn: conn, user: user} do
+      for path <- [~p"/users/new", "/users/#{user.id}/update-tokens"] do
+        conn
+        |> visit(path)
+        |> assert_has("h1", text: "404 (page not found)")
+      end
+    end
+
     test "and can visit the user index page and click on their own name", %{
       conn: conn,
       user: user

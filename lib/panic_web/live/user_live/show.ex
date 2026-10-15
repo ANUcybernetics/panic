@@ -93,23 +93,6 @@ defmodule PanicWeb.UserLive.Show do
     <.back navigate={~p"/users"}>Back to users</.back>
 
     <.modal
-      :if={@live_action == :update_tokens}
-      id="api-token-modal"
-      show
-      on_cancel={JS.patch(~p"/users/#{@user}")}
-    >
-      <.live_component
-        module={PanicWeb.UserLive.FormComponent}
-        id={@user.id}
-        title={@page_title}
-        action={@live_action}
-        current_user={@current_user}
-        user={@user}
-        navigate={~p"/users/#{@user}"}
-      />
-    </.modal>
-
-    <.modal
       :if={@live_action == :new_network}
       id="new-network-modal"
       show
@@ -154,11 +137,6 @@ defmodule PanicWeb.UserLive.Show do
   end
 
   @impl true
-  def handle_info({PanicWeb.UserLive.FormComponent, {:saved, user}}, socket) do
-    {:noreply, assign(socket, user: user)}
-  end
-
-  @impl true
   def handle_info({PanicWeb.NetworkLive.FormComponent, {:saved, _network}}, socket) do
     # do nothing, because it re-triggers a handle_params, where we just read all the networks from the db
     {:noreply, socket}
@@ -175,6 +153,5 @@ defmodule PanicWeb.UserLive.Show do
   end
 
   defp page_title(:show), do: "Show User"
-  defp page_title(:update_tokens), do: "Update API Tokens"
   defp page_title(:new_network), do: "Add Network"
 end

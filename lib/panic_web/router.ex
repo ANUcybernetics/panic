@@ -59,9 +59,7 @@ defmodule PanicWeb.Router do
       on_mount: [{PanicWeb.LiveUserAuth, :live_user_required}] do
       scope "/users" do
         live "/", UserLive.Index, :index
-        live "/new", UserLive.Index, :new
         live "/:user_id", UserLive.Show, :show
-        live "/:user_id/update-tokens", UserLive.Show, :update_tokens
         live "/:user_id/new-network", UserLive.Show, :new_network
       end
 

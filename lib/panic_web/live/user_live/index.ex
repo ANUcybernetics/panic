@@ -7,11 +7,6 @@ defmodule PanicWeb.UserLive.Index do
     ~H"""
     <.header>
       Listing Users
-      <:actions>
-        <.link patch={~p"/users/new"}>
-          <.button>New User</.button>
-        </.link>
-      </:actions>
     </.header>
 
     <.table
@@ -38,18 +33,6 @@ defmodule PanicWeb.UserLive.Index do
         </.link>
       </:action>
     </.table>
-
-    <.modal :if={@live_action in [:new, :edit]} id="user-modal" show on_cancel={JS.patch(~p"/users")}>
-      <.live_component
-        module={PanicWeb.UserLive.FormComponent}
-        id={(@user && @user.id) || :new}
-        title={@page_title}
-        current_user={@current_user}
-        action={@live_action}
-        user={@user}
-        patch={~p"/users"}
-      />
-    </.modal>
     """
   end
 
@@ -62,31 +45,8 @@ defmodule PanicWeb.UserLive.Index do
   end
 
   @impl true
-  def handle_params(params, _url, socket) do
-    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
-  end
-
-  defp apply_action(socket, :edit, %{"id" => id}) do
-    socket
-    |> assign(:page_title, "Edit User")
-    |> assign(:user, Panic.Accounts.get_user!(id, actor: socket.assigns.current_user))
-  end
-
-  defp apply_action(socket, :new, _params) do
-    socket
-    |> assign(:page_title, "New User")
-    |> assign(:user, nil)
-  end
-
-  defp apply_action(socket, :index, _params) do
-    socket
-    |> assign(:page_title, "Listing Users")
-    |> assign(:user, nil)
-  end
-
-  @impl true
-  def handle_info({PanicWeb.UserLive.FormComponent, {:saved, user}}, socket) do
-    {:noreply, stream_insert(socket, :users, user)}
+  def handle_params(_params, _url, socket) do
+    {:noreply, assign(socket, :page_title, "Listing Users")}
   end
 
   @impl true
