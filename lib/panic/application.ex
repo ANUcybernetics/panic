@@ -21,8 +21,6 @@ defmodule Panic.Application do
       {Phoenix.PubSub, name: Panic.PubSub},
       # Start the Presence supervisor
       PanicWeb.Presence,
-      # Start the Finch HTTP client for sending emails
-      {Finch, name: Panic.Finch},
       # Start a worker by calling: Panic.Worker.start_link(arg)
       # {Panic.Worker, arg},
       # Start to serve requests, typically the last entry

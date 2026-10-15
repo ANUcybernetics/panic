@@ -16,8 +16,6 @@ import Config
 #
 # Alternatively, you can use `mix phx.gen.release` to generate a `bin/server`
 # script that automatically sets the env var above.
-alias Swoosh.Adapters.Postmark
-
 if System.get_env("PHX_SERVER") do
   config :panic, PanicWeb.Endpoint, server: true
 end
@@ -72,31 +70,6 @@ if config_env() == :prod do
   #
   # Check `Plug.SSL` for all available options in `force_ssl`.
 
-  # ## Configuring the mailer
-  #
-  # In production you need to configure the mailer to use a different adapter.
-  # Also, you may need to configure the Swoosh API client of your choice if you
-  # are not using SMTP. Here is an example of the configuration:
-  #
-  #     config :panic, Panic.Mailer,
-  #       adapter: Swoosh.Adapters.Mailgun,
-  #       api_key: System.get_env("MAILGUN_API_KEY"),
-  #       domain: System.get_env("MAILGUN_DOMAIN")
-  #
-  # For this example you need include a HTTP client required by Swoosh API client.
-  # Swoosh supports Hackney and Finch out of the box:
-  #
-  #     config :swoosh, :api_client, Swoosh.ApiClient.Hackney
-  #
-  # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
-
-  # Configure Swoosh with Postmark adapter
-  config :panic, Panic.Mailer,
-    adapter: Postmark,
-    api_key: System.get_env("POSTMARK_API_KEY"),
-    message_stream: "outbound",
-    from_email: System.get_env("FROM_EMAIL", "panic@benswift.me")
-
   config :panic, Panic.Repo,
     database: database_path,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
@@ -124,7 +97,4 @@ if config_env() == :prod do
     token_signing_secret:
       System.get_env("TOKEN_SIGNING_SECRET") ||
         raise("Missing environment variable `TOKEN_SIGNING_SECRET`!")
-
-  # Configure Swoosh API client to use Finch (already in deps)
-  config :swoosh, :api_client, Swoosh.ApiClient.Finch
 end

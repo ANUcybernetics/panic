@@ -7,8 +7,6 @@
 # General application configuration
 import Config
 
-alias Swoosh.Adapters.Local
-
 # because I'm mostly using integer primary keys - better for sqlite
 config :ash, :default_belongs_to_type, :integer
 
@@ -53,15 +51,6 @@ config :panic, Oban,
   pruner: [max_age: {1, :day}],
   repo: Panic.Repo,
   cron: [crontab: []]
-
-# Configures the mailer
-#
-# By default it uses the "Local" adapter which stores the emails
-# locally. You can see the emails in your browser, at "/dev/mailbox".
-#
-# For production it's recommended to configure a different adapter
-# at the `config/runtime.exs`.
-config :panic, Panic.Mailer, adapter: Local
 
 # SQLite has a single writer. Ash wraps write actions in BEGIN IMMEDIATE
 # transactions; :immediate makes direct Repo.transaction/2 calls (Oban's, for

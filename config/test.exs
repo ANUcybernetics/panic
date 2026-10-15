@@ -1,7 +1,5 @@
 import Config
 
-alias Swoosh.Adapters.Test
-
 config :ash, policies: [show_policy_breakdowns?: true], disable_async?: true
 
 # Do NOT set this value for production
@@ -16,7 +14,6 @@ config :bcrypt_elixir, log_rounds: 1
 config :logger, level: :warning
 
 config :panic, Oban, testing: :manual
-config :panic, Panic.Mailer, adapter: Test
 
 config :panic, Panic.Repo,
   database: Path.expand("../panic_test.db", __DIR__),
@@ -48,8 +45,4 @@ config :phoenix_live_view,
 config :phoenix_test, :endpoint, PanicWeb.Endpoint
 
 # useful for debugging authorization policy issues
-
-config :swoosh, :api_client, false
-
-# Disable swoosh api client as it is only required for production adapters.
 # config :ash, :policies, log_policy_breakdowns: :error
