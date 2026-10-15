@@ -18,8 +18,6 @@ defmodule Panic.NetworkRunnerAsyncTest do
   alias Panic.Platforms.Dummy
   alias Phoenix.Socket.Broadcast
 
-  require Ash.Query
-
   @moduletag :capture_log
 
   setup do

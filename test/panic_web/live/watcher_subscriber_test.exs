@@ -513,7 +513,6 @@ defmodule PanicWeb.WatcherSubscriberTest do
   end
 
   defp normalise_display({:single, offset, stride}), do: {:single, offset, stride, false}
-  defp normalise_display(display), do: display
 
   defp matches_display_criteria?(_sequence_number, {:grid, _rows, _cols}) do
     true

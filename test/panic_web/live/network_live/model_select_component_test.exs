@@ -100,8 +100,6 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponentTest do
     end
   end
 
-  defp valid_model_chain?([]), do: false
-
   defp valid_model_chain?(model_ids) do
     models = Enum.map(model_ids, &Panic.Model.by_id!/1)
 

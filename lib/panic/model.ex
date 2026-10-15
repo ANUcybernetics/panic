@@ -27,8 +27,6 @@ defmodule Panic.Model do
   alias Panic.Platforms.OpenAI
   alias Panic.Platforms.Replicate
 
-  require Logger
-
   @enforce_keys [:id, :path, :name, :platform, :input_type, :output_type, :invoke]
   defstruct [
     :id,

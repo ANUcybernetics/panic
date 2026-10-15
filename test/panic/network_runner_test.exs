@@ -10,8 +10,6 @@ defmodule Panic.NetworkRunnerTest do
   alias Panic.Engine.NetworkRunner
   alias Panic.NetworkRunnerTestHelpers
 
-  require Ash.Query
-
   @moduletag :capture_log
 
   setup do

@@ -64,17 +64,11 @@ defmodule PanicWeb.PanicComponents do
 
   attr :id, :string, required: true
   slot :inner_block, required: true
-  slot :input, doc: "Optional input to render in the top left corner"
 
   def invocation_container(assigns) do
     ~H"""
     <div id={@id} class="relative aspect-video overflow-hidden">
       {render_slot(@inner_block)}
-      <%= if @input && false do %>
-        <div class="absolute top-0 left-0 aspect-video h-1/3">
-          {render_slot(@input)}
-        </div>
-      <% end %>
     </div>
     """
   end
@@ -107,9 +101,6 @@ defmodule PanicWeb.PanicComponents do
     ~H"""
     <.invocation_container id={@id}>
       <.invocation_slot id={@id} type={@model.output_type} value={@invocation.output} />
-      <:input>
-        <.invocation_slot id={"#{@id}-input"} type={@model.input_type} value={@invocation.input} />
-      </:input>
     </.invocation_container>
     """
   end

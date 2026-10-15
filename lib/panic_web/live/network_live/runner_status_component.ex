@@ -122,8 +122,6 @@ defmodule PanicWeb.NetworkLive.RunnerStatusComponent do
     end
   end
 
-  defp format_run_age(nil), do: "N/A"
-
   defp format_run_age(genesis_invocation) do
     now = DateTime.utc_now()
     inserted_at = Map.get(genesis_invocation, :inserted_at)
