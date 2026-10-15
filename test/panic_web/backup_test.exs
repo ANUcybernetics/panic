@@ -30,6 +30,7 @@ defmodule PanicWeb.BackupTest do
       |> assert_has("button", text: "Download backup")
     end
 
+    @tag :capture_log
     test "backup endpoint returns 403 for non-admin users", %{conn: conn} do
       %{conn: conn, user: _user} = Helpers.create_and_sign_in_user(%{conn: conn})
 

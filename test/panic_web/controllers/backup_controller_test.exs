@@ -10,6 +10,7 @@ defmodule PanicWeb.BackupControllerTest do
       assert json_response(conn, 403) == %{"error" => "Forbidden"}
     end
 
+    @tag :capture_log
     test "returns forbidden for non-admin users", %{conn: conn} do
       %{conn: conn, user: _user} = Helpers.create_and_sign_in_user(%{conn: conn})
       conn = get(conn, ~p"/admin/backup")
