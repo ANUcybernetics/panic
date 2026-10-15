@@ -16,6 +16,7 @@ defmodule PanicWeb.UserLiveTest do
       |> visit("/users")
       |> assert_has("#current-user-email", text: Ash.CiString.value(user.email))
       |> assert_has("#users", text: Ash.CiString.value(user.email))
+      |> refute_has("#users a", text: "Delete")
     end
 
     test "and the removed user form routes show the 404 page", %{conn: conn, user: user} do

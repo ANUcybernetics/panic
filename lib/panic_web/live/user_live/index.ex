@@ -23,15 +23,6 @@ defmodule PanicWeb.UserLive.Index do
           <.link navigate={~p"/users/#{user}"}>Show</.link>
         </div>
       </:action>
-
-      <:action :let={{id, user}}>
-        <.link
-          phx-click={JS.push("delete", value: %{id: user.id}) |> hide("##{id}")}
-          data-confirm="Are you sure?"
-        >
-          Delete
-        </.link>
-      </:action>
     </.table>
     """
   end
@@ -47,13 +38,5 @@ defmodule PanicWeb.UserLive.Index do
   @impl true
   def handle_params(_params, _url, socket) do
     {:noreply, assign(socket, :page_title, "Listing Users")}
-  end
-
-  @impl true
-  def handle_event("delete", %{"id" => id}, socket) do
-    user = Panic.Accounts.get_user!(id, actor: socket.assigns.current_user)
-    Panic.Accounts.destroy_user!(user, actor: socket.assigns.current_user)
-
-    {:noreply, stream_delete(socket, :users, user)}
   end
 end
