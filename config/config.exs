@@ -25,6 +25,10 @@ config :ash,
   many_to_many_destroy_destination_on_match?: true,
   infer_generic_action_reactors?: false
 
+config :ash_json_api,
+  show_public_calculations_when_loaded?: false,
+  authorize_update_destroy_with_error?: true
+
 config :ash_oban, actor_persister: Panic.Accounts.ActorPersister, pro?: false
 
 # Configure esbuild (the version is required)
@@ -40,6 +44,10 @@ config :esbuild,
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
+
+config :mime,
+  extensions: %{"json" => "application/vnd.api+json"},
+  types: %{"application/vnd.api+json" => ["json"]}
 
 config :panic, Oban,
   engine: Oban.Engines.Lite,
@@ -87,6 +95,7 @@ config :spark,
     remove_parens?: true,
     "Ash.Resource": [
       section_order: [
+        :json_api,
         :authentication,
         :tokens,
         :resource,
@@ -105,7 +114,9 @@ config :spark,
         :identities
       ]
     ],
-    "Ash.Domain": [section_order: [:resources, :policies, :authorization, :domain, :execution]]
+    "Ash.Domain": [
+      section_order: [:json_api, :resources, :policies, :authorization, :domain, :execution]
+    ]
   ]
 
 # Configure tailwind (the version is required)

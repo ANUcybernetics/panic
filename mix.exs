@@ -40,6 +40,8 @@ defmodule Panic.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:open_api_spex, "~> 3.22"},
+      {:ash_json_api, "~> 1.7"},
       {:ash_oban, "~> 0.10"},
       {:oban, "~> 2.24"},
       {:sourceror, "~> 1.8", only: [:dev, :test]},
@@ -96,7 +98,7 @@ defmodule Panic.MixProject do
           "ash-framework": [
             description:
               "Load before changing or debugging anything in lib/panic/ (modules that use Ash.Resource or Ash.Domain): actions, changes, policies, signals, AshOban triggers, AshSqlite migrations, AshAuthentication, AshPhoenix forms, or an Ash.Error.* in test output.",
-            usage_rules: [:ash, :ash_oban, :ash_phoenix, :ash_authentication]
+            usage_rules: [:ash, :ash_oban, :ash_phoenix, :ash_authentication, :ash_json_api]
           ],
           "phoenix-framework": [
             description:
