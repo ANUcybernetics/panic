@@ -50,6 +50,16 @@ config :logger, :console,
 # at the `config/runtime.exs`.
 config :panic, Panic.Mailer, adapter: Local
 
+# SQLite has a single writer. Ash wraps write actions in BEGIN IMMEDIATE
+# transactions; :immediate makes direct Repo.transaction/2 calls (Oban's, for
+# example) take the write lock up front too, since a deferred transaction that
+# upgrades mid-way fails at once regardless of busy_timeout. Keep busy_timeout
+# above timeout so a contended write waits for the caller's deadline.
+config :panic, Panic.Repo,
+  timeout: 15_000,
+  busy_timeout: 16_000,
+  default_transaction_mode: :immediate
+
 # Configures the endpoint
 config :panic, PanicWeb.Endpoint,
   url: [host: "localhost"],

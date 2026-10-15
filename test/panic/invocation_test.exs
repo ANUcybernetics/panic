@@ -11,6 +11,21 @@ defmodule Panic.InvocationTest do
     :ok
   end
 
+  describe "write transactions" do
+    test "a failing after_action hook rolls back the insert" do
+      user = Panic.Fixtures.user()
+      network = Panic.Fixtures.network_with_dummy_models(user)
+
+      assert {:error, _} =
+               Invocation
+               |> Ash.Changeset.for_create(:prepare_first, %{network: network, input: "rollback"}, actor: user)
+               |> Ash.Changeset.after_action(fn _changeset, _invocation -> {:error, "boom"} end)
+               |> Ash.create()
+
+      assert [] = Ash.read!(Invocation, authorize?: false)
+    end
+  end
+
   describe "Invocation CRUD operations" do
     property "accepts valid input with non-empty networks" do
       user = Panic.Fixtures.user()
