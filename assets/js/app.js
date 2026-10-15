@@ -58,11 +58,11 @@ const RunnerCountdown = {
     const updateDisplay = () => {
       const now = new Date();
       const diff = Math.max(0, Math.floor((this.targetTime - now) / 1000));
-      
+
       if (this.displayEl) {
         this.displayEl.textContent = diff.toString();
       }
-      
+
       if (diff <= 0 && this.timer) {
         clearInterval(this.timer);
         this.timer = null;
@@ -74,7 +74,7 @@ const RunnerCountdown = {
 
     // Then update every second
     this.timer = setInterval(updateDisplay, 1000);
-  }
+  },
 };
 
 const hooks = {
@@ -82,12 +82,10 @@ const hooks = {
   PhoenixCustomEventHook,
   RunnerCountdown,
   TerminalLockoutTimer,
-  ...live_select
+  ...live_select,
 };
 
-let csrfToken = document
-  .querySelector("meta[name='csrf-token']")
-  .getAttribute("content");
+let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
 
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,

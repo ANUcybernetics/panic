@@ -7,10 +7,10 @@ const path = require("path");
 
 module.exports = {
   content: [
-    "./js/**/*.js", 
-    "../lib/panic_web.ex", 
+    "./js/**/*.js",
+    "../lib/panic_web.ex",
     "../lib/panic_web/**/*.*ex",
-    "../deps/live_select/lib/live_select/component.*ex"
+    "../deps/live_select/lib/live_select/component.*ex",
   ],
   safelist: [
     "grid-cols-1",
@@ -97,28 +97,16 @@ module.exports = {
     //     <div class="phx-click-loading:animate-ping">
     //
     plugin(({ addVariant }) =>
-      addVariant("phx-no-feedback", [
-        ".phx-no-feedback&",
-        ".phx-no-feedback &",
-      ]),
+      addVariant("phx-no-feedback", [".phx-no-feedback&", ".phx-no-feedback &"]),
     ),
     plugin(({ addVariant }) =>
-      addVariant("phx-click-loading", [
-        ".phx-click-loading&",
-        ".phx-click-loading &",
-      ]),
+      addVariant("phx-click-loading", [".phx-click-loading&", ".phx-click-loading &"]),
     ),
     plugin(({ addVariant }) =>
-      addVariant("phx-submit-loading", [
-        ".phx-submit-loading&",
-        ".phx-submit-loading &",
-      ]),
+      addVariant("phx-submit-loading", [".phx-submit-loading&", ".phx-submit-loading &"]),
     ),
     plugin(({ addVariant }) =>
-      addVariant("phx-change-loading", [
-        ".phx-change-loading&",
-        ".phx-change-loading &",
-      ]),
+      addVariant("phx-change-loading", [".phx-change-loading&", ".phx-change-loading &"]),
     ),
 
     // Embeds Heroicons (https://heroicons.com) into your app.css bundle
