@@ -71,7 +71,7 @@ defmodule Panic.MixProject do
       {:gettext, "~> 1.0"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2"},
-      {:bandit, "~> 1.2"},
+      {:bandit, "~> 1.12"},
       {:req, "~> 0.5"},
       {:req_s3, "~> 0.2"},
       {:tower, "~> 0.6"},
