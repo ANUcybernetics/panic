@@ -100,7 +100,8 @@ defmodule Panic.NetworkTest do
             actor: user
           )
 
-        assert network.name == input.name
+        # string attributes are trimmed
+        assert network.name == String.trim(input.name)
         # FIXME there might be an issue here with "" vs nil?
         # assert network.description == input.description
         assert network.models == []
