@@ -32,7 +32,7 @@ defmodule Panic.Release do
               password: password,
               password_confirmation: password
             })
-            |> Ash.create!()
+            |> Ash.create!(authorize?: false)
 
             IO.puts("User created: #{email}")
 

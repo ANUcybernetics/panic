@@ -62,7 +62,7 @@ defmodule Panic.Generators do
         :register_with_password,
         %{email: email, password: password, password_confirmation: password}
       )
-      |> Ash.create!()
+      |> Ash.create!(authorize?: false)
     end
   end
 

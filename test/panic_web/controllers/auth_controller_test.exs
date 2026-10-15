@@ -19,6 +19,20 @@ defmodule PanicWeb.AuthControllerTest do
       |> assert_has("a", text: "About")
     end
 
+    test "visitors can't register an account", %{conn: conn} do
+      email = "stranger-#{System.unique_integer([:positive])}@example.com"
+
+      params = %{
+        "email" => email,
+        "password" => "longenough1",
+        "password_confirmation" => "longenough1"
+      }
+
+      post(conn, "/auth/user/password/register", %{"user" => params})
+
+      assert {:error, _} = Ash.get(Panic.Accounts.User, %{email: email}, authorize?: false)
+    end
+
     test "user sees error with invalid credentials", %{conn: conn} do
       password = "password123"
       user = Fixtures.user(password)

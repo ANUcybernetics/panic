@@ -16,6 +16,8 @@ defmodule Panic.Accounts.User do
       password :password do
         identity_field :email
         sign_in_tokens_enabled? false
+        # accounts are created by an operator (Panic.Release), not by visitors
+        registration_enabled? false
       end
 
       api_key :api_key do
@@ -46,12 +48,57 @@ defmodule Panic.Accounts.User do
   actions do
     defaults [:read, :destroy]
 
-    # Admin-only action to grant/revoke admin status
     update :set_admin do
       accept [:admin]
+    end
 
-      # Only admins can change admin status
-      # We'll add a policy for this
+    read :sign_in_with_password do
+      description "Attempt to sign in using a email and password."
+      get? true
+
+      argument :email, :ci_string do
+        description "The email to use for retrieving the user."
+        allow_nil? false
+      end
+
+      argument :password, :string do
+        description "The password to check for the matching user."
+        allow_nil? false
+        sensitive? true
+      end
+
+      # validates the provided email and password and generates a token
+      prepare AshAuthentication.Strategy.Password.SignInPreparation
+
+      metadata :token, :string do
+        description "A JWT that can be used to authenticate the user."
+        allow_nil? false
+      end
+    end
+
+    create :register_with_password do
+      description "Register a new user with a email and password."
+
+      argument :email, :ci_string do
+        allow_nil? false
+      end
+
+      argument :password, :string do
+        description "The proposed password for the user, in plain text."
+        allow_nil? false
+        constraints min_length: 8
+        sensitive? true
+      end
+
+      argument :password_confirmation, :string do
+        description "The proposed password for the user (again), in plain text."
+        allow_nil? false
+        sensitive? true
+      end
+
+      change set_attribute(:email, arg(:email))
+      change AshAuthentication.Strategy.Password.HashPasswordChange
+      validate AshAuthentication.Strategy.Password.PasswordConfirmationValidation
     end
 
     read :get_by_subject do
@@ -72,16 +119,13 @@ defmodule Panic.Accounts.User do
       authorize_if always()
     end
 
-    # in future, update this so that only role: admin users can create new users (although)
-    # there may still be a bootstrapping problem there?
-    policy action_type(:create) do
-      authorize_if always()
+    # creating and destroying users is left to operators (authorize?: false)
+    policy action_type(:read) do
+      authorize_if expr(id == ^actor(:id))
     end
 
-    # can only read & update User if the actor is the User being updated
-    policy_group expr(id == ^actor(:id)) do
-      policy action_type(:read), do: authorize_if(always())
-      policy action_type(:update), do: authorize_if(always())
+    policy action(:set_admin) do
+      authorize_if actor_attribute_equals(:admin, true)
     end
   end
 
