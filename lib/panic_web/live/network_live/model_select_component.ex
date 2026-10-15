@@ -156,7 +156,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
       <% end %>
       
     <!-- LiveSelect input -->
-      <.form for={@form} phx-change="change" phx-target={@myself}>
+      <.form for={@form} id="model-select-form" phx-change="change" phx-target={@myself}>
         <div id="model-select-wrapper" data-refocus={JS.focus(to: "#network_model_select_text_input")}>
           <.live_select
             field={@form[:model_select]}
