@@ -101,7 +101,12 @@ defmodule PanicWeb.PanicComponents do
   def invocation(assigns) do
     ~H"""
     <.invocation_container id={@id}>
-      <.invocation_slot id={@id} type={@model.output_type} value={@invocation.output} />
+      <.invocation_slot
+        id={@id}
+        type={@model.output_type}
+        value={@invocation.output}
+        alt={if @model.input_type == :text, do: @invocation.input, else: ""}
+      />
     </.invocation_container>
     """
   end
@@ -109,6 +114,7 @@ defmodule PanicWeb.PanicComponents do
   attr :type, :atom, required: true, doc: "the type (modality) of the invocation input or output"
   attr :value, :string, required: true, doc: "the value of the invocation input or output"
   attr :id, :string, required: true
+  attr :alt, :string, default: "", doc: "alt text for an image (the prompt, when it was text)"
 
   def invocation_slot(%{type: :text} = assigns) do
     assigns = assign(assigns, :parsed_content, parse_text_content(assigns.value))
@@ -127,7 +133,7 @@ defmodule PanicWeb.PanicComponents do
 
   def invocation_slot(%{type: :image} = assigns) do
     ~H"""
-    <img class="object-cover size-full" src={@value} />
+    <img class="object-cover size-full" src={@value} alt={@alt} />
     """
   end
 
