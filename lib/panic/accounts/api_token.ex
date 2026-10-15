@@ -52,6 +52,8 @@ defmodule Panic.Accounts.APIToken do
 
     destroy :destroy do
       primary? true
+      # before the delete, because the join rows' foreign keys aren't deferred
+      change cascade_destroy(:user_api_tokens, after_action?: false)
     end
   end
 
@@ -139,6 +141,7 @@ defmodule Panic.Accounts.APIToken do
   relationships do
     many_to_many :users, Panic.Accounts.User do
       through Panic.Accounts.UserAPIToken
+      join_relationship :user_api_tokens
       source_attribute :id
       destination_attribute :id
     end
