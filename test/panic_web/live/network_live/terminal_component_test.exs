@@ -21,6 +21,34 @@ defmodule PanicWeb.NetworkLive.TerminalComponentTest do
     end
   end
 
+  describe "start-run errors" do
+    test "a network with no models says so", %{conn: conn, owner: owner} do
+      network = Panic.Fixtures.network(owner)
+      auth_token = PanicWeb.TerminalAuth.generate_token(network.id)
+
+      conn
+      |> visit("/networks/#{network.id}/terminal?token=#{auth_token}")
+      |> fill_in("Prompt", with: "test prompt")
+      |> submit()
+      |> assert_has("[role=alert]", text: "No models in network")
+    end
+
+    test "a second prompt during the lockout asks the visitor to wait", %{
+      conn: conn,
+      network: network
+    } do
+      auth_token = PanicWeb.TerminalAuth.generate_token(network.id)
+
+      conn
+      |> visit("/networks/#{network.id}/terminal?token=#{auth_token}")
+      |> fill_in("Prompt", with: "first prompt")
+      |> submit()
+      |> fill_in("Prompt", with: "second prompt")
+      |> submit()
+      |> assert_has("[role=alert]", text: "Please wait before starting a new run")
+    end
+  end
+
   describe "error handling for missing API tokens" do
     test "starting a run without the model's API token keeps the terminal usable", %{
       conn: conn,

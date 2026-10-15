@@ -44,6 +44,9 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
           data-ready-at={lockout_ready_at(@genesis_invocation, @network)}
         />
       </.simple_form>
+      <p :if={@run_error} id={"#{@id}-run-error"} role="alert" class="mt-2 text-rose-400">
+        {@run_error}
+      </p>
     </div>
     """
   end
@@ -53,6 +56,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
     {:ok,
      socket
      |> assign(assigns)
+     |> assign_new(:run_error, fn -> nil end)
      |> assign_form()}
   end
 
@@ -76,16 +80,24 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
     case Panic.Engine.start_run(network, prompt, actor: network.user) do
       {:ok, genesis_invocation} ->
         notify_parent({:genesis_invocation, genesis_invocation})
-        socket = assign(socket, :genesis_invocation, genesis_invocation)
+        socket = assign(socket, genesis_invocation: genesis_invocation, run_error: nil)
         {:noreply, assign_form(socket)}
 
-      {:error, %Ash.Error.Invalid{errors: [%RunLocked{} | _]}} ->
-        {:noreply, put_flash(socket, :error, "Please wait before starting a new run")}
-
+      # shown inline: a flash set in a live component is dropped unless it navigates
       {:error, error} ->
-        {:noreply, put_flash(socket, :error, Exception.message(error))}
+        {:noreply, assign(socket, :run_error, run_error_message(error))}
     end
   end
+
+  defp run_error_message(%Ash.Error.Invalid{errors: [%RunLocked{} | _]}), do: "Please wait before starting a new run"
+
+  defp run_error_message(%{errors: [_ | _] = errors}) do
+    Enum.map_join(errors, "; ", fn error ->
+      Map.get(error, :message) || Exception.message(error)
+    end)
+  end
+
+  defp run_error_message(error), do: Exception.message(error)
 
   defp assign_form(%{assigns: %{network: network}} = socket) do
     form =
