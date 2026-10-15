@@ -28,6 +28,51 @@ defmodule PanicWeb.AdminLive do
     </.header>
 
     <section class="mt-16">
+      <h2 class="text-xl font-semibold">API keys</h2>
+      <p class="mt-2 text-sm">
+        Keys for the JSON API at <code>/api</code>
+        (<.link href={~p"/api/swaggerui"} class="underline">docs</.link>), sent as <code>Authorization: Bearer &lt;key&gt;</code>. They act as you, and stop working if you stop being an admin.
+      </p>
+
+      <div :if={@new_api_key} id="new-api-key" class="mt-4">
+        <p>Copy this key now: it won't be shown again.</p>
+        <code class="mt-2 block break-all select-all">{@new_api_key}</code>
+      </div>
+
+      <.simple_form for={@api_key_form} id="api-key-form" phx-submit="create_api_key">
+        <.input field={@api_key_form[:name]} label="Name" required />
+        <.input
+          field={@api_key_form[:expires_in]}
+          type="select"
+          label="Expires"
+          options={[{"Never", "never"}, {"In 30 days", "30"}, {"In a year", "365"}]}
+        />
+        <:actions>
+          <.button>Create API key</.button>
+        </:actions>
+      </.simple_form>
+
+      <.table :if={@api_keys != []} id="api-key-table" rows={@api_keys} row_id={&"api-key-#{&1.id}"}>
+        <:col :let={api_key} label="Name">{api_key.name}</:col>
+        <:col :let={api_key} label="Created">
+          {Calendar.strftime(api_key.inserted_at, "%Y-%m-%d")}
+        </:col>
+        <:col :let={api_key} label="Expires">
+          {if api_key.expires_at, do: Calendar.strftime(api_key.expires_at, "%Y-%m-%d"), else: "never"}
+        </:col>
+        <:action :let={api_key}>
+          <.button
+            phx-click="revoke_api_key"
+            phx-value-id={api_key.id}
+            data-confirm={"Revoke #{api_key.name}? Anything using it will stop working."}
+          >
+            Revoke
+          </.button>
+        </:action>
+      </.table>
+    </section>
+
+    <section class="mt-16">
       <h2 class="text-xl font-semibold">Invocations</h2>
 
       <.table id="all-invocation-table" rows={@streams.invocations}>
@@ -81,7 +126,8 @@ defmodule PanicWeb.AdminLive do
 
     {:ok,
      socket
-     |> assign(networks: networks)
+     |> assign(networks: networks, new_api_key: nil)
+     |> assign_api_keys()
      |> stream(:invocations, [])}
   end
 
@@ -118,6 +164,56 @@ defmodule PanicWeb.AdminLive do
 
     {:noreply, put_flash(socket, :info, message)}
   end
+
+  @impl true
+  def handle_event("create_api_key", %{"api_key" => params}, socket) do
+    actor = socket.assigns.current_user
+
+    case Panic.Accounts.create_api_key(
+           params["name"],
+           %{expires_at: expires_at(params["expires_in"])},
+           actor: actor
+         ) do
+      {:ok, api_key} ->
+        {:noreply,
+         socket
+         |> assign(new_api_key: api_key.__metadata__.plaintext_api_key)
+         |> assign_api_keys()}
+
+      {:error, _error} ->
+        {:noreply, put_flash(socket, :error, "Couldn't create the API key: give it a name")}
+    end
+  end
+
+  @impl true
+  def handle_event("revoke_api_key", %{"id" => id}, socket) do
+    actor = socket.assigns.current_user
+    api_key = Enum.find(socket.assigns.api_keys, &(&1.id == id))
+    :ok = Panic.Accounts.destroy_api_key(api_key, actor: actor)
+
+    {:noreply,
+     socket
+     |> assign(new_api_key: nil)
+     |> assign_api_keys()
+     |> put_flash(:info, "Revoked #{api_key.name}")}
+  end
+
+  defp assign_api_keys(socket) do
+    api_keys =
+      Panic.Accounts.list_api_keys!(
+        actor: socket.assigns.current_user,
+        query: [sort: [inserted_at: :desc]]
+      )
+
+    assign(socket,
+      api_keys: api_keys,
+      api_key_form: to_form(%{"name" => "", "expires_in" => "never"}, as: :api_key)
+    )
+  end
+
+  defp expires_at("30"), do: DateTime.shift(DateTime.utc_now(), day: 30)
+  defp expires_at("365"), do: DateTime.shift(DateTime.utc_now(), day: 365)
+  defp expires_at(_never), do: nil
 
   defp invocation_io_link(%{type: :input} = assigns) do
     model = NetworkHelpers.get_model_or_placeholder(assigns.invocation.model)

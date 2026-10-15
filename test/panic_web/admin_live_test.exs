@@ -58,4 +58,49 @@ defmodule PanicWeb.AdminLiveTest do
       |> assert_has("h2", text: "Networks")
     end
   end
+
+  describe "API keys" do
+    test "creating a key shows it once and it works against the API", %{conn: conn, user: user} do
+      session =
+        conn
+        |> visit("/admin")
+        |> fill_in("Name", with: "my laptop")
+        |> select("Expires", option: "In 30 days")
+        |> click_button("Create API key")
+        |> assert_has("#api-key-table td", text: "my laptop")
+
+      [%{name: "my laptop", expires_at: expires_at}] = Panic.Accounts.list_api_keys!(actor: user)
+      assert DateTime.diff(expires_at, DateTime.utc_now(), :day) in 29..30
+
+      html =
+        session.view
+        |> Phoenix.LiveViewTest.element("#new-api-key code")
+        |> Phoenix.LiveViewTest.render()
+
+      [key] = Regex.run(~r/panic_[\w-]+/, html)
+
+      assert build_conn()
+             |> put_req_header("authorization", "Bearer " <> key)
+             |> get("/api/networks")
+             |> json_response(200)
+
+      # the plaintext is gone after a reload
+      conn
+      |> visit("/admin")
+      |> refute_has("#new-api-key")
+    end
+
+    test "revoking a key removes it", %{conn: conn, user: user} do
+      Panic.Accounts.create_api_key!("old key", actor: user)
+
+      conn
+      |> visit("/admin")
+      |> assert_has("#api-key-table td", text: "old key")
+      |> click_button("#api-key-table button", "Revoke")
+      |> assert_has("#flash-info", text: "Revoked old key")
+      |> refute_has("#api-key-table")
+
+      assert Panic.Accounts.list_api_keys!(actor: user) == []
+    end
+  end
 end
