@@ -53,5 +53,3 @@ config :swoosh, :api_client, false
 
 # Disable swoosh api client as it is only required for production adapters.
 # config :ash, :policies, log_policy_breakdowns: :error
-# Configure TowerEmail.Mailer to use Test adapter in tests
-config :tower_email, TowerEmail.Mailer, adapter: Test

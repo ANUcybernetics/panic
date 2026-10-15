@@ -133,18 +133,4 @@ config :tailwind,
     cd: Path.expand("../assets", __DIR__)
   ]
 
-# Configure Tower for error tracking
-config :tower, reporters: [TowerEmail]
-
-# Configure TowerEmail.Mailer to use the Local adapter in dev
-# This will be overridden in runtime.exs for production  
-config :tower_email, TowerEmail.Mailer, adapter: Local
-
-# Configure TowerEmail reporter
-config :tower_email,
-  otp_app: :panic,
-  from: {"Panic Error Reporter", "panic@benswift.me"},
-  to: System.get_env("ERROR_EMAIL_TO", "ben@benswift.me"),
-  environment: to_string(config_env())
-
 import_config "#{config_env()}.exs"

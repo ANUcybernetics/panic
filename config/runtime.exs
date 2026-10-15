@@ -127,11 +127,4 @@ if config_env() == :prod do
 
   # Configure Swoosh API client to use Finch (already in deps)
   config :swoosh, :api_client, Swoosh.ApiClient.Finch
-
-  # Configure TowerEmail.Mailer with Postmark adapter for production
-  config :tower_email, TowerEmail.Mailer,
-    adapter: Postmark,
-    api_key: System.get_env("POSTMARK_API_KEY"),
-    message_stream: "outbound",
-    from_email: System.get_env("FROM_EMAIL", "panic@benswift.me")
 end
