@@ -6,6 +6,8 @@
 app = 'panic'
 primary_region = 'syd'
 kill_signal = 'SIGTERM'
+# lets Oban finish in-flight invocations (see shutdown_grace_period)
+kill_timeout = 30
 
 [build]
 

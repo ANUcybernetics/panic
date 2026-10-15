@@ -47,7 +47,9 @@ config :panic, Oban,
   engine: Oban.Engines.Lite,
   notifier: Oban.Notifiers.PG,
   queues: [default: 10, invocations: 10, archiver: 2, vestaboards: 1],
-  lifeline: [rescue_after: {2, :hours}],
+  # invocations interrupted by a deploy or Fly autostop retry after this long
+  lifeline: [rescue_after: {30, :minutes}],
+  shutdown_grace_period: to_timeout(second: 25),
   pruner: [max_age: {1, :day}],
   repo: Panic.Repo,
   cron: [crontab: []]
