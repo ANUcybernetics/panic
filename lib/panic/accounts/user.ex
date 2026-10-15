@@ -17,6 +17,11 @@ defmodule Panic.Accounts.User do
         identity_field :email
         sign_in_tokens_enabled? false
       end
+
+      api_key :api_key do
+        api_key_relationship :valid_api_keys
+        api_key_hash_attribute :api_key_hash
+      end
     end
 
     add_ons do
@@ -54,6 +59,11 @@ defmodule Panic.Accounts.User do
       argument :subject, :string, allow_nil?: false
       get? true
       prepare AshAuthentication.Preparations.FilterBySubject
+    end
+
+    read :sign_in_with_api_key do
+      argument :api_key, :string, allow_nil?: false
+      prepare AshAuthentication.Strategy.ApiKey.SignInPreparation
     end
   end
 
@@ -93,6 +103,10 @@ defmodule Panic.Accounts.User do
       through Panic.Accounts.UserAPIToken
       source_attribute :id
       destination_attribute :id
+    end
+
+    has_many :valid_api_keys, Panic.Accounts.ApiKey do
+      filter expr(valid)
     end
   end
 
