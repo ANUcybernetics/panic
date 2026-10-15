@@ -12,6 +12,7 @@ defmodule Panic.MixProject do
       consolidate_protocols: Mix.env() != :dev,
       aliases: aliases(),
       deps: deps(),
+      usage_rules: usage_rules(),
       releases: [
         panic: [
           priv_patterns: ["priv/static/**", "priv/repo/**"]
@@ -86,6 +87,31 @@ defmodule Panic.MixProject do
     ]
   end
 
+  # `mix usage_rules.sync` (part of `mix setup`) writes these into CLAUDE.md and
+  # .claude/skills, which is gitignored
+  defp usage_rules do
+    [
+      file: "CLAUDE.md",
+      usage_rules: ["usage_rules:all"],
+      skills: [
+        location: ".claude/skills",
+        build: [
+          "ash-framework": [
+            description:
+              "Load before changing or debugging anything in lib/panic/ (modules that use Ash.Resource or Ash.Domain): actions, changes, policies, signals, AshOban triggers, AshSqlite migrations, AshAuthentication, AshPhoenix forms, or an Ash.Error.* in test output.",
+            usage_rules: [:ash, :ash_oban, :ash_phoenix, :ash_authentication]
+          ],
+          "phoenix-framework": [
+            description:
+              "Load before changing or debugging anything in lib/panic_web/: LiveViews, function components, HEEx templates, the router, controllers or PubSub broadcasts.",
+            usage_rules: [:phoenix]
+          ]
+        ],
+        deps: [:mdex]
+      ]
+    ]
+  end
+
   # Aliases are shortcuts or tasks specific to the current project.
   # For example, to install project dependencies and perform other setup tasks, run:
   #
@@ -94,7 +120,7 @@ defmodule Panic.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build"],
+      setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build", "usage_rules.sync --yes"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ash.setup --quiet", "test"],
