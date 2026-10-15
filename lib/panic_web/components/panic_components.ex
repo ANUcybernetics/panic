@@ -89,7 +89,7 @@ defmodule PanicWeb.PanicComponents do
   def invocation(%{invocation: %Invocation{state: state}} = assigns) when state in [:ready, :invoking] do
     ~H"""
     <.invocation_container id={@id}>
-      <div class="size-full grid place-items-center animate-breathe bg-rose-500 @container">
+      <div class="size-full grid place-items-center motion-safe:animate-breathe bg-rose-500 @container">
         <div class="text-[25cqw]">
           <.shadowed_text>P!</.shadowed_text>
         </div>
@@ -191,7 +191,7 @@ defmodule PanicWeb.PanicComponents do
   def panic_button(assigns) do
     ~H"""
     <div class={[
-      "rounded-full grid place-items-center animate-breathe bg-rose-500",
+      "rounded-full grid place-items-center motion-safe:animate-breathe bg-rose-500",
       @class
     ]}>
       <.shadowed_text>PANIC!</.shadowed_text>

@@ -36,8 +36,8 @@ module.exports = {
       },
       keyframes: {
         breathe: {
-          "0%, 100%": { opacity: "0.3", fontWeight: "900" },
-          "50%": { opacity: "1", fontWeight: "100" },
+          "0%, 100%": { opacity: "0.3" },
+          "50%": { opacity: "1" },
         },
       },
       animation: {
