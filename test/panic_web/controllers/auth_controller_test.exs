@@ -38,7 +38,7 @@ defmodule PanicWeb.AuthControllerTest do
       |> visit("/users")
       |> assert_has("h1", text: "Listing Users")
 
-      conn = get(conn, "/sign-out")
+      conn = delete(conn, "/sign-out")
       assert redirected_to(conn) == "/"
 
       Phoenix.ConnTest.build_conn()

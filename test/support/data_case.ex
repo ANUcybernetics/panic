@@ -89,6 +89,7 @@ defmodule Panic.DataCase do
 
           # Build the nested structure
           path
+          |> Enum.reject(&is_integer/1)
           |> Enum.reverse()
           |> Enum.reduce(nested_value, fn key, value ->
             %{key => value}
@@ -120,6 +121,7 @@ defmodule Panic.DataCase do
 
             # Build the nested structure
             path
+            |> Enum.reject(&is_integer/1)
             |> Enum.reverse()
             |> Enum.reduce(nested_value, fn key, value ->
               %{key => value}
@@ -143,6 +145,7 @@ defmodule Panic.DataCase do
 
           # Build the nested structure
           path
+          |> Enum.reject(&is_integer/1)
           |> Enum.reverse()
           |> Enum.reduce(nested_value, fn key, value ->
             %{key => value}

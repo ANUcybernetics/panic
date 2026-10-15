@@ -21,7 +21,11 @@ config :ash,
   keep_read_action_loads_when_loading?: false,
   default_actions_require_atomic?: true,
   read_action_after_action_hooks_in_order?: true,
-  bulk_actions_default_to_errors?: true
+  bulk_actions_default_to_errors?: true,
+  redact_sensitive_values_in_errors?: true,
+  default_string_length_count: :codepoints,
+  many_to_many_destroy_destination_on_match?: true,
+  infer_generic_action_reactors?: false
 
 # Configure esbuild (the version is required)
 config :esbuild,
