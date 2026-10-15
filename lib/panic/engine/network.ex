@@ -7,7 +7,8 @@ defmodule Panic.Engine.Network do
     domain: Panic.Engine,
     data_layer: AshSqlite.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    notifiers: [Ash.Notifier.PubSub]
+    notifiers: [Ash.Notifier.PubSub],
+    extensions: [AshJsonApi.Resource]
 
   alias Panic.Engine.Invocation
   alias Panic.Engine.Signals
@@ -15,6 +16,10 @@ defmodule Panic.Engine.Network do
   sqlite do
     table "networks"
     repo Panic.Repo
+  end
+
+  json_api do
+    type "network"
   end
 
   resource do
@@ -62,6 +67,19 @@ defmodule Panic.Engine.Network do
       change set_attribute(:current_run_number, nil)
       change set_attribute(:run_started_at, nil)
     end
+
+    action :start_run, :struct do
+      description "Start a run with the given input, replacing the current run unless it's locked out."
+      constraints instance_of: __MODULE__
+      argument :id, :integer, allow_nil?: false
+      argument :input, :string, allow_nil?: false
+      run Panic.Engine.Actions.StartNetworkRun
+    end
+
+    action :list_models, {:array, :map} do
+      description "Every model a network can use, with its input and output types."
+      run Panic.Engine.Actions.ListModels
+    end
   end
 
   policies do
@@ -80,6 +98,11 @@ defmodule Panic.Engine.Network do
     policy action_type(:destroy) do
       authorize_if relates_to_actor_via(:user)
     end
+
+    # :start_run reads the network with the actor, so only its owner gets through
+    policy action([:start_run, :list_models]) do
+      authorize_if actor_present()
+    end
   end
 
   # lets viewers of a network see runs start and stop
@@ -95,35 +118,38 @@ defmodule Panic.Engine.Network do
     # attribute :owner
     attribute :name, :string do
       allow_nil? false
+      public? true
     end
 
-    attribute :description, :string
+    attribute :description, :string, public?: true
 
     # :models is an ordered array of model id strings
     attribute :models, {:array, :string} do
       default []
       allow_nil? false
+      public? true
     end
 
     attribute :lockout_seconds, :integer do
       default 30
       allow_nil? false
+      public? true
     end
 
     # the run_number (genesis invocation id) of the run in progress, nil when idle
-    attribute :current_run_number, :integer
-    attribute :run_started_at, :utc_datetime_usec
+    attribute :current_run_number, :integer, public?: true
+    attribute :run_started_at, :utc_datetime_usec, public?: true
 
-    create_timestamp :inserted_at
-    update_timestamp :updated_at
+    create_timestamp :inserted_at, public?: true
+    update_timestamp :updated_at, public?: true
     # attribute :schedule
     # attribute :backoff
   end
 
   relationships do
     belongs_to :user, Panic.Accounts.User, allow_nil?: false
-    has_many :invocations, Invocation
-    has_many :installations, Panic.Watcher.Installation
+    has_many :invocations, Invocation, public?: true
+    has_many :installations, Panic.Watcher.Installation, public?: true
   end
 
   signals_in do

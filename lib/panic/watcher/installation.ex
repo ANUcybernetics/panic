@@ -28,7 +28,8 @@ defmodule Panic.Watcher.Installation do
     domain: Panic.Watcher,
     data_layer: AshSqlite.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    notifiers: [Ash.Notifier.PubSub]
+    notifiers: [Ash.Notifier.PubSub],
+    extensions: [AshJsonApi.Resource]
 
   alias Panic.Engine.Network
   alias Panic.Engine.Signals
@@ -38,6 +39,10 @@ defmodule Panic.Watcher.Installation do
   sqlite do
     table "installations"
     repo Panic.Repo
+  end
+
+  json_api do
+    type "installation"
   end
 
   resource do
@@ -130,20 +135,24 @@ defmodule Panic.Watcher.Installation do
 
     attribute :name, :string do
       allow_nil? false
+      public? true
     end
 
     attribute :watchers, {:array, Config} do
       default []
       allow_nil? false
+      public? true
     end
 
-    create_timestamp :inserted_at
-    update_timestamp :updated_at
+    create_timestamp :inserted_at, public?: true
+    update_timestamp :updated_at, public?: true
   end
 
   relationships do
     belongs_to :network, Network do
       allow_nil? false
+      public? true
+      attribute_public? true
     end
   end
 

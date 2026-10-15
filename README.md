@@ -33,6 +33,22 @@ going on:
 - **installation** a specific configuration of watchers (probably representing a
   physical install, but not necessarily)
 
+## JSON API
+
+Admins can drive PANIC! over a [JSON:API](https://jsonapi.org) at `/api`: create
+and edit networks and installations, start and stop runs, and read invocations.
+Mint a key on the admin page (`/admin`) and send it as a bearer token. The full
+reference is at `/api/swaggerui`.
+
+```bash
+curl -H "Authorization: Bearer $PANIC_API_KEY" https://panic.fly.dev/api/networks
+
+curl -X PATCH -H "Authorization: Bearer $PANIC_API_KEY" \
+  -H "Content-Type: application/vnd.api+json" \
+  -d '{"data": {"attributes": {"input": "a cat on a mat"}}}' \
+  https://panic.fly.dev/api/networks/1/start_run
+```
+
 ## Running an installation
 
 The physical displays are Raspberry Pi kiosks that boot straight into their

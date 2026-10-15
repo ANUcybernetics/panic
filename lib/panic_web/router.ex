@@ -2,6 +2,10 @@ defmodule PanicWeb.Router do
   use PanicWeb, :router
   use AshAuthentication.Phoenix.Router
 
+  import PanicWeb.ApiAuth, only: [require_admin: 2]
+
+  alias Panic.Accounts.User
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -14,7 +18,25 @@ defmodule PanicWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug :load_from_bearer
+
+    plug AshAuthentication.Strategy.ApiKey.Plug,
+      resource: User,
+      required?: false,
+      on_error: &PanicWeb.ApiAuth.unauthorized/2
+
+    plug :require_admin
+  end
+
+  scope "/api" do
+    forward "/swaggerui", OpenApiSpex.Plug.SwaggerUI,
+      path: "/api/open_api",
+      default_model_expand_depth: 4
+  end
+
+  scope "/api" do
+    pipe_through :api
+
+    forward "/", PanicWeb.AshJsonApiRouter
   end
 
   scope "/", PanicWeb do
@@ -29,7 +51,7 @@ defmodule PanicWeb.Router do
     )
 
     sign_out_route AuthController
-    auth_routes AuthController, Panic.Accounts.User
+    auth_routes AuthController, User
     reset_route auth_routes_prefix: "/auth"
 
     # Routes that don't need WatcherSubscriber
@@ -120,12 +142,6 @@ defmodule PanicWeb.Router do
     # "static" pages (still liveviews, though)
     live "/about", AboutLive, :index
   end
-
-  # Other scopes may use custom stacks.
-
-  # scope "/api", PanicWeb do
-  #   pipe_through :api
-  # end
 
   # Enable LiveDashboard in development
   if Application.compile_env(:panic, :dev_routes) do

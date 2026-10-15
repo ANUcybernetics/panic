@@ -18,6 +18,10 @@ time. It's an Ash + Phoenix LiveView app on SQLite. The domain glossary
 - `Panic.Accounts` --- users and API tokens (AshAuthentication)
 - `PanicWeb.WatcherSubscriber` --- LiveView `on_mount` hook that subscribes to a
   network's broadcasts, tracks presence and maintains the `:invocations` stream
+- JSON API --- `ash_json_api` routes are declared in the `json_api` blocks of
+  the `Panic.Engine` and `Panic.Watcher` domains; `PanicWeb.ApiAuth` limits it
+  to admins' API keys (`Panic.Accounts.ApiKey`). A resource attribute only
+  appears in the API if it's `public? true`
 
 ## How a run works
 
@@ -52,6 +56,7 @@ transactions (`Panic.Repo.write_transactions?/0`).
   patches from `test_helper.exs`; reapply them with
   `Panic.Test.ArchiverPatches.apply_patches/0` where archive jobs run
 - give identity attributes unique values (see the Ash usage rules)
+- API tests use `PanicWeb.ApiHelpers` (`admin_with_api_key/0`, `api_conn/1`)
 
 ## Development
 

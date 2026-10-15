@@ -103,45 +103,54 @@ defmodule Panic.Watcher.Installation.Config do
 
   attributes do
     attribute :type, :atom do
+      public? true
       allow_nil? false
       constraints one_of: [:grid, :single, :vestaboard]
     end
 
     # Name for all config types - human-readable, alphanumeric + hyphens
     attribute :name, :string do
+      public? true
       allow_nil? false
       constraints match: ~r/^[a-zA-Z0-9-]+$/
     end
 
     # Grid-specific attributes
     attribute :rows, :integer do
+      public? true
       constraints min: 1
     end
 
     attribute :columns, :integer do
+      public? true
       constraints min: 1
     end
 
     # Single/Vestaboard-specific attributes
     attribute :stride, :integer do
+      public? true
       constraints min: 1
     end
 
     attribute :offset, :integer do
+      public? true
       constraints min: 0
     end
 
     # Single/Vestaboard-specific attributes
     attribute :show_invoking, :boolean do
+      public? true
       default false
     end
 
     # Vestaboard-specific attributes
     attribute :vestaboard_name, :atom do
+      public? true
       constraints one_of: [:panic_1, :panic_2, :panic_3, :panic_4]
     end
 
     attribute :initial_prompt, :boolean do
+      public? true
       default false
     end
   end

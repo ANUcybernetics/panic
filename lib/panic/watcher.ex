@@ -6,10 +6,27 @@ defmodule Panic.Watcher do
   associated watchers that define how invocations should be presented to users.
   """
 
-  use Ash.Domain, extensions: [AshPhoenix]
+  use Ash.Domain, extensions: [AshPhoenix, AshJsonApi.Domain]
+
+  alias Panic.Watcher.Installation
+
+  json_api do
+    routes do
+      base_route "/installations", Installation do
+        index :read
+        get :read
+        post :create
+        patch :update
+        delete :destroy
+        patch :add_watcher, route: "/:id/add_watcher"
+        patch :update_watcher, route: "/:id/update_watcher"
+        patch :remove_watcher, route: "/:id/remove_watcher"
+      end
+    end
+  end
 
   resources do
-    resource Panic.Watcher.Installation do
+    resource Installation do
       define :get_installation, action: :read, get_by: [:id]
       define :list_installations, action: :read
       define :destroy_installation, action: :destroy

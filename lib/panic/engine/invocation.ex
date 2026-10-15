@@ -21,7 +21,7 @@ defmodule Panic.Engine.Invocation do
     data_layer: AshSqlite.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub],
-    extensions: [AshOban]
+    extensions: [AshOban, AshJsonApi.Resource]
 
   alias Panic.Engine.Network
   alias Panic.Engine.Signals
@@ -29,6 +29,10 @@ defmodule Panic.Engine.Invocation do
   sqlite do
     table "invocations"
     repo Panic.Repo
+  end
+
+  json_api do
+    type "invocation"
   end
 
   resource do
@@ -51,7 +55,12 @@ defmodule Panic.Engine.Invocation do
   end
 
   actions do
-    defaults [:read, :destroy]
+    defaults [:destroy]
+
+    read :read do
+      primary? true
+      pagination offset?: true, keyset?: true, required?: false, default_limit: 100
+    end
 
     create :start_run do
       accept [:input]
@@ -157,36 +166,39 @@ defmodule Panic.Engine.Invocation do
   attributes do
     integer_primary_key :id
 
-    attribute :input, :string, allow_nil?: false
+    attribute :input, :string, allow_nil?: false, public?: true
 
     attribute :state, :atom do
       constraints one_of: [:ready, :invoking, :completed, :failed]
       allow_nil? false
       default :ready
+      public? true
     end
 
-    attribute :model, :string, allow_nil?: false
-    attribute :metadata, :map, allow_nil?: false, default: %{}
-    attribute :output, :string
+    attribute :model, :string, allow_nil?: false, public?: true
+    attribute :metadata, :map, allow_nil?: false, default: %{}, public?: true
+    attribute :output, :string, public?: true
 
     attribute :sequence_number, :integer do
       constraints min: 0
       allow_nil? false
+      public? true
     end
 
     attribute :run_number, :integer do
       constraints min: 0
+      public? true
     end
 
     # when the :invoke trigger is scheduled to run this invocation
-    attribute :invoke_after, :utc_datetime_usec
+    attribute :invoke_after, :utc_datetime_usec, public?: true
 
-    create_timestamp :inserted_at
-    update_timestamp :updated_at
+    create_timestamp :inserted_at, public?: true
+    update_timestamp :updated_at, public?: true
   end
 
   relationships do
-    belongs_to :network, Network, allow_nil?: false
+    belongs_to :network, Network, allow_nil?: false, public?: true, attribute_public?: true
   end
 
   signals_in do
