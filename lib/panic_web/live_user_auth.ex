@@ -22,4 +22,20 @@ defmodule PanicWeb.LiveUserAuth do
       {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/sign-in")}
     end
   end
+
+  def on_mount(:live_admin_required, _params, _session, socket) do
+    case socket.assigns[:current_user] do
+      %{admin: true} ->
+        {:cont, socket}
+
+      nil ->
+        {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/sign-in")}
+
+      _user ->
+        {:halt,
+         socket
+         |> Phoenix.LiveView.put_flash(:error, "Only admins can access that page")
+         |> Phoenix.LiveView.redirect(to: ~p"/")}
+    end
+  end
 end

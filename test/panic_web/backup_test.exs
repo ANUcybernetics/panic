@@ -10,16 +10,6 @@ defmodule PanicWeb.BackupTest do
   alias PanicWeb.Helpers
 
   describe "backup download from admin panel" do
-    test "non-admin users don't see the backup button", %{conn: conn} do
-      # Create and sign in as regular user
-      %{conn: conn, user: _user} = Helpers.create_and_sign_in_user(%{conn: conn})
-
-      # Navigate to admin panel
-      conn
-      |> visit("/admin")
-      |> refute_has("button", text: "Download backup")
-    end
-
     test "admin users can see the backup button", %{conn: conn} do
       # Create and sign in as admin user
       %{conn: conn, user: _admin} = Helpers.create_and_sign_in_admin_user(%{conn: conn})
@@ -68,14 +58,19 @@ defmodule PanicWeb.BackupTest do
   end
 
   describe "admin panel access" do
-    test "regular users can access admin panel but see limited functionality", %{conn: conn} do
+    test "regular users are redirected home", %{conn: conn} do
       %{conn: conn, user: _user} = Helpers.create_and_sign_in_user(%{conn: conn})
 
       conn
       |> visit("/admin")
-      |> assert_has("h1", text: "Admin panel")
-      |> assert_has("button", text: "Stop all jobs")
-      |> refute_has("button", text: "Download backup")
+      |> assert_path("/")
+      |> assert_has("#flash-error", text: "Only admins can access that page")
+    end
+
+    test "signed-out visitors are sent to sign in", %{conn: conn} do
+      conn
+      |> visit("/admin")
+      |> assert_path("/sign-in")
     end
 
     test "admin users see full functionality in admin panel", %{conn: conn} do

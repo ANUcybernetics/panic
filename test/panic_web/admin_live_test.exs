@@ -5,7 +5,7 @@ defmodule PanicWeb.AdminLiveTest do
 
   alias Panic.Engine
 
-  setup {PanicWeb.Helpers, :create_and_sign_in_user}
+  setup {PanicWeb.Helpers, :create_and_sign_in_admin_user}
 
   setup %{user: user} do
     network1 = network_with_dummy_models(user)

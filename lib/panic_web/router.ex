@@ -54,11 +54,6 @@ defmodule PanicWeb.Router do
         live "/:id/show/edit_watcher/:name", InstallationLive.Show, :edit_watcher
       end
 
-      live "/admin", AdminLive, :index
-
-      # Database backup endpoint
-      get "/admin/backup", BackupController, :download
-
       # API Token management
       scope "/api_tokens" do
         live "/", APITokenLive.Index, :index
@@ -69,6 +64,14 @@ defmodule PanicWeb.Router do
         live "/:id/show/edit", APITokenLive.Show, :edit
       end
     end
+
+    ash_authentication_live_session :admin_required,
+      on_mount: [{PanicWeb.LiveUserAuth, :live_admin_required}] do
+      live "/admin", AdminLive, :index
+    end
+
+    # Database backup endpoint (checks for an admin itself)
+    get "/admin/backup", BackupController, :download
 
     # Routes that need WatcherSubscriber (authenticated)
     ash_authentication_live_session :authentication_required_with_watcher,
