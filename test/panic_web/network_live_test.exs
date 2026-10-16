@@ -40,7 +40,6 @@ defmodule PanicWeb.NetworkLiveTest do
     end
 
     test "can visit the terminal for a runnable network", %{conn: conn, user: user} do
-      # TODO currently I can't get PhoenixTest to fill out the LiveSelect yet, so fake it for now
       network = user |> Panic.Generators.network_with_dummy_models() |> pick()
 
       visit(conn, "/networks/#{network.id}/terminal")

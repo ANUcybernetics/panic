@@ -22,7 +22,6 @@ import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import topbar from "../vendor/topbar";
 import PhoenixCustomEventHook from "phoenix-custom-event-hook";
-import live_select from "live_select";
 
 // LiveView hooks
 
@@ -84,7 +83,6 @@ const hooks = {
   PhoenixCustomEventHook,
   RunnerCountdown,
   TerminalLockoutTimer,
-  ...live_select,
 };
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");

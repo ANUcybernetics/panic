@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "audiomotion-analyzer": "^4.5.1",
-    "phoenix-custom-event-hook": "^0.0.6",
-    "live_select": "file:../deps/live_select"
+    "phoenix-custom-event-hook": "^0.0.6"
   }
 }

@@ -45,7 +45,6 @@ defmodule Panic.MixProject do
       {:ash_oban, "~> 0.10"},
       {:oban, "~> 2.24"},
       {:sourceror, "~> 1.8", only: [:dev, :test]},
-      {:live_select, "~> 1.0"},
       {:repatch, "~> 1.0"},
       {:usage_rules, "~> 1.2", only: [:dev, :test]},
       {:tidewave, "~> 0.1", only: [:dev]},

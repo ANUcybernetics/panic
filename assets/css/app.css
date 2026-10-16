@@ -2,7 +2,6 @@
 @source "../css";
 @source "../js";
 @source "../../lib/panic_web";
-@source "../../deps/live_select/lib/live_select";
 @source "../../deps/ash_authentication_phoenix/lib";
 /* grid watchers pick their column count at runtime */
 @source inline("grid-cols-{1,2,3,4,5,6,7,8,9,10,11,12}");

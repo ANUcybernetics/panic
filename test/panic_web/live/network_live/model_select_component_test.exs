@@ -4,18 +4,18 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponentTest do
   """
   use PanicWeb.ConnCase, async: false
 
+  alias Panic.Engine.Network
   alias PanicWeb.Helpers
 
   describe "component rendering" do
     setup {Helpers, :create_and_sign_in_user}
 
-    test "renders LiveSelect component with correct attributes", %{conn: conn, user: user} do
+    test "renders the model picker", %{conn: conn, user: user} do
       network = create_test_network(user)
 
       conn
       |> visit(~p"/networks/#{network}")
-      |> assert_has("#model-select-input")
-      |> assert_has("input[placeholder='Add model...']")
+      |> assert_has("input[list='model-options'][placeholder='Add a model that takes text...']")
       |> assert_has("span", text: "Valid network")
       |> assert_has("td", text: "Dummy Text-to-Text")
     end
@@ -63,20 +63,76 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponentTest do
       |> click_button("button[phx-click='remove_model'][phx-value-index='0']", "")
       |> click_button("Save Network")
 
-      updated_network = Ash.get!(Panic.Engine.Network, network.id, actor: user)
+      updated_network = Ash.get!(Network, network.id, actor: user)
       assert updated_network.models == ["dummy-t2t", "dummy-t2t"]
     end
   end
 
-  describe "LiveSelect search functionality" do
+  describe "adding models" do
     setup {Helpers, :create_and_sign_in_user}
 
-    test "renders LiveSelect dropdown element", %{conn: conn, user: user} do
-      network = create_test_network(user)
+    test "only offers models that take the last model's output", %{conn: conn, user: user} do
+      network = create_test_network(user, [])
+
+      session =
+        conn
+        |> visit(~p"/networks/#{network}")
+        |> assert_has("#model-options option[value='Dummy Text-to-Image']")
+        |> refute_has("#model-options option[value='Dummy Image-to-Text']")
+        |> fill_in("Add model", with: "Dummy Text-to-Image")
+
+      session
+      |> assert_has("td", text: "Dummy Text-to-Image")
+      |> assert_has("input[placeholder='Add a model that takes image...']")
+      |> assert_has("#model-options option[value='Dummy Image-to-Text']")
+      |> refute_has("#model-options option[value='Dummy Text-to-Image']")
+    end
+
+    test "picking models builds a network that can be saved", %{conn: conn, user: user} do
+      network = create_test_network(user, [])
 
       conn
       |> visit(~p"/networks/#{network}")
-      |> assert_has("#model-select-input")
+      |> fill_in("Add model", with: "Dummy Text-to-Image")
+      |> fill_in("Add model", with: "dummy image-to-text")
+      |> assert_has("span", text: "Valid network")
+      |> click_button("Save Network")
+
+      assert Ash.get!(Network, network.id, actor: user).models == [
+               "dummy-t2i",
+               "dummy-i2t"
+             ]
+    end
+
+    test "Enter adds the only model matching partial text", %{conn: conn, user: user} do
+      network = create_test_network(user, [])
+
+      conn
+      |> visit(~p"/networks/#{network}")
+      |> fill_in("Add model", with: "dummy text-to-aud")
+      |> refute_has("td", text: "Dummy Text-to-Audio")
+      |> submit()
+      |> assert_has("td", text: "Dummy Text-to-Audio")
+    end
+
+    test "Enter does nothing when partial text matches several models", %{conn: conn, user: user} do
+      network = create_test_network(user, [])
+
+      conn
+      |> visit(~p"/networks/#{network}")
+      |> fill_in("Add model", with: "dummy text")
+      |> submit()
+      |> assert_has("div", text: "No models in network")
+    end
+
+    test "an invalid network says why", %{conn: conn, user: user} do
+      network = create_test_network(user, [])
+
+      conn
+      |> visit(~p"/networks/#{network}")
+      |> fill_in("Add model", with: "Dummy Text-to-Image")
+      |> assert_has("span", text: "Network doesn't form a cycle")
+      |> assert_has("button[disabled]", text: "Save Network")
     end
   end
 

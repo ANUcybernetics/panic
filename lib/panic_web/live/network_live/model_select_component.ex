@@ -2,8 +2,6 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   @moduledoc false
   use PanicWeb, :live_component
 
-  import LiveSelect
-
   alias Panic.Model
   alias Phoenix.LiveView.JS
 
@@ -25,7 +23,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
             class="flex items-center gap-2"
           >
             <.icon name="hero-exclamation-circle" class="size-5 text-red-500" />
-            <span class="text-sm text-red-500">Invalid</span>
+            <span class="text-sm text-red-500">Invalid: {@validation_error}</span>
           </div>
         </div>
 
@@ -146,28 +144,21 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
         No models in network. Add a model below to get started.
       </div>
 
-      <!-- LiveSelect input -->
-      <.form for={@form} id="model-select-form" phx-change="change" phx-target={@myself}>
-        <div id="model-select-wrapper" data-refocus={JS.focus(to: "#network_model_select_text_input")}>
-          <.live_select
-            field={@form[:model_select]}
-            phx-target={@myself}
-            id="model-select-input"
-            mode={:single}
-            options={@model_options}
-            placeholder="Add model..."
-            debounce={100}
-            update_min_len={0}
-            style={:none}
-            container_class="relative"
-            dropdown_class="absolute rounded-md shadow-lg z-50 bg-zinc-900 border border-zinc-700 inset-x-0 top-full mt-1 max-h-60 overflow-auto"
-            option_class="px-4 py-2 text-zinc-300 cursor-pointer hover:bg-zinc-800"
-            active_option_class="bg-violet-600 text-white"
-            selected_option_class="font-bold text-violet-400"
-            available_option_class="hover:bg-zinc-800"
-            text_input_class="bg-zinc-800 border border-zinc-600 text-zinc-100 placeholder-zinc-500 rounded-md w-full px-3 py-2"
-          />
-        </div>
+      <.form for={%{}} id="model-picker" phx-change="search" phx-submit="add" phx-target={@myself}>
+        <label for={picker_id(@picks)} class="sr-only">Add model</label>
+        <input
+          id={picker_id(@picks)}
+          name="model"
+          type="text"
+          list="model-options"
+          autocomplete="off"
+          placeholder={"Add a model that takes #{@next_input}..."}
+          phx-mounted={if @picks > 0, do: JS.focus()}
+          class="bg-zinc-800 border border-zinc-600 text-zinc-100 placeholder-zinc-500 rounded-md w-full px-3 py-2"
+        />
+        <datalist id="model-options">
+          <option :for={model <- @candidates} value={model.name} />
+        </datalist>
       </.form>
     </div>
     """
@@ -175,262 +166,135 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
 
   @impl true
   def update(assigns, socket) do
-    # Handle missing models gracefully - filter out any that don't exist
-    saved_models =
-      assigns.network.models
-      |> Enum.map(&Model.by_id/1)
-      |> Enum.reject(&is_nil/1)
-
-    # Initialize draft models from saved models if not already set
-    draft_models =
-      if Map.has_key?(socket.assigns, :draft_models) do
-        socket.assigns.draft_models
-      else
-        saved_models
-      end
-
-    next_input = get_next_input_type(draft_models)
-    model_options = get_model_options("", next_input)
-
-    # Validate the current draft
-    {validation_result, validation_error} = validate_network(draft_models)
-
-    # Check if there are unsaved changes
-    has_changes = draft_models != saved_models
+    socket = assign(socket, assigns)
+    saved_models = assigns.network.models |> Enum.map(&Model.by_id/1) |> Enum.reject(&is_nil/1)
 
     {:ok,
      socket
-     |> assign(assigns)
-     |> assign(
-       saved_models: saved_models,
-       draft_models: draft_models,
-       next_input: next_input,
-       model_options: model_options,
-       validation_result: validation_result,
-       validation_error: validation_error,
-       has_changes: has_changes
-     )
-     |> assign_form()}
-  end
-
-  defp get_next_input_type([]), do: :text
-
-  defp get_next_input_type(models) do
-    %Model{output_type: type} = List.last(models)
-
-    type
+     |> assign(saved_models: saved_models)
+     |> assign_new(:picks, fn -> 0 end)
+     |> assign_draft(socket.assigns[:draft_models] || saved_models)}
   end
 
   @impl true
-  def handle_event("live_select_change", %{"text" => text, "id" => live_select_id}, socket) do
-    model_options = get_model_options(text, socket.assigns.next_input)
-
-    # Send updated options back to LiveSelect
-    send_update(LiveSelect.Component, id: live_select_id, options: model_options)
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("change", params, socket) do
-    # Handle selection from LiveSelect
-    # LiveSelect sends both text_input and the actual value
-    case params do
-      %{"network" => %{"model_select" => model_id}} when model_id != "" and model_id != nil ->
-        case Model.by_id(model_id) do
-          nil ->
-            # Model not found - just ignore the selection
-            {:noreply, socket}
-
-          model ->
-            updated_models = socket.assigns.draft_models ++ [model]
-            next_input = model.output_type
-            model_options = get_model_options("", next_input)
-
-            # Validate the updated draft
-            {validation_result, validation_error} = validate_network(updated_models)
-            has_changes = updated_models != socket.assigns.saved_models
-
-            # Clear the LiveSelect input and update options for next input type
-            send_update(LiveSelect.Component,
-              id: "model-select-input",
-              value: nil,
-              options: model_options
-            )
-
-            {:noreply,
-             socket
-             |> assign(
-               draft_models: updated_models,
-               next_input: next_input,
-               model_options: model_options,
-               validation_result: validation_result,
-               validation_error: validation_error,
-               has_changes: has_changes
-             )
-             |> assign_form()
-             |> push_event("js-exec", %{to: "#model-select-wrapper", attr: "data-refocus"})}
-        end
-
-      _ ->
-        # Ignore empty selections or text input changes
-        {:noreply, socket}
+  # picking from the datalist fills in a model's full name, which adds it
+  def handle_event("search", %{"model" => text}, socket) do
+    case exact_match(socket.assigns.candidates, text) do
+      %Model{} = model -> {:noreply, add_model(socket, model)}
+      nil -> {:noreply, socket}
     end
   end
 
-  @impl true
+  # Enter adds the exact match, or the only candidate containing the text
+  def handle_event("add", %{"model" => text}, socket) do
+    candidates = socket.assigns.candidates
+
+    case {exact_match(candidates, text), Enum.filter(candidates, &contains?(text, &1.name))} do
+      {%Model{} = model, _} -> {:noreply, add_model(socket, model)}
+      {nil, [model]} -> {:noreply, add_model(socket, model)}
+      _ -> {:noreply, socket}
+    end
+  end
+
   def handle_event("remove_model", %{"index" => index}, socket) do
-    updated_models = List.delete_at(socket.assigns.draft_models, String.to_integer(index))
-    next_input = get_next_input_type(updated_models)
-    model_options = get_model_options("", next_input)
-
-    # Validate the updated draft
-    {validation_result, validation_error} = validate_network(updated_models)
-    has_changes = updated_models != socket.assigns.saved_models
-
-    {:noreply,
-     assign(socket,
-       draft_models: updated_models,
-       next_input: next_input,
-       model_options: model_options,
-       validation_result: validation_result,
-       validation_error: validation_error,
-       has_changes: has_changes
-     )}
+    {:noreply, assign_draft(socket, List.delete_at(socket.assigns.draft_models, String.to_integer(index)))}
   end
 
-  @impl true
-  def handle_event("save_models", _params, socket) do
-    # Only save if valid
-    if socket.assigns.validation_result == :valid do
-      model_ids = Enum.map(socket.assigns.draft_models, & &1.id)
-
-      case Panic.Engine.update_models(socket.assigns.network, model_ids, actor: socket.assigns.current_user) do
-        {:ok, updated_network} ->
-          notify_parent({:models_updated, updated_network})
-
-          {:noreply,
-           socket
-           |> assign(
-             network: updated_network,
-             saved_models: socket.assigns.draft_models,
-             has_changes: false
-           )
-           |> assign_form()}
-
-        {:error, %Ash.Error.Invalid{errors: errors}} ->
-          # Extract the error message from the validation error
-          error_message =
-            errors
-            |> Enum.map(& &1.message)
-            |> Enum.filter(& &1)
-            |> Enum.join(", ")
-            |> case do
-              "" -> "Failed to save models"
-              msg -> msg
-            end
-
-          {:noreply, put_flash(socket, :error, error_message)}
-
-        {:error, _error} ->
-          # Generic error handling
-          {:noreply, put_flash(socket, :error, "Failed to save models")}
-      end
-    else
-      {:noreply, socket}
-    end
+  def handle_event("move_model_up", %{"index" => index}, socket) do
+    {:noreply, move(socket, String.to_integer(index), -1)}
   end
 
-  @impl true
+  def handle_event("move_model_down", %{"index" => index}, socket) do
+    {:noreply, move(socket, String.to_integer(index), 1)}
+  end
+
   def handle_event("reset_models", _params, socket) do
-    # Reset draft to saved state
-    next_input = get_next_input_type(socket.assigns.saved_models)
-    model_options = get_model_options("", next_input)
-    {validation_result, validation_error} = validate_network(socket.assigns.saved_models)
-
-    {:noreply,
-     assign(socket,
-       draft_models: socket.assigns.saved_models,
-       next_input: next_input,
-       model_options: model_options,
-       validation_result: validation_result,
-       validation_error: validation_error,
-       has_changes: false
-     )}
+    {:noreply, assign_draft(socket, socket.assigns.saved_models)}
   end
 
-  @impl true
-  def handle_event("move_model_up", %{"index" => index_str}, socket) do
-    index = String.to_integer(index_str)
+  def handle_event("save_models", _params, %{assigns: %{validation_result: :valid}} = socket) do
+    model_ids = Enum.map(socket.assigns.draft_models, & &1.id)
 
-    if index > 0 do
-      updated_models = swap_models(socket.assigns.draft_models, index, index - 1)
-      next_input = get_next_input_type(updated_models)
-      model_options = get_model_options("", next_input)
+    case Panic.Engine.update_models(socket.assigns.network, model_ids, actor: socket.assigns.current_user) do
+      {:ok, updated_network} ->
+        notify_parent({:models_updated, updated_network})
 
-      # Validate the updated draft
-      {validation_result, validation_error} = validate_network(updated_models)
-      has_changes = updated_models != socket.assigns.saved_models
+        {:noreply,
+         assign(socket,
+           network: updated_network,
+           saved_models: socket.assigns.draft_models,
+           has_changes: false
+         )}
 
-      {:noreply,
-       assign(socket,
-         draft_models: updated_models,
-         next_input: next_input,
-         model_options: model_options,
-         validation_result: validation_result,
-         validation_error: validation_error,
-         has_changes: has_changes
-       )}
-    else
-      {:noreply, socket}
+      {:error, error} ->
+        message =
+          error
+          |> Ash.Error.to_error_class()
+          |> Map.get(:errors, [])
+          |> Enum.map_join(", ", &Exception.message/1)
+
+        {:noreply, put_flash(socket, :error, if(message == "", do: "Failed to save models", else: message))}
     end
   end
 
-  @impl true
-  def handle_event("move_model_down", %{"index" => index_str}, socket) do
-    index = String.to_integer(index_str)
+  def handle_event("save_models", _params, socket), do: {:noreply, socket}
 
-    if index < length(socket.assigns.draft_models) - 1 do
-      updated_models = swap_models(socket.assigns.draft_models, index, index + 1)
-      next_input = get_next_input_type(updated_models)
-      model_options = get_model_options("", next_input)
+  # a new input id swaps in a fresh, empty input (LiveView won't clear the
+  # value of a focused one), and phx-mounted focuses it for the next pick
+  defp add_model(socket, model) do
+    socket
+    |> update(:picks, &(&1 + 1))
+    |> assign_draft(socket.assigns.draft_models ++ [model])
+  end
 
-      # Validate the updated draft
-      {validation_result, validation_error} = validate_network(updated_models)
-      has_changes = updated_models != socket.assigns.saved_models
+  defp picker_id(picks), do: "model-picker-input-#{picks}"
 
-      {:noreply,
-       assign(socket,
-         draft_models: updated_models,
-         next_input: next_input,
-         model_options: model_options,
-         validation_result: validation_result,
-         validation_error: validation_error,
-         has_changes: has_changes
-       )}
+  defp move(socket, index, offset) do
+    models = socket.assigns.draft_models
+    other = index + offset
+
+    if other in 0..(length(models) - 1)//1 do
+      swapped =
+        models
+        |> List.replace_at(index, Enum.at(models, other))
+        |> List.replace_at(other, Enum.at(models, index))
+
+      assign_draft(socket, swapped)
     else
-      {:noreply, socket}
+      socket
     end
   end
 
-  # Returns tuples {label, value} for LiveSelect compatibility
-  defp get_model_options(search_term, input_type) do
-    [input_type: input_type]
-    |> Model.all()
-    |> Enum.reject(& &1.deprecated)
-    |> Enum.filter(fn model ->
-      String.downcase(model.name) =~ String.downcase(search_term)
-    end)
-    |> Enum.map(fn model -> {model.name, model.id} end)
+  defp assign_draft(socket, models) do
+    next_input = next_input_type(models)
+    {validation_result, validation_error} = validate_network(models)
+
+    assign(socket,
+      draft_models: models,
+      next_input: next_input,
+      candidates: candidates(next_input),
+      validation_result: validation_result,
+      validation_error: validation_error,
+      has_changes: models != socket.assigns.saved_models
+    )
   end
 
-  defp swap_models(models, index1, index2) do
-    model1 = Enum.at(models, index1)
-    model2 = Enum.at(models, index2)
+  defp next_input_type([]), do: :text
+  defp next_input_type(models), do: List.last(models).output_type
 
-    models
-    |> List.replace_at(index1, model2)
-    |> List.replace_at(index2, model1)
+  # the models that can follow one with this output type
+  defp candidates(input_type) do
+    [input_type: input_type] |> Model.all() |> Enum.reject(& &1.deprecated)
+  end
+
+  defp exact_match(candidates, text) do
+    text = text |> String.trim() |> String.downcase()
+    Enum.find(candidates, &(String.downcase(&1.name) == text))
+  end
+
+  defp contains?(text, name) do
+    text = text |> String.trim() |> String.downcase()
+    text != "" and String.contains?(String.downcase(name), text)
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
@@ -450,13 +314,6 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
       end
 
     bg_color
-  end
-
-  defp assign_form(socket) do
-    # Create a simple form just for the LiveSelect component
-    # The actual update is handled via the code interface
-    form = to_form(%{"model_select" => nil}, as: "network")
-    assign(socket, form: form)
   end
 
   # Client-side validation of network models
