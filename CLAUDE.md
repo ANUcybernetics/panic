@@ -9,9 +9,9 @@ time. It's an Ash + Phoenix LiveView app on SQLite. The domain glossary
 
 - `Panic.Engine` --- `Network` (an ordered list of model ids, owned by a user)
   and `Invocation` (one model call: input, output, state, sequence number)
-- `Panic.Model` --- the models, defined in code rather than the database
-  because each needs bespoke code to call its platform and parse the result.
-  Platforms (`lib/panic/platforms/`) implement `invoke(model, input, token)`;
+- `Panic.Model` --- the models, defined in code rather than the database because
+  each needs bespoke code to call its platform and parse the result. Platforms
+  (`lib/panic/platforms/`) implement `invoke(model, input, token)`;
   `Panic.Platforms.Dummy` needs no API token, so use `dummy-*` models in tests
 - `Panic.Watcher` --- `Installation`, a set of watcher configs (grid, single,
   vestaboard) for a network's displays
@@ -31,13 +31,13 @@ Run state lives in the database: `Network.current_run_number` (nil when idle)
 and each invocation's `state` and `invoke_after`. The `Panic.Engine.Invocation`
 moduledoc describes the flow; in short:
 
-- `Invocation :start_run` checks the lockout, creates the genesis invocation
-  and schedules the `:invoke` AshOban trigger at `invoke_after`
+- `Invocation :start_run` checks the lockout, creates the genesis invocation and
+  schedules the `:invoke` AshOban trigger at `invoke_after`
 - invoking emits signals from `Panic.Engine.Signals`, and listeners in
   `signals_in` sections do the rest: the next invocation (inline), ending a
   failed run (inline), archiving and Vestaboards (Oban jobs)
-- the trigger only runs while its invocation is in the network's current run,
-  so stopping or replacing a run is just updating the network
+- the trigger only runs while its invocation is in the network's current run, so
+  stopping or replacing a run is just updating the network
 - timing and Vestaboard rules are pure functions in `Panic.Engine.Schedule` and
   `Panic.Watcher.Vestaboards`
 
@@ -68,29 +68,35 @@ transactions (`Panic.Repo.write_transactions?/0`).
   in dev it lives in the untracked `mise.local.toml`, so run mix through
   `mise exec --`
 - never call `Mix.env()` in application code (it doesn't exist in releases)
-- CI runs `mix compile --warnings-as-errors`, `mix format --check-formatted`
-  and `mix test`
-- releases migrate on boot (`Panic.Application`), so migrations must be safe
-  to run against the production database as-is
+- CI runs `mix compile --warnings-as-errors`, `mix format --check-formatted` and
+  `mix test`
+- releases migrate on boot (`Panic.Application`), so migrations must be safe to
+  run against the production database as-is
+- pushing `main` deploys to Fly (`.github/workflows/fly-deploy.yml`), so set any
+  new secret (`fly secrets set`) before pushing code that needs it
 
 `rpi/` holds the Raspberry Pi kiosk scripts for physical displays (see
 `rpi/README.md`).
 
 <!-- usage-rules-start -->
 <!-- usage_rules-start -->
+
 ## usage_rules usage
-_A config-driven dev tool for Elixir projects to manage AGENTS.md files and agent skills from dependencies_
+
+_A config-driven dev tool for Elixir projects to manage AGENTS.md files and
+agent skills from dependencies_
 
 ## Using Usage Rules
 
-Many packages have usage rules, which you should *thoroughly* consult before taking any
-action. These usage rules contain guidelines and rules *directly from the package authors*.
-They are your best source of knowledge for making decisions.
+Many packages have usage rules, which you should _thoroughly_ consult before
+taking any action. These usage rules contain guidelines and rules _directly from
+the package authors_. They are your best source of knowledge for making
+decisions.
 
 ## Modules & functions in the current app and dependencies
 
-When looking for docs for modules & functions that are dependencies of the current project,
-or for Elixir itself, use `mix usage_rules.docs`
+When looking for docs for modules & functions that are dependencies of the
+current project, or for Elixir itself, use `mix usage_rules.docs`
 
 ```
 # Search a whole module
@@ -103,12 +109,12 @@ mix usage_rules.docs Enum.zip
 mix usage_rules.docs Enum.zip/1
 ```
 
-
 ## Searching Documentation
 
-You should also consult the documentation of any tools you are using, early and often. The best 
-way to accomplish this is to use the `usage_rules.search_docs` mix task. Once you have
-found what you are looking for, use the links in the search results to get more detail. For example:
+You should also consult the documentation of any tools you are using, early and
+often. The best way to accomplish this is to use the `usage_rules.search_docs`
+mix task. Once you have found what you are looking for, use the links in the
+search results to get more detail. For example:
 
 ```
 # Search docs for all packages in the current application, including Elixir
@@ -123,7 +129,6 @@ mix usage_rules.search_docs "making requests" -p req
 # Search only in titles (useful for finding specific functions/modules)
 mix usage_rules.search_docs "Enum.zip" --query-by title
 ```
-
 
 <!-- usage_rules-end -->
 <!-- usage-rules-end -->
