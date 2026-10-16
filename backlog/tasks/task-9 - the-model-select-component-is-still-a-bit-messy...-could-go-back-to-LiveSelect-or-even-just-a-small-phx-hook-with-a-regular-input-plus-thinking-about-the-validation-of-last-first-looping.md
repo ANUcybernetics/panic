@@ -4,9 +4,10 @@ title: >-
   the model select component is still a bit messy... could go back to
   LiveSelect, or even just a small phx-hook with a regular input (plus thinking
   about the validation of last->first looping)
-status: To Do
+status: Done
 assignee: []
-created_date: "2025-07-08"
+created_date: '2025-07-08'
+updated_date: '2026-10-16 06:29'
 labels:
   - ui
   - refactoring
@@ -15,6 +16,7 @@ dependencies: []
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 The @lib/panic/web/live/network*live/model_select_component.ex component is
 currently based on the :autocomplete_input component. However, the :live_select
 component (not installed, but available through Hex) \_might* be a better fit.
@@ -33,3 +35,10 @@ be best to not _have_ to use it).
   network" is now the output type of the just-selected model)
 
 The dropdown should only disappear when focus leaves the component.
+<!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Replaced LiveSelect with a native input + datalist of the compatible models; picking adds and refocuses a fresh input. The invalid indicator shows the chain error, including the last->first cycle check.
+<!-- SECTION:NOTES:END -->
