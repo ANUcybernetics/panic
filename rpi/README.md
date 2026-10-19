@@ -6,11 +6,15 @@ kiosks that boot directly into fullscreen Chromium displaying a specified URL.
 ## Overview
 
 The setup process uses:
-- **install-sdm.sh** - Installs SDM (SD Card Image Management tool) - one-time setup
+
+- **install-sdm.sh** - Installs SDM (SD Card Image Management tool) - one-time
+  setup
 - **pi-setup.sh** - Creates customized Raspberry Pi OS SD cards with kiosk mode
 
 The resulting installation:
-- Boots directly into GPU-accelerated kiosk mode using labwc Wayland compositor (RPi OS default)
+
+- Boots directly into GPU-accelerated kiosk mode using labwc Wayland compositor
+  (RPi OS default)
 - Automatically joins your Tailscale network
 - Supports native display resolutions including 4K at 60Hz
 - Configures WiFi (WPA2 and enterprise 802.1X)
@@ -28,6 +32,7 @@ The resulting installation:
    - HDMI display
 
 2. **Software Requirements (Linux/Ubuntu):**
+
    ```bash
    # Install required tools
    sudo apt-get update
@@ -35,6 +40,7 @@ The resulting installation:
    ```
 
 3. **Install SDM** (one-time setup):
+
    ```bash
    ./install-sdm.sh
    ```
@@ -81,7 +87,8 @@ The resulting installation:
    ./install-sdm.sh
    ```
 2. **Run the setup script** with your desired configuration
-3. **Insert the SD card** when prompted (the script will detect it automatically)
+3. **Insert the SD card** when prompted (the script will detect it
+   automatically)
 4. **Confirm** the SD card device to proceed with flashing
 5. **Wait** for the image to be customized and written (shows progress)
 6. **Remove the SD card** when complete
@@ -96,7 +103,8 @@ After flashing, insert the SD card into the Pi and power on. The Pi will:
 4. Join Tailscale network (if configured)
 5. Start the kiosk session automatically
 
-**First boot takes 2-3 minutes** as most configuration is done during image customization.
+**First boot takes 2-3 minutes** as most configuration is done during image
+customization.
 
 ## Remote Management
 
@@ -136,27 +144,32 @@ tailscale status | grep panic-tv
 ## Troubleshooting
 
 **Pi doesn't join Tailscale network:**
+
 - Verify the Pi has network connectivity
 - Check if Tailscale auth key is still valid
 - Check logs: `sudo journalctl -u tailscaled`
 
 **Display issues:**
+
 - labwc automatically detects and uses native resolution
 - For 4K displays, ensure HDMI cable supports 4K@60Hz
 - Check logs: `journalctl --user -u chromium-kiosk -n 50`
 - Verify display: `wlr-randr` (when logged in via SSH)
 
 **Audio not working:**
+
 - Audio is configured for HDMI output by default
 - Check audio: `pactl info` or `amixer`
 - Test audio: `speaker-test -c 2`
 
 **Can't SSH to Pi:**
+
 - Ensure Pi is on network: ping the hostname or IP
 - If using Tailscale: `tailscale status | grep <hostname>`
 - Check SSH service: `sudo systemctl status ssh`
 
 **WiFi not connecting:**
+
 - Verify credentials are correct
 - Check if WiFi country is set correctly
 - View network status: `nmcli device status`
@@ -166,14 +179,16 @@ tailscale status | grep panic-tv
 
 ### Customizing the Installation
 
-The script uses SDM to pre-customize the image before writing to SD card. Key configuration files:
+The script uses SDM to pre-customize the image before writing to SD card. Key
+configuration files:
 
 - `/usr/local/sdm/kiosk-config` - Configuration parameters
 - `/boot/firmware/kiosk-url.txt` (or `/boot/kiosk-url.txt`) - Current kiosk URL
 
 ### Display Configuration
 
-The kiosk uses labwc compositor with automatic display detection. To modify the labwc configuration post-installation:
+The kiosk uses labwc compositor with automatic display detection. To modify the
+labwc configuration post-installation:
 
 ```bash
 sudo nano /home/panic/.config/labwc/rc.xml
@@ -181,7 +196,8 @@ sudo nano /home/panic/.config/labwc/rc.xml
 
 ### Network Configuration
 
-The script supports both regular WPA2 and enterprise (802.1X) WiFi networks. For other network configurations, you can use NetworkManager after installation:
+The script supports both regular WPA2 and enterprise (802.1X) WiFi networks. For
+other network configurations, you can use NetworkManager after installation:
 
 ```bash
 # List available networks
@@ -193,9 +209,12 @@ nmcli device wifi connect "SSID" password "password"
 
 ## Platform Support
 
-This script is designed for **Linux (Ubuntu)** systems. The previous macOS version has been deprecated due to changes in DietPi that make it incompatible with macOS.
+This script is designed for **Linux (Ubuntu)** systems. The previous macOS
+version has been deprecated due to changes in DietPi that make it incompatible
+with macOS.
 
 For macOS users, we recommend:
+
 1. Using a Linux VM or container
 2. Using a Linux machine for SD card preparation
 3. Using the official Raspberry Pi Imager GUI application
