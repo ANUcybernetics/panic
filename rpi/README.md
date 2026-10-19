@@ -117,7 +117,14 @@ not:
 ./rpi/kiosk.sh status
 ./rpi/kiosk.sh stop     # blank the displays; lets the Fly machine autostop
 ./rpi/kiosk.sh start
+./rpi/kiosk.sh install  # (re)install the units; start and stop also do this
 ```
+
+Besides the dormant flag, the units include a watchdog (`kiosk-watchdog`, run
+every five minutes by `chromium-watchdog.timer`) that restarts Chromium when it
+is stuck on an error page or a crashed renderer. It checks the page over a local
+DevTools port on 9222, so Chromium runs on its own profile in
+`~/.cache/chromium-kiosk`.
 
 For one-off work on a single Pi:
 
