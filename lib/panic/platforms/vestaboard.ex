@@ -8,7 +8,7 @@ defmodule Panic.Platforms.Vestaboard do
     if Application.get_env(:panic, :disable_vestaboard, false) do
       {:ok, "mock-vestaboard-id-#{System.unique_integer([:positive])}"}
     else
-      [method: :post, json: %{"text" => text}, headers: [{"X-Vestaboard-Read-Write-Key", token}]]
+      [method: :post, json: %{"text" => text}, headers: [{"X-Vestaboard-Token", token}]]
       |> req_new()
       |> Req.request()
       |> case do
@@ -35,13 +35,13 @@ defmodule Panic.Platforms.Vestaboard do
   end
 
   def clear(token, board_name \\ "unknown") do
-    # this is a workaround, because the RW API doesn't allow blank messages
+    # this is a workaround, because the Cloud API doesn't allow blank messages
     send_text("P!", token, board_name)
   end
 
   defp req_new(opts) do
     [
-      base_url: "https://rw.vestaboard.com/",
+      base_url: "https://cloud.vestaboard.com/",
       receive_timeout: 10_000
     ]
     |> Keyword.merge(opts)
