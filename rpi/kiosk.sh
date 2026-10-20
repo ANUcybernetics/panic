@@ -39,8 +39,8 @@ on_pi() {
     tailscale ssh "${KIOSK_USER}@${host}" "$@"
 }
 
-# The script ensure_units runs on a Pi. Three pieces, installed on demand so a
-# freshly imaged Pi picks them up without a re-run of pi-setup.sh:
+# The script ensure_units runs on a Pi. Three pieces, installed on demand so any
+# Pi picks them up without reflashing:
 #   - dormant.conf, which is what makes "stopped" stick;
 #   - devtools.conf, which relaunches Chromium with a DevTools port on its own
 #     profile (Chromium ignores the port on the default profile);
