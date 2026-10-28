@@ -18,6 +18,7 @@ defmodule PanicWeb.InstallationLive.Show do
         <.link navigate={~p"/networks/#{@installation.network}"}>
           {@installation.network.name}
         </.link>
+        · Vestaboard hold: {@installation.vestaboard_hold_seconds}s
       </:subtitle>
       <:actions>
         <.link patch={~p"/installations/#{@installation}/show/edit"} phx-click={JS.push_focus()}>

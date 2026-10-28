@@ -4,7 +4,9 @@ defmodule Panic.Engine.Changes.InvokeModel do
 
   1. Before the transaction, the invocation is marked `:invoking` (so watchers
      see it start) and the model is called, which can take minutes, so it
-     must not hold SQLite's write lock.
+     must not hold SQLite's write lock. A successful call then waits until
+     `hold_until`, if it's set, so the output doesn't appear while a
+     Vestaboard is still flipping (see `Panic.Engine.Schedule`).
   2. Inside the transaction, the output and `:completed` state are set, or
      `:failed` if the call failed. A failed call is an outcome, not an action
      error, so the trigger job doesn't retry a model that rejected its input.
@@ -20,6 +22,7 @@ defmodule Panic.Engine.Changes.InvokeModel do
 
   alias Panic.Accounts.PlatformCredentials
   alias Panic.Engine.Network
+  alias Panic.Engine.Schedule
   alias Panic.Engine.Signals
 
   @impl true
@@ -35,6 +38,7 @@ defmodule Panic.Engine.Changes.InvokeModel do
 
     case call_model(changeset.data) do
       {:ok, output} ->
+        wait_for_hold(changeset.data)
         Ash.Changeset.put_context(changeset, :invocation_result, {:ok, output})
 
       {:error, reason} ->
@@ -54,6 +58,12 @@ defmodule Panic.Engine.Changes.InvokeModel do
       {:model, nil} -> {:error, "Model with ID '#{model_id}' no longer exists"}
       {:error, reason} -> {:error, reason}
     end
+  end
+
+  defp wait_for_hold(%{hold_until: hold_until}) do
+    hold_until
+    |> Schedule.remaining_hold_ms(DateTime.utc_now())
+    |> Process.sleep()
   end
 
   defp record_outcome(changeset) do

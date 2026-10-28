@@ -54,14 +54,14 @@ defmodule Panic.Watcher.Installation do
 
     create :create do
       primary? true
-      accept [:name, :watchers]
+      accept [:name, :watchers, :vestaboard_hold_seconds]
       argument :network_id, :integer, allow_nil?: false
 
       change manage_relationship(:network_id, :network, type: :append_and_remove)
     end
 
     update :update do
-      accept [:name, :watchers]
+      accept [:name, :watchers, :vestaboard_hold_seconds]
       argument :network_id, :integer, allow_nil?: true
       require_atomic? false
 
@@ -135,6 +135,15 @@ defmodule Panic.Watcher.Installation do
 
     attribute :name, :string do
       allow_nil? false
+      public? true
+    end
+
+    # how long the next output waits after these Vestaboards are sent text,
+    # so it doesn't appear while they're still flipping
+    attribute :vestaboard_hold_seconds, :integer do
+      allow_nil? false
+      default 10
+      constraints min: 0
       public? true
     end
 

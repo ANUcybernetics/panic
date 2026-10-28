@@ -74,16 +74,11 @@ defmodule Panic.Engine.Changes.StartRun do
   end
 
   defp schedule_first(changeset, network, now) do
-    initial_prompt_hold? =
-      network.installations
-      |> Enum.flat_map(& &1.watchers)
-      |> Vestaboards.shows_initial_prompt?()
+    hold_seconds = Vestaboards.initial_prompt_hold_seconds(network.installations)
 
-    Ash.Changeset.force_change_attribute(
-      changeset,
-      :invoke_after,
-      Schedule.first_invoke_after(now, initial_prompt_hold?)
-    )
+    changeset
+    |> Ash.Changeset.force_change_attribute(:invoke_after, now)
+    |> Ash.Changeset.force_change_attribute(:hold_until, Schedule.hold_until(now, hold_seconds))
   end
 
   defp lockout_ends_at(%Network{current_run_number: nil}), do: nil

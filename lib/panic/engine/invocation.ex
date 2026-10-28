@@ -193,6 +193,9 @@ defmodule Panic.Engine.Invocation do
     # when the :invoke trigger is scheduled to run this invocation
     attribute :invoke_after, :utc_datetime_usec, public?: true
 
+    # the earliest its output may be shown, while a Vestaboard flips
+    attribute :hold_until, :utc_datetime_usec, public?: true
+
     create_timestamp :inserted_at, public?: true
     update_timestamp :updated_at, public?: true
   end

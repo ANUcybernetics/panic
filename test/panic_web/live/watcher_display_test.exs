@@ -33,6 +33,7 @@ defmodule PanicWeb.WatcherDisplayTest do
         %{
           name: "Gallery",
           network_id: network.id,
+          vestaboard_hold_seconds: 0,
           watchers: [
             %{type: :grid, name: "wall", rows: 2, columns: 2},
             %{type: :single, name: "even", stride: 2, offset: 0},

@@ -89,7 +89,7 @@ defmodule Panic.Engine.RunTest do
       assert [_, %{state: :completed}, %{sequence_number: 2}] = invocations(network)
     end
 
-    test "the next invocation waits for the backoff, longer when a Vestaboard shows the output",
+    test "the next invocation starts after the backoff, and holds its output while a Vestaboard flips",
          %{user: user, network: network} do
       Engine.start_run!(network, "hello", actor: user)
       run_next_invocation()
@@ -99,28 +99,50 @@ defmodule Panic.Engine.RunTest do
                       1_000,
                       500
 
-      create_installation(user, network, [
-        vestaboard("board-1", stride: 2, offset: 1, name: :panic_1)
-      ])
+      assert next.hold_until == nil
+
+      create_installation(
+        user,
+        network,
+        [vestaboard("board-1", stride: 2, offset: 1, name: :panic_1)],
+        vestaboard_hold_seconds: 12
+      )
 
       run_next_invocation()
       assert [_, _, held] = invocations(network)
 
       assert_in_delta DateTime.diff(held.invoke_after, DateTime.utc_now(), :millisecond),
-                      8_000,
+                      1_000,
+                      500
+
+      assert_in_delta DateTime.diff(held.hold_until, DateTime.utc_now(), :millisecond),
+                      12_000,
                       500
     end
 
-    test "a starting run holds for initial-prompt Vestaboards", %{user: user, network: network} do
-      create_installation(user, network, [
-        vestaboard("board-1", stride: 2, offset: 0, name: :panic_1, initial_prompt: true)
-      ])
+    test "a starting run invokes at once but holds its output for initial-prompt Vestaboards",
+         %{user: user, network: network} do
+      create_installation(
+        user,
+        network,
+        [vestaboard("board-1", stride: 2, offset: 0, name: :panic_1, initial_prompt: true)],
+        vestaboard_hold_seconds: 1
+      )
 
       genesis = Engine.start_run!(network, "hello", actor: user)
 
       assert_in_delta DateTime.diff(genesis.invoke_after, genesis.inserted_at, :millisecond),
-                      10_000,
+                      0,
                       100
+
+      assert_in_delta DateTime.diff(genesis.hold_until, genesis.inserted_at, :millisecond),
+                      1_000,
+                      100
+
+      run_next_invocation()
+      genesis = reload(genesis)
+      assert genesis.state == :completed
+      assert DateTime.compare(genesis.updated_at, genesis.hold_until) != :lt
     end
   end
 
@@ -301,11 +323,17 @@ defmodule Panic.Engine.RunTest do
     end
   end
 
-  defp create_installation(user, network, watchers) do
+  # the hold defaults to zero so runs with boards don't wait in tests
+  defp create_installation(user, network, watchers, opts \\ []) do
     Installation
     |> Ash.Changeset.for_create(
       :create,
-      %{name: "Boards", network_id: network.id, watchers: watchers},
+      %{
+        name: "Boards",
+        network_id: network.id,
+        watchers: watchers,
+        vestaboard_hold_seconds: Keyword.get(opts, :vestaboard_hold_seconds, 0)
+      },
       actor: user
     )
     |> Ash.create!()
