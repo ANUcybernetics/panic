@@ -1,9 +1,10 @@
 ---
 id: TASK-61
 title: Mint Vestaboard Cloud API tokens for each board
-status: To Do
+status: In Progress
 assignee: []
-created_date: '2026-10-20 09:33'
+created_date: 2026-10-20 09:33
+updated_date: '2026-10-28T06:06:00Z'
 labels:
   - vestaboard
 dependencies: []
@@ -18,7 +19,7 @@ PANIC! now sends to Vestaboards through the Cloud API (cloud.vestaboard.com, X-V
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 each of panic_1 to panic_4 has a write-only Cloud API token
-- [ ] #2 the four tokens are saved in the PANIC! admin credentials form in production
+- [x] #1 each of panic_1 to panic_4 has a write-only Cloud API token
+- [x] #2 the four tokens are saved in the PANIC! admin credentials form in production
 - [ ] #3 a run in production updates every Vestaboard it targets
 <!-- AC:END -->
