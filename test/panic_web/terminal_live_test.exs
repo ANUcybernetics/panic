@@ -6,11 +6,14 @@ defmodule PanicWeb.TerminalLiveTest do
   `anon_terminal_minutes` (see `PanicWeb.TerminalAuth`).
   """
   use PanicWeb.ConnCase, async: false
+  use Repatch.ExUnit
 
+  import Panic.EngineHelpers
   import Phoenix.LiveViewTest
 
   alias Panic.Engine
   alias Panic.Fixtures
+  alias Panic.Platforms.Dummy
   alias Panic.Watcher.Installation
   alias PanicWeb.TerminalAuth
 
@@ -104,6 +107,78 @@ defmodule PanicWeb.TerminalLiveTest do
       {:ok, view, _html} = live(conn, ~p"/networks/#{network}/terminal?token=#{token}")
 
       assert_redirect(view, expired_path(network), 3000)
+    end
+  end
+
+  describe "the run summary" do
+    setup %{conn: conn} do
+      # each call reports a priced usage: US$0.02 and 2.9 Wh
+      Repatch.patch(Dummy, :invoke, fn model, input, token ->
+        {:ok, output, _usage} = Repatch.real(Dummy.invoke(model, input, token))
+        {:ok, output, %{"platform" => "replicate", "path" => "google/imagen-4-fast"}}
+      end)
+
+      %{conn: signed_in, user: user} = PanicWeb.Helpers.create_and_sign_in_user(%{conn: conn})
+
+      network =
+        user
+        |> anon_network()
+        |> Engine.update_models!(["dummy-t2i", "dummy-i2t"], actor: user)
+
+      {:ok, signed_in: signed_in, user: user, network: network}
+    end
+
+    defp start_and_run(network, user, invocations) do
+      Engine.start_run!(network, "a cat on a mat", actor: user)
+      for _ <- 1..invocations, do: run_next_invocation()
+    end
+
+    test "shows a signed-in user the run so far, cost included", %{
+      signed_in: conn,
+      user: user,
+      network: network
+    } do
+      start_and_run(network, user, 2)
+
+      {:ok, view, _html} = live(conn, ~p"/networks/#{network}/terminal")
+
+      assert has_element?(view, "#run-summary-sequence", "2")
+      assert has_element?(view, "#run-summary-image[src^='https://dummy-images.test/']")
+      assert has_element?(view, "#run-summary-text", "DUMMY_CAPTION")
+      assert has_element?(view, "#run-summary-energy", "5.8 Wh")
+      assert has_element?(view, "#run-summary-cost", "US$0.04")
+    end
+
+    test "keeps up as the run goes", %{signed_in: conn, user: user, network: network} do
+      start_and_run(network, user, 1)
+      {:ok, view, _html} = live(conn, ~p"/networks/#{network}/terminal")
+      refute has_element?(view, "#run-summary-text")
+
+      run_next_invocation()
+
+      assert has_element?(view, "#run-summary-text", "DUMMY_CAPTION")
+      assert has_element?(view, "#run-summary-energy", "5.8 Wh")
+    end
+
+    test "shows anonymous users the energy but not the cost", %{
+      conn: conn,
+      user: user,
+      network: network
+    } do
+      start_and_run(network, user, 2)
+
+      {:ok, view, _html} =
+        live(conn, ~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
+
+      assert has_element?(view, "#run-summary-energy", "5.8 Wh")
+      refute has_element?(view, "#run-summary-cost")
+    end
+
+    test "isn't shown while the network is idle", %{conn: conn, network: network} do
+      {:ok, view, _html} =
+        live(conn, ~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
+
+      refute has_element?(view, "#run-summary")
     end
   end
 

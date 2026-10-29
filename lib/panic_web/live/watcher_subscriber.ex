@@ -41,6 +41,13 @@ defmodule PanicWeb.WatcherSubscriber do
   The display tuple format is also used by Installation watchers, where each watcher
   struct is converted to the appropriate display tuple format.
 
+  ## Every invocation
+
+  A LiveView that needs every invocation of the network, not just those its
+  display shows (say, to summarise the run), implements the optional
+  `c:handle_invocation/2` callback, which gets each broadcast invocation after
+  the stream is updated.
+
   ## Single Display Format
 
   Single display tuples are `{:single, offset, stride, show_invoking}` where
@@ -57,9 +64,14 @@ defmodule PanicWeb.WatcherSubscriber do
   alias PanicWeb.Presence
   alias Phoenix.Component
   alias Phoenix.LiveView
+  alias Phoenix.LiveView.Socket
   alias Phoenix.Socket.Broadcast
 
   require Ash.Query
+
+  @callback handle_invocation(Invocation.t(), Socket.t()) ::
+              Socket.t()
+  @optional_callbacks handle_invocation: 2
 
   @doc """
   LiveView `on_mount/4` callback.
@@ -389,11 +401,12 @@ defmodule PanicWeb.WatcherSubscriber do
           new_socket =
             case msg.payload do
               %{data: %Invocation{} = invocation} ->
-                Component.assign(
-                  new_socket,
+                new_socket
+                |> Component.assign(
                   :current_invocation,
                   latest(new_socket.assigns[:current_invocation], invocation)
                 )
+                |> notify_view(invocation)
 
               _ ->
                 new_socket
@@ -414,6 +427,12 @@ defmodule PanicWeb.WatcherSubscriber do
     )
   end
 
+  defp notify_view(socket, invocation) do
+    if function_exported?(socket.view, :handle_invocation, 2),
+      do: socket.view.handle_invocation(invocation, socket),
+      else: socket
+  end
+
   defp fetch_network_from_params(params, assigns) do
     case params do
       %{"network_id" => network_id} ->
@@ -432,6 +451,9 @@ defmodule PanicWeb.WatcherSubscriber do
   end
 
   defp fetch_network(id, assigns) do
+    # ---------------------------------------------------------------------------
+    # DOM helpers
+    # ---------------------------------------------------------------------------
     actor = Map.get(assigns, :current_user)
 
     case Panic.Engine.get_network(id, actor: actor) do
@@ -452,10 +474,6 @@ defmodule PanicWeb.WatcherSubscriber do
       {:error, _} = err -> err
     end
   end
-
-  # ---------------------------------------------------------------------------
-  # DOM helpers
-  # ---------------------------------------------------------------------------
 
   defp dom_id(%Invocation{sequence_number: seq}, {:grid, rows, cols}) do
     "slot-#{Integer.mod(seq, rows * cols)}"

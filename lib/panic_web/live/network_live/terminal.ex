@@ -3,10 +3,17 @@ defmodule PanicWeb.NetworkLive.Terminal do
   A terminal for prompting a network. Signed-in users can always open one;
   anyone else needs a token from the QR code on an installation's first screen
   (see `PanicWeb.TerminalAuth`), and the terminal closes when it expires.
+
+  It also summarises the current run (see `PanicWeb.NetworkLive.RunSummary`):
+  its estimated energy for everyone, and its estimated cost only for signed-in
+  users.
   """
+  @behaviour PanicWeb.WatcherSubscriber
+
   use PanicWeb, :live_view
 
   alias PanicWeb.NetworkLive.NetworkHelpers
+  alias PanicWeb.NetworkLive.RunSummary
   alias PanicWeb.TerminalAuth
   alias PanicWeb.WatcherSubscriber
 
@@ -25,6 +32,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
         <span class="text-base-content/60">Current run:</span>
         <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
       </p>
+      <.run_summary :if={@run_summary} summary={@run_summary} show_cost?={!!@current_user} />
       <.live_component
         class="mt-4 sm:mt-8"
         module={PanicWeb.NetworkLive.TerminalComponent}
@@ -64,6 +72,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
            socket
            |> assign(:page_title, "Network #{network_id} terminal")
            |> assign(:network_user, network.user)
+           |> assign(:run_summary, RunSummary.load(network.current_run_number, network.models))
            |> WatcherSubscriber.configure_invocation_stream(network, {:single, 0, 1, false})}
 
         {:error, missing_ids} ->
@@ -78,6 +87,12 @@ defmodule PanicWeb.NetworkLive.Terminal do
     end
   end
 
+  @impl WatcherSubscriber
+  def handle_invocation(invocation, socket) do
+    %{run_summary: summary, network: network} = socket.assigns
+    assign(socket, :run_summary, RunSummary.update(summary, invocation, network.models))
+  end
+
   @impl true
   def handle_info({PanicWeb.NetworkLive.TerminalComponent, {:genesis_invocation, genesis_invocation}}, socket) do
     {:noreply, assign(socket, :genesis_invocation, genesis_invocation)}
@@ -86,6 +101,59 @@ defmodule PanicWeb.NetworkLive.Terminal do
   def handle_info(:expired, socket) do
     {:noreply, push_navigate(socket, to: ~p"/networks/#{socket.assigns.network}/terminal/expired")}
   end
+
+  attr :summary, RunSummary, required: true
+  attr :show_cost?, :boolean, required: true
+
+  defp run_summary(assigns) do
+    ~H"""
+    <section
+      id="run-summary"
+      aria-label="This run so far"
+      class="mt-4 grid items-start gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"
+    >
+      <img
+        :if={@summary.image}
+        id="run-summary-image"
+        src={@summary.image}
+        alt="The latest image"
+        class="aspect-video w-full rounded object-cover"
+      />
+      <div class="min-w-0">
+        <p :if={@summary.text} id="run-summary-text" class="break-words font-mono uppercase">
+          {@summary.text}
+        </p>
+        <dl class="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-base-content/60">
+          <div>
+            <dt class="inline">Invocation</dt>
+            <dd id="run-summary-sequence" class="inline text-base-content">
+              {@summary.sequence_number}
+            </dd>
+          </div>
+          <div>
+            <dt class="inline">Energy</dt>
+            <dd id="run-summary-energy" class="inline text-base-content">
+              ≈ {format_energy(@summary.energy_wh)}
+            </dd>
+          </div>
+          <div :if={@show_cost?}>
+            <dt class="inline">Cost</dt>
+            <dd id="run-summary-cost" class="inline text-base-content">
+              ≈ {format_cost(@summary.cost_usd)}
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+    """
+  end
+
+  defp format_energy(wh) when wh >= 1000, do: "#{Float.round(wh / 1000, 2)} kWh"
+  defp format_energy(wh) when wh >= 10, do: "#{round(wh)} Wh"
+  defp format_energy(wh), do: "#{Float.round(wh, 1)} Wh"
+
+  defp format_cost(usd) when usd > 0 and usd < 0.01, do: "< US$0.01"
+  defp format_cost(usd), do: "US$#{:erlang.float_to_binary(usd, decimals: 2)}"
 
   defp authorize(%{assigns: %{current_user: %{}}} = socket, _network), do: {:ok, socket}
 
