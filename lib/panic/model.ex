@@ -150,6 +150,18 @@ defmodule Panic.Model do
         id: "gpt-5-chat",
         path: "gpt-5-chat-latest",
         name: "GPT-5 Chat",
+        deprecated: true,
+        input_type: :text,
+        output_type: :text,
+        platform: OpenAI,
+        invoke: fn model, input, token ->
+          OpenAI.invoke(model, input, token)
+        end
+      },
+      %__MODULE__{
+        id: "gpt-5.6-luna",
+        path: "gpt-5.6-luna",
+        name: "GPT-5.6 Luna",
         input_type: :text,
         output_type: :text,
         platform: OpenAI,
@@ -699,6 +711,7 @@ defmodule Panic.Model do
         path: "bytedance/dreamina-3.1",
         name: "Dreamina 3.1",
         description: "4MP cinematic-quality text-to-image generation with precise style control from ByteDance",
+        deprecated: true,
         input_type: :text,
         output_type: :image,
         invoke: fn model, input, token ->
@@ -867,8 +880,8 @@ defmodule Panic.Model do
       %__MODULE__{
         id: "claude-4-sonnet",
         platform: Replicate,
-        path: "anthropic/claude-4-sonnet",
-        name: "Claude 4 Sonnet",
+        path: "anthropic/claude-4.5-sonnet",
+        name: "Claude 4.5 Sonnet",
         input_type: :text,
         output_type: :text,
         invoke: fn model, input, token ->
@@ -881,8 +894,8 @@ defmodule Panic.Model do
       %__MODULE__{
         id: "claude-4-sonnet-caption",
         platform: Replicate,
-        path: "anthropic/claude-4-sonnet",
-        name: "Claude 4 Sonnet Caption",
+        path: "anthropic/claude-4.5-sonnet",
+        name: "Claude 4.5 Sonnet Caption",
         input_type: :image,
         output_type: :text,
         invoke: fn model, input, token ->

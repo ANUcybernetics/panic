@@ -52,7 +52,9 @@ defmodule Panic.PlatformsTest do
 
       # Process models with a semaphore-style approach
       max_concurrency = 10
-      timeout_per_model = 120_000
+      # just past Replicate.cancel_after/2's longest deadline, so a stuck model
+      # comes back as an error rather than a timeout
+      timeout_per_model = 330_000
 
       IO.puts("\nProcessing #{length(models)} models with max concurrency of #{max_concurrency}...")
 
@@ -76,6 +78,7 @@ defmodule Panic.PlatformsTest do
           end,
           max_concurrency: max_concurrency,
           timeout: timeout_per_model,
+          on_timeout: :kill_task,
           ordered: false
         )
         |> Enum.map(fn
@@ -186,7 +189,7 @@ defmodule Panic.PlatformsTest do
     end
 
     test "can invoke all OpenAI models", %{api_key: api_key} do
-      models = Model.all(platform: OpenAI)
+      models = Model.all(platform: OpenAI, deprecated: false)
       assert length(models) > 0, "Expected to find OpenAI models"
 
       for %Model{id: id, invoke: invoke_fn} = model <- models do
@@ -201,7 +204,7 @@ defmodule Panic.PlatformsTest do
     end
 
     test "models follow instructions precisely", %{api_key: api_key} do
-      models = Model.all(platform: OpenAI)
+      models = Model.all(platform: OpenAI, deprecated: false)
 
       test_prompt =
         "Respond with just the word 'bananaphone'. Do not include any other content (even punctuation)."
