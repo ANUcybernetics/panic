@@ -257,6 +257,7 @@ defmodule Panic.Model do
         platform: Replicate,
         path: "lucataco/moondream2",
         name: "Moondream 2",
+        deprecated: true,
         input_type: :image,
         output_type: :text,
         invoke: fn model, input, token ->
