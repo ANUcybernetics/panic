@@ -2,106 +2,35 @@ defmodule Panic.Platforms.Replicate do
   @moduledoc false
   require Logger
 
-  def get_latest_model_version(%Panic.Model{path: path}, token) do
-    [url: "models/#{path}", auth: {:bearer, token}]
-    |> req_new()
-    |> Req.request()
-    |> case do
-      {:ok, %Req.Response{body: body, status: 200}} ->
-        %{"latest_version" => %{"id" => id}} = body
-        {:ok, id}
-
-      {:ok, %Req.Response{body: %{"detail" => message}, status: status}} when status >= 400 ->
-        {:error, message}
-
-      {:error, reason} ->
-        {:error, reason}
+  def get_latest_model_version(model, token) do
+    with {:ok, %{"latest_version" => %{"id" => id}}} <- fetch_model(model, token) do
+      {:ok, id}
     end
   end
 
   @doc """
-  Polls a prediction until it finishes, pausing between polls. A prediction
-  still processing after `timeout_ms` (time spent starting, such as a cold
-  boot, doesn't count) is cancelled and returned as an error, so a hung model
-  can't stall a run.
+  Runs `model` on `input`. The request waits up to a minute for the
+  prediction to finish (Replicate's sync mode), so most predictions need no
+  polling, and Replicate cancels any still running at the `cancel_after/2`
+  deadline, so a hung model can't stall a run.
   """
-  def get(prediction_id, token, timeout_ms) do
-    interval_ms =
-      :panic
-      |> Application.get_env(:replicate_poll_options, [])
-      |> Keyword.get(:interval_ms, 1_000)
-
-    poll(prediction_id, token, interval_ms, timeout_ms, nil)
-  end
-
-  defp poll(prediction_id, token, interval_ms, timeout_ms, deadline) do
-    [url: "predictions/#{prediction_id}", auth: {:bearer, token}]
-    |> req_new()
-    |> Req.request()
-    |> case do
-      {:ok, %Req.Response{body: body, status: 200}} ->
-        case body do
-          %{"status" => "succeeded"} = body ->
-            {:ok, body}
-
-          %{"status" => "failed", "error" => error} ->
-            if detect_nsfw(error) do
-              {:error, :nsfw}
-            else
-              {:error, error}
-            end
-
-          %{"status" => "canceled"} ->
-            {:error, "Prediction was canceled"}
-
-          %{"status" => "starting"} ->
-            Process.sleep(interval_ms)
-            poll(prediction_id, token, interval_ms, timeout_ms, deadline)
-
-          %{"status" => "processing"} ->
-            now = System.monotonic_time(:millisecond)
-            deadline = deadline || now + timeout_ms
-
-            if now >= deadline do
-              cancel(prediction_id, token)
-              {:error, "Prediction timed out after #{div(timeout_ms, 1000)}s"}
-            else
-              Process.sleep(interval_ms)
-              poll(prediction_id, token, interval_ms, timeout_ms, deadline)
-            end
-        end
-
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
-
-  defp cancel(prediction_id, token) do
-    [url: "predictions/#{prediction_id}/cancel", method: :post, auth: {:bearer, token}]
-    |> req_new()
-    |> Req.request()
-  end
-
   def invoke(model, input, token) do
     with_retry(fn ->
-      version =
-        case model do
-          %{version: version} -> {:ok, version}
-          _ -> get_latest_model_version(model, token)
-        end
-
-      with {:ok, version_id} <- version do
-        request_body = %{version: version_id, input: input}
-
-        [url: "predictions", method: :post, json: request_body, auth: {:bearer, token}]
+      with {:ok, %{"latest_version" => %{"id" => version}} = info} <- fetch_model(model, token) do
+        [
+          url: "predictions",
+          method: :post,
+          json: %{version: version, input: input},
+          auth: {:bearer, token},
+          headers: [{"prefer", "wait=60"}, {"cancel-after", cancel_after(model, info)}],
+          receive_timeout: to_timeout(second: 70)
+        ]
         |> req_new()
         |> Req.request()
         |> case do
-          {:ok, %Req.Response{body: %{"id" => id}, status: 201}} ->
-            get(id, token, timeout_ms(model))
-
-          {:ok, %Req.Response{body: %{"detail" => message}, status: 410}} ->
-            {:error, message}
+          {:ok, %Req.Response{body: %{"id" => _} = prediction, status: status}}
+          when status in 200..299 ->
+            outcome(prediction, token)
 
           {:ok, %Req.Response{body: %{"detail" => message}, status: status}} when status >= 400 ->
             {:error, message}
@@ -113,10 +42,54 @@ defmodule Panic.Platforms.Replicate do
     end)
   end
 
-  # Text and image models finish in seconds, so a minute without output looks
-  # stuck to viewers; audio models can legitimately take longer.
-  defp timeout_ms(%{output_type: :audio}), do: to_timeout(minute: 3)
-  defp timeout_ms(_model), do: to_timeout(minute: 1)
+  # Counted from creation, cold boot included. Official models are always warm
+  # and finish in seconds, so a minute without output looks stuck to viewers
+  # (audio takes longer); other models may first need minutes to boot.
+  defp cancel_after(%{output_type: :audio}, %{"is_official" => true}), do: "3m"
+  defp cancel_after(_model, %{"is_official" => true}), do: "1m"
+  defp cancel_after(_model, _info), do: "5m"
+
+  # Polls a prediction that outlasted the sync wait. Replicate enforces the
+  # deadline, so a canceled or aborted prediction ends the loop like any
+  # other unsuccessful status.
+  defp outcome(%{"status" => status, "id" => id}, token) when status in ~w(starting processing) do
+    :panic
+    |> Application.get_env(:replicate_poll_options, [])
+    |> Keyword.get(:interval_ms, 1_000)
+    |> Process.sleep()
+
+    with {:ok, prediction} <- get(id, token) do
+      outcome(prediction, token)
+    end
+  end
+
+  defp outcome(%{"status" => "succeeded"} = prediction, _token), do: {:ok, prediction}
+
+  defp outcome(%{"status" => "failed", "error" => error}, _token) when is_binary(error) do
+    if detect_nsfw(error), do: {:error, :nsfw}, else: {:error, error}
+  end
+
+  defp outcome(%{"status" => status}, _token), do: {:error, "Prediction #{status}"}
+
+  defp get(prediction_id, token) do
+    get_json("predictions/#{prediction_id}", token)
+  end
+
+  defp fetch_model(%Panic.Model{path: path}, token) do
+    get_json("models/#{path}", token)
+  end
+
+  defp get_json(url, token) do
+    [url: url, auth: {:bearer, token}]
+    |> req_new()
+    |> Req.request()
+    |> case do
+      {:ok, %Req.Response{body: body, status: 200}} -> {:ok, body}
+      {:ok, %Req.Response{body: %{"detail" => message}}} -> {:error, message}
+      {:ok, %Req.Response{status: status}} -> {:error, "Replicate returned #{status}"}
+      {:error, reason} -> {:error, reason}
+    end
+  end
 
   @doc false
   def with_retry(fun) do
@@ -132,9 +105,10 @@ defmodule Panic.Platforms.Replicate do
       {:ok, _} = success ->
         success
 
-      # a refusal won't change on retry
-      {:error, :nsfw} = refusal ->
-        refusal
+      # a refusal won't change on retry, and a model that couldn't start
+      # before its deadline would only keep the run waiting again
+      {:error, reason} = error when reason in [:nsfw, "Prediction aborted"] ->
+        error
 
       {:error, _} = error when attempt >= max_retries ->
         error
