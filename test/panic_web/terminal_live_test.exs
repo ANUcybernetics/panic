@@ -176,6 +176,17 @@ defmodule PanicWeb.TerminalLiveTest do
       refute has_element?(view, "#run-stats-cost")
     end
 
+    test "appears when a run starts", %{conn: conn, network: network} do
+      {:ok, view, _html} =
+        live(conn, ~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
+
+      view |> form("form", invocation: %{input: "a cat on a mat"}) |> render_submit()
+      run_next_invocation()
+
+      assert has_element?(view, "#run-stats-sequence", "1")
+      assert has_element?(view, "#run-stats-energy", "2.9 Wh")
+    end
+
     test "isn't shown while the network is idle", %{conn: conn, network: network} do
       {:ok, view, _html} =
         live(conn, ~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")

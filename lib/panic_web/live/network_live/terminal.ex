@@ -75,6 +75,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
            |> assign(:page_title, "Network #{network_id} terminal")
            |> assign(:network_user, network.user)
            |> assign(:run_summary, RunSummary.load(network.current_run_number, network.models))
+           |> WatcherSubscriber.watch(network)
            |> WatcherSubscriber.configure_invocation_stream(network, {:single, 0, 1, false})}
 
         {:error, missing_ids} ->

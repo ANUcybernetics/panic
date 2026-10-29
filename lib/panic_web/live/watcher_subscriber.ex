@@ -98,7 +98,11 @@ defmodule PanicWeb.WatcherSubscriber do
           socket
           |> maybe_subscribe(network, installation_id)
           |> attach_invocation_hook()
-          |> Component.assign(installation_id: installation_id, network_id: network.id)
+          |> Component.assign(
+            installation_id: installation_id,
+            network_id: network.id,
+            watching: network.id
+          )
 
         {:cont, socket}
 
@@ -110,6 +114,21 @@ defmodule PanicWeb.WatcherSubscriber do
         # No network context: continue without attaching the watcher
         {:cont, socket}
     end
+  end
+
+  @doc """
+  Subscribes `socket` to `network`'s broadcasts and attaches the hook that
+  handles them, as `on_mount/4` does when the viewer can read the network. A
+  LiveView that authorises its viewer some other way (the anonymous terminal's
+  token) calls this once it has. Does nothing if it's already watching.
+  """
+  def watch(%{assigns: %{watching: id}} = socket, %Network{id: id}), do: socket
+
+  def watch(socket, %Network{} = network) do
+    socket
+    |> maybe_subscribe(network, nil)
+    |> attach_invocation_hook()
+    |> Component.assign(network_id: network.id, watching: network.id)
   end
 
   @doc """
