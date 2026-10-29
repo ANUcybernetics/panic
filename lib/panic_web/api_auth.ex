@@ -12,6 +12,21 @@ defmodule PanicWeb.ApiAuth do
   end
 
   @doc """
+  Plug that answers a blank bearer token (`Authorization: Bearer `) with 401.
+  It must run before `AshAuthentication.Strategy.ApiKey.Plug`, which crashes
+  on one rather than rejecting it.
+  """
+  def reject_blank_bearer(conn, _opts) do
+    case get_req_header(conn, "authorization") do
+      ["Bearer" <> token] ->
+        if String.trim(token) == "", do: unauthorized(conn, :missing_api_key), else: conn
+
+      _ ->
+        conn
+    end
+  end
+
+  @doc """
   Plug that halts unless the authenticated user is an admin. The OpenAPI spec
   is public so the Swagger UI (`/api/swaggerui`) can load it.
   """

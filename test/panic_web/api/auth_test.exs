@@ -20,6 +20,13 @@ defmodule PanicWeb.Api.AuthTest do
     assert json(conn, 401)
   end
 
+  test "an empty bearer token is unauthorized" do
+    for header <- ["Bearer ", "Bearer", "Bearer   "] do
+      conn = build_conn() |> put_req_header("authorization", header) |> get("/api/networks")
+      assert json(conn, 401), "expected 401 for #{inspect(header)}"
+    end
+  end
+
   test "expired keys are unauthorized" do
     {admin, _key} = admin_with_api_key()
     expired = api_key_for(admin, %{expires_at: DateTime.shift(DateTime.utc_now(), minute: -1)})

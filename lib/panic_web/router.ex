@@ -2,7 +2,7 @@ defmodule PanicWeb.Router do
   use PanicWeb, :router
   use AshAuthentication.Phoenix.Router
 
-  import PanicWeb.ApiAuth, only: [require_admin: 2]
+  import PanicWeb.ApiAuth, only: [reject_blank_bearer: 2, require_admin: 2]
 
   alias Panic.Accounts.User
 
@@ -18,6 +18,7 @@ defmodule PanicWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug :reject_blank_bearer
 
     plug AshAuthentication.Strategy.ApiKey.Plug,
       resource: User,
