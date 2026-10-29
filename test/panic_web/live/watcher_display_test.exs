@@ -4,6 +4,7 @@ defmodule PanicWeb.WatcherDisplayTest do
   engine drives it, viewed anonymously the way the kiosk displays are.
   """
   use PanicWeb.ConnCase, async: false
+  use Repatch.ExUnit
 
   import Panic.EngineHelpers
   import Phoenix.LiveViewTest
@@ -112,6 +113,53 @@ defmodule PanicWeb.WatcherDisplayTest do
 
     run_next_invocation()
     assert shows?(late, 1, outputs(network)[1])
+  end
+
+  test "a display opened mid-run shows what it would have been showing", %{
+    conn: conn,
+    user: user,
+    network: network,
+    installation: installation
+  } do
+    Engine.start_run!(network, "reloaded kiosk", actor: user)
+    run_next_invocation()
+    run_next_invocation()
+    run_next_invocation()
+    outputs = outputs(network)
+
+    {:ok, even, _html} = live(conn, ~p"/i/#{installation.id}/even")
+    {:ok, odd, _html} = live(conn, ~p"/i/#{installation.id}/odd")
+    {:ok, wall, _html} = live(conn, ~p"/i/#{installation.id}/wall")
+
+    assert shows?(even, 0, outputs[2])
+    assert shows?(odd, 1, outputs[1])
+    for name <- [even, odd], do: assert(slot_count(name) == 1)
+    for seq <- 0..2, do: assert(shows?(wall, seq, outputs[seq]))
+  end
+
+  test "a display opened before its first turn shows the genesis", %{
+    conn: conn,
+    user: user,
+    network: network,
+    installation: installation
+  } do
+    Engine.start_run!(network, "early arrival", actor: user)
+    run_next_invocation()
+
+    {:ok, odd, _html} = live(conn, ~p"/i/#{installation.id}/odd")
+    assert slot_count(odd) == 1
+    assert has_element?(odd, "#slot-1")
+  end
+
+  test "a display running out-of-date assets reloads itself", %{
+    conn: conn,
+    installation: installation
+  } do
+    # the test endpoint has no digest manifest to compare assets against
+    Repatch.patch(Phoenix.LiveView, :static_changed?, [mode: :global], fn _socket -> true end)
+    path = ~p"/i/#{installation.id}/even"
+
+    assert {:error, {:redirect, %{to: ^path}}} = live(conn, path)
   end
 
   test "stopping a run freezes every display", %{user: user, network: network, views: views} do

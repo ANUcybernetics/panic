@@ -59,6 +59,8 @@ defmodule PanicWeb.WatcherSubscriber do
   alias Phoenix.LiveView
   alias Phoenix.Socket.Broadcast
 
+  require Ash.Query
+
   @doc """
   LiveView `on_mount/4` callback.
 
@@ -88,15 +90,15 @@ defmodule PanicWeb.WatcherSubscriber do
 
         {:cont, socket}
 
+      # ---------------------------------------------------------------------------
+      # Manual helpers (kept for backwards-compat)
+      # ---------------------------------------------------------------------------
+
       {:error, _} ->
         # No network context: continue without attaching the watcher
         {:cont, socket}
     end
   end
-
-  # ---------------------------------------------------------------------------
-  # Manual helpers (kept for backwards-compat)
-  # ---------------------------------------------------------------------------
 
   @doc """
   Configure the `:invocations` stream on `socket`.
@@ -128,8 +130,49 @@ defmodule PanicWeb.WatcherSubscriber do
         genesis_invocation: current_genesis(network),
         network_id: network.id
       )
+      |> show_current_run(network, display)
     end
   end
+
+  # A display that opens mid-run (say a kiosk reloading after a deploy) shows
+  # what it would have shown had it been watching all along, rather than
+  # nothing until its next turn comes round.
+  defp show_current_run(socket, %Network{current_run_number: nil}, _display), do: socket
+
+  defp show_current_run(socket, network, display) do
+    recent =
+      Invocation
+      |> Ash.Query.filter(
+        network_id == ^network.id and run_number == ^network.current_run_number and
+          state == :completed
+      )
+      |> Ash.Query.sort(sequence_number: :desc)
+      |> Ash.Query.limit(slots(display))
+      |> Ash.read!(authorize?: false)
+      |> Enum.reverse()
+
+    case display do
+      {:grid, _rows, _cols} ->
+        Enum.reduce(recent, socket, &handle_non_genesis_invocation(&2, &1, display))
+
+      {:single, offset, stride, _show_invoking} ->
+        case Enum.filter(
+               recent,
+               &(rem(&1.sequence_number, stride) == offset and &1.sequence_number > 0)
+             ) do
+          [] -> show_genesis(socket)
+          shown -> handle_non_genesis_invocation(socket, List.last(shown), display)
+        end
+    end
+  end
+
+  defp slots({:grid, rows, cols}), do: rows * cols
+  defp slots({:single, _offset, stride, _show_invoking}), do: stride
+
+  defp show_genesis(%{assigns: %{genesis_invocation: %Invocation{} = genesis}} = socket),
+    do: LiveView.stream_insert(socket, :invocations, genesis)
+
+  defp show_genesis(socket), do: socket
 
   @doc """
   Handle a broadcast carrying an `%Invocation{}` and update the LiveView socket.
@@ -410,6 +453,10 @@ defmodule PanicWeb.WatcherSubscriber do
     end
   end
 
+  # ---------------------------------------------------------------------------
+  # DOM helpers
+  # ---------------------------------------------------------------------------
+
   defp dom_id(%Invocation{sequence_number: seq}, {:grid, rows, cols}) do
     "slot-#{Integer.mod(seq, rows * cols)}"
   end
@@ -420,10 +467,6 @@ defmodule PanicWeb.WatcherSubscriber do
   defp dom_id(%Invocation{sequence_number: 0}, {:single, offset, _stride, _show_invoking}) do
     "slot-#{offset}"
   end
-
-  # ---------------------------------------------------------------------------
-  # DOM helpers
-  # ---------------------------------------------------------------------------
 
   defp dom_id(%Invocation{sequence_number: seq}, {:single, offset, stride, _show_invoking}) do
     if rem(seq, stride) == offset, do: "slot-#{offset}"
