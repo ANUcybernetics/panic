@@ -29,14 +29,10 @@ defmodule PanicWeb.NetworkLive.Terminal do
         font-size: clamp(100%, 2.5vw, 200%);
       }
     </style>
+    <%!-- the prompt comes first, so nothing above it changes as the run goes and
+          it never moves under a phone user's thumb --%>
     <div class="terminal-container mx-auto max-w-5xl p-4 sm:p-8">
-      <p class="min-h-12 break-words text-primary-content">
-        <span class="text-base-content/60">Current run:</span>
-        <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
-      </p>
-      <.run_summary :if={@run_summary} summary={@run_summary} show_cost?={!!@current_user} />
       <.live_component
-        class="mt-4 sm:mt-8"
         module={PanicWeb.NetworkLive.TerminalComponent}
         network={@network}
         genesis_invocation={@genesis_invocation}
@@ -50,10 +46,15 @@ defmodule PanicWeb.NetworkLive.Terminal do
         phx-hook="RunnerCountdown"
         data-target-time={DateTime.to_iso8601(@expires_at)}
         data-format="clock"
-        class="mt-4 text-sm text-base-content/60"
+        class="mt-2 text-sm text-base-content/60"
       >
-        This terminal closes in <span id="countdown-display">--</span>.
+        This terminal closes in <span id="countdown-display" phx-update="ignore">--</span>.
       </p>
+      <p class="mt-6 break-words text-primary-content sm:mt-8">
+        <span class="text-base-content/60">Current run:</span>
+        <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
+      </p>
+      <.run_summary :if={@run_summary} summary={@run_summary} show_cost?={!!@current_user} />
     </div>
     """
   end
@@ -115,13 +116,16 @@ defmodule PanicWeb.NetworkLive.Terminal do
       aria-label="This run so far"
       class="mt-4 grid items-start gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"
     >
-      <img
-        :if={@summary.image}
-        id="run-summary-image"
-        src={@summary.image}
-        alt="The latest image"
-        class="aspect-video w-full rounded object-cover"
-      />
+      <%!-- the image's box is there before its first image arrives or loads --%>
+      <div class="aspect-video w-full overflow-hidden rounded bg-base-content/5">
+        <img
+          :if={@summary.image}
+          id="run-summary-image"
+          src={@summary.image}
+          alt="The latest image"
+          class="size-full object-cover"
+        />
+      </div>
       <div class="min-w-0">
         <p :if={@summary.text} id="run-summary-text" class="break-words font-mono uppercase">
           {@summary.text}
