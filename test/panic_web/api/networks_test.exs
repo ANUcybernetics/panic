@@ -39,6 +39,29 @@ defmodule PanicWeb.Api.NetworksTest do
   defp network(key, id), do: key |> api_conn() |> get("/api/networks/#{id}") |> json(200) |> Map.fetch!("data")
 
   describe "networks" do
+    test "the anonymous terminal is off by default, and can be turned on and off", %{key: key} do
+      %{"id" => id, "attributes" => attributes} = create_network(key)
+      assert attributes["anon_terminal_minutes"] == nil
+
+      patch_minutes = fn minutes ->
+        key
+        |> api_conn()
+        |> patch("/api/networks/#{id}", body("network", %{anon_terminal_minutes: minutes}))
+      end
+
+      assert 15
+             |> patch_minutes.()
+             |> json(200)
+             |> get_in(["data", "attributes", "anon_terminal_minutes"]) == 15
+
+      assert nil
+             |> patch_minutes.()
+             |> json(200)
+             |> get_in(["data", "attributes", "anon_terminal_minutes"]) == nil
+
+      assert %{"errors" => [_ | _]} = 0 |> patch_minutes.() |> json(400)
+    end
+
     test "create, read, update and delete", %{key: key} do
       created = create_network(key, %{lockout_seconds: 5})
 

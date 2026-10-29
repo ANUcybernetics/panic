@@ -27,7 +27,7 @@ defmodule Panic.Engine.Network do
   end
 
   actions do
-    defaults [:read, update: [:name, :description, :lockout_seconds]]
+    defaults [:read, update: [:name, :description, :lockout_seconds, :anon_terminal_minutes]]
 
     destroy :destroy do
       primary? true
@@ -37,7 +37,7 @@ defmodule Panic.Engine.Network do
     end
 
     create :create do
-      accept [:name, :description, :lockout_seconds]
+      accept [:name, :description, :lockout_seconds, :anon_terminal_minutes]
       set_attribute(:models, [])
       change relate_actor(:user)
     end
@@ -133,6 +133,13 @@ defmodule Panic.Engine.Network do
     attribute :lockout_seconds, :integer do
       default 30
       allow_nil? false
+      public? true
+    end
+
+    attribute :anon_terminal_minutes, :integer do
+      description "Minutes a terminal opened from the QR code on the first screen of each of the network's installations stays usable, without signing in. Nil turns the QR code off."
+
+      constraints min: 1
       public? true
     end
 
