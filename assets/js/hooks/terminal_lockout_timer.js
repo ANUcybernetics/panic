@@ -1,5 +1,13 @@
 const TerminalLockoutTimer = {
   mounted() {
+    // the prompt is a textarea so it can grow, but a prompt is one line:
+    // Enter submits it (unless it's confirming an IME composition)
+    this.el.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.isComposing) {
+        event.preventDefault();
+        this.el.form.requestSubmit();
+      }
+    });
     this.startTimer();
   },
 

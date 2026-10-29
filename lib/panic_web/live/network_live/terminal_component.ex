@@ -17,10 +17,11 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
       >
         <.input
           field={@form[:input]}
-          type="text"
+          type="textarea"
           label="Prompt"
           placeholder="Ready for new input"
-          class="input input-lg w-full"
+          rows="1"
+          class="textarea textarea-lg w-full min-h-0 max-h-[8lh] resize-none [field-sizing:content]"
           phx-hook="TerminalLockoutTimer"
           data-ready-at={lockout_ready_at(@genesis_invocation, @network)}
         />
