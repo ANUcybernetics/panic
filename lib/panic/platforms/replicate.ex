@@ -94,6 +94,10 @@ defmodule Panic.Platforms.Replicate do
       {:ok, _} = success ->
         success
 
+      # a refusal won't change on retry
+      {:error, :nsfw} = refusal ->
+        refusal
+
       {:error, _} = error when attempt >= max_retries ->
         error
 
@@ -132,6 +136,12 @@ defmodule Panic.Platforms.Replicate do
 
       # Other common patterns
       String.contains?(downcased, "nsfw") ->
+        true
+
+      String.contains?(downcased, "content policy") ->
+        true
+
+      String.contains?(downcased, "safety checker") ->
         true
 
       String.contains?(downcased, "inappropriate content") ->

@@ -50,9 +50,28 @@ defmodule Panic.Platforms.ReplicateTest do
       assert {:ok, "immediate success"} = result
       assert :counters.get(call_count, 1) == 1
     end
+
+    test "doesn't retry a refusal" do
+      call_count = :counters.new(1, [:atomics])
+
+      result =
+        Replicate.with_retry(fn ->
+          :counters.add(call_count, 1, 1)
+          {:error, :nsfw}
+        end)
+
+      assert {:error, :nsfw} = result
+      assert :counters.get(call_count, 1) == 1
+    end
   end
 
   describe "detect_nsfw/1" do
+    test "detects content policy and safety checker refusals" do
+      assert Replicate.detect_nsfw(
+               ~s|Modal predict_sync rejected: status=422 body={"detail":{"moderation":{"blocked":true,"reason":"Blocked by content policy (violence). Enforced by the safety checker"}}}|
+             )
+    end
+
     test "detects error messages starting with NSFW" do
       assert Replicate.detect_nsfw("NSFW content detected")
       assert Replicate.detect_nsfw("NSFW: inappropriate content")
