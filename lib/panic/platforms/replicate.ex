@@ -19,7 +19,22 @@ defmodule Panic.Platforms.Replicate do
     end
   end
 
-  def get(prediction_id, token) do
+  @doc """
+  Polls a prediction until it finishes, pausing between polls. A prediction
+  still processing after `timeout_ms` (time spent starting, such as a cold
+  boot, doesn't count) is cancelled and returned as an error, so a hung model
+  can't stall a run.
+  """
+  def get(prediction_id, token, timeout_ms) do
+    interval_ms =
+      :panic
+      |> Application.get_env(:replicate_poll_options, [])
+      |> Keyword.get(:interval_ms, 1_000)
+
+    poll(prediction_id, token, interval_ms, timeout_ms, nil)
+  end
+
+  defp poll(prediction_id, token, interval_ms, timeout_ms, deadline) do
     [url: "predictions/#{prediction_id}", auth: {:bearer, token}]
     |> req_new()
     |> Req.request()
@@ -39,14 +54,32 @@ defmodule Panic.Platforms.Replicate do
           %{"status" => "canceled"} ->
             {:error, "Prediction was canceled"}
 
-          %{"status" => status} when status in ~w(starting processing) ->
-            ## recursion case; doesn't need a tuple
-            get(prediction_id, token)
+          %{"status" => "starting"} ->
+            Process.sleep(interval_ms)
+            poll(prediction_id, token, interval_ms, timeout_ms, deadline)
+
+          %{"status" => "processing"} ->
+            now = System.monotonic_time(:millisecond)
+            deadline = deadline || now + timeout_ms
+
+            if now >= deadline do
+              cancel(prediction_id, token)
+              {:error, "Prediction timed out after #{div(timeout_ms, 1000)}s"}
+            else
+              Process.sleep(interval_ms)
+              poll(prediction_id, token, interval_ms, timeout_ms, deadline)
+            end
         end
 
       {:error, reason} ->
         {:error, reason}
     end
+  end
+
+  defp cancel(prediction_id, token) do
+    [url: "predictions/#{prediction_id}/cancel", method: :post, auth: {:bearer, token}]
+    |> req_new()
+    |> Req.request()
   end
 
   def invoke(model, input, token) do
@@ -65,7 +98,7 @@ defmodule Panic.Platforms.Replicate do
         |> Req.request()
         |> case do
           {:ok, %Req.Response{body: %{"id" => id}, status: 201}} ->
-            get(id, token)
+            get(id, token, timeout_ms(model))
 
           {:ok, %Req.Response{body: %{"detail" => message}, status: 410}} ->
             {:error, message}
@@ -79,6 +112,11 @@ defmodule Panic.Platforms.Replicate do
       end
     end)
   end
+
+  # Text and image models finish in seconds, so a minute without output looks
+  # stuck to viewers; audio models can legitimately take longer.
+  defp timeout_ms(%{output_type: :audio}), do: to_timeout(minute: 3)
+  defp timeout_ms(_model), do: to_timeout(minute: 1)
 
   @doc false
   def with_retry(fun) do
