@@ -220,6 +220,26 @@ defmodule Panic.Engine.RunTest do
       assert [_] = invocations(network)
     end
 
+    test "that refuses its input is retried with a safe input and the run carries on",
+         %{user: user, network: network} do
+      safe = Panic.Engine.Changes.InvokeModel.safe_input(:text)
+
+      Repatch.patch(Dummy, :invoke, fn model, input, token ->
+        if input == safe,
+          do: Repatch.real(Dummy.invoke(model, input, token)),
+          else: {:error, "Blocked by content policy (violence)"}
+      end)
+
+      genesis = Engine.start_run!(network, "something a filter dislikes", actor: user)
+      assert %{success: 1} = run_next_invocation()
+
+      genesis = reload(genesis)
+      assert genesis.state == :completed
+      assert genesis.metadata["error_before_safe_retry"] =~ "content policy"
+      assert reload(network).current_run_number == genesis.run_number
+      assert [_, _] = invocations(network)
+    end
+
     test "a new run can start after a failure", %{user: user, network: network} do
       Repatch.patch(Dummy, :invoke, fn _model, _input, _token -> {:error, "simulated failure"} end)
 

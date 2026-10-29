@@ -8,7 +8,8 @@ defmodule Panic.Engine.Changes.InvokeModel do
      `hold_until`, if it's set, so the output doesn't appear while a
      Vestaboard is still flipping (see `Panic.Engine.Schedule`).
   2. Inside the transaction, the output and `:completed` state are set, or
-     `:failed` if the call failed. A failed call is an outcome, not an action
+     `:failed` if the call failed even after a retry with a safe input (see
+     `call_model/1`). A failed call is an outcome, not an action
      error, so the trigger job doesn't retry a model that rejected its input.
   3. `:invocation_completed` is emitted only while the invocation is still
      part of its network's current run, so a stopped or replaced run doesn't
@@ -37,9 +38,9 @@ defmodule Panic.Engine.Changes.InvokeModel do
     Ash.update!(changeset.data, %{}, action: :about_to_invoke, actor: context.actor)
 
     case call_model(changeset.data) do
-      {:ok, output} ->
+      {:ok, output, metadata} ->
         wait_for_hold(changeset.data)
-        Ash.Changeset.put_context(changeset, :invocation_result, {:ok, output})
+        Ash.Changeset.put_context(changeset, :invocation_result, {:ok, output, metadata})
 
       {:error, reason} ->
         Ash.Changeset.put_context(changeset, :invocation_result, {:error, reason})
@@ -50,13 +51,22 @@ defmodule Panic.Engine.Changes.InvokeModel do
     with {:model, %Panic.Model{} = model} <- {:model, Panic.Model.by_id(model_id)},
          {:ok, token} <- PlatformCredentials.fetch_token(model.platform) do
       case model.invoke.(model, input, token) do
-        # retry an NSFW rejection once with a safe prompt
-        {:error, :nsfw} -> model.invoke.(model, nsfw_retry_prompt(), token)
-        result -> result
+        {:ok, output} -> {:ok, output, %{}}
+        {:error, reason} -> retry_with_safe_input(model, reason, token)
       end
     else
       {:model, nil} -> {:error, "Model with ID '#{model_id}' no longer exists"}
       {:error, reason} -> {:error, reason}
+    end
+  end
+
+  # Models refuse some inputs (safety filters, moderation), and every platform
+  # words that differently. Rather than recognise each refusal, any failure is
+  # retried once with an input no filter objects to: a refusal recovers and the
+  # run carries on, while a real outage fails again and ends the run.
+  defp retry_with_safe_input(model, reason, token) do
+    with {:ok, output} <- model.invoke.(model, safe_input(model.input_type), token) do
+      {:ok, output, %{"error_before_safe_retry" => inspect(reason)}}
     end
   end
 
@@ -68,10 +78,14 @@ defmodule Panic.Engine.Changes.InvokeModel do
 
   defp record_outcome(changeset) do
     case changeset.context[:invocation_result] do
-      {:ok, output} ->
+      {:ok, output, metadata} ->
         changeset
         |> Ash.Changeset.force_change_attribute(:output, output)
         |> Ash.Changeset.force_change_attribute(:state, :completed)
+        |> Ash.Changeset.force_change_attribute(
+          :metadata,
+          Map.merge(changeset.data.metadata, metadata)
+        )
 
       {:error, reason} ->
         changeset
@@ -114,5 +128,12 @@ defmodule Panic.Engine.Changes.InvokeModel do
     current == invocation.run_number
   end
 
-  defp nsfw_retry_prompt, do: "a wombat holding a sign that says 'whoops!'"
+  @safe_inputs %{
+    text: "a wombat holding a sign that says 'whoops!'",
+    image: "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-placeholder.webp",
+    audio: "https://fly.storage.tigris.dev/panic-invocation-outputs/test-audio.ogg"
+  }
+
+  @doc false
+  def safe_input(input_type), do: Map.fetch!(@safe_inputs, input_type)
 end
