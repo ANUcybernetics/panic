@@ -807,7 +807,11 @@ defmodule Panic.Model do
         output_type: :image,
         invoke: fn model, input, token ->
           with {:ok, %{"output" => output}} <-
-                 Replicate.invoke(model, %{prompt: input, aspect_ratio: "16:9"}, token) do
+                 Replicate.invoke(
+                   model,
+                   %{prompt: input, aspect_ratio: "16:9", disable_safety_checker: true},
+                   token
+                 ) do
             first_url(output)
           end
         end
