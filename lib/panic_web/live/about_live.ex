@@ -54,6 +54,27 @@ defmodule PanicWeb.AboutLive do
         real-time, for viewers on screens anywhere in the world.
       </p>
 
+      <h2 id="energy">How much energy does it use?</h2>
+
+      <p>
+        The screens show a running estimate of the energy each run has used so far. None
+        of the platforms report the energy their models use, so the figures are ballpark
+        estimates, not measurements. For models we pay for by the second of GPU time, the
+        estimate is that time × the GPU's rated power × 0.7 (<a href="https://epoch.ai/gradient-updates/how-much-energy-does-chatgpt-use">Epoch AI's</a>
+        assumption for how hard a GPU works during inference) × 1.2 for the data
+        centre's cooling and other overheads. For the rest, whose hardware isn't
+        published, it uses published measurements instead: about 2.9 Wh per generated
+        image (<a href="https://arxiv.org/abs/2311.16863">Luccioni, Jernite &amp; Strubell 2024</a>),
+        and for text, Epoch AI's estimate of about 0.3 Wh for a typical chatbot reply.
+      </p>
+
+      <p>
+        To make the numbers easier to picture, they're compared with everyday things: a
+        10 W LED bulb, charging a phone (about 15 Wh) or boiling a litre of water in a
+        kettle (about 100 Wh). The estimates leave out the energy used to train the
+        models, which is spread across every use of them and is much harder to pin down.
+      </p>
+
       <h2>PANIC! Research Questions</h2>
 
       <p>At the School of Cybernetics we love thinking about the way that feedback loops
