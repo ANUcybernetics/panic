@@ -39,8 +39,19 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
     """
   end
 
+  # Kiosks keep a display open across deploys, and LiveView would otherwise
+  # render the new markup with the old page's styles and scripts, so a display
+  # whose assets are out of date reloads itself.
   @impl true
-  def mount(%{"id" => id, "watcher_name" => watcher_name} = _params, _session, socket) do
+  def mount(%{"id" => id, "watcher_name" => watcher_name} = params, session, socket) do
+    if static_changed?(socket) do
+      {:ok, redirect(socket, to: ~p"/i/#{id}/#{watcher_name}")}
+    else
+      mount_display(params, session, socket)
+    end
+  end
+
+  defp mount_display(%{"id" => id, "watcher_name" => watcher_name} = _params, _session, socket) do
     case get_installation(id, socket.assigns) do
       {:ok, installation} ->
         case get_watcher_by_name(installation, watcher_name) do
