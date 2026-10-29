@@ -1,7 +1,8 @@
 defmodule Panic.Watcher.Vestaboards do
   @moduledoc """
   Which text each Vestaboard watcher shows, as pure functions over watcher
-  configs.
+  configs, and whether a piece of text fits on a board (6 rows of 22
+  columns, word-wrapped).
 
   A board shows the output of every invocation whose sequence number lands on
   its offset (`rem(sequence_number, stride) == offset`), the same rule single
@@ -91,5 +92,79 @@ defmodule Panic.Watcher.Vestaboards do
     |> Enum.filter(&displays?.(&1.watchers))
     |> Enum.map(& &1.vestaboard_hold_seconds)
     |> Enum.max(fn -> nil end)
+  end
+
+  @columns 22
+  @rows 6
+
+  @doc """
+  `text` word-wrapped to the width of a board, breaking words longer than a
+  line.
+
+      iex> Panic.Watcher.Vestaboards.wrap("a tabby cat grooms by a roaring stone fireplace")
+      ["a tabby cat grooms by", "a roaring stone", "fireplace"]
+  """
+  def wrap(text) do
+    text
+    |> String.split()
+    |> Enum.flat_map(
+      &(&1
+        |> String.graphemes()
+        |> Enum.chunk_every(@columns)
+        |> Enum.map(fn g -> Enum.join(g) end))
+    )
+    |> Enum.reduce([], fn
+      word, [] ->
+        [word]
+
+      word, [line | rest] ->
+        if String.length(line) + 1 + String.length(word) <= @columns,
+          do: ["#{line} #{word}" | rest],
+          else: [word, line | rest]
+    end)
+    |> Enum.reverse()
+  end
+
+  @doc """
+  Whether `text` fits on a board once word-wrapped.
+
+      iex> Panic.Watcher.Vestaboards.fits?("a cat on a mat")
+      true
+      iex> Panic.Watcher.Vestaboards.fits?(String.duplicate("word ", 30))
+      false
+  """
+  def fits?(text), do: length(wrap(text)) <= @rows
+
+  @doc """
+  `text` cut back a word at a time until it fits on a board.
+
+      iex> Panic.Watcher.Vestaboards.trim_to_fit(String.duplicate("word ", 30))
+      String.trim(String.duplicate("word ", 24))
+  """
+  def trim_to_fit(text) do
+    text
+    |> String.split()
+    |> Stream.iterate(&Enum.drop(&1, -1))
+    |> Enum.find(&fits?(Enum.join(&1, " ")))
+    |> Enum.join(" ")
+  end
+
+  @doc """
+  `text` on one line with typographic punctuation and accents swapped for
+  characters a board can show, and anything else dropped.
+
+      iex> Panic.Watcher.Vestaboards.sanitise("A café’s “neon” sign — glowing 🌙\\n")
+      "A cafe's neon sign, glowing"
+  """
+  def sanitise(text) do
+    text
+    |> String.replace(["‘", "’"], "'")
+    |> String.replace(["“", "”", "*"], "")
+    |> String.replace(~r/\s*[—–]\s*/u, ", ")
+    |> String.replace(~r/[‐‑]/u, "-")
+    |> String.normalize(:nfd)
+    |> String.replace(~r/[^A-Za-z0-9 !@#$()\-+&=;:'"%,.\/?\s]/u, "")
+    |> String.split()
+    |> Enum.join(" ")
   end
 end
