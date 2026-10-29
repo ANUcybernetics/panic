@@ -1,158 +1,77 @@
 defmodule PanicWeb.TerminalAuth do
   @moduledoc """
-  Handles time-based authentication tokens for terminal access.
+  Tokens for the anonymous terminal: the QR code on the first screen of each
+  of a network's installations opens a terminal that anyone can prompt the
+  network from, without signing in, for the network's `anon_terminal_minutes`
+  (subject to the network's lockout, like any other run).
 
-  This module provides functionality to generate and verify time-limited tokens
-  that are embedded in QR codes for terminal access. Tokens are valid for 1 hour
-  and are scoped to specific networks.
+  The token carries the time it was issued, and the terminal closes that many
+  minutes later. The displays issue a fresh token every `qr_refresh_ms/0`, so
+  a scan gives (almost) the full time, but a photo of an old QR code soon
+  stops working: the terminal is for people who are at the installation.
 
-  ## Authentication Bypass
-
-  Authenticated users (those logged in to the system) can access the terminal
-  without a token. This allows network owners and authorized users to access
-  the terminal directly from the control panel. Tokens are only required for
-  unauthenticated access via QR codes.
-
-  ## Examples
-
-      # Generate a token for a network
-      token = TerminalAuth.generate_token(network_id)
-
-      # Verify a token
-      case TerminalAuth.verify_token(token) do
-        {:ok, network_id} -> # Token is valid
-        {:error, :expired} -> # Token has expired
-        {:error, :invalid} -> # Token is invalid
-      end
+  A network with `anon_terminal_minutes` set to nil has no anonymous
+  terminal, and its tokens don't verify. Signed-in users don't need a token.
   """
 
-  @salt "terminal_access"
-  # 1 hour in seconds
-  @max_age 3600
+  alias Panic.Engine.Network
+
+  @salt "anon_terminal"
+  @qr_refresh_ms to_timeout(minute: 1)
 
   @doc """
-  Generates a time-based token for terminal access to a specific network.
-
-  ## Parameters
-
-    * `network_id` - The ID of the network this token grants access to
-
-  ## Returns
-
-    A URL-safe token string
-
-  ## Examples
-
-      iex> TerminalAuth.generate_token("123")
-      "SFMyNTY..."
+  How often a display should show a new QR code.
   """
-  def generate_token(network_id) do
-    Phoenix.Token.sign(PanicWeb.Endpoint, @salt, to_string(network_id))
+  def qr_refresh_ms, do: @qr_refresh_ms
+
+  @doc """
+  The URL of an anonymous terminal for the network, issued now.
+  """
+  def terminal_url(network_id) do
+    PanicWeb.Endpoint.url() <> "/networks/#{network_id}/terminal?token=#{token(network_id)}"
   end
 
   @doc """
-  Verifies a terminal access token.
+  A terminal token for the network, issued at `issued_at` (unix seconds).
 
-  ## Parameters
-
-    * `token` - The token to verify
-
-  ## Returns
-
-    * `{:ok, network_id}` - Token is valid, returns the network_id
-    * `{:error, :expired}` - Token has expired
-    * `{:error, :invalid}` - Token is invalid or malformed
-
-  ## Examples
-
-      iex> TerminalAuth.verify_token(token)
-      {:ok, "123"}
-
-      iex> TerminalAuth.verify_token(expired_token)
-      {:error, :expired}
+  It's the issue time and a signature of it and the network id: short, so
+  the QR code stays coarse enough to scan from across a room.
   """
-  def verify_token(token) do
-    case Phoenix.Token.verify(PanicWeb.Endpoint, @salt, token, max_age: @max_age) do
-      {:ok, network_id} -> {:ok, network_id}
-      {:error, :expired} -> {:error, :expired}
-      {:error, _} -> {:error, :invalid}
+  def token(network_id, issued_at \\ System.system_time(:second)) do
+    "#{issued_at}.#{signature(network_id, issued_at)}"
+  end
+
+  @doc """
+  Verifies a terminal token for the network, returning when the terminal it
+  opens closes.
+  """
+  def verify(_token, %Network{anon_terminal_minutes: nil}), do: {:error, :disabled}
+
+  def verify(token, %Network{id: id, anon_terminal_minutes: minutes}) when is_binary(token) do
+    with [issued, signature] <- String.split(token, "."),
+         {issued_at, ""} <- Integer.parse(issued),
+         true <- Plug.Crypto.secure_compare(signature, signature(id, issued_at)) do
+      expires_at = issued_at + minutes * 60
+      now = System.system_time(:second)
+
+      # a token from the future would stay open too long
+      if issued_at <= now and now <= expires_at,
+        do: {:ok, DateTime.from_unix!(expires_at)},
+        else: {:error, :expired}
+    else
+      _ -> {:error, :invalid}
     end
   end
 
-  @doc """
-  Generates a terminal URL with an embedded authentication token.
+  def verify(_token, _network), do: {:error, :invalid}
 
-  ## Parameters
+  # 128 bits of HMAC-SHA256 is plenty for a token that lasts minutes
+  defp signature(network_id, issued_at) do
+    secret = PanicWeb.Endpoint.config(:secret_key_base)
 
-    * `network_id` - The ID of the network
-
-  ## Returns
-
-    A full URL string including the authentication token
-
-  ## Examples
-
-      iex> TerminalAuth.generate_terminal_url("123")
-      "https://example.com/networks/123/terminal?token=SFMyNTY..."
-  """
-  def generate_terminal_url(network_id) do
-    token = generate_token(network_id)
-    PanicWeb.Endpoint.url() <> "/networks/#{network_id}/terminal?token=#{token}"
-  end
-
-  @doc """
-  Validates a token in a LiveView socket.
-
-  This is a convenience function for use in LiveView mount/3 callbacks.
-  It extracts the token from params and verifies it matches the network_id.
-
-  Note: This function is typically only needed for unauthenticated access.
-  Authenticated users bypass token validation in the Terminal LiveView.
-
-  ## Parameters
-
-    * `params` - The params map from mount/3 or handle_params/3
-    * `socket` - The LiveView socket
-
-  ## Returns
-
-    * `{:ok, socket}` - Token is valid, socket is unchanged
-    * `{:error, socket}` - Token is invalid/expired, socket has redirect
-
-  ## Examples
-
-      def mount(params, _session, socket) do
-        # Check if user is authenticated first
-        if socket.assigns[:current_user] do
-          {:ok, socket}
-        else
-          case TerminalAuth.validate_token_in_socket(params, socket) do
-            {:ok, socket} ->
-              {:ok, socket}
-            {:error, socket} ->
-              {:ok, socket}
-          end
-        end
-      end
-  """
-  def validate_token_in_socket(%{"network_id" => network_id, "token" => token}, socket) do
-    case verify_token(token) do
-      {:ok, ^network_id} ->
-        {:ok, socket}
-
-      # expired, invalid, or for a different network
-      _ ->
-        {:error, Phoenix.LiveView.push_navigate(socket, to: "/networks/#{network_id}/terminal/expired")}
-    end
-  end
-
-  def validate_token_in_socket(%{"network_id" => network_id}, socket) do
-    # No token provided
-    {:error, Phoenix.LiveView.push_navigate(socket, to: "/networks/#{network_id}/terminal/expired")}
-  end
-
-  def validate_token_in_socket(_params, socket) do
-    # Missing required params
-    {:error, Phoenix.LiveView.push_navigate(socket, to: "/404")}
+    :hmac
+    |> :crypto.mac(:sha256, secret, "#{@salt}:#{network_id}:#{issued_at}")
+    |> binary_part(0, 16)
+    |> Base.url_encode64(padding: false)
   end
 end

@@ -10,6 +10,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
 
   import PanicWeb.PanicComponents
 
+  alias PanicWeb.TerminalAuth
   alias PanicWeb.WatcherSubscriber
 
   @impl true
@@ -17,7 +18,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
     ~H"""
     <div
       :if={@display != nil && tuple_size(@display) == 3 && elem(@display, 0) == :grid}
-      class="px-4 pt-2 pb-4"
+      class={["px-4 pt-2 pb-4", show_terminal_qr?(@first_display?, @network) && "pr-[22vmin]"]}
     >
       <.live_component
         :if={@current_user}
@@ -34,6 +35,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
       </p>
     </div>
     <.display invocations={@streams.invocations} display={@display} />
+    <.terminal_qr :if={show_terminal_qr?(@first_display?, @network)} url={@terminal_qr_url} />
     """
   end
 
@@ -46,12 +48,18 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
             display = watcher_to_display_tuple(watcher)
             network = installation.network
 
+            if connected?(socket) do
+              :timer.send_interval(TerminalAuth.qr_refresh_ms(), self(), :refresh_terminal_qr)
+            end
+
             {:ok,
              socket
              |> assign(:page_title, "#{installation.name} - #{watcher.name}")
              |> assign(:installation, installation)
              |> assign(:watcher, watcher)
              |> assign(:watcher_name, watcher.name)
+             |> assign(:first_display?, first_display?(installation, watcher))
+             |> assign(:terminal_qr_url, TerminalAuth.terminal_url(network.id))
              |> WatcherSubscriber.configure_invocation_stream(network, display), layout: {PanicWeb.Layouts, :display}}
 
           {:error, :not_found} ->
@@ -70,9 +78,22 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
   end
 
   @impl true
+  def handle_info(:refresh_terminal_qr, socket) do
+    {:noreply, assign(socket, :terminal_qr_url, TerminalAuth.terminal_url(socket.assigns.network.id))}
+  end
+
   def handle_info({PanicWeb.NetworkLive.TerminalComponent, {:genesis_invocation, genesis_invocation}}, socket) do
     {:noreply, assign(socket, :genesis_invocation, genesis_invocation)}
   end
+
+  # the anonymous terminal's QR code goes on the installation's first screen
+  # (a Vestaboard can't show one)
+  defp first_display?(installation, watcher) do
+    first = Enum.find(installation.watchers, &(&1.type != :vestaboard))
+    first != nil and first.name == watcher.name
+  end
+
+  defp show_terminal_qr?(first_display?, network), do: first_display? and network.anon_terminal_minutes != nil
 
   # Convert watcher struct to display tuple format expected by WatcherSubscriber
   defp watcher_to_display_tuple(%{type: :grid, rows: rows, columns: columns}) do

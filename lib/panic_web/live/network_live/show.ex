@@ -14,9 +14,16 @@ defmodule PanicWeb.NetworkLive.Show do
     ~H"""
     <.header>
       {@network.name}
+      <:subtitle>
+        Lockout: {@network.lockout_seconds}s · Anonymous terminal: {if @network.anon_terminal_minutes,
+          do: "#{@network.anon_terminal_minutes} min",
+          else: "off"}
+      </:subtitle>
       <:actions>
         <.button patch={~p"/networks/#{@network}/edit"}>Edit</.button>
-        <.button navigate={~p"/networks/#{@network}/info/qr"}>QR</.button>
+        <.button :if={@network.anon_terminal_minutes} navigate={~p"/networks/#{@network}/info/qr"}>
+          QR
+        </.button>
         <.button href={~p"/networks/#{@network}/terminal"}>Terminal</.button>
         <.button phx-click="stop" variant="error">Stop</.button>
       </:actions>

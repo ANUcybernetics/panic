@@ -60,7 +60,11 @@ const RunnerCountdown = {
       const diff = Math.max(0, Math.floor((this.targetTime - now) / 1000));
 
       if (this.displayEl) {
-        this.displayEl.textContent = diff.toString();
+        // data-format="clock" shows minutes:seconds rather than seconds
+        this.displayEl.textContent =
+          this.el.dataset.format === "clock"
+            ? `${Math.floor(diff / 60)}:${String(diff % 60).padStart(2, "0")}`
+            : diff.toString();
       }
 
       if (diff <= 0 && this.timer) {

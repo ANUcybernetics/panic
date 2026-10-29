@@ -53,8 +53,14 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   end
 
   def handle_event("start-run", %{"invocation" => invocation_params}, socket) do
-    prompt = invocation_params["input"] || ""
+    if closed?(socket.assigns[:expires_at]) do
+      {:noreply, assign(socket, :run_error, "This terminal has closed")}
+    else
+      start_run(socket, invocation_params["input"] || "")
+    end
+  end
 
+  defp start_run(socket, prompt) do
     network = socket.assigns.network
 
     # runs always act as the network owner, whoever typed the prompt
@@ -69,6 +75,10 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
         {:noreply, assign(socket, :run_error, run_error_message(error))}
     end
   end
+
+  # an anonymous terminal closes when its QR code token expires
+  defp closed?(nil), do: false
+  defp closed?(expires_at), do: DateTime.after?(DateTime.utc_now(), expires_at)
 
   defp run_error_message(%Ash.Error.Invalid{errors: [%RunLocked{} | _]}), do: "Please wait before starting a new run"
 

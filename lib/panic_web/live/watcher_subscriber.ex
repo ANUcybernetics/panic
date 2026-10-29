@@ -445,12 +445,15 @@ defmodule PanicWeb.WatcherSubscriber do
 
   defp latest(_current, new), do: new
 
-  # Keeps the run fields of the assigned network current, without replacing
-  # whatever relationships the LiveView loaded on it.
+  # Keeps the run fields (and the anonymous terminal setting, which decides
+  # whether a display shows its QR code) of the assigned network current,
+  # without replacing whatever relationships the LiveView loaded on it.
   defp assign_run_state(socket, %Network{} = updated) do
     case socket.assigns[:network] do
       %Network{id: id} = network when id == updated.id ->
-        run_state = Map.take(updated, [:current_run_number, :run_started_at])
+        run_state =
+          Map.take(updated, [:current_run_number, :run_started_at, :anon_terminal_minutes])
+
         Component.assign(socket, :network, Map.merge(network, run_state))
 
       _ ->

@@ -19,7 +19,17 @@ defmodule PanicWeb.NetworkLive.FormComponent do
       >
         <.input field={@form[:name]} type="text" label="Name" />
         <.input field={@form[:description]} type="textarea" label="Description" />
-        <.input field={@form[:lockout_seconds]} type="number" label="Lockout Seconds" />
+        <.input field={@form[:lockout_seconds]} type="number" label="Lockout seconds" />
+        <.input
+          field={@form[:anon_terminal_minutes]}
+          type="number"
+          min="1"
+          label="Anonymous terminal (minutes)"
+        >
+          <:help>
+            Shows a QR code on the first screen of each of the network's installations, which lets anyone there prompt the network for this many minutes without signing in. Leave blank to turn it off.
+          </:help>
+        </.input>
 
         <div class="mt-6 flex flex-wrap gap-2">
           <.button variant="primary" phx-disable-with="Saving...">Save Network</.button>

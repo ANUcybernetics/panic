@@ -1,145 +1,73 @@
 defmodule PanicWeb.TerminalAuthTest do
-  use PanicWeb.ConnCase, async: false
+  use ExUnit.Case, async: true
 
+  alias Panic.Engine.Network
   alias PanicWeb.TerminalAuth
 
-  describe "generate_token/1" do
-    test "generates a token for a network ID" do
-      token = TerminalAuth.generate_token("123")
-      assert is_binary(token)
-      assert String.length(token) > 0
-    end
+  @network %Network{id: 123, anon_terminal_minutes: 10}
 
-    test "generates different tokens for different network IDs" do
-      token1 = TerminalAuth.generate_token("123")
-      token2 = TerminalAuth.generate_token("456")
-      assert token1 != token2
-    end
+  defp minutes_ago(minutes), do: System.system_time(:second) - minutes * 60
 
-    test "generates different tokens for same network ID at different times" do
-      token1 = TerminalAuth.generate_token("123")
-      # Small delay to ensure different timestamps
-      Process.sleep(10)
-      token2 = TerminalAuth.generate_token("123")
-      assert token1 != token2
-    end
+  test "a fresh token opens a terminal for the network's minutes" do
+    issued_at = System.system_time(:second)
+    token = TerminalAuth.token(@network.id, issued_at)
+
+    assert {:ok, expires_at} = TerminalAuth.verify(token, @network)
+    assert DateTime.to_unix(expires_at) == issued_at + 10 * 60
   end
 
-  describe "verify_token/1" do
-    test "verifies a valid token" do
-      network_id = "123"
-      token = TerminalAuth.generate_token(network_id)
-      assert {:ok, ^network_id} = TerminalAuth.verify_token(token)
-    end
+  test "a token's terminal closes the network's minutes after it was issued" do
+    issued_at = minutes_ago(4)
+    token = TerminalAuth.token(@network.id, issued_at)
 
-    test "returns error for invalid token" do
-      assert {:error, :invalid} = TerminalAuth.verify_token("invalid_token")
-    end
-
-    test "returns error for expired token" do
-      two_hours_ago = System.system_time(:second) - 7200
-
-      expired_token =
-        Phoenix.Token.sign(PanicWeb.Endpoint, "terminal_access", "123", signed_at: two_hours_ago)
-
-      assert {:error, :expired} = TerminalAuth.verify_token(expired_token)
-    end
-
-    test "returns correct network_id from token" do
-      network_id = "test-network-456"
-      token = TerminalAuth.generate_token(network_id)
-      assert {:ok, ^network_id} = TerminalAuth.verify_token(token)
-    end
+    assert {:ok, expires_at} = TerminalAuth.verify(token, @network)
+    assert DateTime.to_unix(expires_at) == issued_at + 10 * 60
   end
 
-  describe "generate_terminal_url/1" do
-    test "generates a full URL with token" do
-      url = TerminalAuth.generate_terminal_url("123")
-      assert url =~ ~r{/networks/123/terminal\?token=}
-      assert url =~ ~r{^https?://}
-    end
-
-    test "includes valid token in URL" do
-      network_id = "789"
-      url = TerminalAuth.generate_terminal_url(network_id)
-
-      # Extract token from URL
-      [_, token] = Regex.run(~r/token=(.+)$/, url)
-
-      assert {:ok, ^network_id} = TerminalAuth.verify_token(token)
-    end
+  test "a token older than the network's minutes has expired" do
+    token = TerminalAuth.token(@network.id, minutes_ago(11))
+    assert {:error, :expired} = TerminalAuth.verify(token, @network)
   end
 
-  describe "validate_token_in_socket/2" do
-    setup do
-      socket = %Phoenix.LiveView.Socket{
-        assigns: %{},
-        endpoint: PanicWeb.Endpoint,
-        router: PanicWeb.Router
-      }
+  test "a token issued in the future doesn't verify" do
+    token = TerminalAuth.token(@network.id, minutes_ago(-5))
+    assert {:error, :expired} = TerminalAuth.verify(token, @network)
+  end
 
-      {:ok, socket: socket}
-    end
+  test "a token whose issue time has been changed doesn't verify" do
+    [_issued, signature] = @network.id |> TerminalAuth.token(minutes_ago(11)) |> String.split(".")
+    assert {:error, :invalid} = TerminalAuth.verify("#{minutes_ago(1)}.#{signature}", @network)
+  end
 
-    test "validates correct token for network", %{socket: socket} do
-      network_id = "123"
-      token = TerminalAuth.generate_token(network_id)
-      params = %{"network_id" => network_id, "token" => token}
+  test "the network's current setting decides how long a token lasts" do
+    token = TerminalAuth.token(@network.id, minutes_ago(11))
 
-      assert {:ok, _socket} = TerminalAuth.validate_token_in_socket(params, socket)
-    end
+    assert {:ok, _expires_at} =
+             TerminalAuth.verify(token, %{@network | anon_terminal_minutes: 30})
+  end
 
-    test "rejects token for different network", %{socket: socket} do
-      token = TerminalAuth.generate_token("123")
-      params = %{"network_id" => "456", "token" => token}
+  test "no token verifies for a network with the anonymous terminal off" do
+    token = TerminalAuth.token(@network.id)
 
-      assert {:error, socket} = TerminalAuth.validate_token_in_socket(params, socket)
+    assert {:error, :disabled} =
+             TerminalAuth.verify(token, %{@network | anon_terminal_minutes: nil})
+  end
 
-      assert socket.redirected ==
-               {:live, :redirect, %{kind: :push, to: "/networks/456/terminal/expired"}}
-    end
+  test "a token for another network doesn't verify" do
+    token = TerminalAuth.token(456)
+    assert {:error, :invalid} = TerminalAuth.verify(token, @network)
+  end
 
-    test "rejects expired token", %{socket: socket} do
-      network_id = "123"
-      # Create an expired token
-      expired_token =
-        Phoenix.Token.sign(PanicWeb.Endpoint, "terminal_access", %{
-          network_id: network_id,
-          # 2 hours ago
-          generated_at: System.system_time(:second) - 7200
-        })
+  test "malformed and missing tokens don't verify" do
+    assert {:error, :invalid} = TerminalAuth.verify("not-a-token", @network)
+    assert {:error, :invalid} = TerminalAuth.verify(nil, @network)
+  end
 
-      params = %{"network_id" => network_id, "token" => expired_token}
+  test "a terminal URL points at the network's terminal with a token" do
+    url = TerminalAuth.terminal_url(@network.id)
 
-      assert {:error, socket} = TerminalAuth.validate_token_in_socket(params, socket)
-
-      assert socket.redirected ==
-               {:live, :redirect, %{kind: :push, to: "/networks/123/terminal/expired"}}
-    end
-
-    test "rejects invalid token", %{socket: socket} do
-      params = %{"network_id" => "123", "token" => "invalid"}
-
-      assert {:error, socket} = TerminalAuth.validate_token_in_socket(params, socket)
-
-      assert socket.redirected ==
-               {:live, :redirect, %{kind: :push, to: "/networks/123/terminal/expired"}}
-    end
-
-    test "rejects missing token", %{socket: socket} do
-      params = %{"network_id" => "123"}
-
-      assert {:error, socket} = TerminalAuth.validate_token_in_socket(params, socket)
-
-      assert socket.redirected ==
-               {:live, :redirect, %{kind: :push, to: "/networks/123/terminal/expired"}}
-    end
-
-    test "redirects to 404 for missing network_id", %{socket: socket} do
-      params = %{"token" => "some_token"}
-
-      assert {:error, socket} = TerminalAuth.validate_token_in_socket(params, socket)
-      assert socket.redirected == {:live, :redirect, %{kind: :push, to: "/404"}}
-    end
+    assert url =~ ~r{^https?://.+/networks/123/terminal\?token=.+}
+    [_, token] = String.split(url, "token=")
+    assert {:ok, _expires_at} = TerminalAuth.verify(token, @network)
   end
 end

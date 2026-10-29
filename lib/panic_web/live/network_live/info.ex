@@ -48,16 +48,19 @@ defmodule PanicWeb.NetworkLive.Info do
       id="qr-modal"
       on_cancel={JS.patch(~p"/networks/#{@network.id}/info/")}
     >
-      <.qr_code text={@qr_text} title="scan to prompt" />
+      <.qr_code :if={@qr_text} text={@qr_text} title="scan to prompt" />
+      <p :if={!@qr_text} class="text-center">
+        This network's anonymous terminal is off. Turn it on by giving it a number of minutes in the network's settings.
+      </p>
     </.modal>
     """
   end
 
   @impl true
   def mount(_params, _session, socket) do
-    # Schedule periodic QR code refresh every 5 minutes
+    # each QR code opens a terminal for a limited time, so keep issuing new ones
     if connected?(socket) do
-      :timer.send_interval(300_000, self(), :refresh_qr_code)
+      :timer.send_interval(TerminalAuth.qr_refresh_ms(), self(), :refresh_qr_code)
     end
 
     {:ok, socket}
@@ -67,17 +70,10 @@ defmodule PanicWeb.NetworkLive.Info do
   def handle_params(%{"network_id" => network_id}, _, socket) do
     case get_network(network_id, socket.assigns) do
       {:ok, network} ->
-        # Generate URL based on live action
-        qr_url =
-          case socket.assigns.live_action do
-            :qr -> TerminalAuth.generate_terminal_url(network.id)
-            _ -> url(socket, ~p"/networks/#{network.id}/info/")
-          end
-
         {:noreply,
          socket
          |> assign(:page_title, "Network #{network_id} terminal")
-         |> assign(:qr_text, qr_url)
+         |> assign(:qr_text, terminal_qr_text(network))
          |> WatcherSubscriber.configure_invocation_stream(network, {:single, 0, 1, false})}
 
       {:error, _error} ->
@@ -87,15 +83,11 @@ defmodule PanicWeb.NetworkLive.Info do
 
   @impl true
   def handle_info(:refresh_qr_code, socket) do
-    # Only refresh if we're showing the QR modal
-    if socket.assigns.live_action == :qr do
-      network_id = socket.assigns.network.id
-      new_qr_url = TerminalAuth.generate_terminal_url(network_id)
-      {:noreply, assign(socket, :qr_text, new_qr_url)}
-    else
-      {:noreply, socket}
-    end
+    {:noreply, assign(socket, :qr_text, terminal_qr_text(socket.assigns.network))}
   end
+
+  defp terminal_qr_text(%{anon_terminal_minutes: nil}), do: nil
+  defp terminal_qr_text(network), do: TerminalAuth.terminal_url(network.id)
 
   defp all_models(network) do
     Enum.map(network.models, &PanicWeb.NetworkLive.NetworkHelpers.get_model_or_placeholder/1)

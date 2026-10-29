@@ -170,7 +170,7 @@ defmodule PanicWeb.PanicComponents do
   end
 
   @doc """
-  Renders a modal containing a QR code.
+  Renders a QR code with a title, for showing in a modal.
   """
   attr :text, :string, required: true, doc: "the text data to encode in the QR code"
   attr :title, :string, default: "wtf is this?", doc: "the title to display above the QR code"
@@ -180,24 +180,50 @@ defmodule PanicWeb.PanicComponents do
     <div class="flex flex-col items-center">
       <h2 class="mb-6 text-2xl font-semibold sm:text-4xl">{@title}</h2>
       <div class="w-full max-w-md [&_svg]:h-auto [&_svg]:w-full">
-        {@text
-        |> QRCode.create(:high)
-        |> QRCode.render(:svg, %QRCode.Render.SvgSettings{
-          qrcode_color: {216, 180, 254},
-          background_color: {24, 24, 27}
-        })
-        # unwrap the tuple
-        |> elem(1)
-        |> scalable_svg()
-        |> Phoenix.HTML.raw()}
+        {qr_svg(@text, {216, 180, 254}, {24, 24, 27})}
       </div>
     </div>
     """
   end
 
-  # the QR code SVG has a fixed size and no viewBox, so it can't shrink to fit a phone
-  defp scalable_svg(svg) do
-    Regex.replace(~r/<svg width="(\d+)" height="(\d+)"/, svg, ~S(<svg viewBox="0 0 \1 \2"), global: false)
+  @doc """
+  Renders the anonymous terminal's QR code in the top right of a display:
+  dark on light, so phones read it even when it's small.
+  """
+  attr :url, :string, required: true
+
+  def terminal_qr(assigns) do
+    ~H"""
+    <div
+      id="terminal-qr"
+      data-url={@url}
+      class="fixed top-[2vmin] right-[2vmin] z-10 w-[18vmin] rounded-[1vmin] bg-purple-200 p-[0.8vmin] text-center text-[1.5vmin] leading-tight text-zinc-900 [&_svg]:h-auto [&_svg]:w-full"
+    >
+      {qr_svg(@url, {24, 24, 27}, {233, 213, 255})}
+      <span class="block pt-[0.4vmin]">scan to prompt</span>
+    </div>
+    """
+  end
+
+  defp qr_svg(text, colour, background) do
+    {:ok, svg} =
+      text
+      |> QRCode.create(:medium)
+      |> QRCode.render(:svg, %QRCode.Render.SvgSettings{
+        qrcode_color: colour,
+        background_color: background
+      })
+
+    # the SVG has a fixed size and no viewBox, so add one to let CSS size it;
+    # it draws each module as a rect, and crispEdges stops anti-aliasing
+    # leaving seams between them when it's scaled (which stops it scanning)
+    svg
+    |> String.replace(
+      ~r/<svg width="(\d+)" height="(\d+)"/,
+      ~S(<svg viewBox="0 0 \1 \2" shape-rendering="crispEdges"),
+      global: false
+    )
+    |> Phoenix.HTML.raw()
   end
 
   def panic_button(assigns) do

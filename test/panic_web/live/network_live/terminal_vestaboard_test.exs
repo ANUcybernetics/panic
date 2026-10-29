@@ -55,7 +55,7 @@ defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
         )
         |> Ash.create()
 
-      token = TerminalAuth.generate_token(network.id)
+      token = anon_token(network)
 
       %{network: network, user: user, token: token, installation: installation}
     end
@@ -81,5 +81,11 @@ defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
       assert genesis.network_id == network.id
       assert genesis.state == :ready
     end
+  end
+
+  # opens the network's anonymous terminal, so these tests can visit it without signing in
+  defp anon_token(network) do
+    Panic.Engine.update_network!(network, %{anon_terminal_minutes: 10}, authorize?: false)
+    TerminalAuth.token(network.id)
   end
 end

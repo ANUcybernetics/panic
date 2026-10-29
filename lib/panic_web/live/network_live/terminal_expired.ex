@@ -14,15 +14,15 @@ defmodule PanicWeb.NetworkLive.TerminalExpired do
       <.icon name="hero-clock" class="mx-auto mb-8 size-24 text-primary-content/70" />
       <h1 class="mb-4 text-3xl font-bold text-primary-content">QR Code Expired</h1>
       <p class="mb-6">
-        The QR code you scanned has expired for security reasons.
-        QR codes are only valid for 1 hour after they're generated.
+        A terminal opened from a QR code only stays open for a little while,
+        so it's only for people at the installation. This one has closed.
       </p>
       <div class="card card-border border-base-300 bg-base-200 mb-6 text-left">
         <div class="card-body">
           <h2 class="card-title text-primary-content">How to get a new QR code:</h2>
           <ol class="list-decimal space-y-2 pl-6">
             <li>Find the screen displaying the PANIC! network</li>
-            <li>Look for the QR code on the screen (it refreshes automatically)</li>
+            <li>Look for the QR code in its top right corner (it changes every minute)</li>
             <li>Scan the new QR code with your device</li>
           </ol>
         </div>
