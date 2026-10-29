@@ -1,46 +1,57 @@
 # PANIC! Birch setup
 
 The Birch Level 3 installation is four TCL 4K TVs, each driven by a Raspberry Pi
-attached to it, plus four Vestaboards. It runs the "Decoding AI" network
-(network 12) through installation 4, and each display is a watcher on that
-installation:
+attached to it, plus four Vestaboards. Whatever network is showing there, it
+runs through an installation with eight watchers:
 
-| display | watcher | URL                             |
-| ------- | ------- | ------------------------------- |
-| TV 1--4 | `tv1`--`tv4` | `https://panic.fly.dev/i/4/tvN` |
-| Vestaboards | `panic1`--`panic4` | driven by the server, no browser |
+| display     | watcher            | shows                                        |
+| ----------- | ------------------ | -------------------------------------------- |
+| TV 1--4     | `tv1`--`tv4`       | `https://panic.fly.dev/i/<installation>/tvN` |
+| Vestaboards | `panic1`--`panic4` | driven by the server, no browser             |
 
-The eight watchers share a stride of 8 and sit at different offsets, so each one
-shows a different step of the run as it cycles.
+The watchers share a stride of 8 and sit at different offsets (TVs on 0, 2, 4,
+6; Vestaboards on 1, 3, 5, 7, with `panic1` also showing the prompt), so the TVs
+show the images and the Vestaboards the text, each a different step of the run.
+That layout suits a network of eight models alternating text-to-image and
+image-to-text. Captioners for the boards should keep their text to 6 lines of 22
+characters.
+
+## Choosing what the TVs show
+
+Each Pi's kiosk boots into the URL in its `kiosk-url.txt`, so the TVs show
+whichever installation those URLs name. To move the TVs to another installation,
+change the URL on each Pi (see [`rpi/README.md`](../rpi/README.md)). The
+Vestaboards need nothing: the server sends text to them from whichever
+installation's network is running. Every installation with Vestaboard watchers
+drives the same four boards, so only run one such network at a time.
 
 ## Waking the installation up
 
-The Pis boot straight into their kiosk URL --- there is nothing to type on the
-TVs. If the screens are blank, the kiosks are stopped; bring them back with
+The TVs need turning on at the wall. The Pis boot straight into their kiosk URL,
+so there is nothing to type on the TVs. If the screens are blank, the kiosks are
+stopped; bring them back with
 
 ```bash
 ./rpi/kiosk.sh start
 ```
 
 from a machine on the tailnet. `./rpi/kiosk.sh status` shows what each Pi is
-doing. The Pis stay on the tailnet whether or not the kiosks are running, and
-rejoin by themselves after a power cycle.
+doing and which URL it's on. The Pis stay on the tailnet whether or not the
+kiosks are running, and rejoin by themselves after a power cycle.
 
 ## Starting a run
 
-On any laptop or tablet:
-
-- go to the [panic landing page](https://panic.fly.dev/) and log in
-- open the [terminal page](https://panic.fly.dev/networks/12/terminal) and type
-  a prompt to kick off a run (hit enter to start it)
-
-The TVs and Vestaboards pick the run up on their own.
+On any laptop or tablet, log in at the
+[panic landing page](https://panic.fly.dev/), open the network's terminal page
+(`/networks/<id>/terminal`) and type a prompt. Admins can also start one over
+the [JSON API](../README.md#json-api) with the network's `start_run` route. The
+TVs and Vestaboards pick the run up on their own.
 
 ## Stopping
 
-Go to the [network page](https://panic.fly.dev/networks/12) and hit "Stop"
-towards the top. **Do this when you're done** --- otherwise PANIC! keeps running
-indefinitely and burns through our AI platform credits.
+Hit "Stop" on the network's page (`/networks/<id>`). A run slows down as it ages
+(see `Panic.Engine.Schedule`) but never stops by itself, so **stop it when
+you're done** to save AI platform credits.
 
 If the installation is finished for a while, also stop the kiosks:
 
@@ -54,9 +65,7 @@ until someone visits the site again.
 
 ## Other notes
 
-- there might be a delay when you start a run with a new prompt, because
-  Replicate (where the models are hosted) may need to load them into memory.
-  Once they're warm it moves through the text/image outputs pretty quickly.
-
+- a model that refuses a prompt (safety filters) or hangs is retried, so a run
+  can pause for up to a minute or so before carrying on
 - the Vestaboards sometimes get "behind" the TVs. You don't need to do anything;
-  they'll catch back up.
+  they'll catch back up
