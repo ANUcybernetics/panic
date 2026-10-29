@@ -1363,7 +1363,10 @@ defmodule Panic.Model do
 
     with {:ok, caption} <-
            replicate_text(replicate_model, condenser_input(path, instructions, text), token) do
-      {:ok, Vestaboards.sanitise(caption)}
+      case Vestaboards.sanitise(caption) do
+        "" -> {:error, "#{path} returned no caption"}
+        caption -> {:ok, caption}
+      end
     end
   end
 
