@@ -338,15 +338,5 @@ defmodule PanicWeb.TerminalLiveTest do
       # Note: The actual update happens via Phoenix PubSub, so in tests
       # we might not see the immediate update without proper setup
     end
-
-    test "terminal has proper styling", %{conn: conn, user: user} do
-      network = Fixtures.network_with_dummy_models(user)
-
-      conn
-      |> visit("/networks/#{network.id}/terminal")
-      |> assert_has(".terminal-container")
-      # Purple input color
-      |> assert_has("style", text: "color: #d8b4fe")
-    end
   end
 end

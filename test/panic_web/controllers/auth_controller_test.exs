@@ -49,14 +49,14 @@ defmodule PanicWeb.AuthControllerTest do
       %{conn: conn} = create_and_sign_in_user(%{conn: conn})
 
       conn
-      |> visit("/users")
-      |> assert_has("h1", text: "Listing Users")
+      |> visit("/networks")
+      |> assert_has("h1", text: "Networks")
 
       conn = delete(conn, "/sign-out")
       assert redirected_to(conn) == "/"
 
       Phoenix.ConnTest.build_conn()
-      |> visit("/users")
+      |> visit("/networks")
       |> assert_has("button", text: "Sign in")
     end
 
@@ -65,13 +65,13 @@ defmodule PanicWeb.AuthControllerTest do
       user = Fixtures.user(password)
 
       conn
-      |> visit("/users")
+      |> visit("/networks")
       |> assert_has("button", text: "Sign in")
       |> fill_in("Email", with: user.email)
       |> fill_in("Password", with: password)
       |> submit()
       |> then(fn session ->
-        session |> visit("/users") |> assert_has("h1", text: "Listing Users")
+        session |> visit("/networks") |> assert_has("h1", text: "Networks")
       end)
     end
 
@@ -83,7 +83,7 @@ defmodule PanicWeb.AuthControllerTest do
 
     test "anonymous user cannot access protected routes", %{conn: conn} do
       conn
-      |> visit("/users")
+      |> visit("/networks")
       |> assert_has("button", text: "Sign in")
     end
 
@@ -91,8 +91,8 @@ defmodule PanicWeb.AuthControllerTest do
       %{conn: conn} = create_and_sign_in_user(%{conn: conn})
 
       conn
-      |> visit("/users")
-      |> assert_has("h1", text: "Listing Users")
+      |> visit("/networks")
+      |> assert_has("h1", text: "Networks")
     end
 
     test "sign in page is accessible when not authenticated", %{conn: conn} do

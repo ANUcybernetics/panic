@@ -9,21 +9,20 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
   def render(assigns) do
     ~H"""
     <div class="space-y-4">
-      <!-- Validity indicator and action buttons -->
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-4">
-          <span :if={@has_changes} class="text-sm text-zinc-400">Unsaved changes</span>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+          <span :if={@has_changes} class="text-base-content/60">Unsaved changes</span>
 
-          <div :if={@validation_result == :valid} class="flex items-center gap-2">
-            <.icon name="hero-check-circle" class="size-5 text-green-500" />
-            <span class="text-sm text-green-500">Valid network</span>
+          <div :if={@validation_result == :valid} class="flex items-center gap-2 text-success">
+            <.icon name="hero-check-circle" class="size-5" />
+            <span>Valid network</span>
           </div>
           <div
             :if={@validation_result != :valid and @draft_models != []}
-            class="flex items-center gap-2"
+            class="flex items-center gap-2 text-error"
           >
-            <.icon name="hero-exclamation-circle" class="size-5 text-red-500" />
-            <span class="text-sm text-red-500">Invalid: {@validation_error}</span>
+            <.icon name="hero-exclamation-circle" class="size-5 shrink-0" />
+            <span>Invalid: {@validation_error}</span>
           </div>
         </div>
 
@@ -32,7 +31,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
             type="button"
             phx-click="reset_models"
             phx-target={@myself}
-            class="px-4 py-2 text-sm bg-zinc-700 text-zinc-300 rounded-sm hover:bg-zinc-600"
+            class="btn btn-sm btn-ghost"
           >
             Reset
           </button>
@@ -41,70 +40,55 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
             phx-click="save_models"
             phx-target={@myself}
             disabled={@validation_result != :valid}
-            class={[
-              "px-4 py-2 text-sm rounded-sm",
-              if @validation_result == :valid do
-                "bg-green-600 text-white hover:bg-green-700"
-              else
-                "bg-zinc-700 text-zinc-500 cursor-not-allowed"
-              end
-            ]}
+            class="btn btn-sm btn-success"
           >
             Save Network
           </button>
         </div>
       </div>
 
-      <!-- Model table -->
-      <div :if={@draft_models != []} class="overflow-y-auto">
-        <table class="w-full">
-          <thead class="text-sm text-left leading-6 text-purple-600">
+      <div :if={@draft_models != []} class="overflow-x-auto rounded-box border border-base-300">
+        <table class="table">
+          <thead>
             <tr>
-              <th class="p-0 pb-2 pl-4 pr-6 font-normal w-20">Index</th>
-              <th class="p-0 pb-2 pr-6 font-normal">Model Name</th>
-              <th class="p-0 pb-2 pr-6 font-normal w-24">Type</th>
-              <th class="p-0 pb-2 pr-4 w-24">
-                <span class="sr-only">Reorder</span>
-              </th>
-              <th class="p-0 pb-2 pr-4 w-20">
-                <span class="sr-only">Actions</span>
-              </th>
+              <th class="w-0">#</th>
+              <th>Model</th>
+              <th class="hidden sm:table-cell">Type</th>
+              <th class="w-0"><span class="sr-only">Actions</span></th>
             </tr>
           </thead>
-          <tbody class="relative divide-y divide-zinc-800 border-t border-zinc-700 text-sm leading-6 text-purple-300">
-            <tr :for={{model, index} <- Enum.with_index(@draft_models)} class="hover:bg-zinc-800/50">
-              <td class="relative p-0 py-2 pl-4 pr-6 text-zinc-400">
-                {index}
-              </td>
-              <td class="relative p-0 py-2 pr-6">
+          <tbody>
+            <tr :for={{model, index} <- Enum.with_index(@draft_models)}>
+              <td class="text-base-content/60">{index}</td>
+              <td>
                 {model.name}
-              </td>
-              <td class="relative p-0 py-2 pr-6">
                 <span class={[
-                  "px-2 py-1 text-xs rounded-md inline-block",
+                  "badge badge-sm mt-1 block w-fit sm:hidden",
                   type_badge_class(model.input_type, model.output_type)
                 ]}>
                   {model.input_type} → {model.output_type}
                 </span>
               </td>
-              <td class="relative p-0 py-2 pr-4">
-                <div class="flex items-center gap-1">
+              <td class="hidden sm:table-cell">
+                <span class={[
+                  "badge badge-sm whitespace-nowrap",
+                  type_badge_class(model.input_type, model.output_type)
+                ]}>
+                  {model.input_type} → {model.output_type}
+                </span>
+              </td>
+              <td>
+                <div class="flex items-center justify-end">
                   <button
                     type="button"
                     phx-click="move_model_up"
                     phx-value-index={index}
                     phx-target={@myself}
                     disabled={index == 0}
-                    class={[
-                      "text-zinc-400",
-                      if index == 0 do
-                        "opacity-30 cursor-not-allowed"
-                      else
-                        "hover:text-purple-400"
-                      end
-                    ]}
+                    class="btn btn-ghost btn-square btn-sm"
+                    aria-label="Move up"
                   >
-                    <.icon name="hero-chevron-up" class="size-4" />
+                    <.icon name="hero-chevron-up" />
                   </button>
                   <button
                     type="button"
@@ -112,35 +96,28 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
                     phx-value-index={index}
                     phx-target={@myself}
                     disabled={index == length(@draft_models) - 1}
-                    class={[
-                      "text-zinc-400",
-                      if index == length(@draft_models) - 1 do
-                        "opacity-30 cursor-not-allowed"
-                      else
-                        "hover:text-purple-400"
-                      end
-                    ]}
+                    class="btn btn-ghost btn-square btn-sm"
+                    aria-label="Move down"
                   >
-                    <.icon name="hero-chevron-down" class="size-4" />
+                    <.icon name="hero-chevron-down" />
+                  </button>
+                  <button
+                    type="button"
+                    phx-click="remove_model"
+                    phx-value-index={index}
+                    phx-target={@myself}
+                    class="btn btn-ghost btn-square btn-sm hover:text-error"
+                    aria-label="Remove"
+                  >
+                    <.icon name="hero-trash" />
                   </button>
                 </div>
-              </td>
-              <td class="relative p-0 py-2 pr-4 text-right">
-                <button
-                  type="button"
-                  phx-click="remove_model"
-                  phx-value-index={index}
-                  phx-target={@myself}
-                  class="text-zinc-400 hover:text-red-500"
-                >
-                  <.icon name="hero-trash" class="size-4" />
-                </button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div :if={@draft_models == []} class="text-center py-8 text-zinc-500">
+      <div :if={@draft_models == []} class="py-8 text-center text-base-content/60">
         No models in network. Add a model below to get started.
       </div>
 
@@ -154,7 +131,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponent do
           autocomplete="off"
           placeholder={"Add a model that takes #{@next_input}..."}
           phx-mounted={if @picks > 0, do: JS.focus()}
-          class="bg-zinc-800 border border-zinc-600 text-zinc-100 placeholder-zinc-500 rounded-md w-full px-3 py-2"
+          class="input w-full"
         />
         <datalist id="model-options">
           <option :for={model <- @candidates} value={model.name} />

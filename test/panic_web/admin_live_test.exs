@@ -85,6 +85,15 @@ defmodule PanicWeb.AdminLiveTest do
       |> assert_has("h2", text: "Invocations")
       |> assert_has("h2", text: "Networks")
     end
+
+    test "lists the users", %{conn: conn, user: admin} do
+      user = user()
+
+      conn
+      |> visit("/admin")
+      |> assert_has("#user-table", text: Ash.CiString.value(admin.email))
+      |> assert_has("#user-table", text: Ash.CiString.value(user.email))
+    end
   end
 
   describe "API keys" do

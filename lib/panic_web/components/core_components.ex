@@ -2,15 +2,11 @@ defmodule PanicWeb.CoreComponents do
   @moduledoc """
   Provides core UI components.
 
-  At first glance, this module may seem daunting, but its goal is to provide
-  core building blocks for your application, such as modals, tables, and
-  forms. The components consist mostly of markup and are well-documented
-  with doc strings and declarative assigns. You may customize and style
-  them in any way you want, based on your application growth and needs.
-
-  The default components use Tailwind CSS, a utility-first CSS framework.
-  See the [Tailwind CSS documentation](https://tailwindcss.com) to learn
-  how to customize them or feel free to swap in another framework altogether.
+  These follow the Phoenix 1.8 generator's components, styled with
+  [daisyUI](https://daisyui.com/components/) classes over Tailwind CSS. The
+  daisyUI theme (the PANIC! colours) is defined in `assets/css/app.css`, so
+  style with semantic colours (`bg-base-200`, `text-primary`, `btn-error`)
+  rather than raw palette ones.
 
   Icons are provided by [heroicons](https://heroicons.com). See `icon/1` for usage.
   """
@@ -50,16 +46,18 @@ defmodule PanicWeb.CoreComponents do
       phx-hook="Modal"
       data-show={to_string(@show)}
       data-cancel={@on_cancel}
-      closedby="any"
-      class="modal relative w-[calc(100%-2rem)] max-w-3xl rounded-2xl bg-zinc-900 p-14 text-purple-300 shadow-lg shadow-purple-400/10 ring-1 ring-purple-400/10"
+      class="modal"
     >
-      <div id={"#{@id}-content"}>
+      <div id={"#{@id}-content"} class="modal-box max-w-2xl p-6 sm:p-10">
+        <form method="dialog" class="absolute top-3 right-3">
+          <button class="btn btn-sm btn-circle btn-ghost" aria-label={gettext("close")}>
+            <.icon name="hero-x-mark" class="size-5" />
+          </button>
+        </form>
         {render_slot(@inner_block)}
       </div>
-      <form method="dialog" class="absolute top-6 right-5">
-        <button class="-m-3 flex-none p-3 opacity-20 hover:opacity-40" aria-label={gettext("close")}>
-          <.icon name="hero-x-mark-solid" class="h-5 w-5" />
-        </button>
+      <form method="dialog" class="modal-backdrop">
+        <button tabindex="-1">{gettext("close")}</button>
       </form>
     </dialog>
     """
@@ -90,22 +88,25 @@ defmodule PanicWeb.CoreComponents do
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
-      class={[
-        "fixed top-2 right-2 mr-2 w-80 sm:w-96 z-50 rounded-lg p-3 ring-1",
-        @kind == :info && "bg-emerald-50 text-emerald-800 ring-emerald-500 fill-cyan-900",
-        @kind == :error && "bg-rose-50 text-rose-900 shadow-md ring-rose-500 fill-rose-900"
-      ]}
+      class="toast toast-top toast-end z-50"
       {@rest}
     >
-      <p :if={@title} class="flex items-center gap-1.5 text-sm font-semibold leading-6">
-        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-4 w-4" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-4 w-4" />
-        {@title}
-      </p>
-      <p class="mt-2 text-sm leading-5">{msg}</p>
-      <button type="button" class="group absolute top-1 right-1 p-2" aria-label={gettext("close")}>
-        <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
-      </button>
+      <div class={[
+        "alert w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap",
+        @kind == :info && "alert-info",
+        @kind == :error && "alert-error"
+      ]}>
+        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
+        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
+        <div>
+          <p :if={@title} class="font-semibold">{@title}</p>
+          <p>{msg}</p>
+        </div>
+        <div class="flex-1" />
+        <button type="button" class="group self-start cursor-pointer" aria-label={gettext("close")}>
+          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
+        </button>
+      </div>
     </div>
     """
   end
@@ -122,101 +123,83 @@ defmodule PanicWeb.CoreComponents do
 
   def flash_group(assigns) do
     ~H"""
-    <div id={@id}>
-      <.flash kind={:info} title={gettext("Success!")} flash={@flash} />
-      <.flash kind={:error} title={gettext("Error!")} flash={@flash} />
+    <div id={@id} aria-live="polite">
+      <.flash kind={:info} flash={@flash} />
+      <.flash kind={:error} flash={@flash} />
+
       <.flash
         id="client-error"
         kind={:error}
         title={gettext("We can't find the internet")}
-        phx-disconnected={show(".phx-client-error #client-error")}
-        phx-connected={hide("#client-error")}
+        phx-disconnected={show(".phx-client-error #client-error") |> JS.remove_attribute("hidden")}
+        phx-connected={hide("#client-error") |> JS.set_attribute({"hidden", ""})}
         hidden
       >
         {gettext("Attempting to reconnect")}
-        <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
+        <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
 
       <.flash
         id="server-error"
         kind={:error}
         title={gettext("Something went wrong!")}
-        phx-disconnected={show(".phx-server-error #server-error")}
-        phx-connected={hide("#server-error")}
+        phx-disconnected={show(".phx-server-error #server-error") |> JS.remove_attribute("hidden")}
+        phx-connected={hide("#server-error") |> JS.set_attribute({"hidden", ""})}
         hidden
       >
-        {gettext("Hang in there while we get back on track")}
-        <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
+        {gettext("Attempting to reconnect")}
+        <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
     </div>
     """
   end
 
   @doc """
-  Renders a simple form.
-
-  ## Examples
-
-      <.simple_form for={@form} phx-change="validate" phx-submit="save">
-        <.input field={@form[:email]} label="Email"/>
-        <.input field={@form[:username]} label="Username" />
-        <:actions>
-          <.button>Save</.button>
-        </:actions>
-      </.simple_form>
-  """
-  attr :for, :any, required: true, doc: "the datastructure for the form"
-  attr :as, :any, default: nil, doc: "the server side parameter to collect all input under"
-
-  attr :rest, :global,
-    include: ~w(autocomplete name rel action enctype method novalidate target multipart),
-    doc: "the arbitrary HTML attributes to apply to the form tag"
-
-  slot :inner_block, required: true
-  slot :actions, doc: "the slot for form actions, such as a submit button"
-
-  def simple_form(assigns) do
-    ~H"""
-    <.form :let={f} for={@for} as={@as} {@rest}>
-      <div class="mt-10 space-y-8 bg-zinc-900">
-        {render_slot(@inner_block, f)}
-        <div :for={action <- @actions} class="mt-2 flex items-center justify-between gap-6">
-          {render_slot(action, f)}
-        </div>
-      </div>
-    </.form>
-    """
-  end
-
-  @doc """
-  Renders a button.
+  Renders a button, or a link styled as one when given `href`, `navigate`
+  or `patch`.
 
   ## Examples
 
       <.button>Send!</.button>
-      <.button phx-click="go" class="ml-2">Send!</.button>
+      <.button phx-click="go" variant="primary">Send!</.button>
+      <.button navigate={~p"/"}>Home</.button>
+      <.button phx-click="delete" variant="error" size="sm">Delete</.button>
   """
-  attr :type, :string, default: nil
-  attr :class, :string, default: nil
-  attr :rest, :global, include: ~w(disabled form name value)
+  attr :rest, :global, include: ~w(href navigate patch method download name value disabled form type)
 
+  attr :class, :any, default: nil
+  attr :variant, :string, values: ~w(primary secondary ghost error), default: "secondary"
+  attr :size, :string, values: ~w(sm md), default: "md"
   slot :inner_block, required: true
 
-  def button(assigns) do
-    ~H"""
-    <button
-      type={@type}
-      class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-purple-900 hover:bg-purple-600 py-2 px-3",
-        "text-sm font-semibold leading-6 text-purple-300 active:text-purple-300/80",
-        @class
-      ]}
-      {@rest}
-    >
-      {render_slot(@inner_block)}
-    </button>
-    """
+  def button(%{rest: rest} = assigns) do
+    assigns =
+      assign(assigns, :class, [
+        "btn",
+        button_variant(assigns.variant),
+        assigns.size == "sm" && "btn-sm",
+        assigns.class
+      ])
+
+    if rest[:href] || rest[:navigate] || rest[:patch] do
+      ~H"""
+      <.link class={@class} {@rest}>
+        {render_slot(@inner_block)}
+      </.link>
+      """
+    else
+      ~H"""
+      <button class={@class} {@rest}>
+        {render_slot(@inner_block)}
+      </button>
+      """
+    end
   end
+
+  defp button_variant("primary"), do: "btn-primary"
+  defp button_variant("secondary"), do: "btn-secondary"
+  defp button_variant("ghost"), do: "btn-ghost"
+  defp button_variant("error"), do: "btn-error btn-soft"
 
   @doc """
   Renders an input with label and error messages.
@@ -261,11 +244,12 @@ defmodule PanicWeb.CoreComponents do
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
   attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
   attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
+  attr :class, :any, default: nil, doc: "the input class to use over defaults"
 
   attr :rest, :global, include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
                 multiple pattern placeholder readonly required rows size step)
 
-  slot :inner_block
+  slot :help, doc: "a hint shown under the input"
 
   def input(%{field: %FormField{} = field} = assigns) do
     errors = if used_input?(field), do: field.errors, else: []
@@ -287,22 +271,23 @@ defmodule PanicWeb.CoreComponents do
       end)
 
     ~H"""
-    <div>
-      <label class="flex items-center gap-4 text-sm leading-6 text-purple-500">
-        <input type="hidden" name={@name} value="false" />
+    <div class="fieldset">
+      <label class="label gap-3 text-base-content">
+        <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
         <input
           type="checkbox"
           id={@id}
           name={@name}
           value="true"
           checked={@checked}
-          class="rounded-sm border-zinc-300 text-purple-300 focus:ring-0"
+          class={@class || "checkbox checkbox-sm checkbox-primary"}
           aria-invalid={@errors != [] && "true"}
           aria-describedby={error_id(@id, @errors)}
           {@rest}
         />
         {@label}
       </label>
+      <p :if={@help != []} class="label text-wrap">{render_slot(@help)}</p>
       <.field_errors id={error_id(@id, @errors)} errors={@errors} />
     </div>
     """
@@ -310,12 +295,12 @@ defmodule PanicWeb.CoreComponents do
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div>
-      <.label for={@id}>{@label}</.label>
+    <div class="fieldset">
+      <label :if={@label} for={@id} class="fieldset-legend">{@label}</label>
       <select
         id={@id}
         name={@name}
-        class="mt-2 block w-full rounded-md border border-gray-300 bg-zinc-900 shadow-xs focus:border-zinc-400 focus:ring-0 sm:text-sm"
+        class={[@class || "select w-full", @errors != [] && "select-error"]}
         multiple={@multiple}
         aria-invalid={@errors != [] && "true"}
         aria-describedby={error_id(@id, @errors)}
@@ -324,6 +309,7 @@ defmodule PanicWeb.CoreComponents do
         <option :if={@prompt} value="">{@prompt}</option>
         {Phoenix.HTML.Form.options_for_select(@options, @value)}
       </select>
+      <p :if={@help != []} class="label text-wrap">{render_slot(@help)}</p>
       <.field_errors id={error_id(@id, @errors)} errors={@errors} />
     </div>
     """
@@ -331,20 +317,17 @@ defmodule PanicWeb.CoreComponents do
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div>
-      <.label for={@id}>{@label}</.label>
+    <div class="fieldset">
+      <label :if={@label} for={@id} class="fieldset-legend">{@label}</label>
       <textarea
         id={@id}
         name={@name}
-        class={[
-          "mt-2 block w-full rounded-lg text-purple-300 bg-zinc-800 focus:ring-0 sm:text-sm sm:leading-6 min-h-24",
-          @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
-        ]}
+        class={[@class || "textarea w-full min-h-24", @errors != [] && "textarea-error"]}
         aria-invalid={@errors != [] && "true"}
         aria-describedby={error_id(@id, @errors)}
         {@rest}
-      ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
+      >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
+      <p :if={@help != []} class="label text-wrap">{render_slot(@help)}</p>
       <.field_errors id={error_id(@id, @errors)} errors={@errors} />
     </div>
     """
@@ -353,24 +336,19 @@ defmodule PanicWeb.CoreComponents do
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <div>
-      <.label for={@id}>{@label}</.label>
+    <div class="fieldset">
+      <label :if={@label} for={@id} class="fieldset-legend">{@label}</label>
       <input
         type={@type}
         name={@name}
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-        class={[
-          "mt-2 block w-full rounded-lg text-purple-300 bg-zinc-800 focus:ring-0 sm:text-sm sm:leading-6",
-          "placeholder:text-purple-300/70 disabled:placeholder:text-purple-300/50",
-          @errors == [] &&
-            "border-zinc-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-300",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
-        ]}
+        class={[@class || "input w-full", @errors != [] && "input-error"]}
         aria-invalid={@errors != [] && "true"}
         aria-describedby={error_id(@id, @errors)}
         {@rest}
       />
+      <p :if={@help != []} class="label text-wrap">{render_slot(@help)}</p>
       <.field_errors id={error_id(@id, @errors)} errors={@errors} />
     </div>
     """
@@ -386,43 +364,19 @@ defmodule PanicWeb.CoreComponents do
   defp field_errors(assigns) do
     ~H"""
     <div :if={@errors != []} id={@id}>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <p :for={msg <- @errors} class="mt-1 flex gap-2 items-center text-sm text-error">
+        <.icon name="hero-exclamation-circle" class="size-5 shrink-0" />
+        {msg}
+      </p>
     </div>
     """
   end
 
   @doc """
-  Renders a label.
+  Renders a page header with title, and actions that wrap below it on
+  narrow screens.
   """
-  attr :for, :string, default: nil
-  slot :inner_block, required: true
-
-  def label(assigns) do
-    ~H"""
-    <label for={@for} class="block text-sm font-semibold leading-6 text-purple-400">
-      {render_slot(@inner_block)}
-    </label>
-    """
-  end
-
-  @doc """
-  Generates a generic error message.
-  """
-  slot :inner_block, required: true
-
-  def error(assigns) do
-    ~H"""
-    <p class="mt-3 flex gap-3 text-sm leading-6 text-rose-600">
-      <.icon name="hero-exclamation-circle-mini" class="mt-0.5 h-5 w-5 flex-none" />
-      {render_slot(@inner_block)}
-    </p>
-    """
-  end
-
-  @doc """
-  Renders a header with title.
-  """
-  attr :class, :string, default: nil
+  attr :class, :any, default: nil
 
   slot :inner_block, required: true
   slot :subtitle
@@ -430,28 +384,45 @@ defmodule PanicWeb.CoreComponents do
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", @class]}>
-      <div>
-        <h1 class="text-lg font-semibold leading-8 text-purple-400">
+    <header class={["flex flex-wrap items-center justify-between gap-4 pb-6", @class]}>
+      <div class="min-w-0">
+        <h1 class="text-xl font-semibold leading-8 text-primary-content break-words">
           {render_slot(@inner_block)}
         </h1>
-        <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-purple-500">
+        <p :if={@subtitle != []} class="mt-1 text-sm text-base-content/70">
           {render_slot(@subtitle)}
         </p>
       </div>
-      <div class="flex-none">{render_slot(@actions)}</div>
+      <div :if={@actions != []} class="flex flex-wrap gap-2">{render_slot(@actions)}</div>
     </header>
     """
   end
 
+  @doc """
+  Renders a section heading, with optional actions on the right.
+  """
+  attr :class, :any, default: nil
+  slot :inner_block, required: true
+  slot :actions
+
+  def section_header(assigns) do
+    ~H"""
+    <div class={["flex flex-wrap items-center justify-between gap-2 mb-4", @class]}>
+      <h2 class="text-lg font-semibold text-primary-content">{render_slot(@inner_block)}</h2>
+      <div :if={@actions != []} class="flex flex-wrap gap-2">{render_slot(@actions)}</div>
+    </div>
+    """
+  end
+
   @doc ~S"""
-  Renders a table with generic styling.
+  Renders a table with generic styling. It scrolls sideways when it's wider
+  than the screen, and its actions sit together in the last column.
 
   ## Examples
 
       <.table id="users" rows={@users}>
-        <:col :let={user} label="id"><%= user.id %></:col>
-        <:col :let={user} label="username"><%= user.username %></:col>
+        <:col :let={user} label="id">{user.id}</:col>
+        <:col :let={user} label="username">{user.username}</:col>
       </.table>
   """
   attr :id, :string, required: true
@@ -465,6 +436,7 @@ defmodule PanicWeb.CoreComponents do
 
   slot :col, required: true do
     attr :label, :string
+    attr :class, :any
   end
 
   slot :action, doc: "the slot for showing user actions in the last table column"
@@ -476,100 +448,39 @@ defmodule PanicWeb.CoreComponents do
       end
 
     ~H"""
-    <div class="overflow-y-auto px-4 sm:overflow-visible sm:px-0">
-      <table class="w-160 mt-11 sm:w-full">
-        <thead class="text-sm text-left leading-6 text-purple-600">
+    <div class="overflow-x-auto rounded-box border border-base-300">
+      <table class="table">
+        <thead>
           <tr>
-            <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal">{col[:label]}</th>
-            <th :if={@action != []} class="relative p-0 pb-4">
+            <th :for={col <- @col} class={col[:class]}>{col[:label]}</th>
+            <th :if={@action != []}>
               <span class="sr-only">{gettext("Actions")}</span>
             </th>
           </tr>
         </thead>
-        <tbody
-          id={@id}
-          phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"}
-          class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-purple-300"
-        >
-          <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class="group hover:bg-zinc-50">
+        <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
+          <tr
+            :for={row <- @rows}
+            id={@row_id && @row_id.(row)}
+            class={@row_click && "hover:bg-base-200"}
+          >
             <td
-              :for={{col, i} <- Enum.with_index(@col)}
+              :for={col <- @col}
               phx-click={@row_click && @row_click.(row)}
-              class={["relative p-0", @row_click && "hover:cursor-pointer"]}
+              class={[@row_click && "hover:cursor-pointer", col[:class]]}
             >
-              <div class="block py-4 pr-6">
-                <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-700 sm:rounded-l-xl" />
-                <span class={["relative", i == 0 && "font-semibold text-purple-300"]}>
-                  {render_slot(col, @row_item.(row))}
-                </span>
-              </div>
+              {render_slot(col, @row_item.(row))}
             </td>
-            <td :if={@action != []} class="relative w-14 p-0">
-              <div class="relative whitespace-nowrap py-4 text-right text-sm font-medium">
-                <span class="absolute -inset-y-px -right-4 left-0 group-hover:bg-zinc-700 sm:rounded-r-xl" />
-                <span
-                  :for={action <- @action}
-                  class="relative ml-4 font-semibold leading-6 text-purple-300 hover:text-purple-300"
-                >
+            <td :if={@action != []} class="w-0">
+              <div class="flex justify-end gap-2 whitespace-nowrap">
+                <%= for action <- @action do %>
                   {render_slot(action, @row_item.(row))}
-                </span>
+                <% end %>
               </div>
             </td>
           </tr>
         </tbody>
       </table>
-    </div>
-    """
-  end
-
-  @doc """
-  Renders a data list.
-
-  ## Examples
-
-      <.list>
-        <:item title="Title"><%= @post.title %></:item>
-        <:item title="Views"><%= @post.views %></:item>
-      </.list>
-  """
-  slot :item, required: true do
-    attr :title, :string, required: true
-  end
-
-  def list(assigns) do
-    ~H"""
-    <div class="mt-14">
-      <dl class="-my-4 divide-y divide-zinc-100">
-        <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
-          <dt class="w-1/4 flex-none text-purple-600">{item.title}</dt>
-          <dd class="text-purple-300">{render_slot(item)}</dd>
-        </div>
-      </dl>
-    </div>
-    """
-  end
-
-  @doc """
-  Renders a back navigation link.
-
-  ## Examples
-
-      <.back navigate={~p"/posts"}>Back to posts</.back>
-  """
-  attr :navigate, :any, default: nil
-  attr :href, :any, default: nil
-  slot :inner_block, required: true
-
-  def back(assigns) do
-    ~H"""
-    <div class="mt-16">
-      <.link
-        {if @navigate, do: [navigate: @navigate], else: [href: @href]}
-        class="text-sm font-semibold leading-6 text-purple-300 hover:text-purple-300"
-      >
-        <.icon name="hero-arrow-left-solid" class="h-3 w-3" />
-        {render_slot(@inner_block)}
-      </.link>
     </div>
     """
   end
@@ -585,7 +496,7 @@ defmodule PanicWeb.CoreComponents do
   width, height, and background color classes.
 
   Icons are extracted from the `deps/heroicons` directory and bundled within
-  your compiled app.css by the plugin in your `assets/tailwind.config.js`.
+  your compiled app.css by the plugin in `assets/vendor/heroicons.js`.
 
   ## Examples
 
@@ -593,7 +504,7 @@ defmodule PanicWeb.CoreComponents do
       <.icon name="hero-arrow-path" class="ml-1 w-3 h-3 animate-spin" />
   """
   attr :name, :string, required: true
-  attr :class, :string, default: nil
+  attr :class, :any, default: "size-4"
 
   def icon(%{name: "hero-" <> _} = assigns) do
     ~H"""
@@ -606,8 +517,9 @@ defmodule PanicWeb.CoreComponents do
   def show(js \\ %JS{}, selector) do
     JS.show(js,
       to: selector,
+      time: 300,
       transition:
-        {"transition-all transform ease-out duration-300", "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
+        {"transition-all ease-out duration-300", "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
          "opacity-100 translate-y-0 sm:scale-100"}
     )
   end
@@ -617,7 +529,7 @@ defmodule PanicWeb.CoreComponents do
       to: selector,
       time: 200,
       transition:
-        {"transition-all transform ease-in duration-200", "opacity-100 translate-y-0 sm:scale-100",
+        {"transition-all ease-in duration-200", "opacity-100 translate-y-0 sm:scale-100",
          "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
     )
   end
@@ -626,16 +538,8 @@ defmodule PanicWeb.CoreComponents do
   Translates an error message using gettext.
   """
   def translate_error({msg, opts}) do
-    # When using gettext, we typically pass the strings we want
-    # to translate as a static argument:
-    #
-    #     # Translate the number of files with plural rules
-    #     dngettext("errors", "1 file", "%{count} files", count)
-    #
-    # However the error messages in our forms and APIs are generated
-    # dynamically, so we need to translate them by calling Gettext
-    # with our gettext backend as first argument. Translations are
-    # available in the errors.po file (as we use the "errors" domain).
+    # the error messages in our forms and APIs are generated dynamically, so
+    # we call Gettext with our backend as first argument (the "errors" domain)
     if count = opts[:count] do
       Gettext.dngettext(PanicWeb.Gettext, "errors", msg, msg, count, opts)
     else

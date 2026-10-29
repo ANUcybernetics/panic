@@ -20,7 +20,7 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
         </:subtitle>
       </.header>
 
-      <.simple_form
+      <.form
         for={@form}
         id="watcher-form"
         phx-target={@myself}
@@ -48,21 +48,25 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
             title="Only letters, numbers, and hyphens allowed"
           />
 
-          <div :if={watcher_form[:type].value == :grid} class="space-y-4">
+          <div :if={watcher_form[:type].value == :grid} class="grid gap-x-4 sm:grid-cols-2">
             <.input field={watcher_form[:rows]} type="number" label="Rows" min="1" />
             <.input field={watcher_form[:columns]} type="number" label="Columns" min="1" />
           </div>
 
-          <div :if={watcher_form[:type].value in [:single, :vestaboard]} class="space-y-4">
+          <div
+            :if={watcher_form[:type].value in [:single, :vestaboard]}
+            class="grid gap-x-4 sm:grid-cols-2"
+          >
             <.input field={watcher_form[:stride]} type="number" label="Stride" min="1" />
             <.input field={watcher_form[:offset]} type="number" label="Offset" min="0" />
-            <.input field={watcher_form[:show_invoking]} type="checkbox" label="Show Invoking State" />
-            <p class="mt-1 text-sm text-gray-600">
-              When enabled, invocations in the 'invoking' state will be displayed. When disabled, only completed, ready, and failed states are shown.
-            </p>
+            <.input field={watcher_form[:show_invoking]} type="checkbox" label="Show invoking state">
+              <:help>
+                When enabled, invocations in the 'invoking' state will be displayed. When disabled, only completed, ready, and failed states are shown.
+              </:help>
+            </.input>
           </div>
 
-          <div :if={watcher_form[:type].value == :vestaboard} class="space-y-4">
+          <div :if={watcher_form[:type].value == :vestaboard} class="grid gap-x-4 sm:grid-cols-2">
             <.input
               field={watcher_form[:vestaboard_name]}
               type="select"
@@ -74,19 +78,20 @@ defmodule PanicWeb.InstallationLive.WatcherFormComponent do
                 {"Panic 4", :panic_4}
               ]}
             />
-            <.input field={watcher_form[:initial_prompt]} type="checkbox" label="Show Initial Prompt" />
-            <p class="mt-1 text-sm text-gray-600">
-              When enabled, this vestaboard will display the initial prompt text when a new run starts
-            </p>
+            <.input field={watcher_form[:initial_prompt]} type="checkbox" label="Show initial prompt">
+              <:help>
+                When enabled, this Vestaboard will display the initial prompt text when a new run starts.
+              </:help>
+            </.input>
           </div>
         </.inputs_for>
 
-        <:actions>
-          <.button phx-disable-with="Saving...">{if @watcher_name,
+        <div class="mt-6 flex flex-wrap gap-2">
+          <.button variant="primary" phx-disable-with="Saving...">{if @watcher_name,
             do: "Update Watcher",
             else: "Add Watcher"}</.button>
-        </:actions>
-      </.simple_form>
+        </div>
+      </.form>
     </div>
     """
   end

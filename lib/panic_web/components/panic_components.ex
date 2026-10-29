@@ -178,8 +178,8 @@ defmodule PanicWeb.PanicComponents do
   def qr_code(assigns) do
     ~H"""
     <div class="flex flex-col items-center">
-      <h2 class="text-4xl font-semibold mb-8">{@title}</h2>
-      <div>
+      <h2 class="mb-6 text-2xl font-semibold sm:text-4xl">{@title}</h2>
+      <div class="w-full max-w-md [&_svg]:h-auto [&_svg]:w-full">
         {@text
         |> QRCode.create(:high)
         |> QRCode.render(:svg, %QRCode.Render.SvgSettings{
@@ -188,10 +188,16 @@ defmodule PanicWeb.PanicComponents do
         })
         # unwrap the tuple
         |> elem(1)
+        |> scalable_svg()
         |> Phoenix.HTML.raw()}
       </div>
     </div>
     """
+  end
+
+  # the QR code SVG has a fixed size and no viewBox, so it can't shrink to fit a phone
+  defp scalable_svg(svg) do
+    Regex.replace(~r/<svg width="(\d+)" height="(\d+)"/, svg, ~S(<svg viewBox="0 0 \1 \2"), global: false)
   end
 
   def panic_button(assigns) do

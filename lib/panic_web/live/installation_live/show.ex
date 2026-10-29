@@ -9,88 +9,80 @@ defmodule PanicWeb.InstallationLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <.back navigate={~p"/installations"}>Back to installations</.back>
-
     <.header>
       {@installation.name}
       <:subtitle>
         Network:
-        <.link navigate={~p"/networks/#{@installation.network}"}>
+        <.link navigate={~p"/networks/#{@installation.network}"} class="link">
           {@installation.network.name}
         </.link>
         · Vestaboard hold: {@installation.vestaboard_hold_seconds}s
       </:subtitle>
       <:actions>
-        <.link patch={~p"/installations/#{@installation}/show/edit"} phx-click={JS.push_focus()}>
-          <.button>Edit installation</.button>
-        </.link>
+        <.button patch={~p"/installations/#{@installation}/show/edit"}>Edit installation</.button>
       </:actions>
     </.header>
 
-    <div class="mt-10">
-      <h2 class="text-lg font-semibold leading-8 text-zinc-800 dark:text-zinc-100">
+    <section class="mt-6">
+      <.section_header>
         Watchers
-      </h2>
-      <div class="mt-4 space-y-4">
-        <div :if={@installation.watchers == []} class="text-sm text-zinc-600 dark:text-zinc-400">
-          No watchers configured. Add one to start displaying invocations.
-        </div>
-        <div
-          :for={{watcher, _index} <- Enum.with_index(@installation.watchers)}
-          class="relative rounded-lg border border-zinc-200 dark:border-zinc-700 p-4"
+        <:actions>
+          <.button
+            patch={~p"/installations/#{@installation}/show/add_watcher"}
+            variant="primary"
+            size="sm"
+          >
+            <.icon name="hero-plus" /> Add watcher
+          </.button>
+        </:actions>
+      </.section_header>
+      <p :if={@installation.watchers == []} class="text-base-content/70">
+        No watchers configured. Add one to start displaying invocations.
+      </p>
+      <ul class="space-y-4">
+        <li
+          :for={watcher <- @installation.watchers}
+          id={"watcher-#{watcher.name}"}
+          class="card card-border border-base-300 bg-base-200"
         >
-          <div class="flex justify-between items-start">
-            <div class="grow">
-              <div class="flex items-center gap-3">
-                <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-                  {watcher.name}
-                </h3>
-                <span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                  {watcher.type}
-                </span>
-                <span class="inline-flex items-center rounded-md bg-green-100 dark:bg-green-900 px-2 py-1 text-xs font-medium text-green-800 dark:text-green-200">
-                  <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 8 8">
-                    <circle cx="4" cy="4" r="3" />
-                  </svg>
+          <div class="card-body gap-3 p-4 sm:p-6">
+            <div class="flex flex-wrap items-start justify-between gap-2">
+              <div class="flex min-w-0 flex-wrap items-center gap-2">
+                <h3 class="card-title break-all text-primary-content">{watcher.name}</h3>
+                <span class="badge badge-outline">{watcher.type}</span>
+                <span class="badge badge-success badge-soft">
                   {count_viewers_for_watcher(@installation, watcher)} viewers
                 </span>
               </div>
-              <div class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                {watcher_summary(watcher)}
-              </div>
-              <div class="mt-2">
-                <.link
-                  navigate={~p"/i/#{@installation.id}/#{watcher.name}"}
-                  class="text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+              <div class="flex gap-1">
+                <.button
+                  patch={~p"/installations/#{@installation}/show/edit_watcher/#{watcher.name}"}
+                  variant="ghost"
+                  size="sm"
                 >
-                  View display (/i/{@installation.id}/{watcher.name}) →
-                </.link>
+                  Edit
+                </.button>
+                <.button
+                  phx-click={JS.push("delete_watcher", value: %{name: watcher.name})}
+                  data-confirm="Are you sure you want to delete this watcher?"
+                  variant="error"
+                  size="sm"
+                >
+                  Delete
+                </.button>
               </div>
             </div>
-            <div class="flex gap-2">
-              <.link
-                patch={~p"/installations/#{@installation}/show/edit_watcher/#{watcher.name}"}
-                class="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-              >
-                Edit
-              </.link>
-              <.link
-                phx-click={JS.push("delete_watcher", value: %{name: watcher.name})}
-                data-confirm="Are you sure you want to delete this watcher?"
-                class="text-sm text-red-600 hover:text-red-500"
-              >
-                Delete
-              </.link>
-            </div>
+            <p class="text-sm text-base-content/70">{watcher_summary(watcher)}</p>
+            <.link
+              navigate={~p"/i/#{@installation.id}/#{watcher.name}"}
+              class="link w-fit break-all text-sm"
+            >
+              View display (/i/{@installation.id}/{watcher.name}) →
+            </.link>
           </div>
-        </div>
-      </div>
-      <div class="mt-6">
-        <.link patch={~p"/installations/#{@installation}/show/add_watcher"}>
-          <.button>Add watcher</.button>
-        </.link>
-      </div>
-    </div>
+        </li>
+      </ul>
+    </section>
 
     <.modal
       :if={@live_action == :edit}

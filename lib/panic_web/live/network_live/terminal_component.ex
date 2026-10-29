@@ -8,27 +8,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
   def render(assigns) do
     ~H"""
     <div class={assigns[:class]}>
-      <style>
-        #<%= "#{@id}-form" %> .mt-10 {
-          margin-top: 1rem;
-        }
-        #<%= "#{@id}-form" %> .space-y-8 {
-          gap: 1rem;
-        }
-        @media (max-width: 640px) {
-          #<%= "#{@id}-form" %> input[type="text"] {
-            font-size: 1rem !important;
-            padding: 0.5rem !important;
-          }
-          #<%= "#{@id}-form" %> label {
-            font-size: 0.875rem;
-          }
-          #<%= "#{@id}-form" %> .mt-2 {
-            margin-top: 0.5rem;
-          }
-        }
-      </style>
-      <.simple_form
+      <.form
         for={@form}
         id={"#{@id}-form"}
         phx-target={@myself}
@@ -40,11 +20,12 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
           type="text"
           label="Prompt"
           placeholder="Ready for new input"
+          class="input input-lg w-full"
           phx-hook="TerminalLockoutTimer"
           data-ready-at={lockout_ready_at(@genesis_invocation, @network)}
         />
-      </.simple_form>
-      <p :if={@run_error} id={"#{@id}-run-error"} role="alert" class="mt-2 text-rose-400">
+      </.form>
+      <p :if={@run_error} id={"#{@id}-run-error"} role="alert" class="mt-2 text-error">
         {@run_error}
       </p>
     </div>

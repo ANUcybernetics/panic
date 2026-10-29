@@ -29,14 +29,14 @@ defmodule PanicWeb.NetworkLiveTest do
   describe "basic network management - authenticated user" do
     setup {PanicWeb.Helpers, :create_and_sign_in_user}
 
-    test "can create a network which is then listed on user page", %{conn: conn, user: user} do
+    test "can create a network which is then listed on the networks page", %{conn: conn} do
       conn
-      |> visit("/users/#{user.id}")
-      |> click_link("Add network")
+      |> visit("/networks/new")
       |> fill_in("Name", with: "Test network")
       |> fill_in("Description", with: "A network for testing purposes")
       |> submit()
-      |> assert_has("#network-list", text: "Test network")
+      |> visit("/networks")
+      |> assert_has("#networks", text: "Test network")
     end
 
     test "can visit the terminal for a runnable network", %{conn: conn, user: user} do
@@ -55,14 +55,6 @@ defmodule PanicWeb.NetworkLiveTest do
       |> fill_in("Description", with: "Updated description")
       |> submit()
       |> assert_has("h1", text: "Updated network name")
-    end
-
-    test "can view network info all view", %{conn: conn, user: user} do
-      network = user |> Panic.Generators.network_with_dummy_models() |> pick()
-
-      conn
-      |> visit(~p"/networks/#{network.id}/info/all")
-      |> assert_has("div.prose")
     end
   end
 

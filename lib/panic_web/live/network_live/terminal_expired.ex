@@ -10,62 +10,28 @@ defmodule PanicWeb.NetworkLive.TerminalExpired do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-2xl mx-auto px-4 py-16 text-center">
-      <div class="mb-8">
-        <svg
-          class="mx-auto h-24 w-24 text-purple-400"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-      </div>
-
-      <h1 class="text-3xl font-bold text-purple-100 mb-4">
-        QR Code Expired
-      </h1>
-
-      <div class="prose prose-purple prose-lg mx-auto">
-        <p class="text-purple-200 mb-6">
-          The QR code you scanned has expired for security reasons.
-          QR codes are only valid for 1 hour after they're generated.
-        </p>
-
-        <div class="bg-purple-900/20 border border-purple-700 rounded-lg p-6 mb-6">
-          <h2 class="text-xl font-semibold text-purple-100 mb-3">
-            How to get a new QR code:
-          </h2>
-          <ol class="text-left text-purple-200 space-y-2">
+    <div class="mx-auto max-w-2xl px-4 py-16 text-center">
+      <.icon name="hero-clock" class="mx-auto mb-8 size-24 text-primary-content/70" />
+      <h1 class="mb-4 text-3xl font-bold text-primary-content">QR Code Expired</h1>
+      <p class="mb-6">
+        The QR code you scanned has expired for security reasons.
+        QR codes are only valid for 1 hour after they're generated.
+      </p>
+      <div class="card card-border border-base-300 bg-base-200 mb-6 text-left">
+        <div class="card-body">
+          <h2 class="card-title text-primary-content">How to get a new QR code:</h2>
+          <ol class="list-decimal space-y-2 pl-6">
             <li>Find the screen displaying the PANIC! network</li>
             <li>Look for the QR code on the screen (it refreshes automatically)</li>
             <li>Scan the new QR code with your device</li>
           </ol>
         </div>
-
-        <div class="space-y-4">
-          <.link
-            navigate={~p"/about"}
-            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-purple-900 bg-purple-200 hover:bg-purple-100 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-          >
-            Learn more about PANIC!
-          </.link>
-
-          <div :if={@current_user} class="mt-4">
-            <.link
-              navigate={~p"/networks/#{@network_id}"}
-              class="text-purple-300 hover:text-purple-100 underline"
-            >
-              View network details
-            </.link>
-          </div>
-        </div>
+      </div>
+      <div class="flex flex-col items-center gap-4">
+        <.button navigate={~p"/about"} variant="primary">Learn more about PANIC!</.button>
+        <.link :if={@current_user} navigate={~p"/networks/#{@network_id}"} class="link">
+          View network details
+        </.link>
       </div>
     </div>
     """

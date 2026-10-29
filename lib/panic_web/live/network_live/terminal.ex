@@ -10,31 +10,19 @@ defmodule PanicWeb.NetworkLive.Terminal do
   def render(assigns) do
     ~H"""
     <style>
-      .terminal-container input {
-        color: #d8b4fe;
-        margin-top: 0;
-      }
-      .terminal-container input::placeholder {
-        color: #f3e8ff;
-      }
-      @media (max-width: 640px) {
-        .terminal-container {
-          font-size: 0.875rem;
-        }
-        .terminal-container input {
-          font-size: 1rem;
-        }
+      /* the display layout's 200% suits a big screen, but this page is also
+         what a phone shows after scanning the QR code */
+      :root {
+        font-size: clamp(100%, 2.5vw, 200%);
       }
     </style>
-    <div class="terminal-container p-4 sm:p-8 text-purple-100 font-bold">
-      <p class="min-h-8 sm:min-h-12 text-sm sm:text-base">
-        <span>Current run:</span>
-        <span :if={@genesis_invocation} class="block sm:inline mt-1 sm:mt-0">
-          {@genesis_invocation.input}
-        </span>
+    <div class="terminal-container mx-auto max-w-5xl p-4 sm:p-8">
+      <p class="min-h-12 break-words text-primary-content">
+        <span class="text-base-content/60">Current run:</span>
+        <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
       </p>
       <.live_component
-        class="text-purple-100 mt-4 sm:mt-8"
+        class="mt-4 sm:mt-8"
         module={PanicWeb.NetworkLive.TerminalComponent}
         network={@network}
         genesis_invocation={@genesis_invocation}

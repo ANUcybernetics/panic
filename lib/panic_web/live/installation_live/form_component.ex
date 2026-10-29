@@ -15,7 +15,7 @@ defmodule PanicWeb.InstallationLive.FormComponent do
         </:subtitle>
       </.header>
 
-      <.simple_form
+      <.form
         for={@form}
         id="installation-form"
         phx-target={@myself}
@@ -36,15 +36,16 @@ defmodule PanicWeb.InstallationLive.FormComponent do
           type="number"
           min="0"
           label="Vestaboard hold (seconds)"
-        />
-        <p class="mt-1 text-sm text-gray-600">
-          After a Vestaboard is sent text, the next output waits at least this long before it's shown, so it doesn't change while the board is still flipping.
-        </p>
+        >
+          <:help>
+            After a Vestaboard is sent text, the next output waits at least this long before it's shown, so it doesn't change while the board is still flipping.
+          </:help>
+        </.input>
 
-        <:actions>
-          <.button phx-disable-with="Saving...">Save Installation</.button>
-        </:actions>
-      </.simple_form>
+        <div class="mt-6 flex flex-wrap gap-2">
+          <.button variant="primary" phx-disable-with="Saving...">Save Installation</.button>
+        </div>
+      </.form>
     </div>
     """
   end

@@ -14,75 +14,84 @@ defmodule PanicWeb.AdminLive do
     <.header>
       Admin panel
       <:actions>
-        <.link href={~p"/admin/backup"} download>
-          <.button>
-            Download backup
-          </.button>
-        </.link>
+        <.button href={~p"/admin/backup"} download>
+          <.icon name="hero-arrow-down-tray" /> Download backup
+        </.button>
         <.button
           phx-click="stop_all_jobs"
           data-confirm="Are you sure you want to stop all running jobs?"
+          variant="error"
         >
           Stop all jobs
         </.button>
       </:actions>
     </.header>
 
-    <section class="mt-16">
-      <h2 class="text-xl font-semibold">Platform keys</h2>
-      <p class="mt-2 text-sm">
+    <section class="mt-12">
+      <h2 class="text-lg font-semibold text-primary-content">Platform keys</h2>
+      <p class="mt-2 text-sm text-base-content/70">
         The keys every run spends, whoever starts it. They're stored encrypted and never sent back
         to the browser: leave a field blank to keep its key, or paste a new one to replace it.
       </p>
 
-      <.simple_form
+      <.form
         for={@credentials_form}
         id="credentials-form"
+        class="mt-4"
         phx-change="validate_credentials"
         phx-submit="save_credentials"
       >
-        <div :for={key <- PlatformCredentials.keys()}>
+        <div class="grid gap-x-4 sm:grid-cols-2">
           <.input
+            :for={key <- PlatformCredentials.keys()}
             field={@credentials_form[key]}
             type="password"
             value=""
             autocomplete="off"
             label={credential_label(key)}
-          />
-          <p id={"#{key}-status"} class="mt-1 text-sm text-purple-500">
-            {credential_status(Map.get(@credentials, key))}
-          </p>
+          >
+            <:help>
+              <span id={"#{key}-status"}>{credential_status(Map.get(@credentials, key))}</span>
+            </:help>
+          </.input>
         </div>
-        <:actions>
-          <.button phx-disable-with="Saving...">Save keys</.button>
-        </:actions>
-      </.simple_form>
+        <div class="mt-6 flex flex-wrap gap-2">
+          <.button variant="primary" phx-disable-with="Saving...">Save keys</.button>
+        </div>
+      </.form>
     </section>
 
-    <section class="mt-16">
-      <h2 class="text-xl font-semibold">JSON API keys</h2>
-      <p class="mt-2 text-sm">
+    <section class="mt-12">
+      <h2 class="text-lg font-semibold text-primary-content">JSON API keys</h2>
+      <p class="mt-2 text-sm text-base-content/70">
         Keys for the JSON API at <code>/api</code>
         (<.link href={~p"/api/swaggerui"} class="underline">docs</.link>), sent as <code>Authorization: Bearer &lt;key&gt;</code>. They act as you, and stop working if you stop being an admin.
       </p>
 
-      <div :if={@new_api_key} id="new-api-key" class="mt-4">
+      <div
+        :if={@new_api_key}
+        id="new-api-key"
+        role="alert"
+        class="alert alert-success alert-soft mt-4 block"
+      >
         <p>Copy this key now: it won't be shown again.</p>
         <code class="mt-2 block break-all select-all">{@new_api_key}</code>
       </div>
 
-      <.simple_form for={@api_key_form} id="api-key-form" phx-submit="create_api_key">
-        <.input field={@api_key_form[:name]} label="Name" required />
-        <.input
-          field={@api_key_form[:expires_in]}
-          type="select"
-          label="Expires"
-          options={[{"Never", "never"}, {"In 30 days", "30"}, {"In a year", "365"}]}
-        />
-        <:actions>
+      <.form for={@api_key_form} id="api-key-form" phx-submit="create_api_key" class="mt-4 mb-6">
+        <div class="grid gap-x-4 sm:grid-cols-2">
+          <.input field={@api_key_form[:name]} label="Name" required />
+          <.input
+            field={@api_key_form[:expires_in]}
+            type="select"
+            label="Expires"
+            options={[{"Never", "never"}, {"In 30 days", "30"}, {"In a year", "365"}]}
+          />
+        </div>
+        <div class="mt-6 flex flex-wrap gap-2">
           <.button>Create API key</.button>
-        </:actions>
-      </.simple_form>
+        </div>
+      </.form>
 
       <.table :if={@api_keys != []} id="api-key-table" rows={@api_keys} row_id={&"api-key-#{&1.id}"}>
         <:col :let={api_key} label="Name">{api_key.name}</:col>
@@ -97,6 +106,8 @@ defmodule PanicWeb.AdminLive do
             phx-click="revoke_api_key"
             phx-value-id={api_key.id}
             data-confirm={"Revoke #{api_key.name}? Anything using it will stop working."}
+            variant="error"
+            size="sm"
           >
             Revoke
           </.button>
@@ -104,8 +115,8 @@ defmodule PanicWeb.AdminLive do
       </.table>
     </section>
 
-    <section class="mt-16">
-      <h2 class="text-xl font-semibold">Invocations</h2>
+    <section class="mt-12">
+      <h2 class="mb-4 text-lg font-semibold text-primary-content">Invocations</h2>
 
       <.table id="all-invocation-table" rows={@streams.invocations}>
         <:col :let={{_id, invocation}} label="ID">
@@ -117,27 +128,42 @@ defmodule PanicWeb.AdminLive do
           {"#{invocation.network_id}-#{invocation.run_number}-#{invocation.sequence_number}"}
         </:col>
         <:col :let={{_id, invocation}} label="Input">
-          <.invocation_io_link invocation={invocation} type={:input} />
+          <span class="line-clamp-2 break-all">
+            <.invocation_io_link invocation={invocation} type={:input} />
+          </span>
         </:col>
         <:col :let={{_id, invocation}} label="Output">
-          <.invocation_io_link invocation={invocation} type={:output} />
+          <span class="line-clamp-2 break-all">
+            <.invocation_io_link invocation={invocation} type={:output} />
+          </span>
         </:col>
       </.table>
     </section>
 
-    <section class="mt-16">
-      <h2 class="text-xl font-semibold">Networks</h2>
+    <section class="mt-12">
+      <h2 class="mb-4 text-lg font-semibold text-primary-content">Networks</h2>
 
       <.table :if={@networks != []} id="network-table" rows={@networks}>
         <:col :let={network} label="Name">
-          <.link href={~p"/networks/#{network}/"} phx-click={JS.push_focus()}>
+          <.link navigate={~p"/networks/#{network}"} class="font-semibold">
             {network.name}
           </.link>
         </:col>
         <:col :let={network} label="User ID">{network.user_id}</:col>
-        <:col :let={network} label="Description">{network.description}</:col>
+        <:col :let={network} label="Description" class="hidden sm:table-cell">
+          <span class="line-clamp-2">{network.description}</span>
+        </:col>
       </.table>
-      <p :if={@networks == []} class="mt-8">No networks found.</p>
+      <p :if={@networks == []} class="text-base-content/70">No networks found.</p>
+    </section>
+
+    <section class="mt-12">
+      <h2 class="mb-4 text-lg font-semibold text-primary-content">Users</h2>
+      <.table id="user-table" rows={@users} row_id={&"user-#{&1.id}"}>
+        <:col :let={user} label="ID">{user.id}</:col>
+        <:col :let={user} label="Email">{user.email}</:col>
+        <:col :let={user} label="Admin">{if user.admin, do: "yes", else: "no"}</:col>
+      </.table>
     </section>
     """
   end
@@ -155,7 +181,11 @@ defmodule PanicWeb.AdminLive do
 
     {:ok,
      socket
-     |> assign(networks: networks, new_api_key: nil)
+     |> assign(
+       networks: networks,
+       users: Panic.Accounts.list_users!(authorize?: false),
+       new_api_key: nil
+     )
      |> assign_credentials()
      |> assign_api_keys()
      |> stream(:invocations, [])}
@@ -309,9 +339,9 @@ defmodule PanicWeb.AdminLive do
       <% :text -> %>
         {@value}
       <% :unknown -> %>
-        <span class="text-gray-500 italic">Unknown model type</span>
+        <span class="italic text-base-content/60">Unknown model type</span>
       <% _ -> %>
-        <.link href={@value}>external link</.link>
+        <.link href={@value} class="link">external link</.link>
     <% end %>
     """
   end

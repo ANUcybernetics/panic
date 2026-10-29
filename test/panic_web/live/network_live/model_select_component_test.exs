@@ -26,7 +26,7 @@ defmodule PanicWeb.NetworkLive.ModelSelectComponentTest do
       conn
       |> visit(~p"/networks/#{network}")
       |> assert_has("table")
-      |> assert_has("th", text: "Model Name")
+      |> assert_has("th", text: "Model")
       |> assert_has("th", text: "Type")
       |> assert_has("td", text: "Dummy Text-to-Image")
       |> assert_has("td", text: "Dummy Image-to-Text")

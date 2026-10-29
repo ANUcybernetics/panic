@@ -1,53 +1,59 @@
 defmodule PanicWeb.NetworkLive.Index do
-  @moduledoc false
+  @moduledoc """
+  The signed-in user's networks: the home page once you're signed in.
+  """
   use PanicWeb, :live_view
 
   @impl true
   def render(assigns) do
     ~H"""
     <.header>
-      Listing Networks
+      Networks
       <:actions>
-        <.link patch={~p"/networks/new"}>
-          <.button>New Network</.button>
-        </.link>
+        <.button patch={~p"/networks/new"} variant="primary">
+          <.icon name="hero-plus" /> New network
+        </.button>
       </:actions>
     </.header>
 
     <.table
+      :if={@networks != []}
       id="networks"
-      rows={@streams.networks}
-      row_click={fn {_id, network} -> JS.navigate(~p"/networks/#{network}") end}
+      rows={@networks}
+      row_id={&"network-#{&1.id}"}
+      row_click={&JS.navigate(~p"/networks/#{&1}")}
     >
-      <:col :let={{_id, network}} label="ID">{network.id}</:col>
-
-      <:action :let={{_id, network}}>
-        <div class="sr-only">
-          <.link navigate={~p"/networks/#{network}"}>Show</.link>
-        </div>
-
-        <.link patch={~p"/networks/#{network}/edit"}>Edit</.link>
-      </:action>
-
-      <:action :let={{id, network}}>
-        <.link
-          phx-click={JS.push("delete", value: %{id: network.id}) |> hide("##{id}")}
-          data-confirm="Are you sure?"
+      <:col :let={network} label="Name">
+        <.link navigate={~p"/networks/#{network}"} class="font-semibold">{network.name}</.link>
+      </:col>
+      <:col :let={network} label="Models">{length(network.models)}</:col>
+      <:col :let={network} label="Description" class="hidden sm:table-cell">
+        <span class="line-clamp-2">{network.description}</span>
+      </:col>
+      <:action :let={network}>
+        <.button
+          phx-click={JS.push("delete", value: %{id: network.id})}
+          data-confirm="Are you sure you want to delete this network?"
+          variant="error"
+          size="sm"
         >
           Delete
-        </.link>
+        </.button>
       </:action>
     </.table>
+    <p :if={@networks == []} class="text-base-content/70">
+      No networks yet. Make one to start a run.
+    </p>
 
-    <.modal :if={@live_action in [:new, :edit]} id="network-modal" show on_cancel={JS.patch(~p"/")}>
+    <.modal :if={@live_action == :new} id="new-network-modal" show on_cancel={JS.patch(~p"/networks")}>
       <.live_component
         module={PanicWeb.NetworkLive.FormComponent}
-        id={(@network && @network.id) || :new}
+        id={:new}
         current_user={@current_user}
         title={@page_title}
         action={@live_action}
-        network={@network}
-        navigate={~p"/"}
+        network={nil}
+        navigate={nil}
       />
     </.modal>
     """
@@ -55,42 +61,27 @@ defmodule PanicWeb.NetworkLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :networks, Panic.Engine.list_networks!())}
+    {:ok, assign_networks(socket)}
   end
 
   @impl true
-  def handle_params(params, _url, socket) do
-    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
-  end
-
-  defp apply_action(socket, :edit, %{"id" => id}) do
-    socket
-    |> assign(:page_title, "Edit Network")
-    |> assign(:network, Panic.Engine.get_network!(id))
-  end
-
-  defp apply_action(socket, :new, _params) do
-    socket
-    |> assign(:page_title, "New Network")
-    |> assign(:network, nil)
-  end
-
-  defp apply_action(socket, :index, _params) do
-    socket
-    |> assign(:page_title, "Listing Networks")
-    |> assign(:network, nil)
-  end
-
-  @impl true
-  def handle_info({PanicWeb.NetworkLive.FormComponent, {:saved, network}}, socket) do
-    {:noreply, stream_insert(socket, :networks, network)}
+  def handle_params(_params, _url, socket) do
+    {:noreply, assign(socket, :page_title, page_title(socket.assigns.live_action))}
   end
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    network = Panic.Engine.get_network!(id)
-    Panic.Engine.destroy_network!(network)
+    actor = socket.assigns.current_user
+    network = Panic.Engine.get_network!(id, actor: actor)
+    Panic.Engine.destroy_network!(network, actor: actor)
 
-    {:noreply, stream_delete(socket, :networks, network)}
+    {:noreply, assign_networks(socket)}
   end
+
+  defp assign_networks(socket) do
+    assign(socket, :networks, Panic.Engine.list_networks!(actor: socket.assigns.current_user))
+  end
+
+  defp page_title(:index), do: "Networks"
+  defp page_title(:new), do: "New network"
 end

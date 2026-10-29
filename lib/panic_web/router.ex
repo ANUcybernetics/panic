@@ -44,7 +44,7 @@ defmodule PanicWeb.Router do
     pipe_through :browser
 
     sign_in_route(
-      overrides: [PanicWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default],
+      overrides: [PanicWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI],
       auth_routes_prefix: "/auth"
     )
 
@@ -54,12 +54,6 @@ defmodule PanicWeb.Router do
     # Routes that don't need WatcherSubscriber
     ash_authentication_live_session :authentication_required,
       on_mount: [{PanicWeb.LiveUserAuth, :live_user_required}] do
-      scope "/users" do
-        live "/", UserLive.Index, :index
-        live "/:user_id", UserLive.Show, :show
-        live "/:user_id/new-network", UserLive.Show, :new_network
-      end
-
       scope "/installations" do
         live "/", InstallationLive.Index, :index
         live "/new", InstallationLive.Index, :new
@@ -80,6 +74,9 @@ defmodule PanicWeb.Router do
     # Database backup endpoint (checks for an admin itself)
     get "/admin/backup", BackupController, :download
 
+    # the old per-user pages, now /networks (the list) and /admin (the users)
+    get "/users/*path", RedirectController, :networks
+
     # Routes that need WatcherSubscriber (authenticated)
     ash_authentication_live_session :authentication_required_with_watcher,
       on_mount: [
@@ -87,12 +84,11 @@ defmodule PanicWeb.Router do
         {PanicWeb.WatcherSubscriber, :auto}
       ] do
       scope "/networks" do
-        # no "network list" view, because UserLive.Show fulfils that role
+        live "/", NetworkLive.Index, :index
         live "/new", NetworkLive.Index, :new
         live "/:network_id", NetworkLive.Show, :show
         live "/:network_id/edit", NetworkLive.Show, :edit
         live "/:network_id/info/qr", NetworkLive.Info, :qr
-        live "/:network_id/info/all", NetworkLive.Info, :all
       end
     end
 

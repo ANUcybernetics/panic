@@ -1,6 +1,6 @@
 // Drives the native <dialog> rendered by CoreComponents.modal/1: data-show
-// opens it with showModal(), and a close the user makes (Esc, backdrop click,
-// the close button) runs the data-cancel JS command.
+// opens it with showModal(), and a close the user makes (Esc, the daisyUI
+// backdrop form, the close button) runs the data-cancel JS command.
 const Modal = {
   mounted() {
     // showModal() sets these client-side; stop LiveView patches removing them
@@ -16,20 +16,6 @@ const Modal = {
         this.js().exec(this.el.dataset.cancel);
       }
     });
-
-    // closedby="any" light-dismisses natively; this covers browsers without it
-    if (!("closedBy" in HTMLDialogElement.prototype)) {
-      this.el.addEventListener("click", (event) => {
-        if (event.target !== this.el) return;
-        const rect = this.el.getBoundingClientRect();
-        const inside =
-          rect.top <= event.clientY &&
-          event.clientY <= rect.bottom &&
-          rect.left <= event.clientX &&
-          event.clientX <= rect.right;
-        if (!inside) this.el.close();
-      });
-    }
 
     this.sync();
   },

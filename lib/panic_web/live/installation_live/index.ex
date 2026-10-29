@@ -13,9 +13,9 @@ defmodule PanicWeb.InstallationLive.Index do
     <.header>
       Installations
       <:actions>
-        <.link patch={~p"/installations/new"} phx-click={JS.push_focus()}>
-          <.button>New Installation</.button>
-        </.link>
+        <.button patch={~p"/installations/new"} variant="primary">
+          <.icon name="hero-plus" /> New installation
+        </.button>
       </:actions>
     </.header>
 
@@ -24,26 +24,31 @@ defmodule PanicWeb.InstallationLive.Index do
       rows={@streams.installations}
       row_click={fn {_id, installation} -> JS.navigate(~p"/installations/#{installation}") end}
     >
-      <:col :let={{_id, installation}} label="Name">{installation.name}</:col>
-      <:col :let={{_id, installation}} label="Network">
+      <:col :let={{_id, installation}} label="Name">
+        <.link navigate={~p"/installations/#{installation}"} class="font-semibold">
+          {installation.name}
+        </.link>
+      </:col>
+      <:col :let={{_id, installation}} label="Network" class="hidden sm:table-cell">
         {installation.network.name}
       </:col>
       <:col :let={{_id, installation}} label="Watchers">
         {length(installation.watchers)}
       </:col>
       <:action :let={{_id, installation}}>
-        <div class="sr-only">
-          <.link navigate={~p"/installations/#{installation}"}>Show</.link>
-        </div>
-        <.link patch={~p"/installations/#{installation}/edit"}>Edit</.link>
+        <.button patch={~p"/installations/#{installation}/edit"} variant="ghost" size="sm">
+          Edit
+        </.button>
       </:action>
       <:action :let={{id, installation}}>
-        <.link
+        <.button
           phx-click={JS.push("delete", value: %{id: installation.id}) |> hide("##{id}")}
           data-confirm="Are you sure?"
+          variant="error"
+          size="sm"
         >
           Delete
-        </.link>
+        </.button>
       </:action>
     </.table>
 

@@ -10,7 +10,7 @@ defmodule PanicWeb.NetworkLive.FormComponent do
         {@title}
       </.header>
 
-      <.simple_form
+      <.form
         for={@form}
         id="network-form"
         phx-target={@myself}
@@ -21,10 +21,10 @@ defmodule PanicWeb.NetworkLive.FormComponent do
         <.input field={@form[:description]} type="textarea" label="Description" />
         <.input field={@form[:lockout_seconds]} type="number" label="Lockout Seconds" />
 
-        <:actions>
-          <.button phx-disable-with="Saving...">Save Network</.button>
-        </:actions>
-      </.simple_form>
+        <div class="mt-6 flex flex-wrap gap-2">
+          <.button variant="primary" phx-disable-with="Saving...">Save Network</.button>
+        </div>
+      </.form>
     </div>
     """
   end

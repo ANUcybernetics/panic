@@ -14,42 +14,29 @@ defmodule PanicWeb.NetworkLive.Show do
     ~H"""
     <.header>
       {@network.name}
+      <:actions>
+        <.button patch={~p"/networks/#{@network}/edit"}>Edit</.button>
+        <.button navigate={~p"/networks/#{@network}/info/qr"}>QR</.button>
+        <.button href={~p"/networks/#{@network}/terminal"}>Terminal</.button>
+        <.button phx-click="stop" variant="error">Stop</.button>
+      </:actions>
     </.header>
-    <section :if={@network.description} class="mt-16 prose prose-purple">
+
+    <section :if={@network.description} class="prose prose-purple max-w-none">
       {@network.description |> MDEx.to_html!() |> raw}
     </section>
 
-    <section class="mt-16">
-      <h2 class="font-semibold mb-8">
-        Control panel
-      </h2>
-      <div class="flex space-x-4">
-        <.link navigate={~p"/networks/#{@network}/edit"} phx-click={JS.push_focus()}>
-          <.button>Edit</.button>
-        </.link>
-        <.link patch={~p"/networks/#{@network}/info/qr"} type="button">
-          <.button>QR</.button>
-        </.link>
-        <.link href={~p"/networks/#{@network}/terminal"} type="button">
-          <.button>Terminal</.button>
-        </.link>
-        <.button
-          class="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg px-3 py-2"
-          phx-click="stop"
-        >
-          Stop
-        </.button>
-      </div>
-      <p :if={@missing_keys != []} id="missing-keys" role="alert" class="mt-4 text-rose-400">
+    <div :if={@missing_keys != []} id="missing-keys" role="alert" class="alert alert-warning mt-6">
+      <.icon name="hero-exclamation-triangle" class="size-5" />
+      <span>
         No API key set for {Enum.map_join(@missing_keys, ", ", &PlatformCredentials.platform_name/1)}, so runs won't start.
         <.link :if={@current_user.admin} navigate={~p"/admin"} class="underline">Add keys</.link>
         <span :if={!@current_user.admin}>Ask an admin to add them.</span>
-      </p>
-    </section>
+      </span>
+    </div>
 
-    <section class="mt-16">
-      <h2 class="font-semibold mb-8">Models</h2>
-
+    <section class="mt-12">
+      <.section_header>Models</.section_header>
       <.live_component
         module={PanicWeb.NetworkLive.ModelSelectComponent}
         id="model-select"
@@ -58,38 +45,8 @@ defmodule PanicWeb.NetworkLive.Show do
       />
     </section>
 
-    <section class="mt-16">
-      <h2 class="font-semibold mb-8">Installations</h2>
-      <div :if={@network.installations == []} class="text-gray-500 italic">
-        No installations yet.
-        <.link
-          navigate={~p"/installations/new"}
-          class="text-purple-600 hover:text-purple-800 underline"
-        >
-          Create one
-        </.link>
-      </div>
-      <.table
-        :if={@network.installations != []}
-        id="network-installations"
-        rows={@streams.installations}
-        row_click={fn {_id, installation} -> JS.navigate(~p"/installations/#{installation}") end}
-      >
-        <:col :let={{_id, installation}} label="Name">{installation.name}</:col>
-        <:col :let={{_id, installation}} label="Watchers">
-          {length(installation.watchers)}
-        </:col>
-        <:action :let={{_id, installation}}>
-          <div class="sr-only">
-            <.link navigate={~p"/installations/#{installation}"}>Show</.link>
-          </div>
-          <.link navigate={~p"/installations/#{installation}/edit"}>Edit</.link>
-        </:action>
-      </.table>
-    </section>
-
-    <section class="mt-16">
-      <h2 class="font-semibold mb-8">Terminal</h2>
+    <section class="mt-12">
+      <.section_header>Run</.section_header>
       <.live_component
         module={PanicWeb.NetworkLive.TerminalComponent}
         network={@network}
@@ -97,26 +54,48 @@ defmodule PanicWeb.NetworkLive.Show do
         current_user={@current_user}
         id={@network.id}
       />
-    </section>
-
-    <section class="mt-8">
       <RunnerStatusComponent.runner_status
         id="runner-status"
         network={@network}
         genesis_invocation={@genesis_invocation}
         current_invocation={@current_invocation}
       />
-    </section>
-
-    <section class="mt-16">
-      <h2 class="font-semibold mb-8">
-        Last prompt <span :if={@genesis_invocation}>: {@genesis_invocation.input}</span>
-      </h2>
-
+      <p class="mt-6 mb-4 break-words">
+        <span class="text-base-content/60">Last prompt:</span>
+        <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
+      </p>
       <.display invocations={@streams.invocations} display={@display} />
     </section>
 
-    <.back href={~p"/users/#{@current_user}/"}>Back to networks</.back>
+    <section class="mt-12">
+      <.section_header>
+        Installations
+        <:actions>
+          <.button navigate={~p"/installations/new"} size="sm">
+            <.icon name="hero-plus" /> New installation
+          </.button>
+        </:actions>
+      </.section_header>
+      <p :if={@network.installations == []} class="text-base-content/70">
+        No installations yet.
+      </p>
+      <.table
+        :if={@network.installations != []}
+        id="network-installations"
+        rows={@streams.installations}
+        row_click={fn {_id, installation} -> JS.navigate(~p"/installations/#{installation}") end}
+      >
+        <:col :let={{_id, installation}} label="Name">
+          <.link navigate={~p"/installations/#{installation}"} class="font-semibold">
+            {installation.name}
+          </.link>
+        </:col>
+        <:col :let={{_id, installation}} label="Watchers">
+          {length(installation.watchers)}
+        </:col>
+      </.table>
+    </section>
+
     <.modal
       :if={@live_action == :edit}
       id="network-modal"

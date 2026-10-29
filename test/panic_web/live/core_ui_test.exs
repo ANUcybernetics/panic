@@ -13,24 +13,22 @@ defmodule PanicWeb.CoreUITest do
   describe "modal" do
     setup {PanicWeb.Helpers, :create_and_sign_in_user}
 
-    test "renders a native dialog that the Modal hook opens", %{conn: conn, user: user} do
+    test "renders a native dialog that the Modal hook opens", %{conn: conn} do
       conn
-      |> visit(~p"/users/#{user}/new-network")
-      |> assert_has(~s(dialog#new-network-modal[phx-hook="Modal"][closedby="any"][data-show="true"]))
+      |> visit(~p"/networks/new")
+      |> assert_has(~s(dialog#new-network-modal[phx-hook="Modal"][data-show="true"]))
       |> assert_has(~s(#new-network-modal form[method="dialog"] button[aria-label="close"]))
+      |> assert_has(~s(#new-network-modal form[method="dialog"].modal-backdrop))
     end
 
-    test "carries on_cancel for the hook to run when the user closes it", %{
-      conn: conn,
-      user: user
-    } do
-      {:ok, view, _html} = live(conn, ~p"/users/#{user}/new-network")
+    test "carries on_cancel for the hook to run when the user closes it", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/networks/new")
 
       cancel = view |> element("#new-network-modal") |> render() |> Floki.parse_fragment!()
       [encoded] = Floki.attribute(cancel, "dialog", "data-cancel")
 
       assert [["patch", %{"href" => href}]] = Jason.decode!(encoded)
-      assert href == ~p"/users/#{user}"
+      assert href == ~p"/networks"
     end
 
     test "toggles data-show when it stays in the DOM", %{conn: conn, user: user} do
@@ -47,8 +45,8 @@ defmodule PanicWeb.CoreUITest do
   describe "form errors" do
     setup {PanicWeb.Helpers, :create_and_sign_in_user}
 
-    test "stay hidden on fields the user hasn't used", %{conn: conn, user: user} do
-      {:ok, view, _html} = live(conn, ~p"/users/#{user}/new-network")
+    test "stay hidden on fields the user hasn't used", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/networks/new")
 
       # LiveView marks untouched fields with _unused_ params
       html =
@@ -62,8 +60,8 @@ defmodule PanicWeb.CoreUITest do
       refute has_element?(view, ~s(#network_name[aria-invalid]))
     end
 
-    test "show on used fields and are linked to the input", %{conn: conn, user: user} do
-      {:ok, view, _html} = live(conn, ~p"/users/#{user}/new-network")
+    test "show on used fields and are linked to the input", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/networks/new")
 
       view
       |> element("#network-form")

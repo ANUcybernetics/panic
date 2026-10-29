@@ -17,7 +17,7 @@ defmodule PanicWeb.BackupTest do
       # Navigate to admin panel and verify backup button exists
       conn
       |> visit("/admin")
-      |> assert_has("button", text: "Download backup")
+      |> assert_has(~s(a[href="/admin/backup"][download]), text: "Download backup")
     end
 
     @tag :capture_log
@@ -80,7 +80,7 @@ defmodule PanicWeb.BackupTest do
       |> visit("/admin")
       |> assert_has("h1", text: "Admin panel")
       |> assert_has("button", text: "Stop all jobs")
-      |> assert_has("button", text: "Download backup")
+      |> assert_has(~s(a[href="/admin/backup"][download]), text: "Download backup")
     end
   end
 end

@@ -24,38 +24,31 @@ defmodule PanicWeb.NetworkLive.RunnerStatusComponent do
       )
 
     ~H"""
-    <div id={@id} class="mb-6">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-          <div>
-            <span class="text-sm font-medium text-gray-500">Status:</span>
-            <span class={["ml-2 px-2 py-1 rounded-sm text-sm font-semibold", status_class(@status)]}>
-              {format_status(@status)}
-            </span>
-          </div>
+    <div id={@id} class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+      <div>
+        <span class="text-base-content/60">Status:</span>
+        <span class={["badge ml-1", status_class(@status)]}>{format_status(@status)}</span>
+      </div>
 
-          <div :if={@genesis_invocation}>
-            <span class="text-sm font-medium text-gray-500">Run age:</span>
-            <span class="ml-2 text-sm">{format_run_age(@genesis_invocation)}</span>
-          </div>
+      <div :if={@genesis_invocation}>
+        <span class="text-base-content/60">Run age:</span>
+        <span class="ml-1">{format_run_age(@genesis_invocation)}</span>
+      </div>
 
-          <div :if={@sequence_number}>
-            <span class="text-sm font-medium text-gray-500">Sequence:</span>
-            <span class="ml-2 text-sm">#{@sequence_number}</span>
-          </div>
-        </div>
+      <div :if={@sequence_number}>
+        <span class="text-base-content/60">Sequence:</span>
+        <span class="ml-1">#{@sequence_number}</span>
+      </div>
 
-        <div
-          :if={@status == :waiting}
-          id="countdown-container"
-          phx-hook="RunnerCountdown"
-          data-target-time={DateTime.to_iso8601(@current_invocation.invoke_after)}
-          class="text-sm font-medium"
-        >
-          <span class="text-gray-500">Next invocation in </span>
-          <span id="countdown-display" class="font-mono">--</span>
-          <span class="text-gray-500"> seconds</span>
-        </div>
+      <div
+        :if={@status == :waiting}
+        id="countdown-container"
+        phx-hook="RunnerCountdown"
+        data-target-time={DateTime.to_iso8601(@current_invocation.invoke_after)}
+      >
+        <span class="text-base-content/60">Next invocation in</span>
+        <span id="countdown-display">--</span>
+        <span class="text-base-content/60">seconds</span>
       </div>
     </div>
     """
@@ -81,10 +74,10 @@ defmodule PanicWeb.NetworkLive.RunnerStatusComponent do
   defp sequence_number(nil, %Invocation{sequence_number: seq}), do: seq
   defp sequence_number(nil, nil), do: nil
 
-  defp status_class(:idle), do: "bg-gray-200 text-gray-700"
-  defp status_class(:processing), do: "bg-blue-200 text-blue-700"
-  defp status_class(:waiting), do: "bg-yellow-200 text-yellow-700"
-  defp status_class(:failed), do: "bg-red-200 text-red-700"
+  defp status_class(:idle), do: "badge-neutral"
+  defp status_class(:processing), do: "badge-info"
+  defp status_class(:waiting), do: "badge-warning"
+  defp status_class(:failed), do: "badge-error"
 
   defp format_status(:idle), do: "Idle"
   defp format_status(:processing), do: "Processing"

@@ -8,25 +8,9 @@ defmodule PanicWeb.NetworkLive.Info do
   alias PanicWeb.WatcherSubscriber
 
   @impl true
-  def render(%{live_action: :all} = assigns) do
-    ~H"""
-    <div class="prose prose-purple">
-      <h2>QR codes</h2>
-      <ol>
-        <li :for={network <- @networks}>
-          <.link patch={~p"/networks/#{network.id}/info/qr"}>
-            {network.name}
-          </.link>
-        </li>
-      </ol>
-    </div>
-    """
-  end
-
-  @impl true
   def render(assigns) do
     ~H"""
-    <div class="prose prose-purple">
+    <div class="prose prose-purple max-w-none">
       <h2>Network name: {@network.name}</h2>
       <div :if={@network.description}>
         {@network.description |> MDEx.to_html!() |> raw}
@@ -38,7 +22,7 @@ defmodule PanicWeb.NetworkLive.Info do
           <.link :if={model.platform} href={Panic.Model.model_url(model)} target="_blank">
             {model.name}
           </.link>
-          <span :if={!model.platform} class="text-gray-500">{model.name}</span>
+          <span :if={!model.platform} class="text-base-content/60">{model.name}</span>
           ({model.input_type} -> {model.output_type})
         </li>
       </ol>
@@ -94,7 +78,6 @@ defmodule PanicWeb.NetworkLive.Info do
          socket
          |> assign(:page_title, "Network #{network_id} terminal")
          |> assign(:qr_text, qr_url)
-         |> assign_networks()
          |> WatcherSubscriber.configure_invocation_stream(network, {:single, 0, 1, false})}
 
       {:error, _error} ->
@@ -113,12 +96,6 @@ defmodule PanicWeb.NetworkLive.Info do
       {:noreply, socket}
     end
   end
-
-  defp assign_networks(%{assigns: %{live_action: :all}} = socket) do
-    assign(socket, :networks, Panic.Engine.list_networks!(actor: socket.assigns.current_user))
-  end
-
-  defp assign_networks(socket), do: socket
 
   defp all_models(network) do
     Enum.map(network.models, &PanicWeb.NetworkLive.NetworkHelpers.get_model_or_placeholder/1)
