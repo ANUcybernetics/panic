@@ -47,6 +47,15 @@ On any laptop or tablet, log in at the
 the [JSON API](../README.md#json-api) with the network's `start_run` route. The
 TVs and Vestaboards pick the run up on their own.
 
+## Letting visitors prompt
+
+Set the network's "Anonymous terminal (minutes)" (`anon_terminal_minutes` in the
+API) and the installation's first TV watcher shows a small QR code in its top
+right. Scanning it opens a terminal that can re-prompt the network, without
+logging in, for that many minutes; the code changes every minute, so a photo of
+it soon stops working. The network's lockout still applies. Clear the setting to
+take the QR code down.
+
 ## Stopping
 
 Hit "Stop" on the network's page (`/networks/<id>`). A run slows down as it ages
