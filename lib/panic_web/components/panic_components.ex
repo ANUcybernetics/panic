@@ -187,8 +187,9 @@ defmodule PanicWeb.PanicComponents do
   end
 
   @doc """
-  Renders the anonymous terminal's QR code in the top right of a display:
-  dark on light, so phones read it even when it's small.
+  Renders the anonymous terminal's QR code in the bottom right of a display,
+  where it covers the least of an image: dark on light, so phones read it
+  even when it's small.
   """
   attr :url, :string, required: true
 
@@ -197,10 +198,10 @@ defmodule PanicWeb.PanicComponents do
     <div
       id="terminal-qr"
       data-url={@url}
-      class="fixed top-[2vmin] right-[2vmin] z-10 w-[18vmin] rounded-[1vmin] bg-purple-200 p-[0.8vmin] text-center text-[1.5vmin] leading-tight text-zinc-900 [&_svg]:h-auto [&_svg]:w-full"
+      class="fixed right-[2vmin] bottom-[2vmin] z-10 w-[16vmin] rounded-[0.8vmin] bg-zinc-50 p-[0.6vmin] text-center text-[1.3vmin] leading-tight text-zinc-600 shadow-[0_0_2vmin_rgb(0_0_0/0.5)] [&_svg]:h-auto [&_svg]:w-full"
     >
-      {qr_svg(@url, {24, 24, 27}, {233, 213, 255})}
-      <span class="block pt-[0.4vmin]">scan to prompt</span>
+      {qr_svg(@url, {24, 24, 27}, {250, 250, 250})}
+      <span class="block pb-[0.2vmin]">scan to prompt</span>
     </div>
     """
   end

@@ -18,7 +18,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
     ~H"""
     <div
       :if={@display != nil && tuple_size(@display) == 3 && elem(@display, 0) == :grid}
-      class={["px-4 pt-2 pb-4", show_terminal_qr?(@first_display?, @network) && "pr-[22vmin]"]}
+      class="px-4 pt-2 pb-4"
     >
       <.live_component
         :if={@current_user}

@@ -22,7 +22,7 @@ defmodule PanicWeb.NetworkLive.TerminalExpired do
           <h2 class="card-title text-primary-content">How to get a new QR code:</h2>
           <ol class="list-decimal space-y-2 pl-6">
             <li>Find the screen displaying the PANIC! network</li>
-            <li>Look for the QR code in its top right corner (it changes every minute)</li>
+            <li>Look for the QR code in its bottom right corner (it changes every minute)</li>
             <li>Scan the new QR code with your device</li>
           </ol>
         </div>
