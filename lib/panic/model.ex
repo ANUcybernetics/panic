@@ -26,6 +26,33 @@ defmodule Panic.Model do
   alias Panic.Platforms.Gemini
   alias Panic.Platforms.OpenAI
   alias Panic.Platforms.Replicate
+  alias Panic.Watcher.Vestaboards
+
+  # Each Vestaboard captioner looks at the image through a different lens, so a
+  # run drifts rather than converging on one faithfully re-described scene.
+  @describe_lens """
+  Describe this image vividly in two or three sentences: subject, setting, the strangest or most \
+  specific details, and the visual style or medium (photo, painting, render, etc).\
+  """
+  @uncanny_lens """
+  Look closely at this image and describe what is odd, wrong or uncanny about it: garbled text, \
+  impossible anatomy or physics, objects that don't belong, anything a careful viewer would notice. \
+  Two or three sentences.\
+  """
+  @film_still_lens """
+  Treat this image as a single frame from a film. In two or three sentences, say what has just \
+  happened, what is about to happen, and the genre of the film.\
+  """
+  @critic_lens """
+  Describe this image as an art critic would, in two or three sentences: the medium, technique, \
+  palette and mood first, then the subject.\
+  """
+  @condense_prompt """
+  Rewrite the image description below as a caption for a Vestaboard split-flap display, which shows \
+  6 lines of 22 characters. Hard limit: 90 characters, about 14 words. Keep its most surprising idea, \
+  and any art style or medium it names. One plain sentence; no quotation marks, dashes, emoji or line \
+  breaks. Reply with the caption only.\
+  """
 
   @enforce_keys [:id, :path, :name, :platform, :input_type, :output_type, :invoke]
   defstruct [
@@ -713,6 +740,127 @@ defmodule Panic.Model do
         end
       },
       %__MODULE__{
+        id: "nano-banana-2-lite",
+        platform: Replicate,
+        path: "google/nano-banana-2-lite",
+        name: "Nano Banana 2 Lite",
+        description: "Google's fastest image generation model, the lightweight version of Nano Banana 2",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => output}} <-
+                 Replicate.invoke(model, %{prompt: input, aspect_ratio: "16:9"}, token) do
+            first_url(output)
+          end
+        end
+      },
+      %__MODULE__{
+        id: "krea-3",
+        platform: Replicate,
+        path: "krea/krea-3",
+        name: "Krea 3",
+        description: "Fast image generation and editing model from Krea",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input,
+            aspect_ratio: "16:9",
+            resolution: "1k",
+            thinking_mode: "fast"
+          }
+
+          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
+            first_url(output)
+          end
+        end
+      },
+      %__MODULE__{
+        id: "gpt-image-2.5-flare",
+        platform: Replicate,
+        path: "openai/gpt-image-2.5-flare",
+        name: "GPT Image 2.5 Flare",
+        description: "OpenAI's fastest image generation model",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          input_params = %{
+            prompt: input,
+            aspect_ratio: "16:9",
+            quality: "low",
+            moderation: "low",
+            output_format: "jpeg"
+          }
+
+          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
+            first_url(output)
+          end
+        end
+      },
+      %__MODULE__{
+        id: "p-image",
+        platform: Replicate,
+        path: "prunaai/p-image",
+        name: "P-Image",
+        description: "Sub-second text-to-image model from Pruna AI",
+        input_type: :text,
+        output_type: :image,
+        invoke: fn model, input, token ->
+          with {:ok, %{"output" => output}} <-
+                 Replicate.invoke(model, %{prompt: input, aspect_ratio: "16:9"}, token) do
+            first_url(output)
+          end
+        end
+      },
+      %__MODULE__{
+        id: "gpt-5.6-luna-caption",
+        platform: Replicate,
+        path: "openai/gpt-5.6-luna",
+        name: "GPT-5.6 Luna Caption",
+        description: "Vivid description of the image, cut to fit a Vestaboard by DeepSeek V3.1",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          vestaboard_caption(model, @describe_lens, "deepseek-ai/deepseek-v3.1", input, token)
+        end
+      },
+      %__MODULE__{
+        id: "claude-sonnet-5-uncanny",
+        platform: Replicate,
+        path: "anthropic/claude-sonnet-5",
+        name: "Claude Sonnet 5 Uncanny",
+        description: "What is odd or wrong about the image, cut to fit a Vestaboard by GPT-5.6 Luna",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          vestaboard_caption(model, @uncanny_lens, "openai/gpt-5.6-luna", input, token)
+        end
+      },
+      %__MODULE__{
+        id: "gemini-3-flash-film-still",
+        platform: Replicate,
+        path: "google/gemini-3-flash",
+        name: "Gemini 3 Flash Film Still",
+        description: "The image as a frame from a film, cut to fit a Vestaboard by Claude Haiku 4.5",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          vestaboard_caption(model, @film_still_lens, "anthropic/claude-4.5-haiku", input, token)
+        end
+      },
+      %__MODULE__{
+        id: "gemini-3.5-flash-critic",
+        platform: Replicate,
+        path: "google/gemini-3.5-flash",
+        name: "Gemini 3.5 Flash Critic",
+        description: "The image as an art critic sees it, cut to fit a Vestaboard by Llama 4 Maverick",
+        input_type: :image,
+        output_type: :text,
+        invoke: fn model, input, token ->
+          vestaboard_caption(model, @critic_lens, "meta/llama-4-maverick-instruct", input, token)
+        end
+      },
+      %__MODULE__{
         id: "claude-4-sonnet",
         platform: Replicate,
         path: "anthropic/claude-4-sonnet",
@@ -1158,6 +1306,73 @@ defmodule Panic.Model do
   def model_url(%__MODULE__{platform: Dummy}) do
     "#dummy-platform"
   end
+
+  defp first_url(url) when is_binary(url) and url != "", do: {:ok, url}
+  defp first_url([url | _]) when is_binary(url), do: {:ok, url}
+
+  # Describes `image` through `lens` with `captioner`, then has `condenser` (a
+  # Replicate text model from another vendor) cut the description to fit a
+  # Vestaboard, asking once more if it doesn't and trimming as a last resort.
+  defp vestaboard_caption(captioner, lens, condenser, image, token) do
+    with {:ok, description} <-
+           replicate_text(captioner, captioner_input(captioner.path, lens, image), token),
+         {:ok, caption} <- condense(condenser, description, @condense_prompt, token) do
+      if Vestaboards.fits?(caption) do
+        {:ok, caption}
+      else
+        with {:ok, shorter} <-
+               condense(
+                 condenser,
+                 caption,
+                 @condense_prompt <> " Your last attempt was too long; cut harder.",
+                 token
+               ) do
+          {:ok, Vestaboards.trim_to_fit(shorter)}
+        end
+      end
+    end
+  end
+
+  defp condense(path, text, instructions, token) do
+    replicate_model = %__MODULE__{
+      id: path,
+      path: path,
+      name: path,
+      platform: Replicate,
+      input_type: :text,
+      output_type: :text,
+      invoke: nil
+    }
+
+    with {:ok, caption} <-
+           replicate_text(replicate_model, condenser_input(path, instructions, text), token) do
+      {:ok, Vestaboards.sanitise(caption)}
+    end
+  end
+
+  defp replicate_text(model, input, token) do
+    with {:ok, %{"output" => output}} <- Replicate.invoke(model, input, token) do
+      {:ok, output |> List.wrap() |> Enum.join() |> String.trim()}
+    end
+  end
+
+  defp captioner_input("google/" <> _, prompt, image), do: %{prompt: prompt, images: [image], thinking_level: "none"}
+
+  defp captioner_input("openai/" <> _, prompt, image),
+    do: %{prompt: prompt, image_input: [image], reasoning_effort: "none", verbosity: "low"}
+
+  defp captioner_input("anthropic/" <> _, prompt, image),
+    do: %{prompt: prompt, image: image, max_tokens: 1024, effort: "low", max_image_resolution: 0.5}
+
+  defp condenser_input("anthropic/" <> _, system, text), do: %{prompt: text, system_prompt: system, max_tokens: 1024}
+
+  defp condenser_input("openai/" <> _, system, text),
+    do: %{prompt: text, system_prompt: system, reasoning_effort: "none", verbosity: "low"}
+
+  defp condenser_input("meta/" <> _, system, text), do: %{prompt: text, system_prompt: system, max_tokens: 200}
+
+  defp condenser_input("deepseek-ai/" <> _, system, text),
+    do: %{prompt: "#{system}\n\nDescription:\n#{text}", max_tokens: 200, thinking: "None"}
 end
 
 # TODO maybe this should go in it's own file? Hopefully they fix the cog return stuff
