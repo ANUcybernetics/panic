@@ -11,8 +11,10 @@ defmodule Panic.Platforms.Dummy do
   The dummy platform doesn't make any external API calls and returns
   predictable outputs based on the input and output types.
   """
-  def invoke(%Panic.Model{input_type: input_type, output_type: output_type}, input, _token) do
-    generate_output(input_type, output_type, input)
+  def invoke(%Panic.Model{input_type: input_type, output_type: output_type, path: path}, input, _token) do
+    with {:ok, output} <- generate_output(input_type, output_type, input) do
+      {:ok, output, %{"platform" => "dummy", "path" => path}}
+    end
   end
 
   @doc """

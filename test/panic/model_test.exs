@@ -206,19 +206,18 @@ defmodule Panic.ModelTest do
         assert model.platform == Dummy
         assert model.path =~ ~r/^dummy\//
         assert model.description =~ ~r/Dummy model for testing/
-        assert is_function(model.invoke, 3)
       end
     end
 
     test "dummy models produce deterministic outputs" do
       dummy_models = Model.all(platform: Dummy)
 
-      for %Model{invoke: invoke_fn} = model <- dummy_models do
+      for model <- dummy_models do
         input = test_input_for_type(model.input_type)
 
         # Invoke the model twice with the same input
-        {:ok, output1} = invoke_fn.(model, input, nil)
-        {:ok, output2} = invoke_fn.(model, input, nil)
+        {:ok, output1, _usage} = Model.invoke(model, input, nil)
+        {:ok, output2, _usage} = Model.invoke(model, input, nil)
 
         # Outputs should be identical
         assert output1 == output2, "Model #{model.id} should produce deterministic output"
@@ -236,7 +235,7 @@ defmodule Panic.ModelTest do
       for model <- Model.all(platform: Dummy) do
         input = test_input_for_type(model.input_type)
 
-        assert {:ok, output} = model.invoke.(model, input, nil)
+        assert {:ok, output, _usage} = Model.invoke(model, input, nil)
 
         case model.output_type do
           :text -> assert is_binary(output) and String.contains?(output, "DUMMY_")
@@ -250,7 +249,7 @@ defmodule Panic.ModelTest do
       model = Model.by_id!("dummy-t2t")
       input = "hello world"
 
-      assert {:ok, "DUMMY_TEXT: " <> reversed} = model.invoke.(model, input, "token")
+      assert {:ok, "DUMMY_TEXT: " <> reversed, _usage} = Model.invoke(model, input, "token")
       assert reversed == String.reverse(input)
     end
 
@@ -258,7 +257,7 @@ defmodule Panic.ModelTest do
       model = Model.by_id!("dummy-t2i")
       input = "generate an image"
 
-      assert {:ok, url} = model.invoke.(model, input, "token")
+      assert {:ok, url, _usage} = Model.invoke(model, input, "token")
       assert String.starts_with?(url, "https://dummy-images.test/")
       assert String.ends_with?(url, ".png")
     end
@@ -267,7 +266,7 @@ defmodule Panic.ModelTest do
       model = Model.by_id!("dummy-t2a")
       input = "generate audio"
 
-      assert {:ok, url} = model.invoke.(model, input, "token")
+      assert {:ok, url, _usage} = Model.invoke(model, input, "token")
       assert String.starts_with?(url, "https://dummy-audio.test/")
       assert String.ends_with?(url, ".ogg")
     end
@@ -276,14 +275,16 @@ defmodule Panic.ModelTest do
       model = Model.by_id!("dummy-i2t")
 
       # Test with a dummy image URL
-      assert {:ok, caption} =
-               model.invoke.(model, "https://dummy-images.test/abc123.png", "token")
+      assert {:ok, caption, _usage} =
+               Model.invoke(model, "https://dummy-images.test/abc123.png", "token")
 
       assert String.starts_with?(caption, "DUMMY_CAPTION:")
       assert String.contains?(caption, "abc123")
 
       # Test with a regular image URL
-      assert {:ok, caption2} = model.invoke.(model, "https://example.com/image.jpg", "token")
+      assert {:ok, caption2, _usage} =
+               Model.invoke(model, "https://example.com/image.jpg", "token")
+
       assert String.starts_with?(caption2, "DUMMY_CAPTION:")
       assert String.contains?(caption2, "descriptive caption")
     end
@@ -292,7 +293,7 @@ defmodule Panic.ModelTest do
       model = Model.by_id!("dummy-i2i")
       input = "https://example.com/input.png"
 
-      assert {:ok, url} = model.invoke.(model, input, "token")
+      assert {:ok, url, _usage} = Model.invoke(model, input, "token")
       assert String.starts_with?(url, "https://dummy-images.test/transformed_")
       assert String.ends_with?(url, ".png")
     end
@@ -301,7 +302,7 @@ defmodule Panic.ModelTest do
       model = Model.by_id!("dummy-i2a")
       input = "https://example.com/input.png"
 
-      assert {:ok, url} = model.invoke.(model, input, "token")
+      assert {:ok, url, _usage} = Model.invoke(model, input, "token")
       assert String.starts_with?(url, "https://dummy-audio.test/from_image_")
       assert String.ends_with?(url, ".ogg")
     end
@@ -310,18 +311,20 @@ defmodule Panic.ModelTest do
       model = Model.by_id!("dummy-a2t")
 
       # Test with direct audio URL
-      assert {:ok, transcript} = model.invoke.(model, "https://example.com/audio.ogg", "token")
+      assert {:ok, transcript, _usage} =
+               Model.invoke(model, "https://example.com/audio.ogg", "token")
+
       assert String.starts_with?(transcript, "DUMMY_TRANSCRIPT:")
 
       # Test with Gemini-style input (map with audio_file key)
-      assert {:ok, transcript2} =
-               model.invoke.(model, %{audio_file: "https://example.com/audio2.ogg"}, "token")
+      assert {:ok, transcript2, _usage} =
+               Model.invoke(model, %{audio_file: "https://example.com/audio2.ogg"}, "token")
 
       assert String.starts_with?(transcript2, "DUMMY_TRANSCRIPT:")
 
       # Test with Gemini-style input including prompt
-      assert {:ok, description} =
-               model.invoke.(
+      assert {:ok, description, _usage} =
+               Model.invoke(
                  model,
                  %{audio_file: "https://example.com/audio3.ogg", prompt: "Describe the mood"},
                  "token"
@@ -335,7 +338,7 @@ defmodule Panic.ModelTest do
       model = Model.by_id!("dummy-a2i")
       input = "https://example.com/audio.ogg"
 
-      assert {:ok, url} = model.invoke.(model, input, "token")
+      assert {:ok, url, _usage} = Model.invoke(model, input, "token")
       assert String.starts_with?(url, "https://dummy-images.test/from_audio_")
       assert String.ends_with?(url, ".png")
     end
@@ -344,7 +347,7 @@ defmodule Panic.ModelTest do
       model = Model.by_id!("dummy-a2a")
       input = "https://example.com/audio.ogg"
 
-      assert {:ok, url} = model.invoke.(model, input, "token")
+      assert {:ok, url, _usage} = Model.invoke(model, input, "token")
       assert String.starts_with?(url, "https://dummy-audio.test/transformed_")
       assert String.ends_with?(url, ".ogg")
     end
@@ -370,9 +373,9 @@ defmodule Panic.ModelTest do
       input = "test input"
 
       # Call multiple times with same input but different tokens
-      {:ok, output1} = model.invoke.(model, input, "token1")
-      {:ok, output2} = model.invoke.(model, input, "token2")
-      {:ok, output3} = model.invoke.(model, input, "different_token")
+      {:ok, output1, _usage} = Model.invoke(model, input, "token1")
+      {:ok, output2, _usage} = Model.invoke(model, input, "token2")
+      {:ok, output3, _usage} = Model.invoke(model, input, "different_token")
 
       # All outputs should be identical
       assert output1 == output2

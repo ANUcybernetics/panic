@@ -8,20 +8,19 @@ defmodule Panic.Model do
   - `description`: brief description of the model (supports markdown)
   - `input_type`: input type (either `:text`, `:image` or `:audio`)
   - `output_type`: output type (either `:text`, `:image` or `:audio`)
-  - `invoke`: is a function which takes `input` and `token` args and returns the output
+  - `params`: turns the invocation's input into the platform request's input
+  - `output`: picks the output out of the platform's response (see `Panic.Model.Output`)
+  - `invoke`: for a model that makes more than one platform call (or none), a
+    function of `model`, `input` and `token` that replaces `params` and `output`
+    and returns what `invoke/3` does
 
-  This information is stored in code (rather than in the database) because each
-  model requires bespoke code to pull out the relevant return value (see the
-  various versions of `create/3` in this module) and trying to keep that code in
-  sync with this info in the database would be a nightmare.
-
-  There are also a couple of helper functions for fetching/filtering models. So you can
-  kinof squint at `Model` as a Repo of models, although they're just code (not in the db)
-  because of the fact each model needs bespoke "turn result into something that works as an
-  invocation output" code.
+  Models are defined in code (rather than in the database) because each needs
+  bespoke code to build its request and pull out its output. You can squint at
+  this module as a Repo of models.
   """
   @behaviour Access
 
+  alias Panic.Model.Output
   alias Panic.Platforms.Dummy
   alias Panic.Platforms.Gemini
   alias Panic.Platforms.OpenAI
@@ -53,8 +52,16 @@ defmodule Panic.Model do
   and any art style or medium it names. One plain sentence; no quotation marks, dashes, emoji or line \
   breaks. Reply with the caption only.\
   """
+  @audio_description_prompt """
+  Describe this audio. The description will be fed into a text-to-audio generative model,
+  and your aim is to have that model reproduce the original audio as closely as possible.
+  Never include any specific artist or song names in the description.
 
-  @enforce_keys [:id, :path, :name, :platform, :input_type, :output_type, :invoke]
+  Be concise - less than 100 words in total.
+  """
+  @caption_prompt "Provide an interesting, concise caption for this image. Describe foreground and background elements."
+
+  @enforce_keys [:id, :path, :name, :platform, :input_type, :output_type]
   defstruct [
     :id,
     :path,
@@ -62,22 +69,33 @@ defmodule Panic.Model do
     :platform,
     :input_type,
     :output_type,
-    :invoke,
     :description,
     :homepage,
+    :invoke,
+    params: &Function.identity/1,
+    output: &Output.as_is/1,
     deprecated: false
   ]
+
+  @typedoc """
+  What one platform call consumed, as the platform reported it: a string-keyed
+  map with the `"platform"` and `"path"` called and whichever of the metrics
+  `Panic.Engine.Footprint` prices it reported.
+  """
+  @type usage :: %{String.t() => term()}
 
   @type t :: %__MODULE__{
           id: String.t(),
           path: String.t(),
           name: String.t(),
-          platform: OpenAI | Replicate,
+          platform: module(),
           input_type: :text | :audio | :image,
           output_type: :text | :audio | :image,
           description: String.t() | nil,
           homepage: String.t() | nil,
-          invoke: (String.t(), String.t() -> {:ok, String.t()} | {:error, String.t()}),
+          params: (term() -> term()),
+          output: (term() -> {:ok, String.t()} | {:error, term()}),
+          invoke: (t(), term(), String.t() -> {:ok, String.t(), [usage()]} | {:error, term()}) | nil,
           deprecated: boolean()
         }
 
@@ -95,6 +113,27 @@ defmodule Panic.Model do
     {value, struct(__MODULE__, Map.to_list(new_model))}
   end
 
+  @doc """
+  Runs `model` on `input` with the platform `token`. Returns the output and the
+  usage of each platform call that produced it, so the invocation can record
+  what it cost (see `Panic.Engine.Footprint`).
+  """
+  @spec invoke(t(), term(), String.t() | nil) :: {:ok, String.t(), [usage()]} | {:error, term()}
+  def invoke(%__MODULE__{invoke: invoke} = model, input, token) when is_function(invoke, 3) do
+    invoke.(model, input, token)
+  end
+
+  def invoke(%__MODULE__{params: params} = model, input, token) do
+    call(model, params.(input), token)
+  end
+
+  defp call(%__MODULE__{platform: platform, output: output} = model, params, token) do
+    with {:ok, response, usage} <- platform.invoke(model, params, token),
+         {:ok, result} <- output.(response) do
+      {:ok, result, [usage]}
+    end
+  end
+
   def all do
     [
       %__MODULE__{
@@ -104,22 +143,7 @@ defmodule Panic.Model do
         input_type: :audio,
         output_type: :text,
         platform: Gemini,
-        invoke: fn model, audio_file, token ->
-          Gemini.invoke(
-            model,
-            %{
-              audio_file: audio_file,
-              prompt: """
-              Describe this audio. The description will be fed into a text-to-audio generative model,
-              and your aim is to have that model reproduce the original audio as closely as possible.
-              Never include any specific artist or song names in the description.
-
-              Be concise - less than 100 words in total.
-              """
-            },
-            token
-          )
-        end
+        params: &%{audio_file: &1, prompt: @audio_description_prompt}
       },
       %__MODULE__{
         id: "gemini-audio-description-pro",
@@ -128,22 +152,7 @@ defmodule Panic.Model do
         input_type: :audio,
         output_type: :text,
         platform: Gemini,
-        invoke: fn model, audio_file, token ->
-          Gemini.invoke(
-            model,
-            %{
-              audio_file: audio_file,
-              prompt: """
-              Describe this audio. The description will be fed into a text-to-audio generative model,
-              and your aim is to have that model reproduce the original audio as closely as possible.
-              Never include any specific artist or song names in the description.
-
-              Be concise - less than 100 words in total.
-              """
-            },
-            token
-          )
-        end
+        params: &%{audio_file: &1, prompt: @audio_description_prompt}
       },
       ## OpenAI
       %__MODULE__{
@@ -153,10 +162,7 @@ defmodule Panic.Model do
         deprecated: true,
         input_type: :text,
         output_type: :text,
-        platform: OpenAI,
-        invoke: fn model, input, token ->
-          OpenAI.invoke(model, input, token)
-        end
+        platform: OpenAI
       },
       %__MODULE__{
         id: "gpt-5.6-luna",
@@ -164,10 +170,7 @@ defmodule Panic.Model do
         name: "GPT-5.6 Luna",
         input_type: :text,
         output_type: :text,
-        platform: OpenAI,
-        invoke: fn model, input, token ->
-          OpenAI.invoke(model, input, token)
-        end
+        platform: OpenAI
       },
 
       ## Replicate
@@ -179,21 +182,8 @@ defmodule Panic.Model do
         input_type: :image,
         output_type: :text,
         deprecated: true,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => text}} <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     image: input,
-                     prompt:
-                       "Provide an interesting, concise caption for this image. Describe foreground and background elements.",
-                     max_new_tokens: 50
-                   },
-                   token
-                 ) do
-            {:ok, text}
-          end
-        end
+        params: &%{image: &1, prompt: @caption_prompt, max_new_tokens: 50},
+        output: &Output.text/1
       },
       %__MODULE__{
         id: "florence-2-large",
@@ -203,9 +193,9 @@ defmodule Panic.Model do
         input_type: :image,
         output_type: :text,
         deprecated: true,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => %{"text" => text}}} <-
-                 Replicate.invoke(model, %{image: input, task_input: "Detailed Caption"}, token),
+        params: &%{image: &1, task_input: "Detailed Caption"},
+        output: fn response ->
+          with {:ok, text} <- Output.key("text").(response),
                {:ok, %{"DETAILED_CAPTION" => caption}} <- JsonFixer.parse_incorrect_json(text) do
             {:ok, caption}
           end
@@ -219,16 +209,8 @@ defmodule Panic.Model do
         input_type: :image,
         output_type: :text,
         deprecated: true,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => text}} <-
-                 Replicate.invoke(
-                   model,
-                   %{image: input, prompt: "Describe the image in great detail"},
-                   token
-                 ) do
-            {:ok, text}
-          end
-        end
+        params: &%{image: &1, prompt: "Describe the image in great detail"},
+        output: &Output.text/1
       },
       %__MODULE__{
         id: "molmo-7b",
@@ -237,19 +219,9 @@ defmodule Panic.Model do
         name: "Molmo 7B-D",
         input_type: :image,
         output_type: :text,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => text}} <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     image: input,
-                     text: "What do you see? Give me a detailed answer",
-                     max_new_tokens: 100
-                   },
-                   token
-                 ) do
-            {:ok, text |> String.trim() |> String.trim("\"")}
-          end
+        params: &%{image: &1, text: "What do you see? Give me a detailed answer", max_new_tokens: 100},
+        output: fn response ->
+          with {:ok, text} <- Output.text(response), do: {:ok, String.trim(text, "\"")}
         end
       },
       %__MODULE__{
@@ -260,20 +232,13 @@ defmodule Panic.Model do
         deprecated: true,
         input_type: :image,
         output_type: :text,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => text_array}} <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     image: input,
-                     question:
-                       "Provide a very short description of this picture, including both foreground and background elements, and the (artistic) style of the image."
-                   },
-                   token
-                 ) do
-            {:ok, text_array |> Enum.join("") |> String.trim()}
-          end
-        end
+        params:
+          &%{
+            image: &1,
+            question:
+              "Provide a very short description of this picture, including both foreground and background elements, and the (artistic) style of the image."
+          },
+        output: &Output.text/1
       },
       %__MODULE__{
         id: "blip-2",
@@ -283,20 +248,13 @@ defmodule Panic.Model do
         input_type: :image,
         output_type: :text,
         deprecated: true,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => text}} <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     image: input,
-                     question:
-                       "Describe this picture in detail, including both foreground and background elements, and the (artistic) style of the image."
-                   },
-                   token
-                 ) do
-            {:ok, text}
-          end
-        end
+        params:
+          &%{
+            image: &1,
+            question:
+              "Describe this picture in detail, including both foreground and background elements, and the (artistic) style of the image."
+          },
+        output: &Output.text/1
       },
       %__MODULE__{
         id: "blip-3",
@@ -306,19 +264,12 @@ defmodule Panic.Model do
         input_type: :image,
         output_type: :text,
         deprecated: true,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => text}} <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     image: input,
-                     question: "What is shown in the image, and what (artistic) style does the image represent?"
-                   },
-                   token
-                 ) do
-            {:ok, text}
-          end
-        end
+        params:
+          &%{
+            image: &1,
+            question: "What is shown in the image, and what (artistic) style does the image represent?"
+          },
+        output: &Output.text/1
       },
       %__MODULE__{
         id: "llava-13b",
@@ -329,22 +280,8 @@ defmodule Panic.Model do
         input_type: :image,
         output_type: :text,
         deprecated: true,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => output_list}} when is_list(output_list) <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     image: input,
-                     prompt:
-                       "Provide an interesting, concise caption for this image. Describe foreground and background elements.",
-                     max_tokens: 100,
-                     temperature: 0.2
-                   },
-                   token
-                 ) do
-            {:ok, output_list |> Enum.join("") |> String.trim()}
-          end
-        end
+        params: &%{image: &1, prompt: @caption_prompt, max_tokens: 100, temperature: 0.2},
+        output: &Output.text/1
       },
       %__MODULE__{
         id: "qwen2-vl-7b-instruct",
@@ -354,20 +291,8 @@ defmodule Panic.Model do
         description: "Modern visual language model with any-resolution image understanding",
         input_type: :image,
         output_type: :text,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => text}} when is_binary(text) <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     media: input,
-                     prompt:
-                       "Provide an interesting, concise caption for this image. Describe foreground and background elements."
-                   },
-                   token
-                 ) do
-            {:ok, String.trim(text)}
-          end
-        end
+        params: &%{media: &1, prompt: @caption_prompt},
+        output: &Output.text/1
       },
       %__MODULE__{
         id: "llama-4-scout-instruct",
@@ -377,21 +302,8 @@ defmodule Panic.Model do
         description: "Natively multimodal 17B-parameter model with 16 experts",
         input_type: :image,
         output_type: :text,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => output_list}} when is_list(output_list) <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     image: input,
-                     prompt:
-                       "Provide an interesting, concise caption for this image. Describe foreground and background elements.",
-                     max_tokens: 100
-                   },
-                   token
-                 ) do
-            {:ok, output_list |> Enum.join("") |> String.trim()}
-          end
-        end
+        params: &%{image: &1, prompt: @caption_prompt, max_tokens: 100},
+        output: &Output.text/1
       },
       %__MODULE__{
         id: "stable-diffusion",
@@ -400,20 +312,8 @@ defmodule Panic.Model do
         name: "Stable Diffusion 3.5 Turbo",
         input_type: :text,
         output_type: :image,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
-            aspect_ratio: "16:9",
-            output_format: "png"
-          }
-
-          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
-            case output do
-              url when is_binary(url) -> {:ok, url}
-              [url | _] when is_binary(url) -> {:ok, url}
-            end
-          end
-        end
+        params: &%{prompt: &1, aspect_ratio: "16:9", output_format: "png"},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "flux-schnell",
@@ -423,19 +323,8 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :image,
         deprecated: true,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
-            output_format: "png",
-            aspect_ratio: "16:9",
-            disable_safety_checker: true
-          }
-
-          with {:ok, %{"output" => [image_url]}} <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
-          end
-        end
+        params: &flux_schnell_params/1,
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "sdxl",
@@ -445,20 +334,8 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :image,
         deprecated: true,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
-            num_inference_steps: 50,
-            guidance_scale: 7.5,
-            width: 1024,
-            height: 576
-          }
-
-          with {:ok, %{"output" => [image_url]}} <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
-          end
-        end
+        params: &%{prompt: &1, num_inference_steps: 50, guidance_scale: 7.5, width: 1024, height: 576},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "icons",
@@ -468,19 +345,8 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :image,
         deprecated: true,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
-            guidance_scale: 7.5,
-            width: 1024,
-            height: 576
-          }
-
-          with {:ok, %{"output" => [image_url]}} <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
-          end
-        end
+        params: &%{prompt: &1, guidance_scale: 7.5, width: 1024, height: 576},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "sticker-maker",
@@ -490,19 +356,8 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :image,
         deprecated: true,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
-            output_format: "png",
-            width: 1024,
-            height: 576
-          }
-
-          with {:ok, %{"output" => [image_url]}} <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
-          end
-        end
+        params: &%{prompt: &1, output_format: "png", width: 1024, height: 576},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "sdxl-lightning-4step",
@@ -512,18 +367,8 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :image,
         deprecated: true,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
-            width: 1024,
-            height: 576
-          }
-
-          with {:ok, %{"output" => [image_url]}} <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
-          end
-        end
+        params: &%{prompt: &1, width: 1024, height: 576},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "kandinsky-2.2",
@@ -533,18 +378,8 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :image,
         deprecated: true,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
-            width: 1024,
-            height: 576
-          }
-
-          with {:ok, %{"output" => [image_url]}} <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
-          end
-        end
+        params: &%{prompt: &1, width: 1024, height: 576},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "proteus-v0.2",
@@ -554,20 +389,15 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :image,
         deprecated: true,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
+        params:
+          &%{
+            prompt: &1,
             width: 1024,
             height: 576,
             apply_watermark: false,
             disable_safety_checker: true
-          }
-
-          with {:ok, %{"output" => [image_url]}} <-
-                 Replicate.invoke(model, input_params, token) do
-            {:ok, image_url}
-          end
-        end
+          },
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "imagen-4-fast",
@@ -576,20 +406,8 @@ defmodule Panic.Model do
         name: "Imagen 4 Fast",
         input_type: :text,
         output_type: :image,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
-            aspect_ratio: "16:9",
-            safety_filter_level: "block_only_high"
-          }
-
-          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
-            case output do
-              url when is_binary(url) and url != "" -> {:ok, url}
-              [url | _] when is_binary(url) -> {:ok, url}
-            end
-          end
-        end
+        params: &%{prompt: &1, aspect_ratio: "16:9", safety_filter_level: "block_only_high"},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "photon-flash",
@@ -598,19 +416,8 @@ defmodule Panic.Model do
         name: "Luma Photon Flash",
         input_type: :text,
         output_type: :image,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
-            aspect_ratio: "16:9"
-          }
-
-          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
-            case output do
-              url when is_binary(url) -> {:ok, url}
-              [url | _] when is_binary(url) -> {:ok, url}
-            end
-          end
-        end
+        params: &%{prompt: &1, aspect_ratio: "16:9"},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "seedream-3",
@@ -621,21 +428,8 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :image,
         deprecated: true,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
-            aspect_ratio: "16:9",
-            size: "big",
-            guidance_scale: 2.5
-          }
-
-          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
-            case output do
-              url when is_binary(url) -> {:ok, url}
-              [url | _] when is_binary(url) -> {:ok, url}
-            end
-          end
-        end
+        params: &%{prompt: &1, aspect_ratio: "16:9", size: "big", guidance_scale: 2.5},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "flux-2-klein-4b",
@@ -645,20 +439,8 @@ defmodule Panic.Model do
         description: "Sub-second inference T2I with text rendering, successor to FLUX.1 schnell",
         input_type: :text,
         output_type: :image,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
-            aspect_ratio: "16:9",
-            output_format: "png"
-          }
-
-          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
-            case output do
-              url when is_binary(url) -> {:ok, url}
-              [url | _] when is_binary(url) -> {:ok, url}
-            end
-          end
-        end
+        params: &%{prompt: &1, aspect_ratio: "16:9", output_format: "png"},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "seedream-4.5",
@@ -668,21 +450,8 @@ defmodule Panic.Model do
         description: "Successor to Seedream 3 with stronger spatial understanding",
         input_type: :text,
         output_type: :image,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
-            aspect_ratio: "16:9",
-            size: "2K",
-            guidance_scale: 2.5
-          }
-
-          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
-            case output do
-              url when is_binary(url) -> {:ok, url}
-              [url | _] when is_binary(url) -> {:ok, url}
-            end
-          end
-        end
+        params: &%{prompt: &1, aspect_ratio: "16:9", size: "2K", guidance_scale: 2.5},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "z-image-turbo",
@@ -692,19 +461,8 @@ defmodule Panic.Model do
         description: "Sub-second photorealistic image generation",
         input_type: :text,
         output_type: :image,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
-            aspect_ratio: "16:9"
-          }
-
-          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
-            case output do
-              url when is_binary(url) -> {:ok, url}
-              [url | _] when is_binary(url) -> {:ok, url}
-            end
-          end
-        end
+        params: &%{prompt: &1, aspect_ratio: "16:9"},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "dreamina-3.1",
@@ -715,21 +473,8 @@ defmodule Panic.Model do
         deprecated: true,
         input_type: :text,
         output_type: :image,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
-            aspect_ratio: "16:9",
-            resolution: "2K",
-            enhance_prompt: false
-          }
-
-          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
-            case output do
-              url when is_binary(url) -> {:ok, url}
-              [url | _] when is_binary(url) -> {:ok, url}
-            end
-          end
-        end
+        params: &%{prompt: &1, aspect_ratio: "16:9", resolution: "2K", enhance_prompt: false},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "ideogram-v3-turbo",
@@ -739,19 +484,8 @@ defmodule Panic.Model do
         description: "Fast text-to-image generation with stunning realism, creative designs, and consistent styles",
         input_type: :text,
         output_type: :image,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
-            aspect_ratio: "16:9"
-          }
-
-          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
-            case output do
-              url when is_binary(url) -> {:ok, url}
-              [url | _] when is_binary(url) -> {:ok, url}
-            end
-          end
-        end
+        params: &%{prompt: &1, aspect_ratio: "16:9"},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "nano-banana-2-lite",
@@ -761,12 +495,8 @@ defmodule Panic.Model do
         description: "Google's fastest image generation model, the lightweight version of Nano Banana 2",
         input_type: :text,
         output_type: :image,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => output}} <-
-                 Replicate.invoke(model, %{prompt: input, aspect_ratio: "16:9"}, token) do
-            first_url(output)
-          end
-        end
+        params: &%{prompt: &1, aspect_ratio: "16:9"},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "krea-3",
@@ -776,18 +506,8 @@ defmodule Panic.Model do
         description: "Fast image generation and editing model from Krea",
         input_type: :text,
         output_type: :image,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
-            aspect_ratio: "16:9",
-            resolution: "1k",
-            thinking_mode: "fast"
-          }
-
-          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
-            first_url(output)
-          end
-        end
+        params: &%{prompt: &1, aspect_ratio: "16:9", resolution: "1k", thinking_mode: "fast"},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "gpt-image-2.5-flare",
@@ -797,19 +517,15 @@ defmodule Panic.Model do
         description: "OpenAI's fastest image generation model",
         input_type: :text,
         output_type: :image,
-        invoke: fn model, input, token ->
-          input_params = %{
-            prompt: input,
+        params:
+          &%{
+            prompt: &1,
             aspect_ratio: "16:9",
             quality: "low",
             moderation: "low",
             output_format: "jpeg"
-          }
-
-          with {:ok, %{"output" => output}} <- Replicate.invoke(model, input_params, token) do
-            first_url(output)
-          end
-        end
+          },
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "p-image",
@@ -819,16 +535,8 @@ defmodule Panic.Model do
         description: "Sub-second text-to-image model from Pruna AI",
         input_type: :text,
         output_type: :image,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => output}} <-
-                 Replicate.invoke(
-                   model,
-                   %{prompt: input, aspect_ratio: "16:9", disable_safety_checker: true},
-                   token
-                 ) do
-            first_url(output)
-          end
-        end
+        params: &%{prompt: &1, aspect_ratio: "16:9", disable_safety_checker: true},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "gpt-5.6-luna-caption",
@@ -885,12 +593,8 @@ defmodule Panic.Model do
         name: "Claude 4.5 Sonnet",
         input_type: :text,
         output_type: :text,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => output_list}} <-
-                 Replicate.invoke(model, %{prompt: input}, token) do
-            {:ok, Enum.join(output_list)}
-          end
-        end
+        params: &%{prompt: &1},
+        output: &Output.text/1
       },
       %__MODULE__{
         id: "claude-4-sonnet-caption",
@@ -899,20 +603,8 @@ defmodule Panic.Model do
         name: "Claude 4.5 Sonnet Caption",
         input_type: :image,
         output_type: :text,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => output_list}} <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     prompt: "describe this image in one sentence",
-                     image: input,
-                     max_image_resolution: 0.5
-                   },
-                   token
-                 ) do
-            {:ok, Enum.join(output_list)}
-          end
-        end
+        params: &%{prompt: "describe this image in one sentence", image: &1, max_image_resolution: 0.5},
+        output: &Output.text/1
       },
       %__MODULE__{
         id: "meta-llama-3-8b-instruct",
@@ -922,12 +614,8 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :text,
         deprecated: true,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => output_list}} <-
-                 Replicate.invoke(model, %{prompt: input}, token) do
-            {:ok, Enum.join(output_list)}
-          end
-        end
+        params: &%{prompt: &1},
+        output: &Output.text/1
       },
       %__MODULE__{
         id: "meta-llama-3-8b-songifier",
@@ -937,22 +625,20 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :text,
         deprecated: true,
-        invoke: fn model, input, token ->
-          input = """
-          You are an expert music producer with skills in an extremely wide range of musical genres and styles.
-          Interpret the following text as the design brief for a song, and reply with a one-sentence
-          description of the song. You may include details like bpm, instrumentation, genre/feel, but
-          reply only with the one-sentence description (do not say "Certainly", or "Here is the description"
-          or anything other than the song description itself).
+        params: fn input ->
+          %{
+            prompt: """
+            You are an expert music producer with skills in an extremely wide range of musical genres and styles.
+            Interpret the following text as the design brief for a song, and reply with a one-sentence
+            description of the song. You may include details like bpm, instrumentation, genre/feel, but
+            reply only with the one-sentence description (do not say "Certainly", or "Here is the description"
+            or anything other than the song description itself).
 
-          #{input}
-          """
-
-          with {:ok, %{"output" => output_list}} <-
-                 Replicate.invoke(model, %{prompt: input}, token) do
-            {:ok, Enum.join(output_list)}
-          end
-        end
+            #{input}
+            """
+          }
+        end,
+        output: &Output.text/1
       },
       %__MODULE__{
         id: "musicgen",
@@ -962,23 +648,8 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :audio,
         deprecated: true,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => audio_url}} <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     prompt: input,
-                     duration: 8,
-                     # multi_band_diffusion: true,
-                     top_k: 1000,
-                     temperature: 1.1,
-                     output_format: "mp3"
-                   },
-                   token
-                 ) do
-            {:ok, audio_url}
-          end
-        end
+        params: &%{prompt: &1, duration: 8, top_k: 1000, temperature: 1.1, output_format: "mp3"},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "magnet",
@@ -987,20 +658,8 @@ defmodule Panic.Model do
         name: "MAGNeT",
         input_type: :text,
         output_type: :audio,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => [audio_url]}} <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     prompt: input,
-                     model: "facebook/magnet-medium-10secs",
-                     variations: 1
-                   },
-                   token
-                 ) do
-            {:ok, audio_url}
-          end
-        end
+        params: &%{prompt: &1, model: "facebook/magnet-medium-10secs", variations: 1},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "flux-music",
@@ -1009,20 +668,8 @@ defmodule Panic.Model do
         name: "Flux Music",
         input_type: :text,
         output_type: :audio,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => %{"wav" => audio_url}}} <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     prompt: input,
-                     model_version: "base",
-                     steps: 50
-                   },
-                   token
-                 ) do
-            {:ok, audio_url}
-          end
-        end
+        params: &%{prompt: &1, model_version: "base", steps: 50},
+        output: Output.key("wav")
       },
       %__MODULE__{
         id: "riffusion",
@@ -1032,27 +679,13 @@ defmodule Panic.Model do
         input_type: :text,
         output_type: :audio,
         deprecated: true,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => %{"audio" => audio_url}}} <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     prompt_a: input,
-                     alpha: 0,
-                     seed_image_id:
-                       Enum.random([
-                         "agile",
-                         "marim",
-                         "motorway",
-                         "og_beat",
-                         "vibes"
-                       ])
-                   },
-                   token
-                 ) do
-            {:ok, audio_url}
-          end
-        end
+        params:
+          &%{
+            prompt_a: &1,
+            alpha: 0,
+            seed_image_id: Enum.random(~w(agile marim motorway og_beat vibes))
+          },
+        output: Output.key("audio")
       },
       %__MODULE__{
         id: "lyria-2",
@@ -1062,12 +695,8 @@ defmodule Panic.Model do
         description: "Lyria 2 is a music generation model that produces 48kHz stereo audio through text-based prompts",
         input_type: :text,
         output_type: :audio,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => audio_url}} <-
-                 Replicate.invoke(model, %{prompt: input}, token) do
-            {:ok, audio_url}
-          end
-        end
+        params: &%{prompt: &1},
+        output: &Output.first_url/1
       },
       %__MODULE__{
         id: "whisper",
@@ -1076,22 +705,15 @@ defmodule Panic.Model do
         name: "Whisper",
         input_type: :audio,
         output_type: :text,
-        invoke: fn model, input, token ->
-          with {:ok, %{"output" => %{"transcription" => text}}} <-
-                 Replicate.invoke(
-                   model,
-                   %{
-                     audio: input,
-                     transcription: "plain text",
-                     condition_on_previous_text: false,
-                     # set this super high so that it tries to guess something
-                     no_speech_threshold: 1.0
-                   },
-                   token
-                 ) do
-            {:ok, text}
-          end
-        end
+        # no_speech_threshold is set super high so that it tries to guess something
+        params:
+          &%{
+            audio: &1,
+            transcription: "plain text",
+            condition_on_previous_text: false,
+            no_speech_threshold: 1.0
+          },
+        output: Output.key("transcription")
       },
       %__MODULE__{
         id: "image-reproducer-i-flux",
@@ -1101,53 +723,29 @@ defmodule Panic.Model do
         description: "Image generation/reproduction model that can create images from text or reproduce existing images",
         input_type: :text,
         output_type: :image,
+        output: &Output.first_url/1,
+        # reproduces an image URL, but the genesis prompt is text, which
+        # flux-schnell turns into the first image
         invoke: fn model, input, token ->
-          # Check if input looks like a URL (for image reproduction)
-          # or text prompt (for genesis)
           if String.starts_with?(input, "http") do
-            # Image reproduction mode
-            input_params = %{
-              prompt: "reproduce this image exactly",
-              input_image: input,
-              guidance: 2.5,
-              num_inference_steps: 30,
-              output_format: "png",
-              aspect_ratio: "16:9"
-            }
-
-            with {:ok, %{"output" => output}} <-
-                   Replicate.invoke(model, input_params, token) do
-              case output do
-                url when is_binary(url) -> {:ok, url}
-                [url | _] when is_binary(url) -> {:ok, url}
-              end
-            end
+            call(
+              model,
+              %{
+                prompt: "reproduce this image exactly",
+                input_image: input,
+                guidance: 2.5,
+                num_inference_steps: 30,
+                output_format: "png",
+                aspect_ratio: "16:9"
+              },
+              token
+            )
           else
-            # Genesis mode - use flux-schnell to generate initial image
-            flux_schnell_model = %__MODULE__{
-              id: "flux-schnell",
-              path: "black-forest-labs/flux-schnell",
-              name: "FLUX.1 [schnell]",
-              platform: Replicate,
-              input_type: :text,
-              output_type: :image,
-              invoke: fn _, _, _ -> {:ok, ""} end
-            }
-
-            input_params = %{
-              prompt: input,
-              output_format: "png",
-              aspect_ratio: "16:9",
-              disable_safety_checker: true
-            }
-
-            with {:ok, %{"output" => output}} <-
-                   Replicate.invoke(flux_schnell_model, input_params, token) do
-              case output do
-                url when is_binary(url) -> {:ok, url}
-                [url | _] when is_binary(url) -> {:ok, url}
-              end
-            end
+            call(
+              %{model | path: "black-forest-labs/flux-schnell"},
+              flux_schnell_params(input),
+              token
+            )
           end
         end
       },
@@ -1159,133 +757,28 @@ defmodule Panic.Model do
         description: "Image to text passthrough for completing image reproduction networks",
         input_type: :image,
         output_type: :text,
-        invoke: fn _model, input, _token ->
-          # Simply pass through the image URL as text
-          # This allows the network to complete the cycle
-          {:ok, input}
-        end
+        # passes the image URL through as text, so the network completes the cycle
+        invoke: fn _model, input, _token -> {:ok, input, []} end
       }
-    ] ++
-      [
-        # Text to Text
-        %__MODULE__{
-          id: "dummy-t2t",
-          platform: Dummy,
-          path: "dummy/text-to-text",
-          name: "Dummy Text-to-Text",
-          input_type: :text,
-          output_type: :text,
-          description: "Dummy model for testing text-to-text transformations",
-          invoke: fn model, input, token ->
-            Dummy.invoke(model, input, token)
-          end
-        },
-        # Text to Image
-        %__MODULE__{
-          id: "dummy-t2i",
-          platform: Dummy,
-          path: "dummy/text-to-image",
-          name: "Dummy Text-to-Image",
-          input_type: :text,
-          output_type: :image,
-          description: "Dummy model for testing text-to-image generation",
-          invoke: fn model, input, token ->
-            Dummy.invoke(model, input, token)
-          end
-        },
-        # Text to Audio
-        %__MODULE__{
-          id: "dummy-t2a",
-          platform: Dummy,
-          path: "dummy/text-to-audio",
-          name: "Dummy Text-to-Audio",
-          input_type: :text,
-          output_type: :audio,
-          description: "Dummy model for testing text-to-audio generation",
-          invoke: fn model, input, token ->
-            Dummy.invoke(model, input, token)
-          end
-        },
-        # Image to Text
-        %__MODULE__{
-          id: "dummy-i2t",
-          platform: Dummy,
-          path: "dummy/image-to-text",
-          name: "Dummy Image-to-Text",
-          input_type: :image,
-          output_type: :text,
-          description: "Dummy model for testing image captioning",
-          invoke: fn model, input, token ->
-            Dummy.invoke(model, input, token)
-          end
-        },
-        # Image to Image
-        %__MODULE__{
-          id: "dummy-i2i",
-          platform: Dummy,
-          path: "dummy/image-to-image",
-          name: "Dummy Image-to-Image",
-          input_type: :image,
-          output_type: :image,
-          description: "Dummy model for testing image transformation",
-          invoke: fn model, input, token ->
-            Dummy.invoke(model, input, token)
-          end
-        },
-        # Image to Audio
-        %__MODULE__{
-          id: "dummy-i2a",
-          platform: Dummy,
-          path: "dummy/image-to-audio",
-          name: "Dummy Image-to-Audio",
-          input_type: :image,
-          output_type: :audio,
-          description: "Dummy model for testing image-to-audio generation",
-          invoke: fn model, input, token ->
-            Dummy.invoke(model, input, token)
-          end
-        },
-        # Audio to Text
-        %__MODULE__{
-          id: "dummy-a2t",
-          platform: Dummy,
-          path: "dummy/audio-to-text",
-          name: "Dummy Audio-to-Text",
-          input_type: :audio,
-          output_type: :text,
-          description: "Dummy model for testing audio transcription",
-          invoke: fn model, input, token ->
-            Dummy.invoke(model, input, token)
-          end
-        },
-        # Audio to Image
-        %__MODULE__{
-          id: "dummy-a2i",
-          platform: Dummy,
-          path: "dummy/audio-to-image",
-          name: "Dummy Audio-to-Image",
-          input_type: :audio,
-          output_type: :image,
-          description: "Dummy model for testing audio-to-image generation",
-          invoke: fn model, input, token ->
-            Dummy.invoke(model, input, token)
-          end
-        },
-        # Audio to Audio
-        %__MODULE__{
-          id: "dummy-a2a",
-          platform: Dummy,
-          path: "dummy/audio-to-audio",
-          name: "Dummy Audio-to-Audio",
-          input_type: :audio,
-          output_type: :audio,
-          description: "Dummy model for testing audio transformation",
-          invoke: fn model, input, token ->
-            Dummy.invoke(model, input, token)
-          end
-        }
-      ]
+    ] ++ dummy_models()
   end
+
+  defp dummy_models do
+    for {input_type, input_code} <- [text: "t", image: "i", audio: "a"],
+        {output_type, output_code} <- [text: "t", image: "i", audio: "a"] do
+      %__MODULE__{
+        id: "dummy-#{input_code}2#{output_code}",
+        platform: Dummy,
+        path: "dummy/#{input_type}-to-#{output_type}",
+        name: "Dummy #{dummy_type_name(input_type)}-to-#{dummy_type_name(output_type)}",
+        input_type: input_type,
+        output_type: output_type,
+        description: "Dummy model for testing #{input_type}-to-#{output_type} transformations"
+      }
+    end
+  end
+
+  defp dummy_type_name(type), do: type |> Atom.to_string() |> String.capitalize()
 
   def all(filters) do
     Enum.filter(all(), fn model ->
@@ -1325,55 +818,47 @@ defmodule Panic.Model do
     "#dummy-platform"
   end
 
-  defp first_url(url) when is_binary(url) and url != "", do: {:ok, url}
-  defp first_url([url | _]) when is_binary(url), do: {:ok, url}
+  defp flux_schnell_params(prompt),
+    do: %{prompt: prompt, output_format: "png", aspect_ratio: "16:9", disable_safety_checker: true}
 
   # Describes `image` through `lens` with `captioner`, then has `condenser` (a
   # Replicate text model from another vendor) cut the description to fit a
   # Vestaboard, asking once more if it doesn't and trimming as a last resort.
   defp vestaboard_caption(captioner, lens, condenser, image, token) do
-    with {:ok, description} <-
-           replicate_text(captioner, captioner_input(captioner.path, lens, image), token),
-         {:ok, caption} <- condense(condenser, description, @condense_prompt, token) do
+    captioner = %{captioner | output: &Output.text/1}
+
+    with {:ok, description, described} <-
+           call(captioner, captioner_input(captioner.path, lens, image), token),
+         {:ok, caption, condensed} <- condense(condenser, description, @condense_prompt, token) do
       if Vestaboards.fits?(caption) do
-        {:ok, caption}
+        {:ok, caption, described ++ condensed}
       else
-        with {:ok, shorter} <-
-               condense(
-                 condenser,
-                 caption,
-                 @condense_prompt <> " Your last attempt was too long; cut harder.",
-                 token
-               ) do
-          {:ok, Vestaboards.trim_to_fit(shorter)}
+        prompt = @condense_prompt <> " Your last attempt was too long; cut harder."
+
+        with {:ok, shorter, recondensed} <- condense(condenser, caption, prompt, token) do
+          {:ok, Vestaboards.trim_to_fit(shorter), described ++ condensed ++ recondensed}
         end
       end
     end
   end
 
   defp condense(path, text, instructions, token) do
-    replicate_model = %__MODULE__{
+    condenser = %__MODULE__{
       id: path,
       path: path,
       name: path,
       platform: Replicate,
       input_type: :text,
       output_type: :text,
-      invoke: nil
+      output: &Output.text/1
     }
 
-    with {:ok, caption} <-
-           replicate_text(replicate_model, condenser_input(path, instructions, text), token) do
+    with {:ok, caption, usage} <-
+           call(condenser, condenser_input(path, instructions, text), token) do
       case Vestaboards.sanitise(caption) do
         "" -> {:error, "#{path} returned no caption"}
-        caption -> {:ok, caption}
+        caption -> {:ok, caption, usage}
       end
-    end
-  end
-
-  defp replicate_text(model, input, token) do
-    with {:ok, %{"output" => output}} <- Replicate.invoke(model, input, token) do
-      {:ok, output |> List.wrap() |> Enum.join() |> String.trim()}
     end
   end
 

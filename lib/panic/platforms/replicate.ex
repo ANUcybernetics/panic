@@ -9,12 +9,36 @@ defmodule Panic.Platforms.Replicate do
   end
 
   @doc """
-  Runs `model` on `input`. The request waits up to a minute for the
-  prediction to finish (Replicate's sync mode), so most predictions need no
-  polling, and Replicate cancels any still running at the `cancel_after/2`
-  deadline, so a hung model can't stall a run.
+  Runs `model` on `input`, returning the prediction's output and its usage
+  (see `usage/2`). The request waits up to a minute for the prediction to
+  finish (Replicate's sync mode), so most predictions need no polling, and
+  Replicate cancels any still running at the `cancel_after/2` deadline, so a
+  hung model can't stall a run.
   """
   def invoke(model, input, token) do
+    with {:ok, prediction} <- predict(model, input, token) do
+      {:ok, prediction["output"], usage(model.path, prediction)}
+    end
+  end
+
+  @doc """
+  The usage of a finished `prediction` of the model at `path`: its `metrics`,
+  which carry what Replicate bills (`predict_time`, or for official models
+  counts like `image_output_count` and `input_token_count`). Some models name
+  their token counts the other way round, so those are normalised.
+  """
+  def usage(path, prediction) do
+    prediction
+    |> Map.get("metrics", %{})
+    |> Map.new(fn
+      {"token_input_count", count} -> {"input_token_count", count}
+      {"token_output_count", count} -> {"output_token_count", count}
+      metric -> metric
+    end)
+    |> Map.merge(%{"platform" => "replicate", "path" => path})
+  end
+
+  defp predict(model, input, token) do
     with_retry(fn ->
       with {:ok, %{"latest_version" => %{"id" => version}} = info} <- fetch_model(model, token) do
         [

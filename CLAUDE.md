@@ -11,8 +11,10 @@ time. It's an Ash + Phoenix LiveView app on SQLite. The domain glossary
   and `Invocation` (one model call: input, output, state, sequence number)
 - `Panic.Model` --- the models, defined in code rather than the database because
   each needs bespoke code to call its platform and parse the result. Platforms
-  (`lib/panic/platforms/`) implement `invoke(model, input, token)`;
-  `Panic.Platforms.Dummy` needs no API token, so use `dummy-*` models in tests
+  (`lib/panic/platforms/`) implement `invoke(model, input, token)`, returning
+  `{:ok, response, usage}`; `Panic.Engine.Footprint` prices the usage, so give a
+  new model a price there. `Panic.Platforms.Dummy` needs no API token, so use
+  `dummy-*` models in tests
 - `Panic.Watcher` --- `Installation`, a set of watcher configs (grid, single,
   vestaboard) for a network's displays
 - `Panic.Accounts` --- users (AshAuthentication; no self-registration, see

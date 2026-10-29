@@ -7,8 +7,10 @@ defmodule Panic.Engine.Changes.InvokeModel do
      must not hold SQLite's write lock. A successful call then waits until
      `hold_until`, if it's set, so the output doesn't appear while a
      Vestaboard is still flipping (see `Panic.Engine.Schedule`).
-  2. Inside the transaction, the output and `:completed` state are set, or
-     `:failed` if the call failed even after a retry with a safe input (see
+  2. Inside the transaction, the output and `:completed` state are set, along
+     with the usage of each platform call in `metadata["usage"]` and the cost
+     and energy estimated from it (see `Panic.Engine.Footprint`), or `:failed`
+     if the call failed even after a retry with a safe input (see
      `call_model/1`). A failed call is an outcome, not an action
      error, so the trigger job doesn't retry a model that rejected its input.
   3. `:invocation_completed` is emitted only while the invocation is still
@@ -22,6 +24,7 @@ defmodule Panic.Engine.Changes.InvokeModel do
   use Ash.Resource.Change
 
   alias Panic.Accounts.PlatformCredentials
+  alias Panic.Engine.Footprint
   alias Panic.Engine.Network
   alias Panic.Engine.Schedule
   alias Panic.Engine.Signals
@@ -50,8 +53,8 @@ defmodule Panic.Engine.Changes.InvokeModel do
   defp call_model(%{model: model_id, input: input}) do
     with {:model, %Panic.Model{} = model} <- {:model, Panic.Model.by_id(model_id)},
          {:ok, token} <- PlatformCredentials.fetch_token(model.platform) do
-      case model.invoke.(model, input, token) do
-        {:ok, output} -> {:ok, output, %{}}
+      case Panic.Model.invoke(model, input, token) do
+        {:ok, output, usage} -> {:ok, output, %{"usage" => usage}}
         {:error, reason} -> retry_with_safe_input(model, reason, token)
       end
     else
@@ -65,8 +68,8 @@ defmodule Panic.Engine.Changes.InvokeModel do
   # retried once with an input no filter objects to: a refusal recovers and the
   # run carries on, while a real outage fails again and ends the run.
   defp retry_with_safe_input(model, reason, token) do
-    with {:ok, output} <- model.invoke.(model, safe_input(model.input_type), token) do
-      {:ok, output, %{"error_before_safe_retry" => inspect(reason)}}
+    with {:ok, output, usage} <- Panic.Model.invoke(model, safe_input(model.input_type), token) do
+      {:ok, output, %{"usage" => usage, "error_before_safe_retry" => inspect(reason)}}
     end
   end
 
@@ -79,9 +82,13 @@ defmodule Panic.Engine.Changes.InvokeModel do
   defp record_outcome(changeset) do
     case changeset.context[:invocation_result] do
       {:ok, output, metadata} ->
+        footprint = Footprint.estimate(metadata["usage"])
+
         changeset
         |> Ash.Changeset.force_change_attribute(:output, output)
         |> Ash.Changeset.force_change_attribute(:state, :completed)
+        |> Ash.Changeset.force_change_attribute(:cost_usd, footprint.cost_usd)
+        |> Ash.Changeset.force_change_attribute(:energy_wh, footprint.energy_wh)
         |> Ash.Changeset.force_change_attribute(
           :metadata,
           Map.merge(changeset.data.metadata, metadata)

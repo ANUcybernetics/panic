@@ -120,6 +120,13 @@ defmodule Panic.Engine.Invocation do
       prepare build(sort: [sequence_number: :desc], limit: 1)
     end
 
+    action :run_footprint, :map do
+      constraints fields: [cost_usd: [type: :float], energy_wh: [type: :float]]
+      argument :run_number, :integer, allow_nil?: false
+
+      run Panic.Engine.Actions.RunFootprint
+    end
+
     action :archive_output do
       argument :signal, Signals.InvocationCompleted, allow_nil?: false
       run Panic.Engine.Actions.ArchiveOutput
@@ -151,6 +158,11 @@ defmodule Panic.Engine.Invocation do
       authorize_if relates_to_actor_via([:network, :user])
     end
 
+    # totals aren't secret, and anonymous terminals show them
+    policy action(:run_footprint) do
+      authorize_if always()
+    end
+
     policy action(:archive_output) do
       authorize_if actor_present()
     end
@@ -178,6 +190,10 @@ defmodule Panic.Engine.Invocation do
     attribute :model, :string, allow_nil?: false, public?: true
     attribute :metadata, :map, allow_nil?: false, default: %{}, public?: true
     attribute :output, :string, public?: true
+
+    # estimated from metadata["usage"] when the invocation completes (see Panic.Engine.Footprint)
+    attribute :cost_usd, :float, public?: true
+    attribute :energy_wh, :float, public?: true
 
     attribute :sequence_number, :integer do
       constraints min: 0

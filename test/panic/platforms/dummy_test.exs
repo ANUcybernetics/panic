@@ -10,8 +10,7 @@ defmodule Panic.Platforms.DummyTest do
       path: "dummy/error-text-to-text",
       name: "Test",
       input_type: :text,
-      output_type: :text,
-      invoke: fn _, _, _ -> nil end
+      output_type: :text
     }
   end
 
@@ -19,7 +18,7 @@ defmodule Panic.Platforms.DummyTest do
     test "fail_n_times fails n times then succeeds" do
       assert {:error, _} = Dummy.invoke_with_errors(model(), "hello", "token", {:fail_n_times, 2})
       assert {:error, _} = Dummy.invoke_with_errors(model(), "hello", "token", {:fail_n_times, 2})
-      assert {:ok, _} = Dummy.invoke_with_errors(model(), "hello", "token", {:fail_n_times, 2})
+      assert {:ok, _, _} = Dummy.invoke_with_errors(model(), "hello", "token", {:fail_n_times, 2})
     end
 
     test "always_fail always returns error" do

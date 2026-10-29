@@ -146,6 +146,33 @@ defmodule Panic.Engine.RunTest do
     end
   end
 
+  describe "footprint" do
+    test "each invocation records its model's usage and estimated footprint, which the run totals",
+         %{user: user, network: network} do
+      Repatch.patch(Dummy, :invoke, fn model, input, token ->
+        {:ok, output, _usage} = Repatch.real(Dummy.invoke(model, input, token))
+
+        {:ok, output, %{"platform" => "replicate", "path" => "google/imagen-4-fast", "image_output_count" => 1}}
+      end)
+
+      genesis = Engine.start_run!(network, "hello", actor: user)
+      assert %{success: 1} = run_next_invocation()
+      assert %{success: 1} = run_next_invocation()
+
+      assert [first, second, _next] = invocations(network)
+
+      for invocation <- [first, second] do
+        assert [%{"path" => "google/imagen-4-fast"}] = invocation.metadata["usage"]
+        assert_in_delta invocation.cost_usd, 0.02, 1.0e-9
+        assert_in_delta invocation.energy_wh, 2.9, 1.0e-9
+      end
+
+      assert %{cost_usd: cost, energy_wh: energy} = Engine.run_footprint!(genesis.run_number)
+      assert_in_delta cost, 0.04, 1.0e-9
+      assert_in_delta energy, 5.8, 1.0e-9
+    end
+  end
+
   describe "lockout" do
     test "a second run within the lockout is rejected", %{user: user, network: network} do
       network =

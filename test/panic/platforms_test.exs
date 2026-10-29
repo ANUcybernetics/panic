@@ -61,14 +61,14 @@ defmodule Panic.PlatformsTest do
       results =
         models
         |> Task.async_stream(
-          fn %Model{id: id, invoke: invoke_fn} = model ->
+          fn %Model{id: id} = model ->
             input = test_input_for_model(model)
             IO.puts("  Starting model #{id}...")
             start_time = System.monotonic_time(:millisecond)
 
             result =
               try do
-                invoke_fn.(model, input, api_key)
+                Model.invoke(model, input, api_key)
               rescue
                 e -> {:error, Exception.message(e)}
               end
@@ -139,37 +139,37 @@ defmodule Panic.PlatformsTest do
     end
 
     test "imagen-4-fast generates valid image URLs", %{api_key: api_key} do
-      %Model{invoke: invoke_fn} = model = Model.by_id!("imagen-4-fast")
+      model = Model.by_id!("imagen-4-fast")
 
-      assert {:ok, img_url} = invoke_fn.(model, @test_text_input, api_key)
+      assert {:ok, img_url, _usage} = Model.invoke(model, @test_text_input, api_key)
       assert String.match?(img_url, ~r|^https://.*$|), "Expected valid URL, got: #{img_url}"
     end
 
     test "lyria-2 generates valid audio URLs", %{api_key: api_key} do
-      %Model{invoke: invoke_fn} = model = Model.by_id!("lyria-2")
+      model = Model.by_id!("lyria-2")
 
-      assert {:ok, audio_url} =
-               invoke_fn.(model, "an upbeat electronic dance track with synths", api_key)
+      assert {:ok, audio_url, _usage} =
+               Model.invoke(model, "an upbeat electronic dance track with synths", api_key)
 
       assert String.match?(audio_url, ~r|^https://.*$|), "Expected valid URL, got: #{audio_url}"
     end
 
     test "BLIP2 captioner produces descriptive output", %{api_key: api_key} do
-      %Model{invoke: invoke_fn} = model = Model.by_id!("blip-2")
+      model = Model.by_id!("blip-2")
       # Using a static test image to avoid rate limit issues
       input_img = @test_image_input
 
-      assert {:ok, caption} = invoke_fn.(model, input_img, api_key)
+      assert {:ok, caption, _usage} = Model.invoke(model, input_img, api_key)
 
       assert String.length(caption) > 10,
              "Expected descriptive caption (>10 chars), got: #{caption}"
     end
 
     test "florence-2-large model works correctly", %{api_key: api_key} do
-      %Model{invoke: invoke_fn} = model = Model.by_id!("florence-2-large")
+      model = Model.by_id!("florence-2-large")
       input = test_input_for_model(model)
 
-      assert {:ok, output} = invoke_fn.(model, input, api_key)
+      assert {:ok, output, _usage} = Model.invoke(model, input, api_key)
       assert String.match?(output, ~r/\S/), "Expected non-empty output"
     end
   end
@@ -192,10 +192,10 @@ defmodule Panic.PlatformsTest do
       models = Model.all(platform: OpenAI, deprecated: false)
       assert length(models) > 0, "Expected to find OpenAI models"
 
-      for %Model{id: id, invoke: invoke_fn} = model <- models do
+      for %Model{id: id} = model <- models do
         input = test_input_for_model(model)
 
-        assert {:ok, output} = invoke_fn.(model, input, api_key),
+        assert {:ok, output, _usage} = Model.invoke(model, input, api_key),
                "Failed to invoke model #{id}"
 
         assert is_binary(output), "Expected string output for model #{id}"
@@ -209,8 +209,8 @@ defmodule Panic.PlatformsTest do
       test_prompt =
         "Respond with just the word 'bananaphone'. Do not include any other content (even punctuation)."
 
-      for %Model{id: id, invoke: invoke_fn} = model <- models do
-        assert {:ok, output} = invoke_fn.(model, test_prompt, api_key),
+      for %Model{id: id} = model <- models do
+        assert {:ok, output, _usage} = Model.invoke(model, test_prompt, api_key),
                "Failed to invoke model #{id}"
 
         assert output == "bananaphone",
@@ -237,10 +237,10 @@ defmodule Panic.PlatformsTest do
       models = Model.all(platform: Gemini)
       assert length(models) > 0, "Expected to find Gemini models"
 
-      for %Model{id: id, invoke: invoke_fn} = model <- models do
+      for %Model{id: id} = model <- models do
         input = test_input_for_model(model)
 
-        assert {:ok, output} = invoke_fn.(model, input, api_key),
+        assert {:ok, output, _usage} = Model.invoke(model, input, api_key),
                "Failed to invoke model #{id}"
 
         assert is_binary(output), "Expected string output for model #{id}"
@@ -249,10 +249,10 @@ defmodule Panic.PlatformsTest do
     end
 
     test "audio description model processes audio files correctly", %{api_key: api_key} do
-      %Model{invoke: invoke_fn} = model = Model.by_id!("gemini-audio-description")
+      model = Model.by_id!("gemini-audio-description")
 
       # Test with direct audio URL (invoke function creates map internally)
-      assert {:ok, output} = invoke_fn.(model, @test_audio_input, api_key)
+      assert {:ok, output, _usage} = Model.invoke(model, @test_audio_input, api_key)
       assert is_binary(output), "Expected string output"
       assert String.match?(output, ~r/\S/), "Expected non-empty output"
     end
@@ -263,7 +263,7 @@ defmodule Panic.PlatformsTest do
       # The Gemini.invoke function handles custom prompts internally
       # but the model's invoke_fn expects just the audio URL
       # So we test with the standard invoke_fn interface
-      assert {:ok, output} = model.invoke.(model, @test_audio_input, api_key)
+      assert {:ok, output, _usage} = Model.invoke(model, @test_audio_input, api_key)
       assert is_binary(output), "Expected string output"
       assert String.match?(output, ~r/\S/), "Expected non-empty output"
     end
@@ -274,10 +274,10 @@ defmodule Panic.PlatformsTest do
       dummy_models = Model.all(platform: Dummy)
       assert length(dummy_models) > 0, "Expected to find dummy models"
 
-      for %Model{id: id, invoke: invoke_fn} = model <- dummy_models do
+      for %Model{id: id} = model <- dummy_models do
         input = test_input_for_model(model)
 
-        assert {:ok, output} = invoke_fn.(model, input, nil),
+        assert {:ok, output, _usage} = Model.invoke(model, input, nil),
                "Failed to invoke dummy model #{id}"
 
         case model.output_type do
@@ -299,18 +299,18 @@ defmodule Panic.PlatformsTest do
     test "dummy platform handles different input types correctly" do
       # Test text input
       text_model = Model.by_id!("dummy-t2t")
-      assert {:ok, output} = text_model.invoke.(text_model, @test_text_input, nil)
+      assert {:ok, output, _usage} = Model.invoke(text_model, @test_text_input, nil)
       assert String.contains?(output, "DUMMY_TEXT:")
       assert String.contains?(output, String.reverse(@test_text_input))
 
       # Test image input
       image_model = Model.by_id!("dummy-i2t")
-      assert {:ok, output} = image_model.invoke.(image_model, @test_image_input, nil)
+      assert {:ok, output, _usage} = Model.invoke(image_model, @test_image_input, nil)
       assert String.contains?(output, "DUMMY_CAPTION:")
 
       # Test audio input
       audio_model = Model.by_id!("dummy-a2t")
-      assert {:ok, output} = audio_model.invoke.(audio_model, @test_audio_input, nil)
+      assert {:ok, output, _usage} = Model.invoke(audio_model, @test_audio_input, nil)
       assert String.contains?(output, "DUMMY_TRANSCRIPT:")
     end
 
@@ -319,9 +319,9 @@ defmodule Panic.PlatformsTest do
       input = @test_text_input
 
       # Call multiple times with different or no tokens
-      {:ok, output1} = model.invoke.(model, input, "token1")
-      {:ok, output2} = model.invoke.(model, input, "token2")
-      {:ok, output3} = model.invoke.(model, input, nil)
+      {:ok, output1, _usage} = Model.invoke(model, input, "token1")
+      {:ok, output2, _usage} = Model.invoke(model, input, "token2")
+      {:ok, output3, _usage} = Model.invoke(model, input, nil)
 
       # All outputs should be identical
       assert output1 == output2, "Output should be deterministic regardless of token"
@@ -329,43 +329,43 @@ defmodule Panic.PlatformsTest do
     end
 
     test "dummy platform invoke calls work" do
-      %Model{invoke: invoke_fn} = model = Model.by_id!("dummy-t2i")
+      model = Model.by_id!("dummy-t2i")
 
       # Test calling via invoke_fn
-      assert {:ok, output} = invoke_fn.(model, @test_text_input, "any_token")
+      assert {:ok, output, _usage} = Model.invoke(model, @test_text_input, "any_token")
       assert String.starts_with?(output, "https://dummy-images.test/")
       assert String.ends_with?(output, ".png")
     end
 
     test "all input/output type combinations work correctly" do
       # Text to Image
-      %Model{invoke: invoke_fn} = t2i_model = Model.by_id!("dummy-t2i")
-      assert {:ok, img_url} = invoke_fn.(t2i_model, @test_text_input, nil)
+      t2i_model = Model.by_id!("dummy-t2i")
+      assert {:ok, img_url, _usage} = Model.invoke(t2i_model, @test_text_input, nil)
       assert String.match?(img_url, ~r|^https://dummy-images\.test/.*\.png$|)
 
       # Text to Audio
-      %Model{invoke: invoke_fn} = t2a_model = Model.by_id!("dummy-t2a")
-      assert {:ok, audio_url} = invoke_fn.(t2a_model, @test_text_input, nil)
+      t2a_model = Model.by_id!("dummy-t2a")
+      assert {:ok, audio_url, _usage} = Model.invoke(t2a_model, @test_text_input, nil)
       assert String.match?(audio_url, ~r|^https://dummy-audio\.test/.*\.ogg$|)
 
       # Image to Image
-      %Model{invoke: invoke_fn} = i2i_model = Model.by_id!("dummy-i2i")
-      assert {:ok, img_url} = invoke_fn.(i2i_model, @test_image_input, nil)
+      i2i_model = Model.by_id!("dummy-i2i")
+      assert {:ok, img_url, _usage} = Model.invoke(i2i_model, @test_image_input, nil)
       assert String.match?(img_url, ~r|^https://dummy-images\.test/transformed_.*\.png$|)
 
       # Image to Audio
-      %Model{invoke: invoke_fn} = i2a_model = Model.by_id!("dummy-i2a")
-      assert {:ok, audio_url} = invoke_fn.(i2a_model, @test_image_input, nil)
+      i2a_model = Model.by_id!("dummy-i2a")
+      assert {:ok, audio_url, _usage} = Model.invoke(i2a_model, @test_image_input, nil)
       assert String.match?(audio_url, ~r|^https://dummy-audio\.test/from_image_.*\.ogg$|)
 
       # Audio to Image
-      %Model{invoke: invoke_fn} = a2i_model = Model.by_id!("dummy-a2i")
-      assert {:ok, img_url} = invoke_fn.(a2i_model, @test_audio_input, nil)
+      a2i_model = Model.by_id!("dummy-a2i")
+      assert {:ok, img_url, _usage} = Model.invoke(a2i_model, @test_audio_input, nil)
       assert String.match?(img_url, ~r|^https://dummy-images\.test/from_audio_.*\.png$|)
 
       # Audio to Audio
-      %Model{invoke: invoke_fn} = a2a_model = Model.by_id!("dummy-a2a")
-      assert {:ok, audio_url} = invoke_fn.(a2a_model, @test_audio_input, nil)
+      a2a_model = Model.by_id!("dummy-a2a")
+      assert {:ok, audio_url, _usage} = Model.invoke(a2a_model, @test_audio_input, nil)
       assert String.match?(audio_url, ~r|^https://dummy-audio\.test/transformed_.*\.ogg$|)
     end
   end

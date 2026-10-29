@@ -22,8 +22,7 @@ defmodule Panic.Platforms.ReplicateInvokeTest do
         name: "Test",
         platform: Replicate,
         input_type: :text,
-        output_type: :image,
-        invoke: nil
+        output_type: :image
       },
       attrs
     )
@@ -58,7 +57,7 @@ defmodule Panic.Platforms.ReplicateInvokeTest do
   test "returns a prediction that finishes within the sync wait without polling" do
     stub(true, {201, %{"status" => "succeeded", "output" => "url"}})
 
-    assert {:ok, %{"output" => "url"}} = Replicate.invoke(model(), "a cat", "token")
+    assert {:ok, "url", _usage} = Replicate.invoke(model(), "a cat", "token")
     assert_received {:created, %{"prefer" => "wait=60", "cancel-after" => "1m"}}
   end
 
@@ -68,7 +67,33 @@ defmodule Panic.Platforms.ReplicateInvokeTest do
       %{"status" => "succeeded", "output" => "url"}
     ])
 
-    assert {:ok, %{"output" => "url"}} = Replicate.invoke(model(), "a cat", "token")
+    assert {:ok, "url", _usage} = Replicate.invoke(model(), "a cat", "token")
+  end
+
+  test "reports the prediction's metrics as its usage, with token counts named one way" do
+    stub(
+      true,
+      {201,
+       %{
+         "status" => "succeeded",
+         "output" => ["a ", "caption"],
+         "metrics" => %{
+           "predict_time" => 1.5,
+           "token_input_count" => 10,
+           "token_output_count" => 3
+         }
+       }}
+    )
+
+    assert {:ok, ["a ", "caption"], usage} = Replicate.invoke(model(), "a cat", "token")
+
+    assert usage == %{
+             "platform" => "replicate",
+             "path" => "owner/test",
+             "predict_time" => 1.5,
+             "input_token_count" => 10,
+             "output_token_count" => 3
+           }
   end
 
   test "gives community models time to boot, and audio models time to run" do

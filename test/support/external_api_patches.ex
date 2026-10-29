@@ -41,18 +41,18 @@ defmodule Panic.ExternalAPIPatches do
 
   defp setup_model_patches do
     # Patch Replicate API calls
-    Repatch.patch(Panic.Platforms.Replicate, :invoke, fn _model, _input, _token ->
-      {:ok, generate_mock_output()}
+    Repatch.patch(Panic.Platforms.Replicate, :invoke, fn model, _input, _token ->
+      {:ok, generate_mock_output(), %{"platform" => "replicate", "path" => model.path}}
     end)
 
     # Patch OpenAI API calls
-    Repatch.patch(Panic.Platforms.OpenAI, :invoke, fn _model, _input, _token ->
-      {:ok, generate_mock_output()}
+    Repatch.patch(Panic.Platforms.OpenAI, :invoke, fn model, _input, _token ->
+      {:ok, generate_mock_output(), %{"platform" => "openai", "path" => model.path}}
     end)
 
     # Patch Gemini API calls
-    Repatch.patch(Panic.Platforms.Gemini, :invoke, fn _model, _input, _token ->
-      {:ok, generate_mock_output()}
+    Repatch.patch(Panic.Platforms.Gemini, :invoke, fn model, _input, _token ->
+      {:ok, generate_mock_output(), %{"platform" => "gemini", "path" => model.path}}
     end)
   end
 

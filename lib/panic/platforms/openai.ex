@@ -26,8 +26,8 @@ defmodule Panic.Platforms.OpenAI do
       {:ok, %Req.Response{body: body, status: 200}} ->
         case body do
           %{"choices" => [%{"text" => ""}]} -> {:error, :blank_output}
-          %{"choices" => [%{"text" => text}]} -> {:ok, text}
-          %{"choices" => [%{"message" => %{"content" => text}}]} -> {:ok, text}
+          %{"choices" => [%{"text" => text}]} -> {:ok, text, usage(path, body)}
+          %{"choices" => [%{"message" => %{"content" => text}}]} -> {:ok, text, usage(path, body)}
           _ -> {:error, :unexpected_response_format}
         end
 
@@ -37,6 +37,18 @@ defmodule Panic.Platforms.OpenAI do
       {:error, reason} ->
         {:error, reason}
     end
+  end
+
+  # output tokens include any reasoning tokens, which are billed as output
+  defp usage(path, body) do
+    tokens = Map.get(body, "usage", %{})
+
+    %{
+      "platform" => "openai",
+      "path" => path,
+      "input_token_count" => tokens["prompt_tokens"],
+      "output_token_count" => tokens["completion_tokens"]
+    }
   end
 
   defp req_new(opts) do

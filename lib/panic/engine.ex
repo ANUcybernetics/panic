@@ -49,6 +49,7 @@ defmodule Panic.Engine do
       define :mark_as_failed, args: []
       define :get_invocation, action: :read, get_by: [:id]
       define :current_run_head, args: [:run_number]
+      define :run_footprint, args: [:run_number]
     end
   end
 end

@@ -21,9 +21,9 @@ defmodule Panic.Platforms.Gemini do
         {:ok,
          %Req.Response{
            status: 200,
-           body: %{"candidates" => [%{"content" => %{"parts" => [%{"text" => text}]}} | _]}
+           body: %{"candidates" => [%{"content" => %{"parts" => [%{"text" => text}]}} | _]} = body
          }} ->
-          {:ok, text}
+          {:ok, text, usage(model_path, body)}
 
         {:ok, %Req.Response{body: %{"error" => %{"message" => message}}}} ->
           {:error, message}
@@ -35,6 +35,18 @@ defmodule Panic.Platforms.Gemini do
           {:error, reason}
       end
     end
+  end
+
+  # thinking tokens are billed as output
+  defp usage(path, body) do
+    tokens = Map.get(body, "usageMetadata", %{})
+
+    %{
+      "platform" => "gemini",
+      "path" => path,
+      "input_token_count" => tokens["promptTokenCount"],
+      "output_token_count" => (tokens["candidatesTokenCount"] || 0) + (tokens["thoughtsTokenCount"] || 0)
+    }
   end
 
   defp create_audio_part(audio_file) do
