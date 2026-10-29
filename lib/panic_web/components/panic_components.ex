@@ -189,20 +189,78 @@ defmodule PanicWeb.PanicComponents do
   @doc """
   Renders the anonymous terminal's QR code in the bottom right of a display,
   where it covers the least of an image: dark on light, so phones read it
-  even when it's small.
+  even when it's small. With a run `summary`, a heads-up display of the run
+  sits beside it on frosted glass, quiet enough to leave the image the focus
+  and the QR code its light margin.
   """
   attr :url, :string, required: true
+  attr :summary, :any, default: nil, doc: "a `PanicWeb.NetworkLive.RunSummary`, or nil when idle"
 
   def terminal_qr(assigns) do
     ~H"""
-    <div
-      id="terminal-qr"
-      data-url={@url}
-      class="fixed right-[2vmin] bottom-[2vmin] z-10 w-[16vmin] rounded-[0.8vmin] bg-zinc-50 p-[0.6vmin] text-center text-[1.3vmin] leading-tight text-zinc-600 shadow-[0_0_2vmin_rgb(0_0_0/0.5)] [&_svg]:h-auto [&_svg]:w-full"
+    <aside
+      aria-label="Prompt this network"
+      class="fixed right-[2vmin] bottom-[2vmin] z-10 flex items-stretch overflow-hidden rounded-[0.8vmin] shadow-[0_0_2vmin_rgb(0_0_0/0.5)]"
     >
-      {qr_svg(@url, {24, 24, 27}, {250, 250, 250})}
-      <span class="block pb-[0.2vmin]">scan to prompt</span>
-    </div>
+      <div
+        :if={@summary}
+        id="run-hud"
+        class="flex w-[28vmin] flex-col justify-between gap-[0.8vmin] bg-zinc-950/55 px-[1.4vmin] py-[1.2vmin] text-right font-mono text-[1.25vmin] leading-snug text-zinc-400 backdrop-blur-md"
+      >
+        <p class="line-clamp-3 text-zinc-100">“{@summary.prompt}”</p>
+        <.run_stats
+          summary={@summary}
+          class="flex flex-col gap-[0.2vmin] [&_dd]:inline [&_dd]:text-zinc-100 [&_dt]:inline [&_dt]:after:content-['_']"
+        />
+      </div>
+      <div
+        id="terminal-qr"
+        data-url={@url}
+        class="w-[16vmin] bg-zinc-50 p-[0.6vmin] text-center text-[1.3vmin] leading-tight text-zinc-600 [&_svg]:h-auto [&_svg]:w-full"
+      >
+        {qr_svg(@url, {24, 24, 27}, {250, 250, 250})}
+        <span class="block pb-[0.2vmin]">scan to prompt</span>
+      </div>
+    </aside>
+    """
+  end
+
+  @doc """
+  A run's vital signs (see `PanicWeb.NetworkLive.RunSummary`) as a list of
+  terms, laid out and styled by `class`. Cost is only for signed-in viewers.
+  """
+  attr :summary, :any, required: true
+  attr :show_cost?, :boolean, default: false
+  attr :class, :any, default: nil
+
+  def run_stats(assigns) do
+    ~H"""
+    <dl class={@class}>
+      <div>
+        <dt>invocation</dt>
+        <dd id="run-stats-sequence" class="tabular-nums">{@summary.sequence_number}</dd>
+      </div>
+      <div>
+        <dt>running</dt>
+        <dd id="run-stats-elapsed">{PanicWeb.RunFormat.elapsed(@summary.started_at)}</dd>
+      </div>
+      <div class="truncate">
+        <dt>now</dt>
+        <dd id="run-stats-model">{@summary.model}</dd>
+      </div>
+      <div>
+        <dt>energy</dt>
+        <dd id="run-stats-energy">≈ {PanicWeb.RunFormat.energy(@summary.energy_wh)}</dd>
+      </div>
+      <div :if={PanicWeb.RunFormat.everyday(@summary.energy_wh)}>
+        <dt class="sr-only">about the same as</dt>
+        <dd id="run-stats-everyday">about {PanicWeb.RunFormat.everyday(@summary.energy_wh)}</dd>
+      </div>
+      <div :if={@show_cost?}>
+        <dt>cost</dt>
+        <dd id="run-stats-cost">≈ {PanicWeb.RunFormat.cost(@summary.cost_usd)}</dd>
+      </div>
+    </dl>
     """
   end
 

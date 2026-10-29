@@ -5,11 +5,18 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
   This module bridges between the Installation's Watcher structs and the existing
   WatcherSubscriber display logic. Watchers are accessed by their unique name within
   the installation.
+
+  The installation's first screen also shows the QR code for the anonymous
+  terminal, beside a summary of the run in progress (see
+  `PanicWeb.NetworkLive.RunSummary`).
   """
+  @behaviour PanicWeb.WatcherSubscriber
+
   use PanicWeb, :live_view
 
   import PanicWeb.PanicComponents
 
+  alias PanicWeb.NetworkLive.RunSummary
   alias PanicWeb.TerminalAuth
   alias PanicWeb.WatcherSubscriber
 
@@ -35,7 +42,11 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
       </p>
     </div>
     <.display invocations={@streams.invocations} display={@display} />
-    <.terminal_qr :if={show_terminal_qr?(@first_display?, @network)} url={@terminal_qr_url} />
+    <.terminal_qr
+      :if={show_terminal_qr?(@first_display?, @network)}
+      url={@terminal_qr_url}
+      summary={@run_summary}
+    />
     """
   end
 
@@ -58,6 +69,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
           {:ok, watcher} ->
             display = watcher_to_display_tuple(watcher)
             network = installation.network
+            first_display? = first_display?(installation, watcher)
 
             if connected?(socket) do
               :timer.send_interval(TerminalAuth.qr_refresh_ms(), self(), :refresh_terminal_qr)
@@ -69,7 +81,11 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
              |> assign(:installation, installation)
              |> assign(:watcher, watcher)
              |> assign(:watcher_name, watcher.name)
-             |> assign(:first_display?, first_display?(installation, watcher))
+             |> assign(:first_display?, first_display?)
+             |> assign(
+               :run_summary,
+               if(first_display?, do: RunSummary.load(network.current_run_number, network.models))
+             )
              |> assign(:terminal_qr_url, TerminalAuth.terminal_url(network.id))
              |> WatcherSubscriber.configure_invocation_stream(network, display), layout: {PanicWeb.Layouts, :display}}
 
@@ -87,6 +103,15 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
          |> push_navigate(to: ~p"/"), layout: {PanicWeb.Layouts, :app}}
     end
   end
+
+  # only the first screen shows the run summary, so only it keeps one
+  @impl WatcherSubscriber
+  def handle_invocation(invocation, %{assigns: %{first_display?: true}} = socket) do
+    %{run_summary: summary, network: network} = socket.assigns
+    assign(socket, :run_summary, RunSummary.update(summary, invocation, network.models))
+  end
+
+  def handle_invocation(_invocation, socket), do: socket
 
   @impl true
   def handle_info(:refresh_terminal_qr, socket) do

@@ -142,11 +142,13 @@ defmodule PanicWeb.TerminalLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/networks/#{network}/terminal")
 
-      assert has_element?(view, "#run-summary-sequence", "2")
+      assert has_element?(view, "#run-stats-sequence", "2")
       assert has_element?(view, "#run-summary-image[src^='https://dummy-images.test/']")
       assert has_element?(view, "#run-summary-text", "DUMMY_CAPTION")
-      assert has_element?(view, "#run-summary-energy", "5.8 Wh")
-      assert has_element?(view, "#run-summary-cost", "US$0.04")
+      assert has_element?(view, "#run-stats-energy", "5.8 Wh")
+      assert has_element?(view, "#run-stats-cost", "US$0.04")
+      assert has_element?(view, "#run-stats-model", "Dummy Text-to-Image")
+      assert has_element?(view, "#run-stats-elapsed", "under a minute")
     end
 
     test "keeps up as the run goes", %{signed_in: conn, user: user, network: network} do
@@ -157,7 +159,7 @@ defmodule PanicWeb.TerminalLiveTest do
       run_next_invocation()
 
       assert has_element?(view, "#run-summary-text", "DUMMY_CAPTION")
-      assert has_element?(view, "#run-summary-energy", "5.8 Wh")
+      assert has_element?(view, "#run-stats-energy", "5.8 Wh")
     end
 
     test "shows anonymous users the energy but not the cost", %{
@@ -170,8 +172,8 @@ defmodule PanicWeb.TerminalLiveTest do
       {:ok, view, _html} =
         live(conn, ~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
 
-      assert has_element?(view, "#run-summary-energy", "5.8 Wh")
-      refute has_element?(view, "#run-summary-cost")
+      assert has_element?(view, "#run-stats-energy", "5.8 Wh")
+      refute has_element?(view, "#run-stats-cost")
     end
 
     test "isn't shown while the network is idle", %{conn: conn, network: network} do
@@ -330,6 +332,37 @@ defmodule PanicWeb.TerminalLiveTest do
       send(wall.pid, :refresh_terminal_qr)
 
       assert qr_url(wall) != before
+    end
+
+    test "has the run in progress beside it, kept up to date", %{
+      conn: conn,
+      user: user,
+      network: network,
+      installation: installation
+    } do
+      Engine.start_run!(network, "a heron in the fog", actor: user)
+      run_next_invocation()
+
+      {:ok, wall, _html} = live(conn, ~p"/i/#{installation.id}/wall")
+      {:ok, spotlight, _html} = live(conn, ~p"/i/#{installation.id}/spotlight")
+
+      assert has_element?(wall, "#run-hud", "a heron in the fog")
+      assert has_element?(wall, "#run-hud #run-stats-sequence", "1")
+      assert has_element?(wall, "#run-hud #run-stats-energy")
+      refute has_element?(wall, "#run-stats-cost")
+      refute has_element?(spotlight, "#run-hud")
+
+      run_next_invocation()
+      assert has_element?(wall, "#run-hud #run-stats-sequence", "2")
+    end
+
+    test "has no run beside it while the network is idle", %{
+      conn: conn,
+      installation: installation
+    } do
+      {:ok, wall, _html} = live(conn, ~p"/i/#{installation.id}/wall")
+      assert has_element?(wall, "#terminal-qr")
+      refute has_element?(wall, "#run-hud")
     end
 
     test "appears and disappears as the network's setting changes", %{

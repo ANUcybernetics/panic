@@ -12,6 +12,8 @@ defmodule PanicWeb.NetworkLive.Terminal do
 
   use PanicWeb, :live_view
 
+  import PanicWeb.PanicComponents, only: [run_stats: 1]
+
   alias PanicWeb.NetworkLive.NetworkHelpers
   alias PanicWeb.NetworkLive.RunSummary
   alias PanicWeb.TerminalAuth
@@ -123,37 +125,15 @@ defmodule PanicWeb.NetworkLive.Terminal do
         <p :if={@summary.text} id="run-summary-text" class="break-words font-mono uppercase">
           {@summary.text}
         </p>
-        <dl class="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-base-content/60">
-          <div>
-            <dt class="inline">Invocation</dt>
-            <dd id="run-summary-sequence" class="inline text-base-content">
-              {@summary.sequence_number}
-            </dd>
-          </div>
-          <div>
-            <dt class="inline">Energy</dt>
-            <dd id="run-summary-energy" class="inline text-base-content">
-              ≈ {format_energy(@summary.energy_wh)}
-            </dd>
-          </div>
-          <div :if={@show_cost?}>
-            <dt class="inline">Cost</dt>
-            <dd id="run-summary-cost" class="inline text-base-content">
-              ≈ {format_cost(@summary.cost_usd)}
-            </dd>
-          </div>
-        </dl>
+        <.run_stats
+          summary={@summary}
+          show_cost?={@show_cost?}
+          class="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-base-content/60 [&_dd]:inline [&_dd]:text-base-content [&_dt]:inline [&_dt]:after:content-['_']"
+        />
       </div>
     </section>
     """
   end
-
-  defp format_energy(wh) when wh >= 1000, do: "#{Float.round(wh / 1000, 2)} kWh"
-  defp format_energy(wh) when wh >= 10, do: "#{round(wh)} Wh"
-  defp format_energy(wh), do: "#{Float.round(wh, 1)} Wh"
-
-  defp format_cost(usd) when usd > 0 and usd < 0.01, do: "< US$0.01"
-  defp format_cost(usd), do: "US$#{:erlang.float_to_binary(usd, decimals: 2)}"
 
   defp authorize(%{assigns: %{current_user: %{}}} = socket, _network), do: {:ok, socket}
 
