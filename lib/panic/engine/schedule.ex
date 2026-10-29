@@ -5,7 +5,8 @@ defmodule Panic.Engine.Schedule do
 
   Runs slow down as they age, so a long-running network doesn't burn through
   API credits: one second between invocations for the first ten minutes,
-  fifteen seconds up to an hour, then ten minutes.
+  fifteen seconds up to an hour, a minute up to three hours, then half an hour
+  (so a run left going overnight costs little but still moves).
 
   A Vestaboard takes several seconds to finish flipping, so the invocation
   after one it displays (or after the initial prompt) starts on schedule but
@@ -23,7 +24,9 @@ defmodule Panic.Engine.Schedule do
       iex> Panic.Engine.Schedule.next_invoke_after(started, ~U[2026-01-01 00:30:00Z])
       ~U[2026-01-01 00:30:15.000Z]
       iex> Panic.Engine.Schedule.next_invoke_after(started, ~U[2026-01-01 02:00:00Z])
-      ~U[2026-01-01 02:10:00.000Z]
+      ~U[2026-01-01 02:01:00.000Z]
+      iex> Panic.Engine.Schedule.next_invoke_after(started, ~U[2026-01-01 05:00:00Z])
+      ~U[2026-01-01 05:30:00.000Z]
   """
   def next_invoke_after(run_started_at, now) do
     age_ms = DateTime.diff(now, run_started_at, :millisecond)
@@ -59,7 +62,8 @@ defmodule Panic.Engine.Schedule do
     cond do
       age_ms < to_timeout(minute: 10) -> to_timeout(second: 1)
       age_ms < to_timeout(hour: 1) -> to_timeout(second: 15)
-      true -> to_timeout(minute: 10)
+      age_ms < to_timeout(hour: 3) -> to_timeout(minute: 1)
+      true -> to_timeout(minute: 30)
     end
   end
 end
