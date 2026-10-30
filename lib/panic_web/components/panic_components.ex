@@ -464,7 +464,12 @@ defmodule PanicWeb.PanicComponents do
         id="run-hud"
         class="flex w-[28vmin] flex-col justify-between gap-[0.8vmin] bg-zinc-950/55 px-[1.4vmin] py-[1.2vmin] text-right font-mono text-[1.25vmin] leading-snug text-zinc-400 backdrop-blur-md"
       >
-        <p class="line-clamp-3 text-zinc-100">“{@summary.prompt}”</p>
+        <figure>
+          <figcaption>initial prompt</figcaption>
+          <blockquote id="run-hud-prompt" class="line-clamp-3 text-zinc-100">
+            “{@summary.prompt}”
+          </blockquote>
+        </figure>
         <.run_stats
           summary={@summary}
           class="flex flex-col gap-[0.2vmin] [&_dd]:inline [&_dd]:text-zinc-100 [&_dt]:inline [&_dt]:after:content-['_']"

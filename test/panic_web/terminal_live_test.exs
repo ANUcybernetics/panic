@@ -357,7 +357,8 @@ defmodule PanicWeb.TerminalLiveTest do
       {:ok, wall, _html} = live(conn, ~p"/i/#{installation.id}/wall")
       {:ok, spotlight, _html} = live(conn, ~p"/i/#{installation.id}/spotlight")
 
-      assert has_element?(wall, "#run-hud", "a heron in the fog")
+      assert has_element?(wall, "#run-hud figcaption", "initial prompt")
+      assert has_element?(wall, "#run-hud-prompt", "a heron in the fog")
       assert has_element?(wall, "#run-hud #run-stats-sequence", "1")
       assert has_element?(wall, "#run-hud #run-stats-energy")
       refute has_element?(wall, "#run-stats-cost")
