@@ -34,7 +34,7 @@ defmodule PanicWeb.NetworkLive.Info do
           for information about how PANIC! works.
         </p>
 
-        <h2>Last prompt</h2>
+        <h2>Initial prompt</h2>
         <div>
           <em :if={!@genesis_invocation}>loading...</em>
           {@genesis_invocation && @genesis_invocation.input}

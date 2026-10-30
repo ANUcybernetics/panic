@@ -70,7 +70,7 @@ defmodule PanicWeb.NetworkLive.Show do
           current_invocation={@current_invocation}
         />
         <p class="mt-6 mb-4 break-words">
-          <span class="text-base-content/60">Last prompt:</span>
+          <span class="text-base-content/60">Initial prompt:</span>
           <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
         </p>
         <.display invocations={@streams.invocations} display={@display} />

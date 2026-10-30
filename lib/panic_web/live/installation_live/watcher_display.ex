@@ -41,7 +41,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
           id={@network.id}
         />
         <p>
-          <span class="text-purple-300/50">Last prompt:</span>
+          <span class="text-purple-300/50">Initial prompt:</span>
           <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
         </p>
       </div>
