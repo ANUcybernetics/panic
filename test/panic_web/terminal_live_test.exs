@@ -112,10 +112,10 @@ defmodule PanicWeb.TerminalLiveTest do
 
   describe "the run summary" do
     setup %{conn: conn} do
-      # each call reports a priced usage: US$0.02 and 2.9 Wh
+      # each call reports a priced usage: US$0.03 and 1.0 Wh
       Repatch.patch(Dummy, :invoke, fn model, input, token ->
         {:ok, output, _usage} = Repatch.real(Dummy.invoke(model, input, token))
-        {:ok, output, %{"platform" => "replicate", "path" => "google/imagen-4-fast"}}
+        {:ok, output, %{"platform" => "replicate", "path" => "krea/krea-3"}}
       end)
 
       %{conn: signed_in, user: user} = PanicWeb.Helpers.create_and_sign_in_user(%{conn: conn})
@@ -145,8 +145,8 @@ defmodule PanicWeb.TerminalLiveTest do
       assert has_element?(view, "#run-stats-sequence", "2")
       assert has_element?(view, "#run-summary-image[src^='https://dummy-images.test/']")
       assert has_element?(view, "#run-summary-text", "DUMMY_CAPTION")
-      assert has_element?(view, "#run-stats-energy", "5.8 Wh")
-      assert has_element?(view, "#run-stats-cost", "US$0.04")
+      assert has_element?(view, "#run-stats-energy", "2.0 Wh")
+      assert has_element?(view, "#run-stats-cost", "US$0.06")
       assert has_element?(view, "#run-stats-model", "Dummy Text-to-Image")
       assert has_element?(view, "#run-stats-elapsed", "under a minute")
     end
@@ -159,7 +159,7 @@ defmodule PanicWeb.TerminalLiveTest do
       run_next_invocation()
 
       assert has_element?(view, "#run-summary-text", "DUMMY_CAPTION")
-      assert has_element?(view, "#run-stats-energy", "5.8 Wh")
+      assert has_element?(view, "#run-stats-energy", "2.0 Wh")
     end
 
     test "shows anonymous users the energy but not the cost", %{
@@ -172,7 +172,7 @@ defmodule PanicWeb.TerminalLiveTest do
       {:ok, view, _html} =
         live(conn, ~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
 
-      assert has_element?(view, "#run-stats-energy", "5.8 Wh")
+      assert has_element?(view, "#run-stats-energy", "2.0 Wh")
       refute has_element?(view, "#run-stats-cost")
     end
 
@@ -184,7 +184,7 @@ defmodule PanicWeb.TerminalLiveTest do
       run_next_invocation()
 
       assert has_element?(view, "#run-stats-sequence", "1")
-      assert has_element?(view, "#run-stats-energy", "2.9 Wh")
+      assert has_element?(view, "#run-stats-energy", "1.0 Wh")
     end
 
     test "isn't shown while the network is idle", %{conn: conn, network: network} do

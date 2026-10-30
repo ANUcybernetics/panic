@@ -152,7 +152,7 @@ defmodule Panic.Engine.RunTest do
       Repatch.patch(Dummy, :invoke, fn model, input, token ->
         {:ok, output, _usage} = Repatch.real(Dummy.invoke(model, input, token))
 
-        {:ok, output, %{"platform" => "replicate", "path" => "google/imagen-4-fast", "image_output_count" => 1}}
+        {:ok, output, %{"platform" => "replicate", "path" => "krea/krea-3", "image_output_count" => 1}}
       end)
 
       genesis = Engine.start_run!(network, "hello", actor: user)
@@ -162,14 +162,14 @@ defmodule Panic.Engine.RunTest do
       assert [first, second, _next] = invocations(network)
 
       for invocation <- [first, second] do
-        assert [%{"path" => "google/imagen-4-fast"}] = invocation.metadata["usage"]
-        assert_in_delta invocation.cost_usd, 0.02, 1.0e-9
-        assert_in_delta invocation.energy_wh, 2.9, 1.0e-9
+        assert [%{"path" => "krea/krea-3"}] = invocation.metadata["usage"]
+        assert_in_delta invocation.cost_usd, 0.03, 1.0e-9
+        assert_in_delta invocation.energy_wh, 1.0, 1.0e-9
       end
 
       assert %{cost_usd: cost, energy_wh: energy} = Engine.run_footprint!(genesis.run_number)
-      assert_in_delta cost, 0.04, 1.0e-9
-      assert_in_delta energy, 5.8, 1.0e-9
+      assert_in_delta cost, 0.06, 1.0e-9
+      assert_in_delta energy, 2.0, 1.0e-9
     end
   end
 

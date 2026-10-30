@@ -19,15 +19,15 @@ defmodule Panic.Engine.FootprintTest do
     assert Enum.all?(@helper_paths, &Footprint.priced?("replicate", &1))
   end
 
-  test "a GPU-time model costs its hardware's rate and uses its board power" do
-    # 100 s on an L40S: $0.000975/s, and 350 W × 0.7 × PUE 1.2
+  test "a GPU-time model costs its hardware's rate and uses part of its board power" do
+    # 100 s on an L40S: $0.000975/s, and 350 W × 0.45 (decoding) × PUE 1.2
     assert %{cost_usd: cost, energy_wh: energy} =
              Footprint.estimate([
                %{"platform" => "replicate", "path" => "zsxkib/molmo-7b", "predict_time" => 100}
              ])
 
     assert_in_delta cost, 0.0975, 1.0e-9
-    assert_in_delta energy, 8.1667, 1.0e-4
+    assert_in_delta energy, 5.25, 1.0e-9
   end
 
   test "an image model costs its price per image" do
@@ -39,7 +39,7 @@ defmodule Panic.Engine.FootprintTest do
 
     assert %{cost_usd: cost, energy_wh: energy} = Footprint.estimate([usage])
     assert_in_delta cost, 0.04, 1.0e-9
-    assert_in_delta energy, 5.8, 1.0e-9
+    assert_in_delta energy, 0.3, 1.0e-9
   end
 
   test "a language model costs its price per token, on Replicate or directly" do
@@ -57,6 +57,20 @@ defmodule Panic.Engine.FootprintTest do
 
     assert_in_delta replicate, 1.6, 1.0e-9
     assert_in_delta direct, 0.32, 1.0e-9
+  end
+
+  test "a small language model uses less energy per token than a frontier one" do
+    tokens = %{
+      "platform" => "replicate",
+      "input_token_count" => 1000,
+      "output_token_count" => 100
+    }
+
+    small = Footprint.estimate([Map.put(tokens, "path", "anthropic/claude-4.5-haiku")])
+    frontier = Footprint.estimate([Map.put(tokens, "path", "anthropic/claude-sonnet-5")])
+
+    assert_in_delta small.energy_wh, 0.08, 1.0e-9
+    assert_in_delta frontier.energy_wh, 0.26, 1.0e-9
   end
 
   test "sums the calls of a multi-call model" do
