@@ -1,100 +1,17 @@
-// If you want to use Phoenix channels, run `mix help phx.gen.channel`
-// to get started and then uncomment the line below.
-// import "./user_socket.js"
-
-// You can include dependencies in two ways.
-//
-// The simplest option is to put them in assets/vendor and
-// import them using relative paths:
-//
-//     import "../vendor/some-package.js"
-//
-// Alternatively, you can `npm install some-package --prefix assets` and import
-// them using a path starting with the package name:
-//
-//     import "some-package"
-//
-
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
 import "phoenix_html";
 // Establish Phoenix Socket and LiveView configuration.
 import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
+import { hooks as colocatedHooks } from "phoenix-colocated/panic";
 import topbar from "../vendor/topbar";
-import PhoenixCustomEventHook from "phoenix-custom-event-hook";
-
-// LiveView hooks
-
-import AudioVisualizer from "./hooks/audio_visualizer";
-import Modal from "./hooks/modal";
-import TerminalLockoutTimer from "./hooks/terminal_lockout_timer";
-
-const RunnerCountdown = {
-  mounted() {
-    this.targetTime = new Date(this.el.dataset.targetTime);
-    this.displayEl = this.el.querySelector("#countdown-display");
-    this.startCountdown();
-  },
-
-  destroyed() {
-    if (this.timer) {
-      clearInterval(this.timer);
-    }
-  },
-
-  updated() {
-    // Handle updates to the target time
-    const newTargetTime = new Date(this.el.dataset.targetTime);
-    if (newTargetTime.getTime() !== this.targetTime.getTime()) {
-      this.targetTime = newTargetTime;
-      if (this.timer) {
-        clearInterval(this.timer);
-      }
-      this.startCountdown();
-    }
-  },
-
-  startCountdown() {
-    const updateDisplay = () => {
-      const now = new Date();
-      const diff = Math.max(0, Math.floor((this.targetTime - now) / 1000));
-
-      if (this.displayEl) {
-        // data-format="clock" shows minutes:seconds rather than seconds
-        this.displayEl.textContent =
-          this.el.dataset.format === "clock"
-            ? `${Math.floor(diff / 60)}:${String(diff % 60).padStart(2, "0")}`
-            : diff.toString();
-      }
-
-      if (diff <= 0 && this.timer) {
-        clearInterval(this.timer);
-        this.timer = null;
-      }
-    };
-
-    // Update immediately
-    updateDisplay();
-
-    // Then update every second
-    this.timer = setInterval(updateDisplay, 1000);
-  },
-};
-
-const hooks = {
-  AudioVisualizer,
-  Modal,
-  PhoenixCustomEventHook,
-  RunnerCountdown,
-  TerminalLockoutTimer,
-};
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
 
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: { _csrf_token: csrfToken },
-  hooks: hooks,
+  hooks: colocatedHooks,
 });
 
 // Show progress bar on live navigation and form submits

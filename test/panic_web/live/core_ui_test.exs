@@ -16,7 +16,7 @@ defmodule PanicWeb.CoreUITest do
     test "renders a native dialog that the Modal hook opens", %{conn: conn} do
       conn
       |> visit(~p"/networks/new")
-      |> assert_has(~s(dialog#new-network-modal[phx-hook="Modal"][data-show="true"]))
+      |> assert_has(~s(dialog#new-network-modal[phx-hook="PanicWeb.CoreComponents.Modal"][data-show="true"]))
       |> assert_has(~s(#new-network-modal form[method="dialog"] button[aria-label="close"]))
       |> assert_has(~s(#new-network-modal form[method="dialog"].modal-backdrop))
     end

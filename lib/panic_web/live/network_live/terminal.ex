@@ -12,7 +12,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
 
   use PanicWeb, :live_view
 
-  import PanicWeb.PanicComponents, only: [run_stats: 1]
+  import PanicWeb.PanicComponents, only: [countdown: 1, run_stats: 1]
 
   alias PanicWeb.NetworkLive.NetworkHelpers
   alias PanicWeb.NetworkLive.RunSummary
@@ -40,15 +40,13 @@ defmodule PanicWeb.NetworkLive.Terminal do
         expires_at={@expires_at}
         id={@network.id}
       />
-      <p
-        :if={@expires_at}
-        id="terminal-expiry"
-        phx-hook="RunnerCountdown"
-        data-target-time={DateTime.to_iso8601(@expires_at)}
-        data-format="clock"
-        class="mt-2 text-sm text-base-content/60"
-      >
-        This terminal closes in <span id="countdown-display" phx-update="ignore">--</span>.
+      <p :if={@expires_at} id="terminal-expiry" class="mt-2 text-sm text-base-content/60">
+        This terminal closes in
+        <.countdown
+          id="terminal-expiry-countdown"
+          target={@expires_at}
+          format="clock"
+        />.
       </p>
       <p class="mt-6 break-words text-primary-content sm:mt-8">
         <span class="text-base-content/60">Current run:</span>

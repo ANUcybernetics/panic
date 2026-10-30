@@ -98,7 +98,7 @@ defmodule PanicWeb.TerminalLiveTest do
       {:ok, view, _html} = live(conn, ~p"/networks/#{network}/terminal?token=#{token}")
 
       expires_at = (minutes_ago(4) + 10 * 60) |> DateTime.from_unix!() |> DateTime.to_iso8601()
-      assert has_element?(view, ~s(#terminal-expiry[data-target-time="#{expires_at}"]))
+      assert has_element?(view, ~s(#terminal-expiry-countdown[data-target-time="#{expires_at}"]))
     end
 
     test "are sent to the expired page when the terminal closes", %{conn: conn, network: network} do

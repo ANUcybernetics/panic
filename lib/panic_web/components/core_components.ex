@@ -25,7 +25,7 @@ defmodule PanicWeb.CoreComponents do
         This is a modal.
       </.modal>
 
-  It's a native `<dialog>` opened with `showModal()` by the `Modal` hook
+  It's a native `<dialog>` opened with `showModal()` by its colocated hook
   while `:show` is true. `:on_cancel` runs when the user closes it (Esc, a
   backdrop click or the close button), for example:
 
@@ -43,7 +43,7 @@ defmodule PanicWeb.CoreComponents do
     ~H"""
     <dialog
       id={@id}
-      phx-hook="Modal"
+      phx-hook=".Modal"
       data-show={to_string(@show)}
       data-cancel={@on_cancel}
       class="modal"
@@ -60,6 +60,43 @@ defmodule PanicWeb.CoreComponents do
         <button tabindex="-1">{gettext("close")}</button>
       </form>
     </dialog>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".Modal">
+      // data-show opens the dialog with showModal(), and a close the user makes
+      // (Esc, the daisyUI backdrop form, the close button) runs data-cancel
+      export default {
+        mounted() {
+          // showModal() sets these client-side; stop LiveView patches removing them
+          this.js().ignoreAttributes(this.el, ["open", "aria-label"]);
+
+          const heading = this.el.querySelector("h1, h2");
+          if (heading) this.el.setAttribute("aria-label", heading.textContent.trim());
+
+          this.el.addEventListener("close", () => {
+            if (this.closingFromServer) {
+              this.closingFromServer = false;
+            } else {
+              this.js().exec(this.el.dataset.cancel);
+            }
+          });
+
+          this.sync();
+        },
+
+        updated() {
+          this.sync();
+        },
+
+        sync() {
+          const show = this.el.dataset.show === "true";
+          if (show && !this.el.open) {
+            this.el.showModal();
+          } else if (!show && this.el.open) {
+            this.closingFromServer = true;
+            this.el.close();
+          }
+        },
+      };
+    </script>
     """
   end
 

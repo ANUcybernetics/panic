@@ -99,7 +99,7 @@ defmodule PanicWeb.InvocationWatcherTest do
       Panic.EngineHelpers.run_next_invocation()
 
       assert has_element?(view, "#runner-status", "Waiting")
-      assert has_element?(view, "#countdown-container[data-target-time]")
+      assert has_element?(view, "#countdown[data-target-time]")
     end
 
     test "stopping the run returns every viewer to idle", %{

@@ -8,6 +8,8 @@ defmodule PanicWeb.NetworkLive.RunnerStatusComponent do
   """
   use Phoenix.Component
 
+  import PanicWeb.PanicComponents, only: [countdown: 1]
+
   alias Panic.Engine.Invocation
   alias Panic.Engine.Network
 
@@ -40,14 +42,9 @@ defmodule PanicWeb.NetworkLive.RunnerStatusComponent do
         <span class="ml-1">#{@sequence_number}</span>
       </div>
 
-      <div
-        :if={@status == :waiting}
-        id="countdown-container"
-        phx-hook="RunnerCountdown"
-        data-target-time={DateTime.to_iso8601(@current_invocation.invoke_after)}
-      >
+      <div :if={@status == :waiting} id="countdown-container">
         <span class="text-base-content/60">Next invocation in</span>
-        <span id="countdown-display">--</span>
+        <.countdown id="countdown" target={@current_invocation.invoke_after} />
         <span class="text-base-content/60">seconds</span>
       </div>
     </div>
