@@ -44,14 +44,7 @@ defmodule Panic.Accounts.PlatformCredentials do
       require_atomic? false
       accept @keys
 
-      change fn changeset, _context ->
-        Enum.reduce(@keys, changeset, fn key, changeset ->
-          case Ash.Changeset.fetch_argument(changeset, key) do
-            {:ok, blank} when blank in [nil, ""] -> Ash.Changeset.delete_argument(changeset, key)
-            _ -> changeset
-          end
-        end)
-      end
+      change {Panic.Accounts.Changes.IgnoreBlankArguments, arguments: @keys}
     end
   end
 
