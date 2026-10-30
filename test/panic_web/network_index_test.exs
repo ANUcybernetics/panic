@@ -43,11 +43,11 @@ defmodule PanicWeb.NetworkIndexTest do
     test "and can delete a network", %{conn: conn, user: user} do
       network = Panic.Fixtures.network_with_dummy_models(user)
 
-      {:ok, view, _html} = live(conn, ~p"/networks")
-      assert render(view) =~ network.name
-
-      render_click(view, "delete", %{"id" => network.id})
-      refute render(view) =~ network.name
+      conn
+      |> visit(~p"/networks")
+      |> assert_has("#networks", text: network.name)
+      |> click_button("Delete")
+      |> refute_has("#networks", text: network.name)
     end
 
     test "network delete with related data removes the installations too", %{

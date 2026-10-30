@@ -46,33 +46,20 @@ defmodule PanicWeb.CoreUITest do
     setup {PanicWeb.Helpers, :create_and_sign_in_user}
 
     test "stay hidden on fields the user hasn't used", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/networks/new")
-
-      # LiveView marks untouched fields with _unused_ params
-      html =
-        view
-        |> element("#network-form")
-        |> render_change(%{
-          "network" => %{"name" => "", "_unused_name" => "", "description" => "x"}
-        })
-
-      refute html =~ "is required"
-      refute has_element?(view, ~s(#network_name[aria-invalid]))
+      conn
+      |> visit(~p"/networks/new")
+      |> fill_in("Description", with: "x")
+      |> refute_has("#network-form", text: "is required")
+      |> refute_has("#network_name[aria-invalid]")
     end
 
     test "show on used fields and are linked to the input", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/networks/new")
-
-      view
-      |> element("#network-form")
-      |> render_change(%{"network" => %{"name" => "", "description" => "x"}})
-
-      assert has_element?(
-               view,
-               ~s(#network_name[aria-invalid="true"][aria-describedby="network_name-error"])
-             )
-
-      assert has_element?(view, "#network_name-error", "is required")
+      conn
+      |> visit(~p"/networks/new")
+      |> fill_in("Name", with: "a name")
+      |> fill_in("Name", with: "")
+      |> assert_has(~s(#network_name[aria-invalid="true"][aria-describedby="network_name-error"]))
+      |> assert_has("#network_name-error", text: "is required")
     end
   end
 

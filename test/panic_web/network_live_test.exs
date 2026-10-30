@@ -195,17 +195,12 @@ defmodule PanicWeb.NetworkLiveTest do
       # Start an initial run
       _genesis = Engine.start_run!(network, "first prompt", actor: user)
 
-      # Open the live view
-      {:ok, view, _html} = live(conn, ~p"/networks/#{network}")
-
       # Submit a new prompt through the terminal while another run is active
-      view
-      |> form("form[phx-submit=\"start-run\"]", invocation: %{input: "new prompt from terminal"})
-      |> render_submit()
-
-      # The form should be reset and ready for another submission
-      # (no error should be shown)
-      refute render(view) =~ "alert-danger"
+      conn
+      |> visit(~p"/networks/#{network}")
+      |> fill_in("Prompt", with: "new prompt from terminal")
+      |> submit()
+      |> refute_has("p[role=alert]")
     end
   end
 

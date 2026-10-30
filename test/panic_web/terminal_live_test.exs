@@ -86,11 +86,11 @@ defmodule PanicWeb.TerminalLiveTest do
       network = Engine.update_network!(network, %{lockout_seconds: 600}, authorize?: false)
       Engine.start_run!(network, "the first run", authorize?: false)
 
-      {:ok, view, _html} =
-        live(conn, ~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
-
-      view |> form("form", invocation: %{input: "too soon"}) |> render_submit()
-      assert has_element?(view, "[role=alert]", "Please wait before starting a new run")
+      conn
+      |> visit(~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
+      |> fill_in("Prompt", with: "too soon")
+      |> submit()
+      |> assert_has("[role=alert]", text: "Please wait before starting a new run")
     end
 
     test "see when the terminal closes", %{conn: conn, network: network} do
