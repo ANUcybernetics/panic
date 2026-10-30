@@ -59,56 +59,6 @@ defmodule PanicWeb.AboutLive do
           two.
         </p>
 
-        <h2>Techy stuff</h2>
-
-        <p>
-          Panic is the work of <a href="https://benswift.me">Dr. Ben Swift</a>
-          as part of his job at
-          the <a href="https://cybernetics.anu.edu.au">ANU School of Cybernetics</a>. The core
-          "engine" is an (<a href="https://hexdocs.pm/ash/">Ash</a>
-          + <a href="https://hexdocs.pm/phoenix_live_view/">Phoenix LiveView</a>)
-          <a href="https://elixir-lang.org">Elixir</a>
-          app, and it talks to various different hosted
-          GenAI platforms (e.g. <a href="https://replicate.com">Replicate</a>) to run GenAI models
-          created by OpenAI, Anthropic, Meta, Amazon, Google, Microsoft and more. The
-          outputs of these models (text, images and audio) are displayed live, in
-          real-time, for viewers on screens anywhere in the world.
-        </p>
-
-        <h2 id="energy">How much energy does it use?</h2>
-
-        <p>
-          The screens show a running estimate of the energy each run has used so far. None
-          of the platforms report the energy their models use, so the figures are ballpark
-          estimates, not measurements. For models we pay for by the second of GPU time, the
-          estimate is that time × the GPU's rated power × how hard the model works it × 1.2
-          for the data centre's cooling and other overheads. Image and music models keep
-          the GPU busy, so they count at 0.7 of its rated power (<a href="https://epoch.ai/gradient-updates/how-much-energy-does-chatgpt-use">Epoch AI's</a>
-          assumption for inference); language and speech models handling one request at a
-          time mostly wait on memory and draw much less (<a href="https://arxiv.org/abs/2505.06371">ML.ENERGY</a>),
-          so they count at 0.45.
-        </p>
-
-        <p>
-          For the rest, whose hardware isn't published, the estimate uses published
-          measurements instead. Image models use energy in proportion to how many steps
-          they take to refine an image, from about 0.45 Wh at 10 steps to 2.1 Wh at 50 for
-          a large model (<a href="https://arxiv.org/abs/2511.17031">Energy Scaling Laws for Diffusion Models</a>),
-          so an image counts as 0.15 Wh from a fast few-step model and 1.0 Wh from a
-          larger one. For text, a large model's reply counts as about 0.3 Wh (<a href="https://epoch.ai/gradient-updates/how-much-energy-does-chatgpt-use">Epoch AI</a>,
-          in line with <a href="https://arxiv.org/abs/2508.15734">Google's 0.24 Wh</a>
-          for a typical Gemini prompt), and a smaller model's (like Claude Haiku or Gemini
-          Flash) about a third of that. Generated music counts as 0.057 Wh per second of
-          audio (<a href="https://arxiv.org/abs/2609.18585">TTM-Bench</a>).
-        </p>
-
-        <p>
-          To make the numbers easier to picture, they're compared with everyday things: a
-          10 W LED bulb, charging a phone (about 15 Wh) or boiling a litre of water in a
-          kettle (about 100 Wh). The estimates leave out the energy used to train the
-          models, which is spread across every use of them and is much harder to pin down.
-        </p>
-
         <h2>PANIC! Research Questions</h2>
 
         <p>At the School of Cybernetics we love thinking about the way that feedback loops
@@ -159,6 +109,32 @@ defmodule PanicWeb.AboutLive do
             prompt more important? or the random seed? or is it an emergent property of
             the interactions between all models in the network?</li>
         </ul>
+
+        <h2 id="energy">How much energy does it use?</h2>
+
+        <p>
+          The screens show a running estimate of the energy each run has used so far,
+          compared with everyday things like a 10 W LED bulb, charging a phone or boiling a
+          kettle. None of the platforms report how much energy their models use, so the
+          figures are ballpark estimates built from GPU time and published measurements, and
+          they leave out the energy used to train the models. <.link navigate={~p"/about/energy"}>How we estimate it</.link>.
+        </p>
+
+        <h2>Techy stuff</h2>
+
+        <p>
+          Panic is the work of <a href="https://benswift.me">Dr. Ben Swift</a>
+          as part of his job at
+          the <a href="https://cybernetics.anu.edu.au">ANU School of Cybernetics</a>. The core
+          "engine" is an (<a href="https://hexdocs.pm/ash/">Ash</a>
+          + <a href="https://hexdocs.pm/phoenix_live_view/">Phoenix LiveView</a>)
+          <a href="https://elixir-lang.org">Elixir</a>
+          app, and it talks to various different hosted
+          GenAI platforms (e.g. <a href="https://replicate.com">Replicate</a>) to run GenAI models
+          created by OpenAI, Anthropic, Meta, Amazon, Google, Microsoft and more. The
+          outputs of these models (text, images and audio) are displayed live, in
+          real-time, for viewers on screens anywhere in the world.
+        </p>
 
         <h2>Contact</h2>
 

@@ -122,6 +122,7 @@ defmodule PanicWeb.Router do
 
     # "static" pages (still liveviews, though)
     live "/about", AboutLive, :index
+    live "/about/energy", AboutEnergyLive, :index
   end
 
   # Enable LiveDashboard in development

@@ -28,6 +28,16 @@ defmodule PanicWeb.AboutLiveTest do
       |> assert_has("div.prose", text: "Contact")
     end
 
+    test "links to the energy methodology", %{conn: conn} do
+      conn
+      |> visit(~p"/about")
+      |> click_link("How we estimate it")
+      |> assert_has("h1", text: "How PANIC! estimates its energy use")
+      |> assert_has("div.prose", text: "rated power")
+      |> click_link("Back to About PANIC!")
+      |> assert_has("div.prose", text: "Research Questions")
+    end
+
     test "can navigate to about page from home", %{conn: conn} do
       conn
       |> visit("/")
