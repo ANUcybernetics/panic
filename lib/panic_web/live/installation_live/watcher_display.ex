@@ -8,7 +8,10 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
 
   The installation's first screen also shows the QR code for the anonymous
   terminal, beside a summary of the run in progress (see
-  `PanicWeb.NetworkLive.RunSummary`).
+  `PanicWeb.NetworkLive.RunSummary`). A single screen captions what it shows
+  with the model that made it and what from (see
+  `PanicWeb.PanicComponents.invocation_caption/1`), so a viewer can follow the
+  chain from screen to screen.
   """
   @behaviour PanicWeb.WatcherSubscriber
 
@@ -42,11 +45,16 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
           <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
         </p>
       </div>
-      <.display invocations={@streams.invocations} display={@display} />
+      <.display
+        invocations={@streams.invocations}
+        display={@display}
+        models={caption_models(@display, @network)}
+      />
       <.terminal_qr
         :if={show_terminal_qr?(@first_display?, @network)}
         url={@terminal_qr_url}
         summary={@run_summary}
+        models={@network.models}
       />
     </Layouts.display>
     """
@@ -132,6 +140,11 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
   end
 
   defp show_terminal_qr?(first_display?, network), do: first_display? and network.anon_terminal_minutes != nil
+
+  # a grid's cells are too small for captions
+  defp caption_models({:single, _offset, _stride, _show_invoking}, %{models: [_ | _] = models}), do: models
+
+  defp caption_models(_display, _network), do: nil
 
   # Convert watcher struct to display tuple format expected by WatcherSubscriber
   defp watcher_to_display_tuple(%{type: :grid, rows: rows, columns: columns}) do

@@ -27,6 +27,10 @@ defmodule PanicWeb.PanicComponents do
     required: true,
     doc: "the grid tuple: {:grid, row, col} or {:single, offset, stride, show_invoking}"
 
+  attr :models, :list,
+    default: nil,
+    doc: "the network's model ids, to caption each invocation with where it came from (nil for none)"
+
   def display(assigns) do
     ~H"""
     <div
@@ -52,6 +56,7 @@ defmodule PanicWeb.PanicComponents do
         id={id}
         invocation={invocation}
         model={NetworkHelpers.get_model_or_placeholder(invocation.model)}
+        models={@models}
       />
     </div>
     """
@@ -75,6 +80,7 @@ defmodule PanicWeb.PanicComponents do
 
   attr :invocation, :any, required: true, doc: "Panic.Engine.Invocation struct"
   attr :model, :any, required: true, doc: "Panic.Model struct"
+  attr :models, :list, default: nil, doc: "the network's model ids, for a caption (nil for none)"
   attr :id, :string, required: true
 
   def invocation(%{invocation: %Invocation{state: :failed}} = assigns) do
@@ -94,6 +100,13 @@ defmodule PanicWeb.PanicComponents do
           <.shadowed_text>P!</.shadowed_text>
         </div>
       </div>
+      <.invocation_caption
+        :if={@models}
+        id={@id}
+        invocation={@invocation}
+        model={@model}
+        models={@models}
+      />
     </.invocation_container>
     """
   end
@@ -107,8 +120,69 @@ defmodule PanicWeb.PanicComponents do
         value={@invocation.output}
         alt={if @model.input_type == :text, do: @invocation.input, else: ""}
       />
+      <.invocation_caption
+        :if={@models}
+        id={@id}
+        invocation={@invocation}
+        model={@model}
+        models={@models}
+      />
     </.invocation_container>
     """
+  end
+
+  @doc """
+  Says, in the bottom left of an invocation, which model made it and from
+  what: the initial prompt, or the previous model's output (quoted when it's
+  text, so a viewer can read the prompt an image was made from). It's for
+  someone at an installation with no other context, so it shares the run
+  HUD's frosted glass (see `terminal_qr/1`) and stays small.
+  """
+  attr :id, :string, required: true
+  attr :invocation, :any, required: true, doc: "Panic.Engine.Invocation struct"
+  attr :model, :any, required: true, doc: "Panic.Model struct"
+  attr :models, :list, required: true, doc: "the network's model ids"
+
+  def invocation_caption(assigns) do
+    assigns = assign(assigns, :source, caption_source(assigns.invocation, assigns.models))
+
+    ~H"""
+    <div
+      id={"#{@id}-caption"}
+      class="absolute bottom-[2vmin] left-[2vmin] max-w-[36vmin] rounded-[0.8vmin] bg-zinc-950/55 px-[1.4vmin] py-[1.2vmin] font-mono text-[1.25vmin] leading-snug text-zinc-400 shadow-[0_0_2vmin_rgb(0_0_0/0.5)] backdrop-blur-md"
+    >
+      <p>
+        {if @invocation.state == :completed, do: "#{@model.output_type} by", else: "now running"}
+        <span id={"#{@id}-caption-model"} class="text-zinc-100">{@model.name}</span>
+      </p>
+      <p class="mt-[0.6vmin]">
+        <%= case @source do %>
+          <% :prompt -> %>
+            from the initial prompt
+          <% source -> %>
+            from {@model.input_type} by
+            <span id={"#{@id}-caption-source"} class="text-zinc-100">{source.name}</span>
+        <% end %>
+      </p>
+      <blockquote
+        :if={@model.input_type == :text && @invocation.input}
+        id={"#{@id}-caption-input"}
+        class="line-clamp-3 text-zinc-100"
+      >
+        “{@invocation.input}”
+      </blockquote>
+    </div>
+    """
+  end
+
+  # the genesis invocation's input is the prompt, and every other one's is the
+  # output of the model before it in the network
+  defp caption_source(%Invocation{sequence_number: 0}, _models), do: :prompt
+
+  defp caption_source(%Invocation{sequence_number: seq}, models) do
+    models
+    |> Enum.at(rem(seq - 1, length(models)))
+    |> NetworkHelpers.get_model_or_placeholder()
   end
 
   attr :type, :atom, required: true, doc: "the type (modality) of the invocation input or output"
@@ -448,10 +522,13 @@ defmodule PanicWeb.PanicComponents do
   where it covers the least of an image: dark on light, so phones read it
   even when it's small. With a run `summary`, a heads-up display of the run
   sits beside it on frosted glass, quiet enough to leave the image the focus
-  and the QR code its light margin.
+  and the QR code its light margin. The HUD starts with the network as a
+  loop of models, the one at work highlighted, so someone with no other
+  context can see how the screens connect.
   """
   attr :url, :string, required: true
   attr :summary, :any, default: nil, doc: "a `PanicWeb.NetworkLive.RunSummary`, or nil when idle"
+  attr :models, :list, default: [], doc: "the network's model ids"
 
   def terminal_qr(assigns) do
     ~H"""
@@ -464,6 +541,21 @@ defmodule PanicWeb.PanicComponents do
         id="run-hud"
         class="flex w-[28vmin] flex-col justify-between gap-[0.8vmin] bg-zinc-950/55 px-[1.4vmin] py-[1.2vmin] text-right font-mono text-[1.25vmin] leading-snug text-zinc-400 backdrop-blur-md"
       >
+        <section :if={@models != []} aria-label="The network">
+          <p>each model's output is the next one's input</p>
+          <ol
+            id="run-hud-models"
+            class="[&_li]:inline [&_li+li]:before:content-['_→_'] after:content-['_↺']"
+          >
+            <li
+              :for={{model_id, index} <- Enum.with_index(@models)}
+              aria-current={index == Integer.mod(@summary.sequence_number, length(@models)) && "step"}
+              class="aria-[current]:text-zinc-100"
+            >
+              {NetworkHelpers.get_model_or_placeholder(model_id).name}
+            </li>
+          </ol>
+        </section>
         <figure>
           <figcaption>initial prompt</figcaption>
           <blockquote id="run-hud-prompt" class="line-clamp-3 text-zinc-100">

@@ -99,6 +99,27 @@ defmodule PanicWeb.WatcherDisplayTest do
     assert shows?(views["board"], 1, outputs[1])
   end
 
+  test "a single screen captions what it shows with the model that made it and from what", %{
+    user: user,
+    network: network,
+    views: views
+  } do
+    Engine.start_run!(network, "caption me", actor: user)
+    assert has_element?(views["even"], "#slot-0-caption", "now running")
+
+    run_next_invocation()
+    assert has_element?(views["even"], "#slot-0-caption", "text by")
+    assert has_element?(views["even"], "#slot-0-caption-model", "Dummy Text-to-Text")
+    assert has_element?(views["even"], "#slot-0-caption", "from the initial prompt")
+    assert has_element?(views["even"], "#slot-0-caption-input", "caption me")
+
+    run_next_invocation()
+    assert has_element?(views["odd"], "#slot-1-caption-source", "Dummy Text-to-Text")
+    assert has_element?(views["odd"], "#slot-1-caption-input", outputs(network)[0])
+
+    refute has_element?(views["wall"], "#slot-0-caption")
+  end
+
   test "a display opened mid-run picks up from the next invocation", %{
     conn: conn,
     user: user,

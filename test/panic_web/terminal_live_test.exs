@@ -357,6 +357,8 @@ defmodule PanicWeb.TerminalLiveTest do
       {:ok, wall, _html} = live(conn, ~p"/i/#{installation.id}/wall")
       {:ok, spotlight, _html} = live(conn, ~p"/i/#{installation.id}/spotlight")
 
+      current = Enum.at(network.models, rem(1, length(network.models)))
+      assert has_element?(wall, "#run-hud-models [aria-current]", Panic.Model.by_id(current).name)
       assert has_element?(wall, "#run-hud figcaption", "initial prompt")
       assert has_element?(wall, "#run-hud-prompt", "a heron in the fog")
       assert has_element?(wall, "#run-hud #run-stats-sequence", "1")
