@@ -439,7 +439,7 @@ defmodule Panic.Model do
         description: "Sub-second inference T2I with text rendering, successor to FLUX.1 schnell",
         input_type: :text,
         output_type: :image,
-        params: &%{prompt: &1, aspect_ratio: "16:9", output_format: "png"},
+        params: &%{prompt: &1, aspect_ratio: "16:9", output_format: "png", disable_safety_checker: true},
         output: &Output.first_url/1
       },
       %__MODULE__{
@@ -450,7 +450,14 @@ defmodule Panic.Model do
         description: "Successor to Seedream 3 with stronger spatial understanding",
         input_type: :text,
         output_type: :image,
-        params: &%{prompt: &1, aspect_ratio: "16:9", size: "2K", guidance_scale: 2.5},
+        params:
+          &%{
+            prompt: &1,
+            aspect_ratio: "16:9",
+            size: "2K",
+            guidance_scale: 2.5,
+            disable_safety_checker: true
+          },
         output: &Output.first_url/1
       },
       %__MODULE__{
