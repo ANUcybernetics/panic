@@ -21,7 +21,7 @@ defmodule PanicWeb do
 
   def router do
     quote do
-      use Phoenix.Router, helpers: true
+      use Phoenix.Router, helpers: false
 
       import Phoenix.Controller
       import Phoenix.LiveView.Router
