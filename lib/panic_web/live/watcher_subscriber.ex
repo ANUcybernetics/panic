@@ -134,9 +134,13 @@ defmodule PanicWeb.WatcherSubscriber do
 
   Idempotent – if the stream is already configured it does nothing.
   Also tracks presence for this LiveView.
+
+  A grid can hold back its last `:reserved_cells` (default 0) for something
+  else, and its outputs then rotate through the cells before them.
   """
-  def configure_invocation_stream(socket, %Network{} = network, display) do
+  def configure_invocation_stream(socket, %Network{} = network, display, opts \\ []) do
     display = normalise_display(display)
+    slots = slots(display) - Keyword.get(opts, :reserved_cells, 0)
 
     if stream_configured?(socket) do
       # Stream already configured – nothing to (re)configure, just keep assigns fresh
@@ -151,7 +155,7 @@ defmodule PanicWeb.WatcherSubscriber do
       track_presence(socket, network.id, display)
 
       socket
-      |> LiveView.stream_configure(:invocations, dom_id: &dom_id(&1, display))
+      |> LiveView.stream_configure(:invocations, dom_id: &dom_id(&1, display, slots))
       |> LiveView.stream(:invocations, [])
       |> Component.assign(
         network: network,
@@ -160,16 +164,16 @@ defmodule PanicWeb.WatcherSubscriber do
         latest_sequence: nil,
         network_id: network.id
       )
-      |> show_current_run(network, display)
+      |> show_current_run(network, display, slots)
     end
   end
 
   # A display that opens mid-run (say a kiosk reloading after a deploy) shows
   # what it would have shown had it been watching all along, rather than
   # nothing until its next turn comes round.
-  defp show_current_run(socket, %Network{current_run_number: nil}, _display), do: socket
+  defp show_current_run(socket, %Network{current_run_number: nil}, _display, _slots), do: socket
 
-  defp show_current_run(socket, network, display) do
+  defp show_current_run(socket, network, display, slots) do
     recent =
       [
         query: [
@@ -179,7 +183,7 @@ defmodule PanicWeb.WatcherSubscriber do
             state: :completed
           ],
           sort: [sequence_number: :desc],
-          limit: slots(display)
+          limit: slots
         ],
         authorize?: false
       ]
@@ -499,18 +503,18 @@ defmodule PanicWeb.WatcherSubscriber do
     end
   end
 
-  defp dom_id(%Invocation{sequence_number: seq}, {:grid, rows, cols}) do
-    "slot-#{Integer.mod(seq, rows * cols)}"
+  defp dom_id(%Invocation{sequence_number: seq}, {:grid, _rows, _cols}, slots) do
+    "slot-#{Integer.mod(seq, slots)}"
   end
 
   # Genesis invocations (seq 0) must render in all single-mode watchers, not just
   # offset 0. Without this clause, rem(0, stride) == offset is false for offset > 0,
   # producing a nil dom_id that silently prevents the "P!" screen from appearing.
-  defp dom_id(%Invocation{sequence_number: 0}, {:single, offset, _stride, _show_invoking}) do
+  defp dom_id(%Invocation{sequence_number: 0}, {:single, offset, _stride, _show_invoking}, _slots) do
     "slot-#{offset}"
   end
 
-  defp dom_id(%Invocation{sequence_number: seq}, {:single, offset, stride, _show_invoking}) do
+  defp dom_id(%Invocation{sequence_number: seq}, {:single, offset, stride, _show_invoking}, _slots) do
     if rem(seq, stride) == offset, do: "slot-#{offset}"
   end
 

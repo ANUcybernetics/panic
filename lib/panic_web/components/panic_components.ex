@@ -35,6 +35,9 @@ defmodule PanicWeb.PanicComponents do
     default: nil,
     doc: "the sequence number of the run's latest completed invocation; a grid dims older ones"
 
+  slot :reserved_cell,
+    doc: "the grid's last cell, kept out of the rotation (see `WatcherSubscriber.configure_invocation_stream/4`)"
+
   def display(assigns) do
     ~H"""
     <div
@@ -43,7 +46,7 @@ defmodule PanicWeb.PanicComponents do
       style={@latest_sequence && "--latest-sequence: #{@latest_sequence}"}
       phx-update="stream"
     >
-      <div id="display-info" class="p-4 text-2xl text-purple-300/50 only:block hidden">
+      <div id="display-info" class="p-4 text-2xl text-purple-300/50">
         <span class="flex items-center gap-4">
           <span>{"#{elem(@display, 1)}/#{elem(@display, 2)}"}</span>
           <span class="text-lg">
@@ -63,6 +66,16 @@ defmodule PanicWeb.PanicComponents do
         model={NetworkHelpers.get_model_or_placeholder(invocation.model)}
         models={@models}
       />
+      <%!-- placed explicitly, so it stays last however the stream orders the rest --%>
+      <div
+        :for={cell <- @reserved_cell}
+        :if={grid?(@display)}
+        id="reserved-cell"
+        class="@container aspect-video overflow-hidden"
+        style={"grid-row: #{elem(@display, 1)}; grid-column: #{elem(@display, 2)}"}
+      >
+        {render_slot(cell)}
+      </div>
     </div>
     """
   end
@@ -527,13 +540,12 @@ defmodule PanicWeb.PanicComponents do
   end
 
   @doc """
-  Renders the anonymous terminal's QR code in the bottom right of a display,
-  where it covers the least of an image: dark on light, so phones read it
-  even when it's small. With a run `summary`, a heads-up display of the run
-  sits beside it on frosted glass, quiet enough to leave the image the focus
-  and the QR code its light margin. The HUD starts with the network as a
-  loop of models, the one at work highlighted, so someone with no other
-  context can see how the screens connect.
+  Renders the anonymous terminal's QR code in the bottom right of a single
+  screen, where it covers the least of an image: dark on light, so phones
+  read it even when it's small. With a run `summary`, the run's heads-up
+  display sits beside it on frosted glass, quiet enough to leave the image the
+  focus and the QR code its light margin. (A grid gives them a cell of their
+  own instead: see `run_cell/1`.)
   """
   attr :url, :string, required: true
   attr :summary, :any, default: nil, doc: "a `PanicWeb.NetworkLive.RunSummary`, or nil when idle"
@@ -545,46 +557,114 @@ defmodule PanicWeb.PanicComponents do
       aria-label="Prompt this network"
       class="fixed right-[2vmin] bottom-[2vmin] z-10 flex items-stretch overflow-hidden rounded-[0.8vmin] shadow-[0_0_2vmin_rgb(0_0_0/0.5)]"
     >
-      <div
+      <.run_hud
         :if={@summary}
-        id="run-hud"
-        class="flex w-[28vmin] flex-col justify-between gap-[0.8vmin] bg-zinc-950/55 px-[1.4vmin] py-[1.2vmin] text-right font-mono text-[1.25vmin] leading-snug text-zinc-400 backdrop-blur-md"
-      >
-        <section :if={@models != []} aria-label="The network">
-          <p>each model's output is the next one's input</p>
-          <ol
-            id="run-hud-models"
-            class="[&_li]:inline [&_li+li]:before:content-['_→_'] after:content-['_↺']"
-          >
-            <li
-              :for={{model_id, index} <- Enum.with_index(@models)}
-              aria-current={index == Integer.mod(@summary.sequence_number, length(@models)) && "step"}
-              class="aria-[current]:text-zinc-100"
-            >
-              {NetworkHelpers.get_model_or_placeholder(model_id).name}
-            </li>
-          </ol>
-        </section>
-        <figure>
-          <figcaption>initial prompt</figcaption>
-          <blockquote id="run-hud-prompt" class="line-clamp-3 text-zinc-100">
-            “{@summary.prompt}”
-          </blockquote>
-        </figure>
-        <.run_stats
-          summary={@summary}
-          class="flex flex-col gap-[0.2vmin] [&_dd]:inline [&_dd]:text-zinc-100 [&_dt]:inline [&_dt]:after:content-['_']"
-        />
-      </div>
-      <div
-        id="terminal-qr"
-        data-url={@url}
-        class="w-[16vmin] bg-zinc-50 p-[0.6vmin] text-center text-[1.3vmin] leading-tight text-zinc-600 [&_svg]:h-auto [&_svg]:w-full"
-      >
-        {qr_svg(@url, {24, 24, 27}, {250, 250, 250})}
-        <span class="block pb-[0.2vmin]">scan to prompt</span>
-      </div>
+        summary={@summary}
+        models={@models}
+        class="w-[28vmin] bg-zinc-950/55 text-[1.25vmin] backdrop-blur-md"
+      />
+      <.qr_panel url={@url} class="w-[16vmin] text-[1.3vmin]" />
     </aside>
+    """
+  end
+
+  @doc """
+  The cell a grid keeps for the run's heads-up display, beside the anonymous
+  terminal's QR code when there's a `url`. It sizes everything by the cell's
+  width, so it fits any grid. A cell is small, so the QR code gets its full
+  height (it's what has to work from a distance) and the heads-up display is
+  compact: no explanation, and no initial prompt, which the grid's header
+  already shows.
+  """
+  attr :url, :string, default: nil, doc: "the anonymous terminal's URL, or nil when it's off"
+  attr :summary, :any, default: nil, doc: "a `PanicWeb.NetworkLive.RunSummary`, or nil when idle"
+  attr :models, :list, default: [], doc: "the network's model ids"
+
+  def run_cell(assigns) do
+    ~H"""
+    <aside aria-label="Prompt this network" class="flex size-full items-stretch bg-zinc-900">
+      <.run_hud summary={@summary} models={@models} compact? class="min-w-0 flex-1 text-[2.6cqw]">
+        <p :if={@url} class="text-zinc-100">scan to prompt →</p>
+      </.run_hud>
+      <.qr_panel :if={@url} url={@url} label?={false} class="aspect-square h-full text-[3cqw]" />
+    </aside>
+    """
+  end
+
+  # The network as a loop of models (the one at work highlighted, so someone
+  # with no other context can see how the screens connect), then the run in
+  # progress. Spacing is in em, so `class` sizes it all with its font size.
+  attr :summary, :any, required: true
+  attr :models, :list, required: true
+
+  attr :compact?, :boolean,
+    default: false,
+    doc: "leave out the explanation, the initial prompt and the model at work (highlighted in the loop anyway)"
+
+  attr :class, :any, default: nil
+  slot :inner_block
+
+  defp run_hud(assigns) do
+    ~H"""
+    <div
+      id="run-hud"
+      class={[
+        "flex flex-col justify-between gap-[0.6em] px-[1.1em] py-[1em] text-right font-mono leading-snug text-zinc-400",
+        @class
+      ]}
+    >
+      {render_slot(@inner_block)}
+      <section :if={@models != []} aria-label="The network">
+        <p :if={!@compact?}>each model's output is the next one's input</p>
+        <ol
+          id="run-hud-models"
+          class="[&_li]:inline [&_li+li]:before:content-['_→_'] after:content-['_↺']"
+        >
+          <li
+            :for={{model_id, index} <- Enum.with_index(@models)}
+            aria-current={
+              @summary && index == Integer.mod(@summary.sequence_number, length(@models)) && "step"
+            }
+            class="aria-[current]:text-zinc-100"
+          >
+            {NetworkHelpers.get_model_or_placeholder(model_id).name}
+          </li>
+        </ol>
+      </section>
+      <figure :if={@summary && !@compact?}>
+        <figcaption>initial prompt</figcaption>
+        <blockquote id="run-hud-prompt" class="line-clamp-3 text-zinc-100">
+          “{@summary.prompt}”
+        </blockquote>
+      </figure>
+      <.run_stats
+        :if={@summary}
+        summary={@summary}
+        model?={!@compact?}
+        class="flex flex-col gap-[0.15em] [&_dd]:inline [&_dd]:text-zinc-100 [&_dt]:inline [&_dt]:after:content-['_']"
+      />
+    </div>
+    """
+  end
+
+  # dark on light, so phones read it even when it's small
+  attr :url, :string, required: true
+  attr :label?, :boolean, default: true
+  attr :class, :any, default: nil
+
+  defp qr_panel(assigns) do
+    ~H"""
+    <div
+      id="terminal-qr"
+      data-url={@url}
+      class={[
+        "bg-zinc-50 p-[0.45em] text-center leading-tight text-zinc-600 [&_svg]:h-auto [&_svg]:w-full",
+        @class
+      ]}
+    >
+      {qr_svg(@url, {24, 24, 27}, {250, 250, 250})}
+      <span :if={@label?} class="block pb-[0.15em]">scan to prompt</span>
+    </div>
     """
   end
 
@@ -594,6 +674,7 @@ defmodule PanicWeb.PanicComponents do
   """
   attr :summary, :any, required: true
   attr :show_cost?, :boolean, default: false
+  attr :model?, :boolean, default: true
   attr :class, :any, default: nil
 
   def run_stats(assigns) do
@@ -607,7 +688,7 @@ defmodule PanicWeb.PanicComponents do
         <dt>running</dt>
         <dd id="run-stats-elapsed">{PanicWeb.RunFormat.elapsed(@summary.started_at)}</dd>
       </div>
-      <div class="truncate">
+      <div :if={@model?} class="truncate">
         <dt>now</dt>
         <dd id="run-stats-model">{@summary.model}</dd>
       </div>

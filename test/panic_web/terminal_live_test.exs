@@ -369,8 +369,6 @@ defmodule PanicWeb.TerminalLiveTest do
 
       current = Enum.at(network.models, rem(1, length(network.models)))
       assert has_element?(wall, "#run-hud-models [aria-current]", Panic.Model.by_id(current).name)
-      assert has_element?(wall, "#run-hud figcaption", "initial prompt")
-      assert has_element?(wall, "#run-hud-prompt", "a heron in the fog")
       assert has_element?(wall, "#run-hud #run-stats-sequence", "1")
       assert has_element?(wall, "#run-hud #run-stats-energy")
       refute has_element?(wall, "#run-stats-cost")
@@ -380,13 +378,61 @@ defmodule PanicWeb.TerminalLiveTest do
       assert has_element?(wall, "#run-hud #run-stats-sequence", "2")
     end
 
-    test "has no run beside it while the network is idle", %{
+    test "is in a grid's last cell, with the initial prompt left to the header", %{
+      conn: conn,
+      user: user,
+      network: network,
+      installation: installation
+    } do
+      Engine.start_run!(network, "a heron in the fog", actor: user)
+      {:ok, wall, _html} = live(conn, ~p"/i/#{installation.id}/wall")
+
+      assert has_element?(
+               wall,
+               ~s(#reserved-cell[style="grid-row: 2; grid-column: 2"] #terminal-qr)
+             )
+
+      assert has_element?(wall, "#reserved-cell #run-hud")
+      refute has_element?(wall, "#run-hud-prompt")
+      assert render(wall) =~ "a heron in the fog"
+    end
+
+    test "is in the corner of a single first screen, beside the initial prompt", %{
+      conn: conn,
+      user: user,
+      network: network
+    } do
+      installation =
+        Installation
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            name: "Birch",
+            network_id: network.id,
+            watchers: [%{type: :single, name: "first", stride: 1, offset: 0}]
+          },
+          actor: user
+        )
+        |> Ash.create!()
+
+      Engine.start_run!(network, "a heron in the fog", actor: user)
+      {:ok, first, _html} = live(conn, ~p"/i/#{installation.id}/first")
+
+      assert has_element?(first, "aside #terminal-qr")
+      refute has_element?(first, "#reserved-cell")
+      assert has_element?(first, "#run-hud figcaption", "initial prompt")
+      assert has_element?(first, "#run-hud-prompt", "a heron in the fog")
+    end
+
+    test "has the network but no run beside it while the network is idle", %{
       conn: conn,
       installation: installation
     } do
       {:ok, wall, _html} = live(conn, ~p"/i/#{installation.id}/wall")
       assert has_element?(wall, "#terminal-qr")
-      refute has_element?(wall, "#run-hud")
+      assert has_element?(wall, "#run-hud-models")
+      refute has_element?(wall, "#run-hud-models [aria-current]")
+      refute has_element?(wall, "#run-stats-sequence")
     end
 
     test "appears and disappears as the network's setting changes", %{
@@ -399,6 +445,8 @@ defmodule PanicWeb.TerminalLiveTest do
 
       Engine.update_network!(network, %{anon_terminal_minutes: nil}, authorize?: false)
       refute render(wall) =~ ~s(id="terminal-qr")
+      # the grid keeps its cell for the run
+      assert has_element?(wall, "#reserved-cell #run-hud")
 
       Engine.update_network!(network, %{anon_terminal_minutes: 5}, authorize?: false)
       assert render(wall) =~ ~s(id="terminal-qr")

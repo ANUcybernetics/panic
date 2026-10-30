@@ -6,12 +6,14 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
   WatcherSubscriber display logic. Watchers are accessed by their unique name within
   the installation.
 
-  The installation's first screen also shows the QR code for the anonymous
-  terminal, beside a summary of the run in progress (see
-  `PanicWeb.NetworkLive.RunSummary`). A single screen captions what it shows
-  with the model that made it and what from (see
-  `PanicWeb.PanicComponents.invocation_caption/1`), so a viewer can follow the
-  chain from screen to screen.
+  The installation's first screen also shows a summary of the run in progress
+  (see `PanicWeb.NetworkLive.RunSummary`) beside the QR code for the anonymous
+  terminal. A single screen shows them in its corner; a grid gives them its
+  last cell, so one big grid can be a whole installation.
+
+  A single screen captions what it shows with the model that made it and what
+  from (see `PanicWeb.PanicComponents.invocation_caption/1`), so a viewer can
+  follow the chain from screen to screen.
   """
   @behaviour PanicWeb.WatcherSubscriber
 
@@ -27,19 +29,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
   def render(assigns) do
     ~H"""
     <Layouts.display flash={@flash}>
-      <div
-        :if={@display != nil && tuple_size(@display) == 3 && elem(@display, 0) == :grid}
-        class="px-4 pt-2 pb-4"
-      >
-        <.live_component
-          :if={@current_user}
-          class="-mt-4 mb-4"
-          module={PanicWeb.NetworkLive.TerminalComponent}
-          network={@network}
-          genesis_invocation={@genesis_invocation}
-          current_user={@current_user}
-          id={@network.id}
-        />
+      <div :if={grid?(@display)} class="px-4 pt-2 pb-4">
         <p>
           <span class="text-purple-300/50">Initial prompt:</span>
           <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
@@ -50,9 +40,19 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
         display={@display}
         models={caption_models(@display, @network)}
         latest_sequence={@latest_sequence}
-      />
+      >
+        <:reserved_cell :if={@first_display?}>
+          <.run_cell
+            url={terminal_url(@network, @terminal_qr_url)}
+            summary={@run_summary}
+            models={@network.models}
+          />
+        </:reserved_cell>
+      </.display>
       <.terminal_qr
-        :if={show_terminal_qr?(@first_display?, @network)}
+        :if={
+          @first_display? and not grid?(@display) and terminal_url(@network, @terminal_qr_url) != nil
+        }
         url={@terminal_qr_url}
         summary={@run_summary}
         models={@network.models}
@@ -82,7 +82,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
             network = installation.network
             first_display? = first_display?(installation, watcher)
 
-            if connected?(socket) do
+            if connected?(socket) and first_display? do
               :timer.send_interval(TerminalAuth.qr_refresh_ms(), self(), :refresh_terminal_qr)
             end
 
@@ -98,7 +98,9 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
                if(first_display?, do: RunSummary.load(network.current_run_number, network.models))
              )
              |> assign(:terminal_qr_url, TerminalAuth.terminal_url(network.id))
-             |> WatcherSubscriber.configure_invocation_stream(network, display)}
+             |> WatcherSubscriber.configure_invocation_stream(network, display,
+               reserved_cells: if(first_display? and grid?(display), do: 1, else: 0)
+             )}
 
           {:error, :not_found} ->
             {:ok,
@@ -129,10 +131,6 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
     {:noreply, assign(socket, :terminal_qr_url, TerminalAuth.terminal_url(socket.assigns.network.id))}
   end
 
-  def handle_info({PanicWeb.NetworkLive.TerminalComponent, {:genesis_invocation, genesis_invocation}}, socket) do
-    {:noreply, assign(socket, :genesis_invocation, genesis_invocation)}
-  end
-
   # the anonymous terminal's QR code goes on the installation's first screen
   # (a Vestaboard can't show one)
   defp first_display?(installation, watcher) do
@@ -140,7 +138,10 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
     first != nil and first.name == watcher.name
   end
 
-  defp show_terminal_qr?(first_display?, network), do: first_display? and network.anon_terminal_minutes != nil
+  defp terminal_url(%{anon_terminal_minutes: nil}, _url), do: nil
+  defp terminal_url(_network, url), do: url
+
+  defp grid?(display), do: elem(display, 0) == :grid
 
   # a grid's cells are too small for captions
   defp caption_models({:single, _offset, _stride, _show_invoking}, %{models: [_ | _] = models}), do: models

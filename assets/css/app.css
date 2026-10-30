@@ -85,6 +85,11 @@
     transition: filter 2s ease-in-out;
 }
 
+/* a display explains itself only until it has an output to show */
+#current-inovocations:has(> .invocation-cell) > #display-info {
+    display: none;
+}
+
 /* v4's default border colour is currentcolor */
 @layer base {
     *,

@@ -99,6 +99,21 @@ defmodule PanicWeb.WatcherDisplayTest do
     assert shows?(views["board"], 1, outputs[1])
   end
 
+  test "the first screen's grid keeps its last cell for the run, and rotates through the rest", %{
+    user: user,
+    network: network,
+    views: views
+  } do
+    Engine.start_run!(network, "round the wall", actor: user)
+    for _ <- 1..4, do: run_next_invocation()
+    outputs = outputs(network)
+
+    # a 2x2 grid with its last cell kept back rotates through three slots
+    assert has_element?(views["wall"], "#reserved-cell #run-hud")
+    assert shows?(views["wall"], 0, outputs[3])
+    assert slot_count(views["wall"]) == 3
+  end
+
   test "a single screen captions what it shows with the model that made it and from what", %{
     user: user,
     network: network,
