@@ -33,11 +33,31 @@ defmodule PanicWeb.AboutLive do
         <p>Panic is an interactive installation, and we invite you to give it a try:</p>
 
         <ol>
-          <li>type something (anything!) on the keyboard</li>
+          <li>
+            type something (anything!) on the keyboard, or scan the QR code in the corner
+            of the first screen and type it on your phone
+          </li>
           <li>hit <code>Enter</code> & get ready to PANIC!</li>
           <li>keep watching to see the initial output, then the subsequent outputs</li>
           <li>what questions does this raise about feedback loops in GenAI-augmented systems?</li>
         </ol>
+
+        <h2>Reading the screens</h2>
+
+        <p>
+          Your prompt goes to the first model in the network, its output goes to the second,
+          and so on round the loop until someone types a new prompt. The panel beside the QR
+          code shows the network's models in order (the one at work right now is
+          highlighted), the initial prompt, how far the run has got and roughly how much
+          energy it has used so far.
+        </p>
+
+        <p>
+          Each of the other screens shows one model's latest output, labelled with that model
+          and the one whose output it was made from. When that input was text, the label
+          quotes it, so you can read the exact prompt an image was made from and compare the
+          two.
+        </p>
 
         <h2>Techy stuff</h2>
 
