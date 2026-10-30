@@ -10,6 +10,7 @@ defmodule PanicWeb.PanicComponents do
 
   alias Panic.Engine.Invocation
   alias PanicWeb.NetworkLive.NetworkHelpers
+  alias PanicWeb.TextFit
 
   defp io_colour_mapper(type) do
     case type do
@@ -34,6 +35,10 @@ defmodule PanicWeb.PanicComponents do
   attr :latest_sequence, :integer,
     default: nil,
     doc: "the sequence number of the run's latest completed invocation; a grid dims older ones"
+
+  attr :text_reserve, :float,
+    default: 0.0,
+    doc: "on a single screen, the share of its height to keep text clear of at the bottom (see `PanicWeb.TextFit`)"
 
   slot :reserved_cell,
     doc: "the grid's last cell, kept out of the rotation (see `WatcherSubscriber.configure_invocation_stream/4`)"
@@ -65,6 +70,7 @@ defmodule PanicWeb.PanicComponents do
         invocation={invocation}
         model={NetworkHelpers.get_model_or_placeholder(invocation.model)}
         models={@models}
+        fit_text={if !grid?(@display), do: @text_reserve}
       />
       <%!-- placed explicitly, so it stays last however the stream orders the rest --%>
       <div
@@ -108,6 +114,11 @@ defmodule PanicWeb.PanicComponents do
   attr :models, :list, default: nil, doc: "the network's model ids, for a caption (nil for none)"
   attr :id, :string, required: true
 
+  attr :fit_text, :float,
+    default: nil,
+    doc:
+      "fill the cell with a text output, keeping this share of its height clear at the bottom (nil to match a grid's other cards)"
+
   def invocation(%{invocation: %Invocation{state: :failed}} = assigns) do
     ~H"""
     <.invocation_container id={@id} sequence={@invocation.sequence_number}>
@@ -144,6 +155,7 @@ defmodule PanicWeb.PanicComponents do
         type={@model.output_type}
         value={@invocation.output}
         alt={if @model.input_type == :text, do: @invocation.input, else: ""}
+        fit_text={@fit_text}
       />
       <.invocation_caption
         :if={@models}
@@ -214,14 +226,69 @@ defmodule PanicWeb.PanicComponents do
   attr :value, :string, required: true, doc: "the value of the invocation input or output"
   attr :id, :string, required: true
   attr :alt, :string, default: "", doc: "alt text for an image (the prompt, when it was text)"
+  attr :fit_text, :float, default: nil, doc: "see `invocation/1`"
 
   def invocation_slot(%{type: :text} = assigns) do
     assigns = assign(assigns, :parsed_content, parse_text_content(assigns.value))
 
     ~H"""
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".FitText">
+      // Finds the largest font size at which the text fits its box, by binary
+      // search on the rendered text, so it fills a single screen whatever its
+      // length, markup or longest word. It starts from the server's estimate
+      // (PanicWeb.TextFit), so the text barely moves.
+      export default {
+        mounted() {
+          this.fit();
+          this.observer = new ResizeObserver(() => this.fit());
+          this.observer.observe(this.el);
+        },
+
+        updated() {
+          this.fit();
+        },
+
+        destroyed() {
+          this.observer.disconnect();
+        },
+
+        fit() {
+          const text = this.el.firstElementChild;
+          const style = getComputedStyle(this.el);
+          const width =
+            this.el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+          const height =
+            this.el.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+          const fits = (px) => {
+            text.style.fontSize = `${px}px`;
+            return text.scrollHeight <= height && text.scrollWidth <= width;
+          };
+
+          // a short output shouldn't fill the screen with a couple of huge words
+          let low = 8;
+          let high = width * 0.12;
+          if (fits(high)) return;
+
+          for (let i = 0; i < 12; i++) {
+            const mid = (low + high) / 2;
+            if (fits(mid)) low = mid;
+            else high = mid;
+          }
+          fits(low);
+        },
+      };
+    </script>
     <div id={"#{@id}-text"} class="size-full bg-zinc-800">
-      <div class="text-output size-full grid place-items-center text-left @container">
-        <div>{@parsed_content}</div>
+      <%!-- the hook's ".FitText" shorthand only expands in a literal attribute --%>
+      <div
+        id={"#{@id}-text-fit"}
+        class="text-output size-full grid place-items-center text-left @container"
+        style={@fit_text && "padding-bottom: #{TextFit.bottom_padding(@fit_text)}"}
+        phx-hook={@fit_text && "PanicWeb.PanicComponents.FitText"}
+      >
+        <div style={@fit_text && "font-size: #{TextFit.font_cqw(@value, @fit_text)}cqw"}>
+          {@parsed_content}
+        </div>
       </div>
     </div>
     """

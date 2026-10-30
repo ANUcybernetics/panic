@@ -17,6 +17,7 @@ defmodule PanicWeb.NetworkLive.StaticDisplay do
         invocation={@invocation}
         model={PanicWeb.NetworkLive.NetworkHelpers.get_model_or_placeholder(@invocation.model)}
         id={"invocation-#{@invocation.id}"}
+        fit_text={0.0}
       />
     </Layouts.display>
     """

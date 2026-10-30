@@ -40,6 +40,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
         display={@display}
         models={caption_models(@display, @network)}
         latest_sequence={@latest_sequence}
+        text_reserve={text_reserve(@first_display?, @network)}
       >
         <:reserved_cell :if={@first_display?}>
           <.run_cell
@@ -142,6 +143,12 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
   defp terminal_url(_network, url), do: url
 
   defp grid?(display), do: elem(display, 0) == :grid
+
+  # a single screen's text keeps clear of its caption, and on the first screen
+  # of the QR code and heads-up display too (both sit at the bottom)
+  defp text_reserve(first_display?, network) do
+    if first_display? and network.anon_terminal_minutes != nil, do: 0.36, else: 0.12
+  end
 
   # a grid's cells are too small for captions
   defp caption_models({:single, _offset, _stride, _show_invoking}, %{models: [_ | _] = models}), do: models

@@ -114,6 +114,24 @@ defmodule PanicWeb.WatcherDisplayTest do
     assert slot_count(views["wall"]) == 3
   end
 
+  test "a single screen fits its text to the screen, while a grid's cards share one size", %{
+    user: user,
+    network: network,
+    views: views
+  } do
+    Engine.start_run!(network, "fit me", actor: user)
+    run_next_invocation()
+
+    assert has_element?(
+             views["even"],
+             ~s(#slot-0-text-fit[phx-hook="PanicWeb.PanicComponents.FitText"])
+           )
+
+    assert has_element?(views["even"], ~s(#slot-0-text-fit > div[style*="font-size"]))
+    refute has_element?(views["wall"], "#slot-0-text-fit[phx-hook]")
+    refute has_element?(views["wall"], ~s(#slot-0-text-fit > div[style*="font-size"]))
+  end
+
   test "a single screen captions what it shows with the model that made it and from what", %{
     user: user,
     network: network,
