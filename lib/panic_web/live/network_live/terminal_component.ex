@@ -27,6 +27,8 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
         />
       </.form>
       <script :type={Phoenix.LiveView.ColocatedHook} name=".TerminalLockoutTimer">
+        import { formatDuration } from "@/js/duration";
+
         export default {
           mounted() {
             // the prompt is a textarea so it can grow, but a prompt is one line:
@@ -68,7 +70,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
             }
             const timeLeft = Math.max(0, Math.ceil((new Date(readyAt) - new Date()) / 1000));
             if (timeLeft > 0) {
-              this.el.placeholder = `${timeLeft} second${timeLeft !== 1 ? "s" : ""} until ready for new input`;
+              this.el.placeholder = `${formatDuration(timeLeft)} until ready for new input`;
               this.el.disabled = true;
               this.el.value = "";
             } else {

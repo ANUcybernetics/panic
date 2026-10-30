@@ -415,12 +415,13 @@ defmodule PanicWeb.PanicComponents do
 
   attr :id, :string, required: true
   attr :target, DateTime, required: true
-  attr :format, :string, default: "seconds", values: ~w(seconds clock), doc: "clock shows m:ss"
 
-  @doc "Counts down the seconds until `target` in the browser."
+  @doc "Counts down to `target` in the browser, like `2m 05s`."
   def countdown(assigns) do
     ~H"""
     <script :type={Phoenix.LiveView.ColocatedHook} name=".Countdown">
+      import { formatDuration } from "@/js/duration";
+
       export default {
         mounted() {
           this.targetTime = new Date(this.el.dataset.targetTime);
@@ -451,11 +452,7 @@ defmodule PanicWeb.PanicComponents do
             const diff = Math.max(0, Math.floor((this.targetTime - now) / 1000));
 
             if (this.displayEl) {
-              // data-format="clock" shows minutes:seconds rather than seconds
-              this.displayEl.textContent =
-                this.el.dataset.format === "clock"
-                  ? `${Math.floor(diff / 60)}:${String(diff % 60).padStart(2, "0")}`
-                  : diff.toString();
+              this.displayEl.textContent = formatDuration(diff);
             }
 
             if (diff <= 0 && this.timer) {
@@ -476,7 +473,7 @@ defmodule PanicWeb.PanicComponents do
       id={@id}
       phx-hook=".Countdown"
       data-target-time={DateTime.to_iso8601(@target)}
-      data-format={@format}
+      class="tabular-nums"
     ><span id={"#{@id}-display"} phx-update="ignore">--</span></span>
     """
   end

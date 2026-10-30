@@ -15,14 +15,48 @@ defmodule PanicWeb.RunFormat do
   @phone_charge_wh 15
   @kettle_wh 100
 
-  @doc "The time since `started_at`, to the minute."
+  @doc """
+  The time since `started_at`, to the minute (it's rendered on the server, so
+  seconds would sit frozen between updates).
+  """
   def elapsed(started_at, now \\ DateTime.utc_now()) do
-    case DateTime.diff(now, started_at, :minute) do
-      minutes when minutes < 1 -> "under a minute"
-      minutes when minutes < 60 -> "#{minutes} min"
-      minutes -> "#{div(minutes, 60)} h #{rem(minutes, 60)} min"
+    case DateTime.diff(now, started_at, :second) do
+      seconds when seconds < 60 -> "under a minute"
+      seconds -> duration(seconds, :minute)
     end
   end
+
+  @doc """
+  A duration of `seconds` in short form, leaving out leading zero units (the
+  browser countdowns use the same form, from `assets/js/duration.js`).
+
+      iex> PanicWeb.RunFormat.duration(45)
+      "45s"
+      iex> PanicWeb.RunFormat.duration(125)
+      "2m 05s"
+      iex> PanicWeb.RunFormat.duration(20_542)
+      "5h 42m 22s"
+      iex> PanicWeb.RunFormat.duration(3_725, :minute)
+      "1h 02m"
+  """
+  def duration(seconds, precision \\ :second)
+
+  def duration(seconds, :second) do
+    case {div(seconds, 3600), div(rem(seconds, 3600), 60), rem(seconds, 60)} do
+      {0, 0, s} -> "#{s}s"
+      {0, m, s} -> "#{m}m #{pad(s)}s"
+      {h, m, s} -> "#{h}h #{pad(m)}m #{pad(s)}s"
+    end
+  end
+
+  def duration(seconds, :minute) do
+    case {div(seconds, 3600), div(rem(seconds, 3600), 60)} do
+      {0, m} -> "#{m}m"
+      {h, m} -> "#{h}h #{pad(m)}m"
+    end
+  end
+
+  defp pad(n), do: n |> Integer.to_string() |> String.pad_leading(2, "0")
 
   @doc "Energy in watt-hours, in Wh or kWh."
   def energy(wh) when wh >= 1000, do: "#{Float.round(wh / 1000, 1)} kWh"

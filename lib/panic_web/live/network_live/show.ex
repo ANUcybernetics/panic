@@ -7,6 +7,7 @@ defmodule PanicWeb.NetworkLive.Show do
   alias Panic.Accounts.PlatformCredentials
   alias PanicWeb.NetworkLive.ModelSelectComponent
   alias PanicWeb.NetworkLive.RunnerStatusComponent
+  alias PanicWeb.RunFormat
   alias PanicWeb.WatcherSubscriber
 
   @impl true
@@ -16,8 +17,8 @@ defmodule PanicWeb.NetworkLive.Show do
       <.header>
         {@network.name}
         <:subtitle>
-          Lockout: {@network.lockout_seconds}s · Anonymous terminal: {if @network.anon_terminal_minutes,
-            do: "#{@network.anon_terminal_minutes} min",
+          Lockout: {RunFormat.duration(@network.lockout_seconds)} · Anonymous terminal: {if @network.anon_terminal_minutes,
+            do: RunFormat.duration(@network.anon_terminal_minutes * 60, :minute),
             else: "off"}
         </:subtitle>
         <:actions>

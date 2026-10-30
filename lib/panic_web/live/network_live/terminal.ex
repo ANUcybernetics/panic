@@ -42,12 +42,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
           id={@network.id}
         />
         <p :if={@expires_at} id="terminal-expiry" class="mt-2 text-sm text-base-content/60">
-          This terminal closes in
-          <.countdown
-            id="terminal-expiry-countdown"
-            target={@expires_at}
-            format="clock"
-          />.
+          This terminal closes in <.countdown id="terminal-expiry-countdown" target={@expires_at} />.
         </p>
         <p class="mt-6 break-words text-primary-content sm:mt-8">
           <span class="text-base-content/60">Current run:</span>

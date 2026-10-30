@@ -12,6 +12,7 @@ defmodule PanicWeb.NetworkLive.RunnerStatusComponent do
 
   alias Panic.Engine.Invocation
   alias Panic.Engine.Network
+  alias PanicWeb.RunFormat
 
   attr :id, :string, required: true
   attr :network, Network, required: true
@@ -45,7 +46,6 @@ defmodule PanicWeb.NetworkLive.RunnerStatusComponent do
       <div :if={@status == :waiting} id="countdown-container">
         <span class="text-base-content/60">Next invocation in</span>
         <.countdown id="countdown" target={@current_invocation.invoke_after} />
-        <span class="text-base-content/60">seconds</span>
       </div>
     </div>
     """
@@ -81,13 +81,6 @@ defmodule PanicWeb.NetworkLive.RunnerStatusComponent do
   defp format_status(:waiting), do: "Waiting"
   defp format_status(:failed), do: "Failed"
 
-  defp format_run_age(%Invocation{inserted_at: inserted_at}) do
-    diff_seconds = DateTime.diff(DateTime.utc_now(), inserted_at, :second)
-
-    cond do
-      diff_seconds < 60 -> "#{diff_seconds}s"
-      diff_seconds < 3600 -> "#{div(diff_seconds, 60)}m #{rem(diff_seconds, 60)}s"
-      true -> "#{div(diff_seconds, 3600)}h #{div(rem(diff_seconds, 3600), 60)}m"
-    end
-  end
+  # to the minute, because it's only rendered when an invocation changes
+  defp format_run_age(%Invocation{inserted_at: inserted_at}), do: RunFormat.elapsed(inserted_at)
 end

@@ -4,6 +4,7 @@ defmodule PanicWeb.InstallationLive.Show do
   """
   use PanicWeb, :live_view
 
+  alias PanicWeb.RunFormat
   alias PanicWeb.WatcherSubscriber
 
   @impl true
@@ -17,7 +18,7 @@ defmodule PanicWeb.InstallationLive.Show do
           <.link navigate={~p"/networks/#{@installation.network}"} class="link">
             {@installation.network.name}
           </.link>
-          · Vestaboard hold: {@installation.vestaboard_hold_seconds}s
+          · Vestaboard hold: {RunFormat.duration(@installation.vestaboard_hold_seconds)}
         </:subtitle>
         <:actions>
           <.button patch={~p"/installations/#{@installation}/show/edit"}>Edit installation</.button>

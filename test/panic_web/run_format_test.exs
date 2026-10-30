@@ -3,6 +3,8 @@ defmodule PanicWeb.RunFormatTest do
 
   alias PanicWeb.RunFormat
 
+  doctest RunFormat
+
   test "compares energy with an everyday use that reads naturally at its size" do
     assert RunFormat.everyday(0.0) == nil
     assert RunFormat.everyday(0.05) == "a few seconds of an LED bulb"
@@ -28,7 +30,7 @@ defmodule PanicWeb.RunFormatTest do
   test "formats a run's elapsed time to the minute" do
     start = ~U[2026-10-29 10:00:00Z]
     assert RunFormat.elapsed(start, ~U[2026-10-29 10:00:40Z]) == "under a minute"
-    assert RunFormat.elapsed(start, ~U[2026-10-29 10:23:10Z]) == "23 min"
-    assert RunFormat.elapsed(start, ~U[2026-10-29 12:05:00Z]) == "2 h 5 min"
+    assert RunFormat.elapsed(start, ~U[2026-10-29 10:23:10Z]) == "23m"
+    assert RunFormat.elapsed(start, ~U[2026-10-29 12:05:00Z]) == "2h 05m"
   end
 end
