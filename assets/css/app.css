@@ -75,6 +75,16 @@
     }
 }
 
+/* a grid dims each output by how far it is behind the latest completed one
+   (`PanicWeb.PanicComponents.display/1`): a big step down from the latest,
+   then a gentle fade (1, 0.75, 0.68, 0.61, ... down to 0.5). With no completed
+   output yet --age is invalid, so nothing dims */
+.invocation-grid > .invocation-cell {
+    --age: calc(var(--latest-sequence) - var(--sequence));
+    filter: brightness(clamp(0.5, max(1 - var(--age) * 0.25, 0.82 - var(--age) * 0.07), 1));
+    transition: filter 2s ease-in-out;
+}
+
 /* v4's default border colour is currentcolor */
 @layer base {
     *,

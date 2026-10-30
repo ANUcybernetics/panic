@@ -157,6 +157,7 @@ defmodule PanicWeb.WatcherSubscriber do
         network: network,
         display: display,
         genesis_invocation: current_genesis(network),
+        latest_sequence: nil,
         network_id: network.id
       )
       |> show_current_run(network, display)
@@ -254,7 +255,8 @@ defmodule PanicWeb.WatcherSubscriber do
         # Genesis invocation: reset everything and start new run
         %Invocation{sequence_number: 0} ->
           socket
-          |> Component.assign(genesis_invocation: invocation)
+          |> Component.assign(genesis_invocation: invocation, latest_sequence: nil)
+          |> track_latest(invocation)
           |> LiveView.stream(:invocations, [invocation], reset: true)
 
         # Non-genesis invocation: handle based on current genesis state
@@ -564,7 +566,9 @@ defmodule PanicWeb.WatcherSubscriber do
   defp handle_non_genesis_invocation(socket, invocation, display) do
     case {invocation, display} do
       {_, {:grid, _rows, _cols}} ->
-        LiveView.stream_insert(socket, :invocations, invocation, at: -1)
+        socket
+        |> track_latest(invocation)
+        |> LiveView.stream_insert(:invocations, invocation, at: -1)
 
       {%Invocation{sequence_number: seq, state: state}, {:single, offset, stride, show_invoking}}
       when rem(seq, stride) == offset ->
@@ -582,12 +586,19 @@ defmodule PanicWeb.WatcherSubscriber do
     end
   end
 
+  # a grid dims each output by how far it is behind the latest completed one
+  defp track_latest(socket, %Invocation{state: :completed, sequence_number: seq}) do
+    Component.update(socket, :latest_sequence, &max(&1 || seq, seq))
+  end
+
+  defp track_latest(socket, _invocation), do: socket
+
   defp maybe_reset_stream_for_network_change(socket) do
     # Reset the invocation stream if it's configured
     if stream_configured?(socket) do
       socket
       |> LiveView.stream(:invocations, [], reset: true)
-      |> Component.assign(genesis_invocation: nil)
+      |> Component.assign(genesis_invocation: nil, latest_sequence: nil)
     else
       socket
     end

@@ -31,11 +31,16 @@ defmodule PanicWeb.PanicComponents do
     default: nil,
     doc: "the network's model ids, to caption each invocation with where it came from (nil for none)"
 
+  attr :latest_sequence, :integer,
+    default: nil,
+    doc: "the sequence number of the run's latest completed invocation; a grid dims older ones"
+
   def display(assigns) do
     ~H"""
     <div
       id="current-inovocations"
-      class={"grid gap-4 grid-cols-#{num_cols(@display)}"}
+      class={["grid gap-4 grid-cols-#{num_cols(@display)}", grid?(@display) && "invocation-grid"]}
+      style={@latest_sequence && "--latest-sequence: #{@latest_sequence}"}
       phx-update="stream"
     >
       <div id="display-info" class="p-4 text-2xl text-purple-300/50 only:block hidden">
@@ -65,14 +70,21 @@ defmodule PanicWeb.PanicComponents do
   defp num_cols({:grid, _rows, cols}), do: cols
   defp num_cols({:single, _, _, _}), do: 1
 
+  defp grid?(display), do: elem(display, 0) == :grid
+
   # individual components
 
   attr :id, :string, required: true
+  attr :sequence, :integer, required: true
   slot :inner_block, required: true
 
   def invocation_container(assigns) do
     ~H"""
-    <div id={@id} class="relative aspect-video overflow-hidden">
+    <div
+      id={@id}
+      class="invocation-cell relative aspect-video overflow-hidden"
+      style={"--sequence: #{@sequence}"}
+    >
       {render_slot(@inner_block)}
     </div>
     """
@@ -85,7 +97,7 @@ defmodule PanicWeb.PanicComponents do
 
   def invocation(%{invocation: %Invocation{state: :failed}} = assigns) do
     ~H"""
-    <.invocation_container id={@id}>
+    <.invocation_container id={@id} sequence={@invocation.sequence_number}>
       <div class="size-full grid place-items-center bg-rose-950"></div>
     </.invocation_container>
     """
@@ -94,7 +106,7 @@ defmodule PanicWeb.PanicComponents do
   # a genesis invocation is shown while it waits to start, so the run appears straight away
   def invocation(%{invocation: %Invocation{state: state}} = assigns) when state in [:ready, :invoking] do
     ~H"""
-    <.invocation_container id={@id}>
+    <.invocation_container id={@id} sequence={@invocation.sequence_number}>
       <div class="size-full grid place-items-center motion-safe:animate-breathe bg-rose-500 @container">
         <div class="text-[25cqw]">
           <.shadowed_text>P!</.shadowed_text>
@@ -113,7 +125,7 @@ defmodule PanicWeb.PanicComponents do
 
   def invocation(assigns) do
     ~H"""
-    <.invocation_container id={@id}>
+    <.invocation_container id={@id} sequence={@invocation.sequence_number}>
       <.invocation_slot
         id={@id}
         type={@model.output_type}

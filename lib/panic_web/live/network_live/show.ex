@@ -73,7 +73,11 @@ defmodule PanicWeb.NetworkLive.Show do
           <span class="text-base-content/60">Initial prompt:</span>
           <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
         </p>
-        <.display invocations={@streams.invocations} display={@display} />
+        <.display
+          invocations={@streams.invocations}
+          display={@display}
+          latest_sequence={@latest_sequence}
+        />
       </section>
 
       <section class="mt-12">

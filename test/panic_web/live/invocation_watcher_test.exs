@@ -102,6 +102,21 @@ defmodule PanicWeb.InvocationWatcherTest do
       assert has_element?(view, "#countdown[data-target-time]")
     end
 
+    test "the grid dims each output by how far it is behind the latest", %{
+      conn: conn,
+      network: network,
+      user: user
+    } do
+      {:ok, view, _html} = live(conn, ~p"/networks/#{network}")
+
+      Engine.start_run!(network, "dimming test", actor: user)
+      for _ <- 1..3, do: Panic.EngineHelpers.run_next_invocation()
+
+      assert has_element?(view, ~s(.invocation-grid[style="--latest-sequence: 2"]))
+      assert has_element?(view, ~s(.invocation-grid .invocation-cell[style="--sequence: 0"]))
+      assert has_element?(view, ~s(.invocation-grid .invocation-cell[style="--sequence: 2"]))
+    end
+
     test "stopping the run returns every viewer to idle", %{
       conn: conn,
       network: network,

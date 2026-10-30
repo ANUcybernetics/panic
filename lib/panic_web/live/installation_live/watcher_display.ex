@@ -49,6 +49,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
         invocations={@streams.invocations}
         display={@display}
         models={caption_models(@display, @network)}
+        latest_sequence={@latest_sequence}
       />
       <.terminal_qr
         :if={show_terminal_qr?(@first_display?, @network)}

@@ -40,7 +40,12 @@ defmodule PanicWeb.NetworkLive.Info do
           {@genesis_invocation && @genesis_invocation.input}
         </div>
         <h2>Current output</h2>
-        <.display :if={@genesis_invocation} invocations={@streams.invocations} display={@display} />
+        <.display
+          :if={@genesis_invocation}
+          invocations={@streams.invocations}
+          display={@display}
+          latest_sequence={@latest_sequence}
+        />
         <em :if={!@genesis_invocation}>loading...</em>
       </div>
 
