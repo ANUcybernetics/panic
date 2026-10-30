@@ -54,6 +54,12 @@ defmodule PanicWeb.NetworkLive.Terminal do
           <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
         </p>
         <.run_summary :if={@run_summary} summary={@run_summary} show_cost?={!!@current_user} />
+        <%!-- a new tab, so reading it doesn't close an anonymous terminal --%>
+        <p class="mt-6 text-sm sm:mt-8">
+          <.link id="terminal-about" href={~p"/about"} target="_blank" class="link">
+            What is PANIC!?
+          </.link>
+        </p>
       </div>
     </Layouts.display>
     """

@@ -93,6 +93,16 @@ defmodule PanicWeb.TerminalLiveTest do
       |> assert_has("[role=alert]", text: "Please wait before starting a new run")
     end
 
+    test "can find out what PANIC! is without closing the terminal", %{
+      conn: conn,
+      network: network
+    } do
+      {:ok, view, _html} =
+        live(conn, ~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
+
+      assert has_element?(view, ~s(#terminal-about[href="/about"][target="_blank"]))
+    end
+
     test "see when the terminal closes", %{conn: conn, network: network} do
       token = TerminalAuth.token(network.id, minutes_ago(4))
       {:ok, view, _html} = live(conn, ~p"/networks/#{network}/terminal?token=#{token}")
