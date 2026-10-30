@@ -33,9 +33,9 @@ config :ash_oban, actor_persister: Panic.Accounts.ActorPersister, pro?: false
 
 # Configure esbuild (the version is required)
 config :esbuild,
-  version: "0.17.11",
+  version: "0.28.2",
   panic: [
-    args: ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
+    args: ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]
@@ -121,7 +121,7 @@ config :spark,
 
 # Configure tailwind (the version is required)
 config :tailwind,
-  version: "4.1.11",
+  version: "4.3.3",
   panic: [
     args: ~w(
       --input=css/app.css
