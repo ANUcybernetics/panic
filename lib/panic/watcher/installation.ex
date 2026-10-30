@@ -1,27 +1,25 @@
 defmodule Panic.Watcher.Installation do
   @moduledoc """
-  An Installation represents a collection of display configurations that observe invocations from a network.
-
-  Each installation belongs to a network and contains an array of configs that define
-  how invocations should be displayed (grid, single, or vestaboard format).
+  An Installation is a named set of watchers that display invocations from a
+  network (grid, single or vestaboard, see `Panic.Watcher.Installation.Config`).
 
   ## Examples
 
-      # Create an installation with a grid config
-      Ash.create!(Installation, %{
-        name: "Main Display",
-        network_id: network.id,
-        configs: [
-          %{type: :grid, rows: 2, columns: 3}
-        ]
-      })
+      installation =
+        Panic.Watcher.create_installation!(
+          %{
+            name: "Main Display",
+            network_id: network.id,
+            watchers: [%{type: :grid, name: "main-grid", rows: 2, columns: 3}]
+          },
+          actor: user
+        )
 
-      # Add a single config to an existing installation
-      installation
-      |> Ash.Changeset.for_update(:add_config, %{
-        config: %{type: :single, stride: 3, offset: 0}
-      })
-      |> Ash.update!()
+      Panic.Watcher.add_watcher!(
+        installation,
+        %{type: :single, name: "spotlight", stride: 3, offset: 0},
+        actor: user
+      )
   """
   use Ash.Resource,
     otp_app: :panic,
