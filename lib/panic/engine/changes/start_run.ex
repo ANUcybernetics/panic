@@ -12,6 +12,7 @@ defmodule Panic.Engine.Changes.StartRun do
   use Ash.Resource.Change
 
   alias Panic.Accounts.PlatformCredentials
+  alias Panic.Engine
   alias Panic.Engine.Errors.RunLocked
   alias Panic.Engine.Network
   alias Panic.Engine.Schedule
@@ -57,7 +58,7 @@ defmodule Panic.Engine.Changes.StartRun do
   end
 
   defp check_lockout_and_schedule(changeset, network_id) do
-    network = Ash.get!(Network, network_id, authorize?: false, load: [:installations])
+    network = Engine.get_network!(network_id, authorize?: false, load: [:installations])
     now = DateTime.utc_now()
 
     case lockout_ends_at(network) do
@@ -88,18 +89,11 @@ defmodule Panic.Engine.Changes.StartRun do
   end
 
   defp begin_run(changeset, invocation, actor) do
-    invocation =
-      invocation
-      |> Ash.Changeset.for_update(:set_run_number, %{run_number: invocation.id})
-      |> Ash.update!(authorize?: false)
+    invocation = Engine.set_run_number!(invocation, invocation.id, authorize?: false)
 
-    Network
-    |> Ash.get!(invocation.network_id, authorize?: false)
-    |> Ash.Changeset.for_update(:begin_run, %{
-      current_run_number: invocation.run_number,
-      run_started_at: invocation.inserted_at
-    })
-    |> Ash.update!(authorize?: false)
+    invocation.network_id
+    |> Engine.get_network!(authorize?: false)
+    |> Engine.begin_run!(invocation.run_number, invocation.inserted_at, authorize?: false)
 
     AshOban.run_trigger(invocation, :invoke,
       scheduled_at: invocation.invoke_after,

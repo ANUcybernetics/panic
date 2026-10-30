@@ -67,8 +67,6 @@ defmodule PanicWeb.WatcherSubscriber do
   alias Phoenix.LiveView.Socket
   alias Phoenix.Socket.Broadcast
 
-  require Ash.Query
-
   @callback handle_invocation(Invocation.t(), Socket.t()) ::
               Socket.t()
   @optional_callbacks handle_invocation: 2
@@ -172,14 +170,19 @@ defmodule PanicWeb.WatcherSubscriber do
 
   defp show_current_run(socket, network, display) do
     recent =
-      Invocation
-      |> Ash.Query.filter(
-        network_id == ^network.id and run_number == ^network.current_run_number and
-          state == :completed
-      )
-      |> Ash.Query.sort(sequence_number: :desc)
-      |> Ash.Query.limit(slots(display))
-      |> Ash.read!(authorize?: false)
+      [
+        query: [
+          filter: [
+            network_id: network.id,
+            run_number: network.current_run_number,
+            state: :completed
+          ],
+          sort: [sequence_number: :desc],
+          limit: slots(display)
+        ],
+        authorize?: false
+      ]
+      |> Panic.Engine.list_invocations!()
       |> Enum.reverse()
 
     case display do

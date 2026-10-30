@@ -15,10 +15,8 @@ defmodule Panic.Watcher.Actions.UpdateVestaboards do
   alias Panic.Engine.Signals.InvocationCompleted
   alias Panic.Engine.Signals.RunStarted
   alias Panic.Platforms.Vestaboard
-  alias Panic.Watcher.Installation
   alias Panic.Watcher.Vestaboards
 
-  require Ash.Query
   require Logger
 
   @impl true
@@ -39,9 +37,8 @@ defmodule Panic.Watcher.Actions.UpdateVestaboards do
   end
 
   defp vestaboard_watchers(network_id) do
-    Installation
-    |> Ash.Query.filter(network_id == ^network_id)
-    |> Ash.read!(authorize?: false)
+    [query: [filter: [network_id: network_id]], authorize?: false]
+    |> Panic.Watcher.list_installations!()
     |> Enum.flat_map(& &1.watchers)
     |> Vestaboards.vestaboard_watchers()
   end

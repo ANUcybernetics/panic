@@ -79,14 +79,10 @@ defmodule Panic.Engine.Archiver do
 
   # both invocations point at the same file: current.output and next.input
   defp record_archived_url(invocation, next_invocation, s3_url) do
-    invocation
-    |> Ash.Changeset.for_update(:update_output, %{output: s3_url})
-    |> Ash.update!(authorize?: false)
+    Panic.Engine.update_output!(invocation, s3_url, authorize?: false)
 
     if next_invocation do
-      next_invocation
-      |> Ash.Changeset.for_update(:update_input, %{input: s3_url})
-      |> Ash.update!(authorize?: false)
+      Panic.Engine.update_input!(next_invocation, s3_url, authorize?: false)
     end
 
     :ok

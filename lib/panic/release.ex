@@ -26,13 +26,7 @@ defmodule Panic.Release do
       user_info ->
         case String.split(user_info, ":") do
           [email, password] ->
-            Panic.Accounts.User
-            |> Ash.Changeset.for_create(:register_with_password, %{
-              email: email,
-              password: password,
-              password_confirmation: password
-            })
-            |> Ash.create!(authorize?: false)
+            Panic.Accounts.register_user!(email, password, password, authorize?: false)
 
             IO.puts("User created: #{email}")
 

@@ -11,7 +11,7 @@ defmodule Panic.Engine.Changes.PrepareNext do
   """
   use Ash.Resource.Change
 
-  alias Panic.Engine.Network
+  alias Panic.Engine
   alias Panic.Engine.Schedule
   alias Panic.Watcher.Vestaboards
 
@@ -19,7 +19,7 @@ defmodule Panic.Engine.Changes.PrepareNext do
   def change(changeset, _opts, context) do
     network_id = Ash.Changeset.get_argument(changeset, :network_id)
     previous = Ash.Changeset.get_argument(changeset, :previous_sequence_number)
-    network = Ash.get!(Network, network_id, authorize?: false, load: [:installations])
+    network = Engine.get_network!(network_id, authorize?: false, load: [:installations])
     sequence_number = previous + 1
 
     now = DateTime.utc_now()

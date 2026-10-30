@@ -40,14 +40,26 @@ defmodule Panic.Engine do
       define :destroy_network, action: :destroy
       define :update_models, args: [:models]
       define :stop_run
+      define :begin_run, args: [:current_run_number, :run_started_at]
       define :list_running_networks, action: :running
     end
 
     resource Invocation do
       define :start_run, args: [:network, :input]
+      define :set_run_number, args: [:run_number]
+      define :update_input, args: [:input]
+      define :update_output, args: [:output]
+      define :about_to_invoke, args: []
       define :invoke, args: []
       define :mark_as_failed, args: []
       define :get_invocation, action: :read, get_by: [:id]
+      define :list_invocations, action: :read
+
+      define :get_invocation_in_run,
+        action: :read,
+        get_by: [:run_number, :sequence_number],
+        not_found_error?: false
+
       define :current_run_head, args: [:run_number]
       define :run_footprint, args: [:run_number]
     end

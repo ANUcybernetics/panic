@@ -9,21 +9,16 @@ defmodule Panic.Engine.Actions.ArchiveOutput do
   """
   use Ash.Resource.Actions.Implementation
 
+  alias Panic.Engine
   alias Panic.Engine.Archiver
-  alias Panic.Engine.Invocation
-
-  require Ash.Query
 
   @impl true
   def run(input, _opts, _context) do
     %{invocation_id: id, run_number: run_number, sequence_number: seq} = input.arguments.signal
-    invocation = Ash.get!(Invocation, id, authorize?: false)
+    invocation = Engine.get_invocation!(id, authorize?: false)
 
     if archivable?(invocation) do
-      next =
-        Invocation
-        |> Ash.Query.filter(run_number == ^run_number and sequence_number == ^(seq + 1))
-        |> Ash.read_one!(authorize?: false)
+      next = Engine.get_invocation_in_run!(run_number, seq + 1, authorize?: false)
 
       case Archiver.archive_invocation(invocation, next) do
         :ok -> :ok

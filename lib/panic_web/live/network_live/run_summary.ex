@@ -8,8 +8,6 @@ defmodule PanicWeb.NetworkLive.RunSummary do
   """
   alias Panic.Engine.Invocation
 
-  require Ash.Query
-
   defstruct [
     :run_number,
     :prompt,
@@ -43,11 +41,14 @@ defmodule PanicWeb.NetworkLive.RunSummary do
 
   def load(run_number, models) do
     recent =
-      Invocation
-      |> Ash.Query.filter(run_number == ^run_number)
-      |> Ash.Query.sort(sequence_number: :desc)
-      |> Ash.Query.limit(2 * length(models) + 1)
-      |> Ash.read!(authorize?: false)
+      Panic.Engine.list_invocations!(
+        query: [
+          filter: [run_number: run_number],
+          sort: [sequence_number: :desc],
+          limit: 2 * length(models) + 1
+        ],
+        authorize?: false
+      )
 
     # the run number is the genesis invocation's id
     genesis = Panic.Engine.get_invocation!(run_number, authorize?: false)

@@ -25,7 +25,6 @@ defmodule Panic.Engine.Changes.InvokeModel do
 
   alias Panic.Accounts.PlatformCredentials
   alias Panic.Engine.Footprint
-  alias Panic.Engine.Network
   alias Panic.Engine.Schedule
   alias Panic.Engine.Signals
 
@@ -38,7 +37,7 @@ defmodule Panic.Engine.Changes.InvokeModel do
   end
 
   defp invoke(changeset, context) do
-    Ash.update!(changeset.data, %{}, action: :about_to_invoke, actor: context.actor)
+    Panic.Engine.about_to_invoke!(changeset.data, actor: context.actor)
 
     case call_model(changeset.data) do
       {:ok, output, metadata} ->
@@ -131,7 +130,9 @@ defmodule Panic.Engine.Changes.InvokeModel do
   end
 
   defp current_run?(invocation) do
-    %{current_run_number: current} = Ash.get!(Network, invocation.network_id, authorize?: false)
+    %{current_run_number: current} =
+      Panic.Engine.get_network!(invocation.network_id, authorize?: false)
+
     current == invocation.run_number
   end
 

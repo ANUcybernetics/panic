@@ -5,6 +5,11 @@ defmodule Panic.Accounts do
   resources do
     resource Panic.Accounts.User do
       define :list_users, action: :read
+
+      define :register_user,
+        action: :register_with_password,
+        args: [:email, :password, :password_confirmation]
+
       define :get_user, action: :read, get_by: [:id]
       define :destroy_user, action: :destroy
     end
