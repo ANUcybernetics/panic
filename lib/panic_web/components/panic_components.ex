@@ -219,12 +219,9 @@ defmodule PanicWeb.PanicComponents do
     assigns = assign(assigns, :parsed_content, parse_text_content(assigns.value))
 
     ~H"""
-    <div
-      id={"#{@id}-text"}
-      class="size-full grid place-items-center p-2 bg-zinc-800 text-left @container"
-    >
-      <div class="[text-shadow:2px_2px_0px_#581c87] text-left text-[8px] @[200px]:text-[10px] @[400px]:text-xs @[600px]:text-sm @[800px]:text-base">
-        {@parsed_content}
+    <div id={"#{@id}-text"} class="size-full bg-zinc-800">
+      <div class="text-output size-full grid place-items-center text-left @container">
+        <div>{@parsed_content}</div>
       </div>
     </div>
     """

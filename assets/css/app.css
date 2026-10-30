@@ -90,6 +90,24 @@
     display: none;
 }
 
+/* A text output's size depends only on its cell's width, so every card on a
+   screen matches, growing a little slower than the cell: about 14px in a
+   360px grid cell (room for ~360 characters, 90% of outputs) up to 57px on a
+   1920px single screen (~600, 98%). Longer ones fade out into the bottom
+   padding (a percentage of the cell's width, as cqw here would measure an
+   outer container: about 7% of a 16:9 cell's height). The mask is on its own
+   element so it leaves the card's background alone. */
+.text-output {
+    padding: 4%;
+    mask-image: linear-gradient(to bottom, black 93%, transparent);
+}
+
+.text-output > div {
+    font-size: calc(4px + 3cqw);
+    line-height: 1.35;
+    text-shadow: 0.08em 0.08em 0 #581c87;
+}
+
 /* v4's default border colour is currentcolor */
 @layer base {
     *,
