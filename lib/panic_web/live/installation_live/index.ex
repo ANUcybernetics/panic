@@ -10,65 +10,67 @@ defmodule PanicWeb.InstallationLive.Index do
 
   def render(assigns) do
     ~H"""
-    <.header>
-      Installations
-      <:actions>
-        <.button patch={~p"/installations/new"} variant="primary">
-          <.icon name="hero-plus" /> New installation
-        </.button>
-      </:actions>
-    </.header>
+    <Layouts.app flash={@flash} current_user={@current_user}>
+      <.header>
+        Installations
+        <:actions>
+          <.button patch={~p"/installations/new"} variant="primary">
+            <.icon name="hero-plus" /> New installation
+          </.button>
+        </:actions>
+      </.header>
 
-    <.table
-      id="installations"
-      rows={@streams.installations}
-      row_click={fn {_id, installation} -> JS.navigate(~p"/installations/#{installation}") end}
-    >
-      <:col :let={{_id, installation}} label="Name">
-        <.link navigate={~p"/installations/#{installation}"} class="font-semibold">
-          {installation.name}
-        </.link>
-      </:col>
-      <:col :let={{_id, installation}} label="Network" class="hidden sm:table-cell">
-        {installation.network.name}
-      </:col>
-      <:col :let={{_id, installation}} label="Watchers">
-        {length(installation.watchers)}
-      </:col>
-      <:action :let={{_id, installation}}>
-        <.button patch={~p"/installations/#{installation}/edit"} variant="ghost" size="sm">
-          Edit
-        </.button>
-      </:action>
-      <:action :let={{id, installation}}>
-        <.button
-          phx-click={JS.push("delete", value: %{id: installation.id}) |> hide("##{id}")}
-          data-confirm="Are you sure?"
-          variant="error"
-          size="sm"
-        >
-          Delete
-        </.button>
-      </:action>
-    </.table>
+      <.table
+        id="installations"
+        rows={@streams.installations}
+        row_click={fn {_id, installation} -> JS.navigate(~p"/installations/#{installation}") end}
+      >
+        <:col :let={{_id, installation}} label="Name">
+          <.link navigate={~p"/installations/#{installation}"} class="font-semibold">
+            {installation.name}
+          </.link>
+        </:col>
+        <:col :let={{_id, installation}} label="Network" class="hidden sm:table-cell">
+          {installation.network.name}
+        </:col>
+        <:col :let={{_id, installation}} label="Watchers">
+          {length(installation.watchers)}
+        </:col>
+        <:action :let={{_id, installation}}>
+          <.button patch={~p"/installations/#{installation}/edit"} variant="ghost" size="sm">
+            Edit
+          </.button>
+        </:action>
+        <:action :let={{id, installation}}>
+          <.button
+            phx-click={JS.push("delete", value: %{id: installation.id}) |> hide("##{id}")}
+            data-confirm="Are you sure?"
+            variant="error"
+            size="sm"
+          >
+            Delete
+          </.button>
+        </:action>
+      </.table>
 
-    <.modal
-      :if={@live_action in [:new, :edit]}
-      id="installation-modal"
-      show
-      on_cancel={JS.patch(~p"/installations")}
-    >
-      <.live_component
-        module={PanicWeb.InstallationLive.FormComponent}
-        id={@installation.id || :new}
-        title={@page_title}
-        action={@live_action}
-        installation={@installation}
-        current_user={@current_user}
-        networks={@networks}
-        patch={~p"/installations"}
-      />
-    </.modal>
+      <.modal
+        :if={@live_action in [:new, :edit]}
+        id="installation-modal"
+        show
+        on_cancel={JS.patch(~p"/installations")}
+      >
+        <.live_component
+          module={PanicWeb.InstallationLive.FormComponent}
+          id={@installation.id || :new}
+          title={@page_title}
+          action={@live_action}
+          installation={@installation}
+          current_user={@current_user}
+          networks={@networks}
+          patch={~p"/installations"}
+        />
+      </.modal>
+    </Layouts.app>
     """
   end
 

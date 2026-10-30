@@ -22,44 +22,46 @@ defmodule PanicWeb.NetworkLive.Terminal do
   @impl true
   def render(assigns) do
     ~H"""
-    <style>
-      /* the display layout's 200% suits a big screen, but this page is also
-         what a phone shows after scanning the QR code */
-      :root {
-        font-size: clamp(100%, 2.5vw, 200%);
-      }
-    </style>
-    <%!-- the prompt comes first, so nothing above it changes as the run goes and
-          it never moves under a phone user's thumb --%>
-    <div class="terminal-container mx-auto max-w-5xl p-4 sm:p-8">
-      <.live_component
-        module={PanicWeb.NetworkLive.TerminalComponent}
-        network={@network}
-        genesis_invocation={@genesis_invocation}
-        current_user={@network_user}
-        expires_at={@expires_at}
-        id={@network.id}
-      />
-      <p :if={@expires_at} id="terminal-expiry" class="mt-2 text-sm text-base-content/60">
-        This terminal closes in
-        <.countdown
-          id="terminal-expiry-countdown"
-          target={@expires_at}
-          format="clock"
-        />.
-      </p>
-      <p class="mt-6 break-words text-primary-content sm:mt-8">
-        <span class="text-base-content/60">Current run:</span>
-        <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
-      </p>
-      <.run_summary :if={@run_summary} summary={@run_summary} show_cost?={!!@current_user} />
-    </div>
+    <Layouts.display flash={@flash}>
+      <style>
+        /* the display layout's 200% suits a big screen, but this page is also
+           what a phone shows after scanning the QR code */
+        :root {
+          font-size: clamp(100%, 2.5vw, 200%);
+        }
+      </style>
+      <%!-- the prompt comes first, so nothing above it changes as the run goes and
+            it never moves under a phone user's thumb --%>
+      <div class="terminal-container mx-auto max-w-5xl p-4 sm:p-8">
+        <.live_component
+          module={PanicWeb.NetworkLive.TerminalComponent}
+          network={@network}
+          genesis_invocation={@genesis_invocation}
+          current_user={@network_user}
+          expires_at={@expires_at}
+          id={@network.id}
+        />
+        <p :if={@expires_at} id="terminal-expiry" class="mt-2 text-sm text-base-content/60">
+          This terminal closes in
+          <.countdown
+            id="terminal-expiry-countdown"
+            target={@expires_at}
+            format="clock"
+          />.
+        </p>
+        <p class="mt-6 break-words text-primary-content sm:mt-8">
+          <span class="text-base-content/60">Current run:</span>
+          <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
+        </p>
+        <.run_summary :if={@run_summary} summary={@run_summary} show_cost?={!!@current_user} />
+      </div>
+    </Layouts.display>
     """
   end
 
   @impl true
   def mount(params, _session, socket) do
-    {:ok, assign(socket, token: params["token"], expires_at: nil), layout: {PanicWeb.Layouts, :display}}
+    {:ok, assign(socket, token: params["token"], expires_at: nil)}
   end
 
   @impl true

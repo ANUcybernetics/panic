@@ -12,113 +12,115 @@ defmodule PanicWeb.NetworkLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <.header>
-      {@network.name}
-      <:subtitle>
-        Lockout: {@network.lockout_seconds}s · Anonymous terminal: {if @network.anon_terminal_minutes,
-          do: "#{@network.anon_terminal_minutes} min",
-          else: "off"}
-      </:subtitle>
-      <:actions>
-        <.button patch={~p"/networks/#{@network}/edit"}>Edit</.button>
-        <.button :if={@network.anon_terminal_minutes} navigate={~p"/networks/#{@network}/info/qr"}>
-          QR
-        </.button>
-        <.button href={~p"/networks/#{@network}/terminal"}>Terminal</.button>
-        <.button phx-click="stop" variant="error">Stop</.button>
-      </:actions>
-    </.header>
-
-    <section :if={@network.description} class="prose prose-purple max-w-none">
-      {@network.description |> MDEx.to_html!() |> raw}
-    </section>
-
-    <div :if={@missing_keys != []} id="missing-keys" role="alert" class="alert alert-warning mt-6">
-      <.icon name="hero-exclamation-triangle" class="size-5" />
-      <span>
-        No API key set for {Enum.map_join(@missing_keys, ", ", &PlatformCredentials.platform_name/1)}, so runs won't start.
-        <.link :if={@current_user.admin} navigate={~p"/admin"} class="underline">Add keys</.link>
-        <span :if={!@current_user.admin}>Ask an admin to add them.</span>
-      </span>
-    </div>
-
-    <section class="mt-12">
-      <.section_header>Models</.section_header>
-      <.live_component
-        module={PanicWeb.NetworkLive.ModelSelectComponent}
-        id="model-select"
-        network={@network}
-        current_user={@current_user}
-      />
-    </section>
-
-    <section class="mt-12">
-      <.section_header>Run</.section_header>
-      <.live_component
-        module={PanicWeb.NetworkLive.TerminalComponent}
-        network={@network}
-        genesis_invocation={@genesis_invocation}
-        current_user={@current_user}
-        id={@network.id}
-      />
-      <RunnerStatusComponent.runner_status
-        id="runner-status"
-        network={@network}
-        genesis_invocation={@genesis_invocation}
-        current_invocation={@current_invocation}
-      />
-      <p class="mt-6 mb-4 break-words">
-        <span class="text-base-content/60">Last prompt:</span>
-        <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
-      </p>
-      <.display invocations={@streams.invocations} display={@display} />
-    </section>
-
-    <section class="mt-12">
-      <.section_header>
-        Installations
+    <Layouts.app flash={@flash} current_user={@current_user}>
+      <.header>
+        {@network.name}
+        <:subtitle>
+          Lockout: {@network.lockout_seconds}s · Anonymous terminal: {if @network.anon_terminal_minutes,
+            do: "#{@network.anon_terminal_minutes} min",
+            else: "off"}
+        </:subtitle>
         <:actions>
-          <.button navigate={~p"/installations/new"} size="sm">
-            <.icon name="hero-plus" /> New installation
+          <.button patch={~p"/networks/#{@network}/edit"}>Edit</.button>
+          <.button :if={@network.anon_terminal_minutes} navigate={~p"/networks/#{@network}/info/qr"}>
+            QR
           </.button>
+          <.button href={~p"/networks/#{@network}/terminal"}>Terminal</.button>
+          <.button phx-click="stop" variant="error">Stop</.button>
         </:actions>
-      </.section_header>
-      <p :if={@network.installations == []} class="text-base-content/70">
-        No installations yet.
-      </p>
-      <.table
-        :if={@network.installations != []}
-        id="network-installations"
-        rows={@streams.installations}
-        row_click={fn {_id, installation} -> JS.navigate(~p"/installations/#{installation}") end}
-      >
-        <:col :let={{_id, installation}} label="Name">
-          <.link navigate={~p"/installations/#{installation}"} class="font-semibold">
-            {installation.name}
-          </.link>
-        </:col>
-        <:col :let={{_id, installation}} label="Watchers">
-          {length(installation.watchers)}
-        </:col>
-      </.table>
-    </section>
+      </.header>
 
-    <.modal
-      :if={@live_action == :edit}
-      id="network-modal"
-      show
-      on_cancel={JS.navigate(~p"/networks/#{@network}")}
-    >
-      <.live_component
-        module={PanicWeb.NetworkLive.FormComponent}
-        id={@network.id}
-        title={@page_title}
-        current_user={@current_user}
-        action={@live_action}
-        network={@network}
-        navigate={~p"/networks/#{@network}"}
-      />
-    </.modal>
+      <section :if={@network.description} class="prose prose-purple max-w-none">
+        {@network.description |> MDEx.to_html!() |> raw}
+      </section>
+
+      <div :if={@missing_keys != []} id="missing-keys" role="alert" class="alert alert-warning mt-6">
+        <.icon name="hero-exclamation-triangle" class="size-5" />
+        <span>
+          No API key set for {Enum.map_join(@missing_keys, ", ", &PlatformCredentials.platform_name/1)}, so runs won't start.
+          <.link :if={@current_user.admin} navigate={~p"/admin"} class="underline">Add keys</.link>
+          <span :if={!@current_user.admin}>Ask an admin to add them.</span>
+        </span>
+      </div>
+
+      <section class="mt-12">
+        <.section_header>Models</.section_header>
+        <.live_component
+          module={PanicWeb.NetworkLive.ModelSelectComponent}
+          id="model-select"
+          network={@network}
+          current_user={@current_user}
+        />
+      </section>
+
+      <section class="mt-12">
+        <.section_header>Run</.section_header>
+        <.live_component
+          module={PanicWeb.NetworkLive.TerminalComponent}
+          network={@network}
+          genesis_invocation={@genesis_invocation}
+          current_user={@current_user}
+          id={@network.id}
+        />
+        <RunnerStatusComponent.runner_status
+          id="runner-status"
+          network={@network}
+          genesis_invocation={@genesis_invocation}
+          current_invocation={@current_invocation}
+        />
+        <p class="mt-6 mb-4 break-words">
+          <span class="text-base-content/60">Last prompt:</span>
+          <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
+        </p>
+        <.display invocations={@streams.invocations} display={@display} />
+      </section>
+
+      <section class="mt-12">
+        <.section_header>
+          Installations
+          <:actions>
+            <.button navigate={~p"/installations/new"} size="sm">
+              <.icon name="hero-plus" /> New installation
+            </.button>
+          </:actions>
+        </.section_header>
+        <p :if={@network.installations == []} class="text-base-content/70">
+          No installations yet.
+        </p>
+        <.table
+          :if={@network.installations != []}
+          id="network-installations"
+          rows={@streams.installations}
+          row_click={fn {_id, installation} -> JS.navigate(~p"/installations/#{installation}") end}
+        >
+          <:col :let={{_id, installation}} label="Name">
+            <.link navigate={~p"/installations/#{installation}"} class="font-semibold">
+              {installation.name}
+            </.link>
+          </:col>
+          <:col :let={{_id, installation}} label="Watchers">
+            {length(installation.watchers)}
+          </:col>
+        </.table>
+      </section>
+
+      <.modal
+        :if={@live_action == :edit}
+        id="network-modal"
+        show
+        on_cancel={JS.navigate(~p"/networks/#{@network}")}
+      >
+        <.live_component
+          module={PanicWeb.NetworkLive.FormComponent}
+          id={@network.id}
+          title={@page_title}
+          current_user={@current_user}
+          action={@live_action}
+          network={@network}
+          navigate={~p"/networks/#{@network}"}
+        />
+      </.modal>
+    </Layouts.app>
     """
   end
 

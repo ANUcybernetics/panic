@@ -11,160 +11,164 @@ defmodule PanicWeb.AdminLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <.header>
-      Admin panel
-      <:actions>
-        <.button href={~p"/admin/backup"} download>
-          <.icon name="hero-arrow-down-tray" /> Download backup
-        </.button>
-        <.button
-          phx-click="stop_all_jobs"
-          data-confirm="Are you sure you want to stop all running jobs?"
-          variant="error"
-        >
-          Stop all jobs
-        </.button>
-      </:actions>
-    </.header>
-
-    <section class="mt-12">
-      <h2 class="text-lg font-semibold text-primary-content">Platform keys</h2>
-      <p class="mt-2 text-sm text-base-content/70">
-        The keys every run spends, whoever starts it. They're stored encrypted and never sent back
-        to the browser: leave a field blank to keep its key, or paste a new one to replace it.
-      </p>
-
-      <.form
-        for={@credentials_form}
-        id="credentials-form"
-        class="mt-4"
-        phx-change="validate_credentials"
-        phx-submit="save_credentials"
-      >
-        <div class="grid gap-x-4 sm:grid-cols-2">
-          <.input
-            :for={key <- PlatformCredentials.keys()}
-            field={@credentials_form[key]}
-            type="password"
-            value=""
-            autocomplete="off"
-            label={credential_label(key)}
-          >
-            <:help>
-              <span id={"#{key}-status"}>{credential_status(Map.get(@credentials, key))}</span>
-            </:help>
-          </.input>
-        </div>
-        <div class="mt-6 flex flex-wrap gap-2">
-          <.button variant="primary" phx-disable-with="Saving...">Save keys</.button>
-        </div>
-      </.form>
-    </section>
-
-    <section class="mt-12">
-      <h2 class="text-lg font-semibold text-primary-content">JSON API keys</h2>
-      <p class="mt-2 text-sm text-base-content/70">
-        Keys for the JSON API at <code>/api</code>
-        (<.link href={~p"/api/swaggerui"} class="underline">docs</.link>), sent as <code>Authorization: Bearer &lt;key&gt;</code>. They act as you, and stop working if you stop being an admin.
-      </p>
-
-      <div
-        :if={@new_api_key}
-        id="new-api-key"
-        role="alert"
-        class="alert alert-success alert-soft mt-4 block"
-      >
-        <p>Copy this key now: it won't be shown again.</p>
-        <code class="mt-2 block break-all select-all">{@new_api_key}</code>
-      </div>
-
-      <.form for={@api_key_form} id="api-key-form" phx-submit="create_api_key" class="mt-4 mb-6">
-        <div class="grid gap-x-4 sm:grid-cols-2">
-          <.input field={@api_key_form[:name]} label="Name" required />
-          <.input
-            field={@api_key_form[:expires_in]}
-            type="select"
-            label="Expires"
-            options={[{"Never", "never"}, {"In 30 days", "30"}, {"In a year", "365"}]}
-          />
-        </div>
-        <div class="mt-6 flex flex-wrap gap-2">
-          <.button>Create API key</.button>
-        </div>
-      </.form>
-
-      <.table :if={@api_keys != []} id="api-key-table" rows={@api_keys} row_id={&"api-key-#{&1.id}"}>
-        <:col :let={api_key} label="Name">{api_key.name}</:col>
-        <:col :let={api_key} label="Created">
-          {Calendar.strftime(api_key.inserted_at, "%Y-%m-%d")}
-        </:col>
-        <:col :let={api_key} label="Expires">
-          {if api_key.expires_at, do: Calendar.strftime(api_key.expires_at, "%Y-%m-%d"), else: "never"}
-        </:col>
-        <:action :let={api_key}>
-          <.button
-            phx-click="revoke_api_key"
-            phx-value-id={api_key.id}
-            data-confirm={"Revoke #{api_key.name}? Anything using it will stop working."}
-            variant="error"
-            size="sm"
-          >
-            Revoke
+    <Layouts.app flash={@flash} current_user={@current_user}>
+      <.header>
+        Admin panel
+        <:actions>
+          <.button href={~p"/admin/backup"} download>
+            <.icon name="hero-arrow-down-tray" /> Download backup
           </.button>
-        </:action>
-      </.table>
-    </section>
+          <.button
+            phx-click="stop_all_jobs"
+            data-confirm="Are you sure you want to stop all running jobs?"
+            variant="error"
+          >
+            Stop all jobs
+          </.button>
+        </:actions>
+      </.header>
 
-    <section class="mt-12">
-      <h2 class="mb-4 text-lg font-semibold text-primary-content">Invocations</h2>
+      <section class="mt-12">
+        <h2 class="text-lg font-semibold text-primary-content">Platform keys</h2>
+        <p class="mt-2 text-sm text-base-content/70">
+          The keys every run spends, whoever starts it. They're stored encrypted and never sent back
+          to the browser: leave a field blank to keep its key, or paste a new one to replace it.
+        </p>
 
-      <.table id="all-invocation-table" rows={@streams.invocations}>
-        <:col :let={{_id, invocation}} label="ID">
-          <.link patch={~p"/display/static/#{invocation.id}"} phx-click={JS.push_focus()}>
-            {invocation.id}
-          </.link>
-        </:col>
-        <:col :let={{_id, invocation}} label="Numbers">
-          {"#{invocation.network_id}-#{invocation.run_number}-#{invocation.sequence_number}"}
-        </:col>
-        <:col :let={{_id, invocation}} label="Input">
-          <span class="line-clamp-2 break-all">
-            <.invocation_io_link invocation={invocation} type={:input} />
-          </span>
-        </:col>
-        <:col :let={{_id, invocation}} label="Output">
-          <span class="line-clamp-2 break-all">
-            <.invocation_io_link invocation={invocation} type={:output} />
-          </span>
-        </:col>
-      </.table>
-    </section>
+        <.form
+          for={@credentials_form}
+          id="credentials-form"
+          class="mt-4"
+          phx-change="validate_credentials"
+          phx-submit="save_credentials"
+        >
+          <div class="grid gap-x-4 sm:grid-cols-2">
+            <.input
+              :for={key <- PlatformCredentials.keys()}
+              field={@credentials_form[key]}
+              type="password"
+              value=""
+              autocomplete="off"
+              label={credential_label(key)}
+            >
+              <:help>
+                <span id={"#{key}-status"}>{credential_status(Map.get(@credentials, key))}</span>
+              </:help>
+            </.input>
+          </div>
+          <div class="mt-6 flex flex-wrap gap-2">
+            <.button variant="primary" phx-disable-with="Saving...">Save keys</.button>
+          </div>
+        </.form>
+      </section>
 
-    <section class="mt-12">
-      <h2 class="mb-4 text-lg font-semibold text-primary-content">Networks</h2>
+      <section class="mt-12">
+        <h2 class="text-lg font-semibold text-primary-content">JSON API keys</h2>
+        <p class="mt-2 text-sm text-base-content/70">
+          Keys for the JSON API at <code>/api</code>
+          (<.link href={~p"/api/swaggerui"} class="underline">docs</.link>), sent as <code>Authorization: Bearer &lt;key&gt;</code>. They act as you, and stop working if you stop being an admin.
+        </p>
 
-      <.table :if={@networks != []} id="network-table" rows={@networks}>
-        <:col :let={network} label="Name">
-          <.link navigate={~p"/networks/#{network}"} class="font-semibold">
-            {network.name}
-          </.link>
-        </:col>
-        <:col :let={network} label="User ID">{network.user_id}</:col>
-        <:col :let={network} label="Description" class="hidden sm:table-cell">
-          <span class="line-clamp-2">{network.description}</span>
-        </:col>
-      </.table>
-      <p :if={@networks == []} class="text-base-content/70">No networks found.</p>
-    </section>
+        <div
+          :if={@new_api_key}
+          id="new-api-key"
+          role="alert"
+          class="alert alert-success alert-soft mt-4 block"
+        >
+          <p>Copy this key now: it won't be shown again.</p>
+          <code class="mt-2 block break-all select-all">{@new_api_key}</code>
+        </div>
 
-    <section class="mt-12">
-      <h2 class="mb-4 text-lg font-semibold text-primary-content">Users</h2>
-      <.table id="user-table" rows={@users} row_id={&"user-#{&1.id}"}>
-        <:col :let={user} label="ID">{user.id}</:col>
-        <:col :let={user} label="Email">{user.email}</:col>
-        <:col :let={user} label="Admin">{if user.admin, do: "yes", else: "no"}</:col>
-      </.table>
-    </section>
+        <.form for={@api_key_form} id="api-key-form" phx-submit="create_api_key" class="mt-4 mb-6">
+          <div class="grid gap-x-4 sm:grid-cols-2">
+            <.input field={@api_key_form[:name]} label="Name" required />
+            <.input
+              field={@api_key_form[:expires_in]}
+              type="select"
+              label="Expires"
+              options={[{"Never", "never"}, {"In 30 days", "30"}, {"In a year", "365"}]}
+            />
+          </div>
+          <div class="mt-6 flex flex-wrap gap-2">
+            <.button>Create API key</.button>
+          </div>
+        </.form>
+
+        <.table :if={@api_keys != []} id="api-key-table" rows={@api_keys} row_id={&"api-key-#{&1.id}"}>
+          <:col :let={api_key} label="Name">{api_key.name}</:col>
+          <:col :let={api_key} label="Created">
+            {Calendar.strftime(api_key.inserted_at, "%Y-%m-%d")}
+          </:col>
+          <:col :let={api_key} label="Expires">
+            {if api_key.expires_at,
+              do: Calendar.strftime(api_key.expires_at, "%Y-%m-%d"),
+              else: "never"}
+          </:col>
+          <:action :let={api_key}>
+            <.button
+              phx-click="revoke_api_key"
+              phx-value-id={api_key.id}
+              data-confirm={"Revoke #{api_key.name}? Anything using it will stop working."}
+              variant="error"
+              size="sm"
+            >
+              Revoke
+            </.button>
+          </:action>
+        </.table>
+      </section>
+
+      <section class="mt-12">
+        <h2 class="mb-4 text-lg font-semibold text-primary-content">Invocations</h2>
+
+        <.table id="all-invocation-table" rows={@streams.invocations}>
+          <:col :let={{_id, invocation}} label="ID">
+            <.link patch={~p"/display/static/#{invocation.id}"} phx-click={JS.push_focus()}>
+              {invocation.id}
+            </.link>
+          </:col>
+          <:col :let={{_id, invocation}} label="Numbers">
+            {"#{invocation.network_id}-#{invocation.run_number}-#{invocation.sequence_number}"}
+          </:col>
+          <:col :let={{_id, invocation}} label="Input">
+            <span class="line-clamp-2 break-all">
+              <.invocation_io_link invocation={invocation} type={:input} />
+            </span>
+          </:col>
+          <:col :let={{_id, invocation}} label="Output">
+            <span class="line-clamp-2 break-all">
+              <.invocation_io_link invocation={invocation} type={:output} />
+            </span>
+          </:col>
+        </.table>
+      </section>
+
+      <section class="mt-12">
+        <h2 class="mb-4 text-lg font-semibold text-primary-content">Networks</h2>
+
+        <.table :if={@networks != []} id="network-table" rows={@networks}>
+          <:col :let={network} label="Name">
+            <.link navigate={~p"/networks/#{network}"} class="font-semibold">
+              {network.name}
+            </.link>
+          </:col>
+          <:col :let={network} label="User ID">{network.user_id}</:col>
+          <:col :let={network} label="Description" class="hidden sm:table-cell">
+            <span class="line-clamp-2">{network.description}</span>
+          </:col>
+        </.table>
+        <p :if={@networks == []} class="text-base-content/70">No networks found.</p>
+      </section>
+
+      <section class="mt-12">
+        <h2 class="mb-4 text-lg font-semibold text-primary-content">Users</h2>
+        <.table id="user-table" rows={@users} row_id={&"user-#{&1.id}"}>
+          <:col :let={user} label="ID">{user.id}</:col>
+          <:col :let={user} label="Email">{user.email}</:col>
+          <:col :let={user} label="Admin">{if user.admin, do: "yes", else: "no"}</:col>
+        </.table>
+      </section>
+    </Layouts.app>
     """
   end
 

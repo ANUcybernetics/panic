@@ -10,49 +10,51 @@ defmodule PanicWeb.NetworkLive.Info do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="prose prose-purple max-w-none">
-      <h2>Network name: {@network.name}</h2>
-      <div :if={@network.description}>
-        {@network.description |> MDEx.to_html!() |> raw}
-      </div>
-      <h2>Models</h2>
-      <p>The GenAI models in this network are:</p>
-      <ol>
-        <li :for={model <- all_models(@network)}>
-          <.link :if={model.platform} href={Panic.Model.model_url(model)} target="_blank">
-            {model.name}
-          </.link>
-          <span :if={!model.platform} class="text-base-content/60">{model.name}</span>
-          ({model.input_type} -> {model.output_type})
-        </li>
-      </ol>
+    <Layouts.app flash={@flash} current_user={@current_user}>
+      <div class="prose prose-purple max-w-none">
+        <h2>Network name: {@network.name}</h2>
+        <div :if={@network.description}>
+          {@network.description |> MDEx.to_html!() |> raw}
+        </div>
+        <h2>Models</h2>
+        <p>The GenAI models in this network are:</p>
+        <ol>
+          <li :for={model <- all_models(@network)}>
+            <.link :if={model.platform} href={Panic.Model.model_url(model)} target="_blank">
+              {model.name}
+            </.link>
+            <span :if={!model.platform} class="text-base-content/60">{model.name}</span>
+            ({model.input_type} -> {model.output_type})
+          </li>
+        </ol>
 
-      <p>
-        Click the model name in the list above for more about that particular GenAI model, or head to the
-        <.link patch={~p"/about"}>about page</.link>
-        for information about how PANIC! works.
-      </p>
+        <p>
+          Click the model name in the list above for more about that particular GenAI model, or head to the
+          <.link patch={~p"/about"}>about page</.link>
+          for information about how PANIC! works.
+        </p>
 
-      <h2>Last prompt</h2>
-      <div>
+        <h2>Last prompt</h2>
+        <div>
+          <em :if={!@genesis_invocation}>loading...</em>
+          {@genesis_invocation && @genesis_invocation.input}
+        </div>
+        <h2>Current output</h2>
+        <.display :if={@genesis_invocation} invocations={@streams.invocations} display={@display} />
         <em :if={!@genesis_invocation}>loading...</em>
-        {@genesis_invocation && @genesis_invocation.input}
       </div>
-      <h2>Current output</h2>
-      <.display :if={@genesis_invocation} invocations={@streams.invocations} display={@display} />
-      <em :if={!@genesis_invocation}>loading...</em>
-    </div>
 
-    <.modal
-      show={@live_action == :qr}
-      id="qr-modal"
-      on_cancel={JS.patch(~p"/networks/#{@network.id}/info/")}
-    >
-      <.qr_code :if={@qr_text} text={@qr_text} title="scan to prompt" />
-      <p :if={!@qr_text} class="text-center">
-        This network's anonymous terminal is off. Turn it on by giving it a number of minutes in the network's settings.
-      </p>
-    </.modal>
+      <.modal
+        show={@live_action == :qr}
+        id="qr-modal"
+        on_cancel={JS.patch(~p"/networks/#{@network.id}/info/")}
+      >
+        <.qr_code :if={@qr_text} text={@qr_text} title="scan to prompt" />
+        <p :if={!@qr_text} class="text-center">
+          This network's anonymous terminal is off. Turn it on by giving it a number of minutes in the network's settings.
+        </p>
+      </.modal>
+    </Layouts.app>
     """
   end
 

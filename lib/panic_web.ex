@@ -39,10 +39,7 @@ defmodule PanicWeb do
 
   def controller do
     quote do
-      use Phoenix.Controller,
-        formats: [:html, :json],
-        layouts: [html: PanicWeb.Layouts]
-
+      use Phoenix.Controller, formats: [:html, :json]
       use Gettext, backend: PanicWeb.Gettext
 
       import Plug.Conn
@@ -53,8 +50,7 @@ defmodule PanicWeb do
 
   def live_view do
     quote do
-      use Phoenix.LiveView,
-        layout: {PanicWeb.Layouts, :app}
+      use Phoenix.LiveView
 
       unquote(html_helpers())
     end
@@ -90,6 +86,7 @@ defmodule PanicWeb do
       import Phoenix.HTML
       # Core UI components and translation
 
+      alias PanicWeb.Layouts
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
 

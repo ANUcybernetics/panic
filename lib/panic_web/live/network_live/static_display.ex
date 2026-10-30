@@ -12,17 +12,19 @@ defmodule PanicWeb.NetworkLive.StaticDisplay do
   @impl true
   def render(assigns) do
     ~H"""
-    <.invocation
-      invocation={@invocation}
-      model={PanicWeb.NetworkLive.NetworkHelpers.get_model_or_placeholder(@invocation.model)}
-      id={"invocation-#{@invocation.id}"}
-    />
+    <Layouts.display flash={@flash}>
+      <.invocation
+        invocation={@invocation}
+        model={PanicWeb.NetworkLive.NetworkHelpers.get_model_or_placeholder(@invocation.model)}
+        id={"invocation-#{@invocation.id}"}
+      />
+    </Layouts.display>
     """
   end
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket, layout: {PanicWeb.Layouts, :display}}
+    {:ok, socket}
   end
 
   @impl true

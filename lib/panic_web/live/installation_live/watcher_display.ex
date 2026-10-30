@@ -23,30 +23,32 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
   @impl true
   def render(assigns) do
     ~H"""
-    <div
-      :if={@display != nil && tuple_size(@display) == 3 && elem(@display, 0) == :grid}
-      class="px-4 pt-2 pb-4"
-    >
-      <.live_component
-        :if={@current_user}
-        class="-mt-4 mb-4"
-        module={PanicWeb.NetworkLive.TerminalComponent}
-        network={@network}
-        genesis_invocation={@genesis_invocation}
-        current_user={@current_user}
-        id={@network.id}
+    <Layouts.display flash={@flash}>
+      <div
+        :if={@display != nil && tuple_size(@display) == 3 && elem(@display, 0) == :grid}
+        class="px-4 pt-2 pb-4"
+      >
+        <.live_component
+          :if={@current_user}
+          class="-mt-4 mb-4"
+          module={PanicWeb.NetworkLive.TerminalComponent}
+          network={@network}
+          genesis_invocation={@genesis_invocation}
+          current_user={@current_user}
+          id={@network.id}
+        />
+        <p>
+          <span class="text-purple-300/50">Last prompt:</span>
+          <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
+        </p>
+      </div>
+      <.display invocations={@streams.invocations} display={@display} />
+      <.terminal_qr
+        :if={show_terminal_qr?(@first_display?, @network)}
+        url={@terminal_qr_url}
+        summary={@run_summary}
       />
-      <p>
-        <span class="text-purple-300/50">Last prompt:</span>
-        <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
-      </p>
-    </div>
-    <.display invocations={@streams.invocations} display={@display} />
-    <.terminal_qr
-      :if={show_terminal_qr?(@first_display?, @network)}
-      url={@terminal_qr_url}
-      summary={@run_summary}
-    />
+    </Layouts.display>
     """
   end
 
@@ -87,20 +89,20 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
                if(first_display?, do: RunSummary.load(network.current_run_number, network.models))
              )
              |> assign(:terminal_qr_url, TerminalAuth.terminal_url(network.id))
-             |> WatcherSubscriber.configure_invocation_stream(network, display), layout: {PanicWeb.Layouts, :display}}
+             |> WatcherSubscriber.configure_invocation_stream(network, display)}
 
           {:error, :not_found} ->
             {:ok,
              socket
              |> put_flash(:error, "Watcher '#{watcher_name}' not found")
-             |> push_navigate(to: ~p"/installations/#{installation}"), layout: {PanicWeb.Layouts, :app}}
+             |> push_navigate(to: ~p"/installations/#{installation}")}
         end
 
       {:error, _} ->
         {:ok,
          socket
          |> put_flash(:error, "Installation not found")
-         |> push_navigate(to: ~p"/"), layout: {PanicWeb.Layouts, :app}}
+         |> push_navigate(to: ~p"/")}
     end
   end
 

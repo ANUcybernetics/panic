@@ -9,131 +9,133 @@ defmodule PanicWeb.InstallationLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <.header>
-      {@installation.name}
-      <:subtitle>
-        Network:
-        <.link navigate={~p"/networks/#{@installation.network}"} class="link">
-          {@installation.network.name}
-        </.link>
-        · Vestaboard hold: {@installation.vestaboard_hold_seconds}s
-      </:subtitle>
-      <:actions>
-        <.button patch={~p"/installations/#{@installation}/show/edit"}>Edit installation</.button>
-      </:actions>
-    </.header>
-
-    <section class="mt-6">
-      <.section_header>
-        Watchers
+    <Layouts.app flash={@flash} current_user={@current_user}>
+      <.header>
+        {@installation.name}
+        <:subtitle>
+          Network:
+          <.link navigate={~p"/networks/#{@installation.network}"} class="link">
+            {@installation.network.name}
+          </.link>
+          · Vestaboard hold: {@installation.vestaboard_hold_seconds}s
+        </:subtitle>
         <:actions>
-          <.button
-            patch={~p"/installations/#{@installation}/show/add_watcher"}
-            variant="primary"
-            size="sm"
-          >
-            <.icon name="hero-plus" /> Add watcher
-          </.button>
+          <.button patch={~p"/installations/#{@installation}/show/edit"}>Edit installation</.button>
         </:actions>
-      </.section_header>
-      <p :if={@installation.watchers == []} class="text-base-content/70">
-        No watchers configured. Add one to start displaying invocations.
-      </p>
-      <ul class="space-y-4">
-        <li
-          :for={watcher <- @installation.watchers}
-          id={"watcher-#{watcher.name}"}
-          class="card card-border border-base-300 bg-base-200"
-        >
-          <div class="card-body gap-3 p-4 sm:p-6">
-            <div class="flex flex-wrap items-start justify-between gap-2">
-              <div class="flex min-w-0 flex-wrap items-center gap-2">
-                <h3 class="card-title break-all text-primary-content">{watcher.name}</h3>
-                <span class="badge badge-outline">{watcher.type}</span>
-                <span class="badge badge-success badge-soft">
-                  {count_viewers_for_watcher(@installation, watcher)} viewers
-                </span>
-              </div>
-              <div class="flex gap-1">
-                <.button
-                  patch={~p"/installations/#{@installation}/show/edit_watcher/#{watcher.name}"}
-                  variant="ghost"
-                  size="sm"
-                >
-                  Edit
-                </.button>
-                <.button
-                  phx-click={JS.push("delete_watcher", value: %{name: watcher.name})}
-                  data-confirm="Are you sure you want to delete this watcher?"
-                  variant="error"
-                  size="sm"
-                >
-                  Delete
-                </.button>
-              </div>
-            </div>
-            <p class="text-sm text-base-content/70">{watcher_summary(watcher)}</p>
-            <.link
-              navigate={~p"/i/#{@installation.id}/#{watcher.name}"}
-              class="link w-fit break-all text-sm"
+      </.header>
+
+      <section class="mt-6">
+        <.section_header>
+          Watchers
+          <:actions>
+            <.button
+              patch={~p"/installations/#{@installation}/show/add_watcher"}
+              variant="primary"
+              size="sm"
             >
-              View display (/i/{@installation.id}/{watcher.name}) →
-            </.link>
-          </div>
-        </li>
-      </ul>
-    </section>
+              <.icon name="hero-plus" /> Add watcher
+            </.button>
+          </:actions>
+        </.section_header>
+        <p :if={@installation.watchers == []} class="text-base-content/70">
+          No watchers configured. Add one to start displaying invocations.
+        </p>
+        <ul class="space-y-4">
+          <li
+            :for={watcher <- @installation.watchers}
+            id={"watcher-#{watcher.name}"}
+            class="card card-border border-base-300 bg-base-200"
+          >
+            <div class="card-body gap-3 p-4 sm:p-6">
+              <div class="flex flex-wrap items-start justify-between gap-2">
+                <div class="flex min-w-0 flex-wrap items-center gap-2">
+                  <h3 class="card-title break-all text-primary-content">{watcher.name}</h3>
+                  <span class="badge badge-outline">{watcher.type}</span>
+                  <span class="badge badge-success badge-soft">
+                    {count_viewers_for_watcher(@installation, watcher)} viewers
+                  </span>
+                </div>
+                <div class="flex gap-1">
+                  <.button
+                    patch={~p"/installations/#{@installation}/show/edit_watcher/#{watcher.name}"}
+                    variant="ghost"
+                    size="sm"
+                  >
+                    Edit
+                  </.button>
+                  <.button
+                    phx-click={JS.push("delete_watcher", value: %{name: watcher.name})}
+                    data-confirm="Are you sure you want to delete this watcher?"
+                    variant="error"
+                    size="sm"
+                  >
+                    Delete
+                  </.button>
+                </div>
+              </div>
+              <p class="text-sm text-base-content/70">{watcher_summary(watcher)}</p>
+              <.link
+                navigate={~p"/i/#{@installation.id}/#{watcher.name}"}
+                class="link w-fit break-all text-sm"
+              >
+                View display (/i/{@installation.id}/{watcher.name}) →
+              </.link>
+            </div>
+          </li>
+        </ul>
+      </section>
 
-    <.modal
-      :if={@live_action == :edit}
-      id="installation-modal"
-      show
-      on_cancel={JS.patch(~p"/installations/#{@installation}")}
-    >
-      <.live_component
-        module={PanicWeb.InstallationLive.FormComponent}
-        id={@installation.id}
-        title={@page_title}
-        action={@live_action}
-        installation={@installation}
-        current_user={@current_user}
-        networks={@networks}
-        patch={~p"/installations/#{@installation}"}
-      />
-    </.modal>
+      <.modal
+        :if={@live_action == :edit}
+        id="installation-modal"
+        show
+        on_cancel={JS.patch(~p"/installations/#{@installation}")}
+      >
+        <.live_component
+          module={PanicWeb.InstallationLive.FormComponent}
+          id={@installation.id}
+          title={@page_title}
+          action={@live_action}
+          installation={@installation}
+          current_user={@current_user}
+          networks={@networks}
+          patch={~p"/installations/#{@installation}"}
+        />
+      </.modal>
 
-    <.modal
-      :if={@live_action == :add_watcher}
-      id="watcher-modal"
-      show
-      on_cancel={JS.patch(~p"/installations/#{@installation}")}
-    >
-      <.live_component
-        module={PanicWeb.InstallationLive.WatcherFormComponent}
-        id={:new}
-        title="Add Watcher"
-        installation={@installation}
-        current_user={@current_user}
-        patch={~p"/installations/#{@installation}"}
-      />
-    </.modal>
+      <.modal
+        :if={@live_action == :add_watcher}
+        id="watcher-modal"
+        show
+        on_cancel={JS.patch(~p"/installations/#{@installation}")}
+      >
+        <.live_component
+          module={PanicWeb.InstallationLive.WatcherFormComponent}
+          id={:new}
+          title="Add Watcher"
+          installation={@installation}
+          current_user={@current_user}
+          patch={~p"/installations/#{@installation}"}
+        />
+      </.modal>
 
-    <.modal
-      :if={@live_action == :edit_watcher}
-      id="watcher-edit-modal"
-      show
-      on_cancel={JS.patch(~p"/installations/#{@installation}")}
-    >
-      <.live_component
-        module={PanicWeb.InstallationLive.WatcherFormComponent}
-        id={@watcher_name}
-        title="Edit Watcher"
-        installation={@installation}
-        watcher_name={@watcher_name}
-        current_user={@current_user}
-        patch={~p"/installations/#{@installation}"}
-      />
-    </.modal>
+      <.modal
+        :if={@live_action == :edit_watcher}
+        id="watcher-edit-modal"
+        show
+        on_cancel={JS.patch(~p"/installations/#{@installation}")}
+      >
+        <.live_component
+          module={PanicWeb.InstallationLive.WatcherFormComponent}
+          id={@watcher_name}
+          title="Edit Watcher"
+          installation={@installation}
+          watcher_name={@watcher_name}
+          current_user={@current_user}
+          patch={~p"/installations/#{@installation}"}
+        />
+      </.modal>
+    </Layouts.app>
     """
   end
 
