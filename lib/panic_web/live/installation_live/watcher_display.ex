@@ -96,7 +96,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
              |> assign(:first_display?, first_display?)
              |> assign(
                :run_summary,
-               if(first_display?, do: RunSummary.load(network.current_run_number, network.models))
+               if(first_display?, do: RunSummary.load(network.current_run_number))
              )
              |> assign(:terminal_qr_url, TerminalAuth.terminal_url(network.id))
              |> WatcherSubscriber.configure_invocation_stream(network, display,
@@ -121,8 +121,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
   # only the first screen shows the run summary, so only it keeps one
   @impl WatcherSubscriber
   def handle_invocation(invocation, %{assigns: %{first_display?: true}} = socket) do
-    %{run_summary: summary, network: network} = socket.assigns
-    assign(socket, :run_summary, RunSummary.update(summary, invocation, network.models))
+    assign(socket, :run_summary, RunSummary.update(socket.assigns.run_summary, invocation))
   end
 
   def handle_invocation(_invocation, socket), do: socket

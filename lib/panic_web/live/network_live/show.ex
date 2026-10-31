@@ -150,7 +150,7 @@ defmodule PanicWeb.NetworkLive.Show do
           |> assign_network(network)
           |> stream(:installations, network.installations)
           |> assign(:current_invocation, current_run_head(network))
-          |> assign(:run_summary, RunSummary.load(network.current_run_number, network.models))
+          |> assign(:run_summary, RunSummary.load(network.current_run_number))
           |> WatcherSubscriber.configure_invocation_stream(network, {:grid, 2, 3})
 
         {:noreply, socket}
@@ -175,8 +175,7 @@ defmodule PanicWeb.NetworkLive.Show do
 
   @impl WatcherSubscriber
   def handle_invocation(invocation, socket) do
-    %{run_summary: summary, network: network} = socket.assigns
-    assign(socket, :run_summary, RunSummary.update(summary, invocation, network.models))
+    assign(socket, :run_summary, RunSummary.update(socket.assigns.run_summary, invocation))
   end
 
   @impl true

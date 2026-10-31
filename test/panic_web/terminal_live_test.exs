@@ -153,8 +153,10 @@ defmodule PanicWeb.TerminalLiveTest do
       {:ok, view, _html} = live(conn, ~p"/networks/#{network}/terminal")
 
       assert has_element?(view, "#run-stats-sequence", "2")
-      assert has_element?(view, "#run-summary-image[src^='https://dummy-images.test/']")
-      assert has_element?(view, "#run-summary-text", "DUMMY_CAPTION")
+      assert has_element?(view, "#latest-output", "DUMMY_CAPTION")
+      assert has_element?(view, "#latest-output figcaption", "text by")
+      assert has_element?(view, "#latest-output-model", "Dummy Image-to-Text")
+      assert has_element?(view, "#latest-output-sequence", "1")
       assert has_element?(view, "#run-stats-energy", "2.0 Wh")
       assert has_element?(view, "#run-stats-cost", "US$0.06")
       assert has_element?(view, "#run-stats-model", "Dummy Text-to-Image")
@@ -164,11 +166,14 @@ defmodule PanicWeb.TerminalLiveTest do
     test "keeps up as the run goes", %{signed_in: conn, user: user, network: network} do
       start_and_run(network, user, 1)
       {:ok, view, _html} = live(conn, ~p"/networks/#{network}/terminal")
-      refute has_element?(view, "#run-summary-text")
+      assert has_element?(view, "#latest-output img[src^='https://dummy-images.test/']")
+      assert has_element?(view, "#latest-output figcaption", "image by")
+      refute has_element?(view, "#latest-output", "DUMMY_CAPTION")
 
       run_next_invocation()
 
-      assert has_element?(view, "#run-summary-text", "DUMMY_CAPTION")
+      assert has_element?(view, "#latest-output", "DUMMY_CAPTION")
+      refute has_element?(view, "#latest-output img")
       assert has_element?(view, "#run-stats-energy", "2.0 Wh")
     end
 
@@ -191,8 +196,11 @@ defmodule PanicWeb.TerminalLiveTest do
         live(conn, ~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
 
       view |> form("form", invocation: %{input: "a cat on a mat"}) |> render_submit()
+      assert has_element?(view, "#latest-output figcaption", "now running")
+
       run_next_invocation()
 
+      assert has_element?(view, "#latest-output figcaption", "image by")
       assert has_element?(view, "#run-stats-sequence", "1")
       assert has_element?(view, "#run-stats-energy", "1.0 Wh")
     end
@@ -202,6 +210,7 @@ defmodule PanicWeb.TerminalLiveTest do
         live(conn, ~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
 
       refute has_element?(view, "#run-summary")
+      refute has_element?(view, "#latest-output figure")
     end
   end
 

@@ -737,6 +737,7 @@ defmodule PanicWeb.PanicComponents do
   A run's vital signs (see `PanicWeb.NetworkLive.RunSummary`) as a list of
   terms, laid out and styled by `class`. Cost is only for signed-in viewers.
   """
+  attr :id, :string, default: nil
   attr :summary, :any, required: true
   attr :show_cost?, :boolean, default: false
   attr :model?, :boolean, default: true
@@ -744,7 +745,7 @@ defmodule PanicWeb.PanicComponents do
 
   def run_stats(assigns) do
     ~H"""
-    <dl class={@class}>
+    <dl id={@id} class={@class}>
       <div>
         <dt>invocation</dt>
         <dd id="run-stats-sequence" class="tabular-nums">{@summary.sequence_number}</dd>
