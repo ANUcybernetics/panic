@@ -1,5 +1,7 @@
 defmodule PanicWeb.NetworkLive.Show do
   @moduledoc false
+  @behaviour PanicWeb.WatcherSubscriber
+
   use PanicWeb, :live_view
 
   import PanicWeb.PanicComponents
@@ -7,6 +9,7 @@ defmodule PanicWeb.NetworkLive.Show do
   alias Panic.Accounts.PlatformCredentials
   alias PanicWeb.NetworkLive.ModelSelectComponent
   alias PanicWeb.NetworkLive.RunnerStatusComponent
+  alias PanicWeb.NetworkLive.RunSummary
   alias PanicWeb.RunFormat
   alias PanicWeb.WatcherSubscriber
 
@@ -45,16 +48,6 @@ defmodule PanicWeb.NetworkLive.Show do
       </div>
 
       <section class="mt-12">
-        <.section_header>Models</.section_header>
-        <.live_component
-          module={PanicWeb.NetworkLive.ModelSelectComponent}
-          id="model-select"
-          network={@network}
-          current_user={@current_user}
-        />
-      </section>
-
-      <section class="mt-12">
         <.section_header>Run</.section_header>
         <.live_component
           module={PanicWeb.NetworkLive.TerminalComponent}
@@ -66,8 +59,8 @@ defmodule PanicWeb.NetworkLive.Show do
         <RunnerStatusComponent.runner_status
           id="runner-status"
           network={@network}
-          genesis_invocation={@genesis_invocation}
           current_invocation={@current_invocation}
+          summary={@run_summary}
         />
         <p class="mt-6 mb-4 break-words">
           <span class="text-base-content/60">Initial prompt:</span>
@@ -77,6 +70,16 @@ defmodule PanicWeb.NetworkLive.Show do
           invocations={@streams.invocations}
           display={@display}
           latest_sequence={@latest_sequence}
+        />
+      </section>
+
+      <section class="mt-12">
+        <.section_header>Models</.section_header>
+        <.live_component
+          module={PanicWeb.NetworkLive.ModelSelectComponent}
+          id="model-select"
+          network={@network}
+          current_user={@current_user}
         />
       </section>
 
@@ -147,6 +150,7 @@ defmodule PanicWeb.NetworkLive.Show do
           |> assign_network(network)
           |> stream(:installations, network.installations)
           |> assign(:current_invocation, current_run_head(network))
+          |> assign(:run_summary, RunSummary.load(network.current_run_number, network.models))
           |> WatcherSubscriber.configure_invocation_stream(network, {:grid, 2, 3})
 
         {:noreply, socket}
@@ -167,6 +171,12 @@ defmodule PanicWeb.NetworkLive.Show do
       {:ok, invocation} -> invocation
       {:error, _} -> nil
     end
+  end
+
+  @impl WatcherSubscriber
+  def handle_invocation(invocation, socket) do
+    %{run_summary: summary, network: network} = socket.assigns
+    assign(socket, :run_summary, RunSummary.update(summary, invocation, network.models))
   end
 
   @impl true

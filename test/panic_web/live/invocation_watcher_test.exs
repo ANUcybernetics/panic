@@ -5,7 +5,7 @@ defmodule PanicWeb.InvocationWatcherTest do
   Verifies that the WatcherSubscriber on_mount hook correctly:
   - Assigns `current_invocation` from broadcast payloads
   - Populates the invocation stream via the hook
-  - Updates RunnerStatusComponent status based on current_invocation
+  - Updates RunnerStatusComponent's status and run stats as the run goes
   - Sets `data-ready-at` for client-side lockout timer
   """
   use PanicWeb.ConnCase, async: false
@@ -60,8 +60,14 @@ defmodule PanicWeb.InvocationWatcherTest do
 
       _genesis = Engine.start_run!(network, "status test", actor: user)
 
-      html = render(view)
-      assert html =~ "Sequence"
+      assert has_element?(view, "#runner-status #run-stats-sequence", "0")
+      assert has_element?(view, "#runner-status #run-stats-elapsed", "under a minute")
+      assert has_element?(view, "#runner-status #run-stats-energy")
+      assert has_element?(view, "#runner-status #run-stats-cost")
+
+      Panic.EngineHelpers.run_next_invocation()
+
+      assert has_element?(view, "#runner-status #run-stats-sequence", "1")
     end
 
     test "populates invocation stream via hook", %{conn: conn, network: network, user: user} do
