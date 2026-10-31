@@ -259,9 +259,10 @@ defmodule PanicWeb.PanicComponents do
             this.el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
           const height =
             this.el.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+          // scroll sizes are whole pixels, so allow for the box's fraction of one
           const fits = (px) => {
             text.style.fontSize = `${px}px`;
-            return text.scrollHeight <= height && text.scrollWidth <= width;
+            return text.scrollHeight <= Math.ceil(height) && text.scrollWidth <= Math.ceil(width);
           };
 
           // a short output shouldn't fill the screen with a couple of huge words
