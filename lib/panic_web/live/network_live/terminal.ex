@@ -128,7 +128,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
         />
       </div>
       <div class="min-w-0">
-        <p :if={@summary.text} id="run-summary-text" class="break-words font-mono uppercase">
+        <p :if={@summary.text} id="run-summary-text" class="break-words font-mono">
           {@summary.text}
         </p>
         <.run_stats
