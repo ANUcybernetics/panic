@@ -27,6 +27,8 @@ defmodule Panic.Model do
   alias Panic.Platforms.Replicate
   alias Panic.Watcher.Vestaboards
 
+  require Logger
+
   # Each Vestaboard captioner looks at the image through a different lens, so a
   # run drifts rather than converging on one faithfully re-described scene.
   @describe_lens """
@@ -836,15 +838,35 @@ defmodule Panic.Model do
 
     with {:ok, description, described} <-
            call(captioner, captioner_input(captioner.path, lens, image), token),
-         {:ok, caption, condensed} <- condense(condenser, description, @condense_prompt, token) do
-      if Vestaboards.fits?(caption) do
-        {:ok, caption, described ++ condensed}
-      else
-        prompt = @condense_prompt <> " Your last attempt was too long; cut harder."
+         {:ok, caption, condensed} <-
+           condense_or_trim(condenser, description, @condense_prompt, token),
+         {:ok, shorter, recondensed} <- cut_harder(condenser, caption, token) do
+      {:ok, Vestaboards.trim_to_fit(shorter), described ++ condensed ++ recondensed}
+    end
+  end
 
-        with {:ok, shorter, recondensed} <- condense(condenser, caption, prompt, token) do
-          {:ok, Vestaboards.trim_to_fit(shorter), described ++ condensed ++ recondensed}
-        end
+  defp cut_harder(condenser, caption, token) do
+    if Vestaboards.fits?(caption) do
+      {:ok, caption, []}
+    else
+      prompt = @condense_prompt <> " Your last attempt was too long; cut harder."
+      condense_or_trim(condenser, caption, prompt, token)
+    end
+  end
+
+  # The condenser only shortens text the captioner already wrote, so when it
+  # fails (a hung or unavailable model) that text is trimmed instead, rather
+  # than failing the invocation and ending the run.
+  defp condense_or_trim(condenser, text, instructions, token) do
+    with {:error, reason} = error <- condense(condenser, text, instructions, token) do
+      case text |> Vestaboards.sanitise() |> Vestaboards.trim_to_fit() do
+        "" ->
+          error
+
+        trimmed ->
+          Logger.warning("Condenser #{condenser} failed (#{inspect(reason)}), trimming its input instead")
+
+          {:ok, trimmed, []}
       end
     end
   end
