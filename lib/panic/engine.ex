@@ -61,6 +61,7 @@ defmodule Panic.Engine do
         not_found_error?: false
 
       define :current_run_head, args: [:run_number]
+      define :completed_before, args: [:network_id, :run_number, :sequence_number]
       define :run_footprint, args: [:run_number]
     end
   end

@@ -126,6 +126,21 @@ defmodule Panic.ModelTest do
     end
   end
 
+  describe "Model.stand_in/1" do
+    test "every current model but the dummies has a stand-in: another current model of the same types" do
+      for model <- Model.all(deprecated: false), model.platform != Panic.Platforms.Dummy do
+        stand_in = Model.stand_in(model)
+        assert stand_in, "no stand-in for #{model.id}"
+        assert stand_in.id != model.id
+
+        assert {stand_in.input_type, stand_in.output_type} ==
+                 {model.input_type, model.output_type}
+
+        refute stand_in.deprecated, "#{model.id}'s stand-in #{stand_in.id} is deprecated"
+      end
+    end
+  end
+
   describe "Model.by_id!/1" do
     test "retrieves specific models by ID" do
       # Test with a known dummy model

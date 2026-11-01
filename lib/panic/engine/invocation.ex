@@ -113,6 +113,20 @@ defmodule Panic.Engine.Invocation do
       emit Signals, :invocation_failed, fields: [invocation_id: :id]
     end
 
+    # what an invocation that fails can fall back on (see InvokeModel)
+    read :completed_before do
+      argument :network_id, :integer, allow_nil?: false
+      argument :run_number, :integer, allow_nil?: false
+      argument :sequence_number, :integer, allow_nil?: false
+
+      filter expr(
+               network_id == ^arg(:network_id) and run_number == ^arg(:run_number) and
+                 sequence_number < ^arg(:sequence_number) and state == :completed
+             )
+
+      prepare build(sort: [sequence_number: :desc], limit: 50)
+    end
+
     read :current_run_head do
       argument :run_number, :integer, allow_nil?: false
       get? true

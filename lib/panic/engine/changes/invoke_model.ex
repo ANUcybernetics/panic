@@ -10,9 +10,9 @@ defmodule Panic.Engine.Changes.InvokeModel do
   2. Inside the transaction, the output and `:completed` state are set, along
      with the usage of each platform call in `metadata["usage"]` and the cost
      and energy estimated from it (see `Panic.Engine.Footprint`), or `:failed`
-     if the call failed even after a retry with a safe input (see
-     `call_model/1`). A failed call is an outcome, not an action
-     error, so the trigger job doesn't retry a model that rejected its input.
+     if the model failed and nothing could recover it (see `recover/3`). A
+     failed call is an outcome, not an action error, so the trigger job
+     doesn't retry a model that rejected its input.
   3. `:invocation_completed` is emitted only while the invocation is still
      part of its network's current run, so a stopped or replaced run doesn't
      continue. `:invocation_failed` is always emitted; its listener ignores
@@ -28,6 +28,8 @@ defmodule Panic.Engine.Changes.InvokeModel do
   alias Panic.Engine.Schedule
   alias Panic.Engine.Signals
 
+  require Logger
+
   @impl true
   def change(changeset, _opts, context) do
     changeset
@@ -39,38 +41,94 @@ defmodule Panic.Engine.Changes.InvokeModel do
   defp invoke(changeset, context) do
     Panic.Engine.about_to_invoke!(changeset.data, actor: context.actor)
 
-    case call_model(changeset.data) do
-      {:ok, output, metadata} ->
-        wait_for_hold(changeset.data)
-        Ash.Changeset.put_context(changeset, :invocation_result, {:ok, output, metadata})
+    result =
+      case Panic.Model.by_id(changeset.data.model) do
+        nil ->
+          {:error, "Model with ID '#{changeset.data.model}' no longer exists"}
 
-      {:error, reason} ->
-        Ash.Changeset.put_context(changeset, :invocation_result, {:error, reason})
-    end
-  end
-
-  defp call_model(%{model: model_id, input: input}) do
-    with {:model, %Panic.Model{} = model} <- {:model, Panic.Model.by_id(model_id)},
-         {:ok, token} <- PlatformCredentials.fetch_token(model.platform) do
-      case Panic.Model.invoke(model, input, token) do
-        {:ok, output, usage} -> {:ok, output, %{"usage" => usage}}
-        {:error, reason} -> retry_with_safe_input(model, reason, token)
+        model ->
+          with {:error, reason} <- call(model, changeset.data.input) do
+            recover(model, changeset.data, reason)
+          end
       end
-    else
-      {:model, nil} -> {:error, "Model with ID '#{model_id}' no longer exists"}
-      {:error, reason} -> {:error, reason}
+
+    if match?({:ok, _, _, _}, result), do: wait_for_hold(changeset.data)
+    Ash.Changeset.put_context(changeset, :invocation_result, result)
+  end
+
+  defp call(model, input) do
+    with {:ok, token} <- PlatformCredentials.fetch_token(model.platform),
+         {:ok, output, usage} <- Panic.Model.invoke(model, input, token) do
+      {:ok, output, %{"usage" => usage}, model.id}
     end
   end
 
-  # Models refuse some inputs (safety filters, moderation), and every platform
-  # words that differently. Rather than recognise each refusal, any failure is
-  # retried once with an input no filter objects to: a refusal recovers and the
-  # run carries on, while a real outage fails again and ends the run.
-  defp retry_with_safe_input(model, reason, token) do
-    with {:ok, output, usage} <- Panic.Model.invoke(model, safe_input(model.input_type), token) do
-      {:ok, output, %{"usage" => usage, "error_before_safe_retry" => inspect(reason)}}
+  # The show must go on: when a model fails (an outage, a hung prediction, a
+  # refusal, which every platform words differently), the run carries on with
+  # the first of these that works:
+  #
+  # 1. a stand-in model of the same types (`Panic.Model.stand_in/1`) on the
+  #    same input, which the invocation then records as its model
+  # 2. the run's latest output of the model's output type, which needs no
+  #    platform at all
+  # 3. the model on an input no filter objects to, for when there's nothing to
+  #    reuse yet
+  #
+  # Only when all three fail does the invocation fail and the run end.
+  defp recover(model, invocation, reason) do
+    recovered =
+      with {:error, _} <- stand_in(model, invocation.input),
+           {:error, _} <- reuse(model, invocation) do
+        safe_retry(model)
+      end
+
+    case recovered do
+      {:ok, output, metadata, model_id} ->
+        Logger.warning("#{model.id} failed (#{inspect(reason)}), recovered by #{recovery(metadata, model_id)}")
+
+        {:ok, output, Map.put(metadata, "recovered_from", inspect(reason)), model_id}
+
+      {:error, _} ->
+        {:error, reason}
     end
   end
+
+  defp stand_in(model, input) do
+    case Panic.Model.stand_in(model) do
+      nil ->
+        {:error, :no_stand_in}
+
+      stand_in ->
+        with {:ok, output, metadata, id} <- call(stand_in, input) do
+          {:ok, output, Map.put(metadata, "stood_in_for", model.id), id}
+        end
+    end
+  end
+
+  defp reuse(%{output_type: type} = model, invocation) do
+    invocation.network_id
+    |> Panic.Engine.completed_before!(invocation.run_number, invocation.sequence_number, authorize?: false)
+    |> Enum.find(&match?(%{output_type: ^type}, Panic.Model.by_id(&1.model)))
+    |> case do
+      nil ->
+        {:error, :nothing_to_reuse}
+
+      earlier ->
+        {:ok, earlier.output, %{"usage" => [], "reused_output_of" => earlier.id}, model.id}
+    end
+  end
+
+  defp safe_retry(model) do
+    with {:ok, output, metadata, id} <- call(model, safe_input(model.input_type)) do
+      {:ok, output, Map.put(metadata, "safe_input", true), id}
+    end
+  end
+
+  defp recovery(%{"stood_in_for" => _}, model_id), do: "standing in #{model_id}"
+
+  defp recovery(%{"reused_output_of" => id}, _model_id), do: "reusing the output of invocation #{id}"
+
+  defp recovery(%{"safe_input" => true}, _model_id), do: "a safe input"
 
   defp wait_for_hold(%{hold_until: hold_until}) do
     hold_until
@@ -80,10 +138,11 @@ defmodule Panic.Engine.Changes.InvokeModel do
 
   defp record_outcome(changeset) do
     case changeset.context[:invocation_result] do
-      {:ok, output, metadata} ->
+      {:ok, output, metadata, model_id} ->
         footprint = Footprint.estimate(metadata["usage"])
 
         changeset
+        |> Ash.Changeset.force_change_attribute(:model, model_id)
         |> Ash.Changeset.force_change_attribute(:output, output)
         |> Ash.Changeset.force_change_attribute(:state, :completed)
         |> Ash.Changeset.force_change_attribute(:cost_usd, footprint.cost_usd)

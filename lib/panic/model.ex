@@ -803,6 +803,24 @@ defmodule Panic.Model do
     end
   end
 
+  # Reliable models, by input and output type, to stand in for one that fails
+  # (see `Panic.Engine.Changes.InvokeModel`); the second covers the first
+  # being the model that failed.
+  @stand_ins %{
+    {:text, :text} => ["claude-4-sonnet", "gpt-5.6-luna"],
+    {:text, :image} => ["p-image", "flux-2-klein-4b"],
+    {:image, :text} => ["gpt-5.6-luna-caption", "gemini-3.5-flash-critic"],
+    {:text, :audio} => ["lyria-2", "flux-music"],
+    {:audio, :text} => ["whisper", "gemini-audio-description"]
+  }
+
+  @doc "The model to call in place of `model` when it fails, or nil if there's none."
+  def stand_in(%__MODULE__{id: id, input_type: input_type, output_type: output_type}) do
+    @stand_ins
+    |> Map.get({input_type, output_type}, [])
+    |> Enum.find_value(&(&1 != id && by_id(&1)))
+  end
+
   def by_id!(id) do
     case all(id: id) do
       [] -> raise "no model found with id #{id}"

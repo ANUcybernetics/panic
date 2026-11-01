@@ -17,6 +17,7 @@ defmodule Panic.Engine.RunTest do
   alias Panic.Engine.Network
   alias Panic.Engine.Signals
   alias Panic.Platforms.Dummy
+  alias Panic.Platforms.Replicate
   alias Panic.Platforms.Vestaboard
   alias Panic.Watcher.Installation
 
@@ -234,8 +235,91 @@ defmodule Panic.Engine.RunTest do
   end
 
   describe "a failing model" do
-    test "fails the invocation and ends the run", %{user: user, network: network} do
-      Repatch.patch(Dummy, :invoke, fn _model, _input, _token -> {:error, "simulated failure"} end)
+    # the stand-in for dummy-t2t's types is a Replicate model
+    setup do
+      Panic.Fixtures.set_credentials(replicate_token: "test_replicate")
+      :ok
+    end
+
+    defp fail_dummy_unless(keep?) do
+      Repatch.patch(Dummy, :invoke, fn model, input, token ->
+        if keep?.(input),
+          do: Repatch.real(Dummy.invoke(model, input, token)),
+          else: {:error, "simulated failure"}
+      end)
+    end
+
+    defp fail_replicate do
+      Repatch.patch(Replicate, :invoke, fn _model, _input, _token ->
+        {:error, "replicate down"}
+      end)
+    end
+
+    test "is stood in for by a model of the same types, and the run carries on", %{
+      user: user,
+      network: network
+    } do
+      fail_dummy_unless(fn _input -> false end)
+
+      Repatch.patch(Replicate, :invoke, fn model, _input, _token ->
+        {:ok, "a stand-in's output", %{"platform" => "replicate", "path" => model.path}}
+      end)
+
+      genesis = Engine.start_run!(network, "hello", actor: user)
+      assert %{success: 1} = run_next_invocation()
+
+      genesis = reload(genesis)
+      assert genesis.state == :completed
+      assert genesis.output == "a stand-in's output"
+      assert genesis.model == Panic.Model.stand_in(Panic.Model.by_id!("dummy-t2t")).id
+      assert genesis.metadata["stood_in_for"] == "dummy-t2t"
+      assert genesis.metadata["recovered_from"] =~ "simulated failure"
+      assert reload(network).current_run_number == genesis.run_number
+
+      assert [_, %{model: "dummy-t2t", input: "a stand-in's output"}] = invocations(network)
+    end
+
+    test "with no working stand-in reuses the run's latest output of its type", %{
+      user: user,
+      network: network
+    } do
+      fail_dummy_unless(&(&1 == "hello"))
+      fail_replicate()
+
+      Engine.start_run!(network, "hello", actor: user)
+      assert %{success: 1} = run_next_invocation()
+      assert %{success: 1} = run_next_invocation()
+
+      [genesis, second, _third] = invocations(network)
+      assert second.state == :completed
+      assert second.model == "dummy-t2t"
+      assert second.output == genesis.output
+      assert second.metadata["reused_output_of"] == genesis.id
+      assert reload(network).current_run_number == genesis.run_number
+    end
+
+    test "with nothing to reuse yet is retried with a safe input", %{user: user, network: network} do
+      safe = Panic.Engine.Changes.InvokeModel.safe_input(:text)
+      fail_dummy_unless(&(&1 == safe))
+      fail_replicate()
+
+      genesis = Engine.start_run!(network, "something a filter dislikes", actor: user)
+      assert %{success: 1} = run_next_invocation()
+
+      genesis = reload(genesis)
+      assert genesis.state == :completed
+      assert genesis.metadata["safe_input"]
+      assert genesis.metadata["recovered_from"] =~ "simulated failure"
+      assert reload(network).current_run_number == genesis.run_number
+      assert [_, _] = invocations(network)
+    end
+
+    test "fails the invocation and ends the run when nothing recovers it", %{
+      user: user,
+      network: network
+    } do
+      fail_dummy_unless(fn _input -> false end)
+      fail_replicate()
 
       genesis = Engine.start_run!(network, "hello", actor: user)
       assert %{success: 1} = run_next_invocation()
@@ -247,28 +331,9 @@ defmodule Panic.Engine.RunTest do
       assert [_] = invocations(network)
     end
 
-    test "that refuses its input is retried with a safe input and the run carries on",
-         %{user: user, network: network} do
-      safe = Panic.Engine.Changes.InvokeModel.safe_input(:text)
-
-      Repatch.patch(Dummy, :invoke, fn model, input, token ->
-        if input == safe,
-          do: Repatch.real(Dummy.invoke(model, input, token)),
-          else: {:error, "Blocked by content policy (violence)"}
-      end)
-
-      genesis = Engine.start_run!(network, "something a filter dislikes", actor: user)
-      assert %{success: 1} = run_next_invocation()
-
-      genesis = reload(genesis)
-      assert genesis.state == :completed
-      assert genesis.metadata["error_before_safe_retry"] =~ "content policy"
-      assert reload(network).current_run_number == genesis.run_number
-      assert [_, _] = invocations(network)
-    end
-
     test "a new run can start after a failure", %{user: user, network: network} do
-      Repatch.patch(Dummy, :invoke, fn _model, _input, _token -> {:error, "simulated failure"} end)
+      fail_dummy_unless(fn _input -> false end)
+      fail_replicate()
 
       Engine.start_run!(network, "fails", actor: user)
       run_next_invocation()
