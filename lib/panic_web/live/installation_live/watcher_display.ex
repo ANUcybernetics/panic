@@ -15,9 +15,9 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
   from (see `PanicWeb.PanicComponents.invocation_caption/1`), so a viewer can
   follow the chain from screen to screen.
 
-  An installation's grid screens are one grid, in watcher order: each takes the
-  next run of cells, and outputs rotate through all of them, so two 4x5 screens
-  show the latest 39 outputs (the first screen keeps a cell for the run
+  An installation's grid screens, however many, are one grid in watcher order:
+  each takes the next run of cells, and outputs rotate through all of them (two
+  4x5 screens show the latest 39 outputs, as the first keeps a cell for the run
   summary).
   """
   @behaviour PanicWeb.WatcherSubscriber

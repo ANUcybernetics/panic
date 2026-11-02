@@ -212,63 +212,78 @@ defmodule PanicWeb.WatcherDisplayTest do
   end
 
   describe "an installation's grid screens" do
-    # two 2x2 screens: the first keeps a cell for the run summary, so the
-    # grid has 3 + 4 = 7 cells
-    setup %{user: user, network: network} do
-      installation =
-        Installation
-        |> Ash.Changeset.for_create(
-          :create,
-          %{
-            name: "Two screens",
-            network_id: network.id,
-            watchers: [
-              %{type: :grid, name: "left", rows: 2, columns: 2},
-              %{type: :grid, name: "right", rows: 2, columns: 2}
-            ]
-          },
-          actor: user
-        )
-        |> Ash.create!()
-
-      {:ok, two_screens: installation}
+    # n 2x2 screens: the first keeps a cell for the run summary, so together
+    # they're a grid of 3 + 4(n - 1) cells
+    defp grid_screens(user, network, n) do
+      Installation
+      |> Ash.Changeset.for_create(
+        :create,
+        %{
+          name: "#{n} screens",
+          network_id: network.id,
+          watchers: for(i <- 1..n, do: %{type: :grid, name: "screen-#{i}", rows: 2, columns: 2})
+        },
+        actor: user
+      )
+      |> Ash.create!()
     end
 
     defp open_screens(conn, installation) do
-      for name <- ~w(left right) do
+      for %{name: name} <- installation.watchers do
         {:ok, view, _html} = live(conn, ~p"/i/#{installation.id}/#{name}")
         view
       end
     end
 
-    defp assert_one_grid(left, right, outputs) do
-      # seq 7 has wrapped round onto the first cell
-      for {slot, seq} <- [{0, 7}, {1, 1}, {2, 2}], do: assert(shows?(left, slot, outputs[seq]))
-      for seq <- 3..6, do: assert(shows?(right, seq - 3, outputs[seq]))
-      assert slot_count(left) == 3
-      assert slot_count(right) == 4
+    defp total_cells(screens), do: 3 + 4 * (length(screens) - 1)
+
+    # after a run one past a full grid, so the last output has wrapped round
+    # onto the first cell, each screen shows its own run of cells
+    defp assert_one_grid(screens, outputs) do
+      total = total_cells(screens)
+
+      screens
+      |> Enum.with_index()
+      |> Enum.reduce(0, fn {view, index}, first ->
+        cells = if index == 0, do: 3, else: 4
+        assert slot_count(view) == cells
+
+        for slot <- 0..(cells - 1) do
+          position = first + slot
+          assert shows?(view, slot, outputs[if(position == 0, do: total, else: position)])
+        end
+
+        first + cells
+      end)
     end
 
-    test "are one grid: the second continues where the first ends, and they wrap round together",
-         %{conn: conn, user: user, network: network, two_screens: installation} do
-      [left, right] = open_screens(conn, installation)
+    for n <- [2, 3] do
+      test "#{n} screens are one grid: each continues where the last ends, and they wrap round together",
+           %{conn: conn, user: user, network: network} do
+        [first | rest] = screens = open_screens(conn, grid_screens(user, network, unquote(n)))
 
-      Engine.start_run!(network, "two screens", actor: user)
-      assert shows_genesis?(left, 0)
-      assert slot_count(right) == 0
-      for view <- [left, right], do: assert(render(view) =~ "two screens")
+        Engine.start_run!(network, "one grid prompt", actor: user)
+        assert shows_genesis?(first, 0)
+        for view <- rest, do: assert(slot_count(view) == 0)
+        for view <- screens, do: assert(render(view) =~ "one grid prompt")
 
-      for _ <- 0..7, do: run_next_invocation()
-      assert_one_grid(left, right, outputs(network))
+        for _ <- 0..total_cells(screens), do: run_next_invocation()
+        assert_one_grid(screens, outputs(network))
+      end
     end
 
-    test "opened mid-run show their part of the grid",
-         %{conn: conn, user: user, network: network, two_screens: installation} do
+    test "screens opened mid-run show their part of the grid", %{
+      conn: conn,
+      user: user,
+      network: network
+    } do
+      installation = grid_screens(user, network, 3)
       Engine.start_run!(network, "late screens", actor: user)
-      for _ <- 0..7, do: run_next_invocation()
+      for _ <- 0..total_cells(installation.watchers), do: run_next_invocation()
 
-      [left, right] = open_screens(conn, installation)
-      assert_one_grid(left, right, outputs(network))
+      installation
+      |> then(&open_screens(conn, &1))
+      |> assert_one_grid(outputs(network))
     end
   end
 
