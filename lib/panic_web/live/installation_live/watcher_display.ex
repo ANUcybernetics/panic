@@ -18,7 +18,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
   An installation's grid screens are one grid, in watcher order: each takes the
   next run of cells, and outputs rotate through all of them, so two 4x5 screens
   show the latest 39 outputs (the first screen keeps a cell for the run
-  summary). Only the screen with the first cell shows the initial prompt.
+  summary).
   """
   @behaviour PanicWeb.WatcherSubscriber
 
@@ -34,7 +34,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
   def render(assigns) do
     ~H"""
     <Layouts.display flash={@flash}>
-      <div :if={grid?(@display) and elem(@grid_span, 0) == 0} class="px-4 pt-2 pb-4">
+      <div :if={grid?(@display)} class="px-4 pt-2 pb-4">
         <p>
           <span class="text-purple-300/50">Initial prompt:</span>
           <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>

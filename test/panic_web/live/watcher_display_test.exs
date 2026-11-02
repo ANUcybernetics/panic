@@ -255,8 +255,7 @@ defmodule PanicWeb.WatcherDisplayTest do
       Engine.start_run!(network, "two screens", actor: user)
       assert shows_genesis?(left, 0)
       assert slot_count(right) == 0
-      assert render(left) =~ "Initial prompt"
-      refute render(right) =~ "Initial prompt"
+      for view <- [left, right], do: assert(render(view) =~ "two screens")
 
       for _ <- 0..7, do: run_next_invocation()
       assert_one_grid(left, right, outputs(network))
