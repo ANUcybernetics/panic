@@ -626,7 +626,7 @@ defmodule PanicWeb.PanicComponents do
         :if={@summary}
         summary={@summary}
         models={@models}
-        class="w-[28vmin] bg-zinc-950/55 text-[1.25vmin] backdrop-blur-md"
+        class="w-[38vmin] bg-zinc-950/55 text-[1.25vmin] backdrop-blur-md"
       />
       <.qr_panel url={@url} class="w-[16vmin] text-[1.3vmin]" />
     </aside>
@@ -658,13 +658,16 @@ defmodule PanicWeb.PanicComponents do
 
   # The network as a loop of models (the one at work highlighted, so someone
   # with no other context can see how the screens connect), then the run in
-  # progress. Spacing is in em, so `class` sizes it all with its font size.
+  # progress. It's packed to stay short, so the QR code beside it isn't
+  # stretched: the loop runs on from its explanation, the prompt from its
+  # label, and the stats share lines.
+  # Spacing is in em, so `class` sizes it all with its font size.
   attr :summary, :any, required: true
   attr :models, :list, required: true
 
   attr :compact?, :boolean,
     default: false,
-    doc: "leave out the explanation, the initial prompt and the model at work (highlighted in the loop anyway)"
+    doc: "leave out the explanation and the initial prompt"
 
   attr :class, :any, default: nil
   slot :inner_block
@@ -680,10 +683,10 @@ defmodule PanicWeb.PanicComponents do
     >
       {render_slot(@inner_block)}
       <section :if={@models != []} aria-label="The network">
-        <p :if={!@compact?}>each model's output is the next one's input</p>
+        <span :if={!@compact?}>each model's output is the next one's input:</span>
         <ol
           id="run-hud-models"
-          class="[&_li]:inline [&_li+li]:before:content-['_→_'] after:content-['_↺']"
+          class="inline [&_li]:inline [&_li+li]:before:content-['_→_'] after:content-['_↺']"
         >
           <li
             :for={{model_id, index} <- Enum.with_index(@models)}
@@ -696,17 +699,15 @@ defmodule PanicWeb.PanicComponents do
           </li>
         </ol>
       </section>
-      <figure :if={@summary && !@compact?}>
-        <figcaption>initial prompt</figcaption>
-        <blockquote id="run-hud-prompt" class="line-clamp-3 text-zinc-100">
-          “{@summary.prompt}”
-        </blockquote>
+      <figure :if={@summary && !@compact?} class="line-clamp-3">
+        <figcaption class="inline">initial prompt</figcaption>
+        <blockquote id="run-hud-prompt" class="inline text-zinc-100">“{@summary.prompt}”</blockquote>
       </figure>
       <.run_stats
         :if={@summary}
         summary={@summary}
-        model?={!@compact?}
-        class="flex flex-col gap-[0.15em] [&_dd]:inline [&_dd]:text-zinc-100 [&_dt]:inline [&_dt]:after:content-['_']"
+        model?={false}
+        class="flex flex-wrap justify-end gap-x-[1em] gap-y-[0.15em] [&_dd]:inline [&_dd]:text-zinc-100 [&_dt]:inline [&_dt]:after:content-['_']"
       />
     </div>
     """
