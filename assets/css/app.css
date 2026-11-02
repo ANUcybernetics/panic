@@ -85,6 +85,13 @@
     transition: filter 2s ease-in-out;
 }
 
+/* a single screen's output fills the screen whatever its shape (a 4096x2160
+   one is wider than 16:9), so the caption at its bottom stays on screen */
+#current-inovocations:not(.invocation-grid) > .invocation-cell {
+    aspect-ratio: auto;
+    height: 100dvh;
+}
+
 /* a display explains itself only until it has an output to show */
 #current-inovocations:has(> .invocation-cell) > #display-info {
     display: none;
