@@ -41,8 +41,9 @@ defmodule Panic.Model do
   Two or three sentences.\
   """
   @film_still_lens """
-  Treat this image as a single frame from a film. In two or three sentences, say what has just \
-  happened, what is about to happen, and the genre of the film.\
+  Treat this image as a single frame from a film. In two or three sentences, describe the shot as a \
+  cinematographer would: the framing and lighting, who or what is in it and what they are doing, \
+  and the genre it suggests. Describe only what is in the frame; don't invent a plot.\
   """
   @critic_lens """
   Describe this image as an art critic would, in two or three sentences: the medium, technique, \
