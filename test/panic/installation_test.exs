@@ -186,7 +186,7 @@ defmodule Panic.InstallationTest do
 
       assert {:ok, updated} =
                installation
-               |> Ash.Changeset.for_update(:reorder_watchers, %{watchers: reordered}, actor: user)
+               |> Ash.Changeset.for_update(:update, %{watchers: reordered}, actor: user)
                |> Ash.update()
 
       # Compare just the relevant fields of the watchers, filtering out nil values

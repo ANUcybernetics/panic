@@ -88,11 +88,6 @@ defmodule Panic.Watcher.Installation do
       change Panic.Watcher.Changes.UpdateWatcher
     end
 
-    update :reorder_watchers do
-      accept [:watchers]
-      require_atomic? false
-    end
-
     action :show_initial_prompt do
       argument :signal, Signals.RunStarted, allow_nil?: false
       run UpdateVestaboards
