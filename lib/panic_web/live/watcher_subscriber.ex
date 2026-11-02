@@ -251,9 +251,9 @@ defmodule PanicWeb.WatcherSubscriber do
           display = socket.assigns.display
           invocation = message.payload.data
 
-          # Archiving rewrites a URL the display already shows, and an
-          # invocation waiting to start has nothing to show yet
-          if should_filter_archive_url?(invocation) or waiting?(invocation) do
+          # Archiving rewrites a URL the display already shows (with these
+          # actions), and an invocation waiting to start has nothing to show yet
+          if message.event in ["update_output", "update_input"] or waiting?(invocation) do
             {:noreply, socket}
           else
             handle_filtered_invocation_message(invocation, socket, display)
@@ -266,13 +266,6 @@ defmodule PanicWeb.WatcherSubscriber do
 
   defp waiting?(%Invocation{state: :ready, sequence_number: seq}), do: seq > 0
   defp waiting?(_invocation), do: false
-
-  defp should_filter_archive_url?(%Invocation{input: input, output: output}) do
-    archive_prefix = "https://fly.storage.tigris.dev/"
-
-    String.starts_with?(input || "", archive_prefix) or
-      String.starts_with?(output || "", archive_prefix)
-  end
 
   defp handle_filtered_invocation_message(invocation, socket, display) do
     socket =

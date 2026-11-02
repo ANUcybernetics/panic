@@ -10,6 +10,7 @@ defmodule PanicWeb.WatcherDisplayTest do
   import Phoenix.LiveViewTest
 
   alias Panic.Engine
+  alias Panic.Engine.Archiver
   alias Panic.Engine.Invocation
   alias Panic.Watcher.Installation
 
@@ -269,6 +270,54 @@ defmodule PanicWeb.WatcherDisplayTest do
       [left, right] = open_screens(conn, installation)
       assert_one_grid(left, right, outputs(network))
     end
+  end
+
+  test "a screen shows an output made from an archived image, and isn't disturbed by the archiving",
+       %{conn: conn, user: user} do
+    # archived copies live on Tigris, as in production
+    Repatch.patch(Archiver, :download_file, fn _url ->
+      {:ok, "/tmp/archived.webp"}
+    end)
+
+    Repatch.patch(Archiver, :convert_file, fn file, _rootname -> {:ok, file} end)
+
+    Repatch.patch(Archiver, :upload_to_s3, fn path ->
+      {:ok, "https://fly.storage.tigris.dev/panic-invocation-outputs/#{Path.basename(path)}"}
+    end)
+
+    network =
+      "Archived images"
+      |> Engine.create_network!("t2i then i2t", actor: user)
+      |> Ash.Changeset.for_update(:update, %{lockout_seconds: 0}, actor: user)
+      |> Ash.update!()
+      |> Engine.update_models!(["dummy-t2i", "dummy-i2t"], actor: user)
+
+    installation =
+      Installation
+      |> Ash.Changeset.for_create(
+        :create,
+        %{
+          name: "Archive",
+          network_id: network.id,
+          watchers: [%{type: :grid, name: "wall", rows: 2, columns: 2}]
+        },
+        actor: user
+      )
+      |> Ash.create!()
+
+    {:ok, wall, _html} = live(conn, ~p"/i/#{installation.id}/wall")
+
+    Engine.start_run!(network, "a cat", actor: user)
+    run_next_invocation()
+    image = outputs(network)[0]
+    assert has_element?(wall, "#slot-0 img[src='#{image}']")
+
+    # archiving rewrites the image's URL, and the next input, to the archived copy
+    drain_archiver()
+    assert has_element?(wall, "#slot-0 img[src='#{image}']")
+
+    run_next_invocation()
+    assert shows?(wall, 1, outputs(network)[1])
   end
 
   test "a display running out-of-date assets reloads itself", %{
