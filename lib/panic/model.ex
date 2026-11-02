@@ -36,9 +36,10 @@ defmodule Panic.Model do
   specific details, and the visual style or medium (photo, painting, render, etc).\
   """
   @uncanny_lens """
-  Look closely at this image and describe what is odd, wrong or uncanny about it: garbled text, \
-  impossible anatomy or physics, objects that don't belong, anything a careful viewer would notice. \
-  Two or three sentences.\
+  Look closely at this image. In two or three sentences, say what it shows, then what is odd, wrong \
+  or uncanny about the scene: impossible anatomy or physics, objects that don't belong, anything a \
+  careful viewer would notice. Describe the scene itself; don't call it AI-generated, comment on how \
+  it was made, or mention garbled text.\
   """
   @film_still_lens """
   Treat this image as a single frame from a film. In two or three sentences, describe the shot as a \
@@ -51,9 +52,9 @@ defmodule Panic.Model do
   """
   @condense_prompt """
   Rewrite the image description below as a caption for a Vestaboard split-flap display, which shows \
-  6 lines of 22 characters. Hard limit: 90 characters, about 14 words. Keep its most surprising idea, \
-  and any art style or medium it names. One plain sentence; no quotation marks, dashes, emoji or line \
-  breaks. Reply with the caption only.\
+  6 lines of 22 characters. Hard limit: 90 characters, about 14 words. Keep its main subject and \
+  setting, then its most surprising detail and any art style or medium it names. One plain sentence; \
+  no quotation marks, dashes, emoji or line breaks. Reply with the caption only.\
   """
   @audio_description_prompt """
   Describe this audio. The description will be fed into a text-to-audio generative model,
