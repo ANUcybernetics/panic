@@ -69,21 +69,23 @@ defmodule PanicWeb.WatcherDisplayTest do
 
   defp shows_genesis?(view, slot), do: has_element?(view, "#slot-#{slot}", "P!")
 
-  test "every watcher shows the run from the genesis onwards", %{
-    user: user,
-    network: network,
-    views: views
-  } do
+  test "the grid and the first screen show the genesis, and the other screens stay blank until their turn",
+       %{
+         user: user,
+         network: network,
+         views: views
+       } do
     for {_name, view} <- views, do: assert(has_element?(view, "#display-info"))
 
     Engine.start_run!(network, "hello watchers", actor: user)
 
     assert shows_genesis?(views["wall"], 0)
     assert shows_genesis?(views["even"], 0)
-    assert shows_genesis?(views["odd"], 1)
-    assert shows_genesis?(views["board"], 1)
+    for name <- ~w(odd board), do: assert(slot_count(views[name]) == 0)
 
     run_next_invocation()
+    for name <- ~w(odd board), do: assert(slot_count(views[name]) == 0)
+
     run_next_invocation()
     run_next_invocation()
     outputs = outputs(network)
@@ -191,18 +193,21 @@ defmodule PanicWeb.WatcherDisplayTest do
     for seq <- 0..2, do: assert(shows?(wall, seq, outputs[seq]))
   end
 
-  test "a display opened before its first turn shows the genesis", %{
+  test "a display opened before its first turn stays blank, unless it's the first", %{
     conn: conn,
     user: user,
     network: network,
     installation: installation
   } do
     Engine.start_run!(network, "early arrival", actor: user)
+
+    {:ok, even, _html} = live(conn, ~p"/i/#{installation.id}/even")
+    assert shows_genesis?(even, 0)
+
     run_next_invocation()
 
     {:ok, odd, _html} = live(conn, ~p"/i/#{installation.id}/odd")
-    assert slot_count(odd) == 1
-    assert has_element?(odd, "#slot-1")
+    assert slot_count(odd) == 0
   end
 
   test "a display running out-of-date assets reloads itself", %{
@@ -237,10 +242,13 @@ defmodule PanicWeb.WatcherDisplayTest do
     run_next_invocation()
     run_next_invocation()
 
+    assert has_element?(views["odd"], "#slot-1")
+
     Engine.start_run!(network, "second run", actor: user)
 
     assert shows_genesis?(views["wall"], 0)
     refute has_element?(views["wall"], "#slot-1")
-    assert shows_genesis?(views["odd"], 1)
+    assert shows_genesis?(views["even"], 0)
+    assert slot_count(views["odd"]) == 0
   end
 end

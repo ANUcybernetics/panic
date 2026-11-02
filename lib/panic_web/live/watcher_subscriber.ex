@@ -199,7 +199,8 @@ defmodule PanicWeb.WatcherSubscriber do
                recent,
                &(rem(&1.sequence_number, stride) == offset and &1.sequence_number > 0)
              ) do
-          [] -> show_genesis(socket)
+          [] when offset == 0 -> show_genesis(socket)
+          [] -> socket
           shown -> handle_non_genesis_invocation(socket, List.last(shown), display)
         end
     end
@@ -207,6 +208,12 @@ defmodule PanicWeb.WatcherSubscriber do
 
   defp slots({:grid, rows, cols}), do: rows * cols
   defp slots({:single, _offset, stride, _show_invoking}), do: stride
+
+  # A new run starts on the grid and the first single screen; the other single
+  # screens go blank until their first output, rather than all repeating it.
+  defp genesis_cells(_genesis, {:single, offset, _stride, _show_invoking}) when offset != 0, do: []
+
+  defp genesis_cells(genesis, _display), do: [genesis]
 
   defp show_genesis(%{assigns: %{genesis_invocation: %Invocation{} = genesis}} = socket),
     do: LiveView.stream_insert(socket, :invocations, genesis)
@@ -261,7 +268,7 @@ defmodule PanicWeb.WatcherSubscriber do
           socket
           |> Component.assign(genesis_invocation: invocation, latest_sequence: nil)
           |> track_latest(invocation)
-          |> LiveView.stream(:invocations, [invocation], reset: true)
+          |> LiveView.stream(:invocations, genesis_cells(invocation, display), reset: true)
 
         # Non-genesis invocation: handle based on current genesis state
         %Invocation{run_number: run_number} ->
@@ -505,13 +512,6 @@ defmodule PanicWeb.WatcherSubscriber do
 
   defp dom_id(%Invocation{sequence_number: seq}, {:grid, _rows, _cols}, slots) do
     "slot-#{Integer.mod(seq, slots)}"
-  end
-
-  # Genesis invocations (seq 0) must render in all single-mode watchers, not just
-  # offset 0. Without this clause, rem(0, stride) == offset is false for offset > 0,
-  # producing a nil dom_id that silently prevents the "P!" screen from appearing.
-  defp dom_id(%Invocation{sequence_number: 0}, {:single, offset, _stride, _show_invoking}, _slots) do
-    "slot-#{offset}"
   end
 
   defp dom_id(%Invocation{sequence_number: seq}, {:single, offset, stride, _show_invoking}, _slots) do
