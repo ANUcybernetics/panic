@@ -18,12 +18,14 @@ characters.
 
 ## Choosing what the TVs show
 
-Each Pi's kiosk boots into the URL in its `kiosk-url.txt`, so the TVs show
-whichever installation those URLs name. To move the TVs to another installation,
-change the URL on each Pi (see [`rpi/README.md`](../rpi/README.md)). The
-Vestaboards need nothing: the server sends text to them from whichever
-installation's network is running. Every installation with Vestaboard watchers
-drives the same four boards, so only run one such network at a time.
+The Birch setup is one installation, "Birch Level 3", and each Pi's kiosk boots
+into its watcher's URL (in the Pi's `kiosk-url.txt`; see
+[`rpi/README.md`](../rpi/README.md)). To show another network, pick it on the
+installation's edit page: the TVs switch to it straight away, and the
+Vestaboards show its runs, with nothing to change on the Pis. Don't make a
+second installation for the new network: every installation with Vestaboard
+watchers drives the same four boards, so two of them running at once would fight
+over the boards.
 
 ## Waking the installation up
 
