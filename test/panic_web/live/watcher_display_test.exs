@@ -210,6 +210,68 @@ defmodule PanicWeb.WatcherDisplayTest do
     assert slot_count(odd) == 0
   end
 
+  describe "an installation's grid screens" do
+    # two 2x2 screens: the first keeps a cell for the run summary, so the
+    # grid has 3 + 4 = 7 cells
+    setup %{user: user, network: network} do
+      installation =
+        Installation
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            name: "Two screens",
+            network_id: network.id,
+            watchers: [
+              %{type: :grid, name: "left", rows: 2, columns: 2},
+              %{type: :grid, name: "right", rows: 2, columns: 2}
+            ]
+          },
+          actor: user
+        )
+        |> Ash.create!()
+
+      {:ok, two_screens: installation}
+    end
+
+    defp open_screens(conn, installation) do
+      for name <- ~w(left right) do
+        {:ok, view, _html} = live(conn, ~p"/i/#{installation.id}/#{name}")
+        view
+      end
+    end
+
+    defp assert_one_grid(left, right, outputs) do
+      # seq 7 has wrapped round onto the first cell
+      for {slot, seq} <- [{0, 7}, {1, 1}, {2, 2}], do: assert(shows?(left, slot, outputs[seq]))
+      for seq <- 3..6, do: assert(shows?(right, seq - 3, outputs[seq]))
+      assert slot_count(left) == 3
+      assert slot_count(right) == 4
+    end
+
+    test "are one grid: the second continues where the first ends, and they wrap round together",
+         %{conn: conn, user: user, network: network, two_screens: installation} do
+      [left, right] = open_screens(conn, installation)
+
+      Engine.start_run!(network, "two screens", actor: user)
+      assert shows_genesis?(left, 0)
+      assert slot_count(right) == 0
+      assert render(left) =~ "Initial prompt"
+      refute render(right) =~ "Initial prompt"
+
+      for _ <- 0..7, do: run_next_invocation()
+      assert_one_grid(left, right, outputs(network))
+    end
+
+    test "opened mid-run show their part of the grid",
+         %{conn: conn, user: user, network: network, two_screens: installation} do
+      Engine.start_run!(network, "late screens", actor: user)
+      for _ <- 0..7, do: run_next_invocation()
+
+      [left, right] = open_screens(conn, installation)
+      assert_one_grid(left, right, outputs(network))
+    end
+  end
+
   test "a display running out-of-date assets reloads itself", %{
     conn: conn,
     installation: installation

@@ -14,6 +14,11 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
   A single screen captions what it shows with the model that made it and what
   from (see `PanicWeb.PanicComponents.invocation_caption/1`), so a viewer can
   follow the chain from screen to screen.
+
+  An installation's grid screens are one grid, in watcher order: each takes the
+  next run of cells, and outputs rotate through all of them, so two 4x5 screens
+  show the latest 39 outputs (the first screen keeps a cell for the run
+  summary). Only the screen with the first cell shows the initial prompt.
   """
   @behaviour PanicWeb.WatcherSubscriber
 
@@ -29,7 +34,7 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
   def render(assigns) do
     ~H"""
     <Layouts.display flash={@flash}>
-      <div :if={grid?(@display)} class="px-4 pt-2 pb-4">
+      <div :if={grid?(@display) and elem(@grid_span, 0) == 0} class="px-4 pt-2 pb-4">
         <p>
           <span class="text-purple-300/50">Initial prompt:</span>
           <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
@@ -100,7 +105,8 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
              )
              |> assign(:terminal_qr_url, TerminalAuth.terminal_url(network.id))
              |> WatcherSubscriber.configure_invocation_stream(network, display,
-               reserved_cells: if(first_display? and grid?(display), do: 1, else: 0)
+               reserved_cells: if(first_display? and grid?(display), do: 1, else: 0),
+               span: grid_span(installation, watcher)
              )}
 
           {:error, :not_found} ->
@@ -137,6 +143,24 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
     first = Enum.find(installation.watchers, &(&1.type != :vestaboard))
     first != nil and first.name == watcher.name
   end
+
+  # where this grid's cells sit among all the installation's grid cells:
+  # {first, total}, or nil for a screen that isn't a grid
+  defp grid_span(installation, %{type: :grid} = watcher) do
+    cells =
+      for %{type: :grid} = grid <- installation.watchers,
+          do: {grid.name, grid_cells(installation, grid)}
+
+    before = Enum.take_while(cells, fn {name, _cells} -> name != watcher.name end)
+
+    {before |> Enum.map(&elem(&1, 1)) |> Enum.sum(), cells |> Enum.map(&elem(&1, 1)) |> Enum.sum()}
+  end
+
+  defp grid_span(_installation, _watcher), do: nil
+
+  # the first screen keeps a cell for the run summary
+  defp grid_cells(installation, grid),
+    do: grid.rows * grid.columns - if(first_display?(installation, grid), do: 1, else: 0)
 
   defp terminal_url(%{anon_terminal_minutes: nil}, _url), do: nil
   defp terminal_url(_network, url), do: url

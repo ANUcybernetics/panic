@@ -137,10 +137,18 @@ defmodule PanicWeb.WatcherSubscriber do
 
   A grid can hold back its last `:reserved_cells` (default 0) for something
   else, and its outputs then rotate through the cells before them.
+
+  A grid can also be one screen of a larger grid spread across several:
+  `:span` is `{first, total}`, the larger grid's cell this screen starts at and
+  how many cells it has in all. Outputs rotate through the larger grid, and
+  this screen shows the ones that land on its cells (default `{0, cells}`, a
+  grid of its own).
   """
   def configure_invocation_stream(socket, %Network{} = network, display, opts \\ []) do
     display = normalise_display(display)
     slots = slots(display) - Keyword.get(opts, :reserved_cells, 0)
+    {first, total} = Keyword.get(opts, :span) || {0, slots}
+    span = {first, slots, total}
 
     if stream_configured?(socket) do
       # Stream already configured – nothing to (re)configure, just keep assigns fresh
@@ -155,25 +163,28 @@ defmodule PanicWeb.WatcherSubscriber do
       track_presence(socket, network.id, display)
 
       socket
-      |> LiveView.stream_configure(:invocations, dom_id: &dom_id(&1, display, slots))
+      |> LiveView.stream_configure(:invocations, dom_id: &dom_id(&1, display, span))
       |> LiveView.stream(:invocations, [])
       |> Component.assign(
         network: network,
         display: display,
+        grid_span: span,
         genesis_invocation: current_genesis(network),
         latest_sequence: nil,
         network_id: network.id
       )
-      |> show_current_run(network, display, slots)
+      |> show_current_run(network, display, total)
     end
   end
 
   # A display that opens mid-run (say a kiosk reloading after a deploy) shows
   # what it would have shown had it been watching all along, rather than
   # nothing until its next turn comes round.
-  defp show_current_run(socket, %Network{current_run_number: nil}, _display, _slots), do: socket
+  defp show_current_run(socket, %Network{current_run_number: nil}, _display, _cells), do: socket
 
-  defp show_current_run(socket, network, display, slots) do
+  # `cells` is how many invocations back to look: a whole stride, or a whole
+  # grid (across all its screens)
+  defp show_current_run(socket, network, display, cells) do
     recent =
       [
         query: [
@@ -183,7 +194,7 @@ defmodule PanicWeb.WatcherSubscriber do
             state: :completed
           ],
           sort: [sequence_number: :desc],
-          limit: slots
+          limit: cells
         ],
         authorize?: false
       ]
@@ -209,11 +220,14 @@ defmodule PanicWeb.WatcherSubscriber do
   defp slots({:grid, rows, cols}), do: rows * cols
   defp slots({:single, _offset, stride, _show_invoking}), do: stride
 
-  # A new run starts on the grid and the first single screen; the other single
-  # screens go blank until their first output, rather than all repeating it.
-  defp genesis_cells(_genesis, {:single, offset, _stride, _show_invoking}) when offset != 0, do: []
+  # A new run starts on the first single screen, and on the grid screen with
+  # the first cell; the other screens go blank until their first output,
+  # rather than all repeating it.
+  defp genesis_cells(_genesis, {:single, offset, _stride, _show_invoking}, _span) when offset != 0, do: []
 
-  defp genesis_cells(genesis, _display), do: [genesis]
+  defp genesis_cells(_genesis, {:grid, _rows, _cols}, {first, _slots, _total}) when first != 0, do: []
+
+  defp genesis_cells(genesis, _display, _span), do: [genesis]
 
   defp show_genesis(%{assigns: %{genesis_invocation: %Invocation{} = genesis}} = socket),
     do: LiveView.stream_insert(socket, :invocations, genesis)
@@ -268,7 +282,11 @@ defmodule PanicWeb.WatcherSubscriber do
           socket
           |> Component.assign(genesis_invocation: invocation, latest_sequence: nil)
           |> track_latest(invocation)
-          |> LiveView.stream(:invocations, genesis_cells(invocation, display), reset: true)
+          |> LiveView.stream(
+            :invocations,
+            genesis_cells(invocation, display, socket.assigns.grid_span),
+            reset: true
+          )
 
         # Non-genesis invocation: handle based on current genesis state
         %Invocation{run_number: run_number} ->
@@ -510,11 +528,11 @@ defmodule PanicWeb.WatcherSubscriber do
     end
   end
 
-  defp dom_id(%Invocation{sequence_number: seq}, {:grid, _rows, _cols}, slots) do
-    "slot-#{Integer.mod(seq, slots)}"
+  defp dom_id(%Invocation{sequence_number: seq}, {:grid, _rows, _cols}, {first, _slots, total}) do
+    "slot-#{Integer.mod(seq, total) - first}"
   end
 
-  defp dom_id(%Invocation{sequence_number: seq}, {:single, offset, stride, _show_invoking}, _slots) do
+  defp dom_id(%Invocation{sequence_number: seq}, {:single, offset, stride, _show_invoking}, _span) do
     if rem(seq, stride) == offset, do: "slot-#{offset}"
   end
 
@@ -569,10 +587,13 @@ defmodule PanicWeb.WatcherSubscriber do
 
   defp handle_non_genesis_invocation(socket, invocation, display) do
     case {invocation, display} do
+      # every screen of a grid tracks the latest output, so they dim alike
       {_, {:grid, _rows, _cols}} ->
-        socket
-        |> track_latest(invocation)
-        |> LiveView.stream_insert(:invocations, invocation, at: -1)
+        socket = track_latest(socket, invocation)
+
+        if on_screen?(invocation, socket.assigns.grid_span),
+          do: LiveView.stream_insert(socket, :invocations, invocation, at: -1),
+          else: socket
 
       {%Invocation{sequence_number: seq, state: state}, {:single, offset, stride, show_invoking}}
       when rem(seq, stride) == offset ->
@@ -589,6 +610,9 @@ defmodule PanicWeb.WatcherSubscriber do
         socket
     end
   end
+
+  defp on_screen?(%Invocation{sequence_number: seq}, {first, slots, total}),
+    do: Integer.mod(seq, total) in first..(first + slots - 1)//1
 
   # a grid dims each output by how far it is behind the latest completed one
   defp track_latest(socket, %Invocation{state: :completed, sequence_number: seq}) do
