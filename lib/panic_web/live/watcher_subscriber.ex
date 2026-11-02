@@ -1,66 +1,31 @@
 defmodule PanicWeb.WatcherSubscriber do
-  @moduledoc ~S"""
-  Helper for subscribing to and managing a stream of `%Invocation{}` structs
-  inside Phoenix LiveViews using Phoenix Presence.
+  @moduledoc """
+  Keeps a LiveView's `:invocations` stream following a network's run.
 
-  It offers three public facets:
+  As an `on_mount` hook (`on_mount PanicWeb.WatcherSubscriber`) it finds the
+  network from the route (`network_id`, or an installation's `id`), subscribes
+  to its broadcasts, and attaches a `handle_info` hook that handles them, so the
+  LiveView needs no boilerplate. A LiveView that authorises its viewer some
+  other way calls `watch/2` instead. Once it knows its display, the LiveView
+  calls `configure_invocation_stream/4`.
 
-    * `on_mount/1` – a LiveView mount hook that automatically:
-        • subscribes to `"invocation:<network_id>"` pub-sub topic
-        • tracks the LiveView's presence for the network
-        • configures the `:invocations` stream
-        • attaches a `handle_info` hook so the LiveView itself needs **no**
-          boilerplate for invocation broadcasts
-        • assigns `current_invocation` from broadcast payloads
-    * `configure_invocation_stream/3` – manual set-up (kept for
-      backwards-compatibility)
-    * `handle_invocation_message/2` – processes a broadcast and updates the
-      stream / genesis invocation as required
+  A display is `{:grid, rows, columns}` or `{:single, offset, stride,
+  show_invoking}`: a single screen shows the invocations whose sequence number
+  is `offset` modulo `stride`, only once they've completed unless
+  `show_invoking`.
 
-  ## Phoenix Presence Integration
-
-  This module now uses Phoenix Presence to track which LiveViews are watching
-  which networks. Presence information includes:
-  - Display mode (grid/single)
-  - User information (if authenticated)
-  - Installation ID (if viewing through an installation)
-
-  ## Usage
-
-  In a LiveView that receives a `network_id` param:
-
-      defmodule MyAppWeb.SomeLive do
-        use MyAppWeb, :live_view
-        on_mount {PanicWeb.WatcherSubscriber, :auto}
-        ...
-      end
-
-  Pass an explicit display tuple (`{:grid, rows, cols}` or `{:single, off, stride, show_invoking}`)
-  instead of `:auto` if you don't want automatic detection.
-
-  The display tuple format is also used by Installation watchers, where each watcher
-  struct is converted to the appropriate display tuple format.
-
-  ## Every invocation
+  The hook also keeps `:current_invocation` (the run's furthest invocation) and
+  the network's run state assigned, follows an installation to a new network,
+  and tracks each viewer's presence (see `list_viewers/1`).
 
   A LiveView that needs every invocation of the network, not just those its
   display shows (say, to summarise the run), implements the optional
   `c:handle_invocation/2` callback, which gets each broadcast invocation after
   the stream is updated.
-
-  ## Single Display Format
-
-  Single display tuples are `{:single, offset, stride, show_invoking}` where
-  show_invoking is a boolean. When false, invocations in the `:invoking` state
-  are filtered out. The legacy 3-tuple form `{:single, offset, stride}` is
-  normalised to `{:single, offset, stride, false}` at entry.
   """
 
   alias Panic.Engine.Invocation
   alias Panic.Engine.Network
-  # ---------------------------------------------------------------------------
-  # on_mount hook
-  # ---------------------------------------------------------------------------
   alias PanicWeb.Presence
   alias Phoenix.Component
   alias Phoenix.LiveView
@@ -72,20 +37,12 @@ defmodule PanicWeb.WatcherSubscriber do
   @optional_callbacks handle_invocation: 2
 
   @doc """
-  LiveView `on_mount/4` callback.
-
-  The first argument can be `:auto` (default) to infer the display mode from the
-  params & live_action, or a display tuple (`{:grid, rows, cols}` /
-  `{:single, offset, stride, show_invoking}`) to force a specific mode.
+  Subscribes to the route's network, if the viewer can read it. The stream is
+  configured later, by the LiveView, once it knows its display.
   """
-  def on_mount(_display_mode \\ :auto, params, _session, socket) do
+  def on_mount(:default, params, _session, socket) do
     case fetch_network_from_params(params, socket.assigns) do
       {:ok, network} ->
-        # Only subscribe and attach the watcher. We **do not** configure the
-        # invocation stream here because the correct `display` mode is typically
-        # chosen later inside the LiveView (e.g. in `handle_params/3`). Doing it
-        # here caused incorrect behaviour when `socket.assigns.live_action` was
-        # not yet set.
         installation_id =
           case params do
             %{"id" => id} -> id
@@ -104,12 +61,7 @@ defmodule PanicWeb.WatcherSubscriber do
 
         {:cont, socket}
 
-      # ---------------------------------------------------------------------------
-      # Manual helpers (kept for backwards-compat)
-      # ---------------------------------------------------------------------------
-
       {:error, _} ->
-        # No network context: continue without attaching the watcher
         {:cont, socket}
     end
   end
@@ -145,7 +97,6 @@ defmodule PanicWeb.WatcherSubscriber do
   grid of its own).
   """
   def configure_invocation_stream(socket, %Network{} = network, display, opts \\ []) do
-    display = normalise_display(display)
     slots = slots(display) - Keyword.get(opts, :reserved_cells, 0)
     {first, total} = Keyword.get(opts, :span) || {0, slots}
     span = {first, slots, total}
@@ -169,7 +120,7 @@ defmodule PanicWeb.WatcherSubscriber do
         network: network,
         display: display,
         grid_span: span,
-        genesis_invocation: current_genesis(network),
+        genesis_invocation: genesis(network.current_run_number),
         latest_sequence: nil,
         network_id: network.id
       )
@@ -234,81 +185,38 @@ defmodule PanicWeb.WatcherSubscriber do
 
   defp show_genesis(socket), do: socket
 
-  @doc """
-  Handle a broadcast carrying an `%Invocation{}` and update the LiveView socket.
-
-  Returns `{:noreply, socket}` so callers can simply `handle_invocation_message/2`.
-  """
-  def handle_invocation_message(message, socket) do
-    # Skip non-invocation events
-    case message.event do
-      "presence_diff" ->
-        {:noreply, socket}
-
-      _ ->
-        # Check if invocation stream is configured - if not, ignore the message
-        if stream_configured?(socket) do
-          display = socket.assigns.display
-          invocation = message.payload.data
-
-          # Archiving rewrites a URL the display already shows (with these
-          # actions), and an invocation waiting to start has nothing to show yet
-          if message.event in ["update_output", "update_input"] or waiting?(invocation) do
-            {:noreply, socket}
-          else
-            handle_filtered_invocation_message(invocation, socket, display)
-          end
-        else
-          {:noreply, socket}
-        end
+  # Archiving rewrites a URL the display already shows (with these actions),
+  # and an invocation waiting to start has nothing to show yet
+  defp handle_invocation_message(%Broadcast{event: event, payload: %{data: invocation}}, socket) do
+    cond do
+      not stream_configured?(socket) -> socket
+      event in ["update_output", "update_input"] or waiting?(invocation) -> socket
+      true -> show_invocation(invocation, socket, socket.assigns.display)
     end
   end
 
   defp waiting?(%Invocation{state: :ready, sequence_number: seq}), do: seq > 0
   defp waiting?(_invocation), do: false
 
-  defp handle_filtered_invocation_message(invocation, socket, display) do
-    socket =
-      case invocation do
-        # Genesis invocation: reset everything and start new run
-        %Invocation{sequence_number: 0} ->
-          socket
-          |> Component.assign(genesis_invocation: invocation, latest_sequence: nil)
-          |> track_latest(invocation)
-          |> LiveView.stream(
-            :invocations,
-            genesis_cells(invocation, display, socket.assigns.grid_span),
-            reset: true
-          )
+  # a genesis starts a new run; anything else belongs to the current run (or,
+  # for a display that hasn't seen one, the run it's from), or is stale
+  defp show_invocation(%Invocation{sequence_number: 0} = invocation, socket, display) do
+    socket
+    |> Component.assign(genesis_invocation: invocation, latest_sequence: nil)
+    |> track_latest(invocation)
+    |> LiveView.stream(:invocations, genesis_cells(invocation, display, socket.assigns.grid_span), reset: true)
+  end
 
-        # Non-genesis invocation: handle based on current genesis state
-        %Invocation{run_number: run_number} ->
-          case socket.assigns[:genesis_invocation] do
-            %Invocation{run_number: ^run_number} ->
-              # Same run - process the invocation
-              handle_non_genesis_invocation(socket, invocation, display)
+  defp show_invocation(%Invocation{run_number: run_number} = invocation, socket, display) do
+    case socket.assigns[:genesis_invocation] || genesis(run_number) do
+      %Invocation{run_number: ^run_number} = genesis ->
+        socket
+        |> Component.assign(genesis_invocation: genesis)
+        |> handle_non_genesis_invocation(invocation, display)
 
-            nil ->
-              # No genesis set - this is a mid-run join, fetch genesis invocation
-              case fetch_genesis_invocation(invocation, socket.assigns.network) do
-                {:ok, genesis} ->
-                  # Set genesis and process this invocation
-                  socket
-                  |> Component.assign(genesis_invocation: genesis)
-                  |> handle_non_genesis_invocation(invocation, display)
-
-                {:error, _} ->
-                  # Failed to fetch genesis, ignore this invocation
-                  socket
-              end
-
-            _ ->
-              # Different run - ignore this invocation
-              socket
-          end
-      end
-
-    {:noreply, socket}
+      _ ->
+        socket
+    end
   end
 
   @doc """
@@ -323,23 +231,15 @@ defmodule PanicWeb.WatcherSubscriber do
     |> Enum.filter(& &1)
   end
 
-  @doc """
-  Handle an installation update broadcast and switch to the new network if needed.
-
-  Returns `{:noreply, socket}` so callers can simply use it in handle_info hooks.
-  """
-  def handle_installation_update_message(message, socket) do
+  # an installation switched to another network takes its displays with it
+  defp handle_installation_update_message(message, socket) do
     installation = message.payload.data
     current_network = socket.assigns[:network]
 
-    # Check if the network has changed
     if current_network && installation.network_id != current_network.id do
-      # Network changed - need to switch subscriptions
       case fetch_network(installation.network_id, socket.assigns) do
         {:ok, new_network} ->
-          # Unsubscribe from old network, subscribe to new
           if LiveView.connected?(socket) do
-            # Untrack presence from old network
             Presence.untrack(
               self(),
               "invocation:#{current_network.id}",
@@ -349,36 +249,22 @@ defmodule PanicWeb.WatcherSubscriber do
             PanicWeb.Endpoint.unsubscribe("invocation:#{current_network.id}")
             PanicWeb.Endpoint.subscribe("invocation:#{new_network.id}")
 
-            # Track presence for new network if display is configured
             if socket.assigns[:display] do
               track_presence(socket, new_network.id, socket.assigns.display)
             end
           end
 
-          # Update network assignment and reset stream if configured
-          socket =
-            socket
-            |> Component.assign(network: new_network, network_id: new_network.id)
-            |> maybe_reset_stream_for_network_change()
-
-          {:noreply, socket}
+          socket
+          |> Component.assign(network: new_network, network_id: new_network.id)
+          |> maybe_reset_stream_for_network_change()
 
         {:error, _} ->
-          # Failed to fetch new network, keep current state
-          {:noreply, socket}
+          socket
       end
     else
-      # Network unchanged or no current network
-      {:noreply, socket}
+      socket
     end
   end
-
-  defp normalise_display({:single, offset, stride}), do: {:single, offset, stride, false}
-  # ---------------------------------------------------------------------------
-  # Internal helpers
-  # ---------------------------------------------------------------------------
-  # Also subscribe to installation updates if we're in installation mode
-  defp normalise_display(display), do: display
 
   defp maybe_subscribe(socket, network, installation_id) do
     if LiveView.connected?(socket) do
@@ -442,7 +328,7 @@ defmodule PanicWeb.WatcherSubscriber do
           {:halt, socket}
 
         %Broadcast{topic: "invocation:" <> _} = msg, socket ->
-          {:noreply, new_socket} = handle_invocation_message(msg, socket)
+          new_socket = handle_invocation_message(msg, socket)
 
           new_socket =
             case msg.payload do
@@ -461,8 +347,7 @@ defmodule PanicWeb.WatcherSubscriber do
           {:halt, new_socket}
 
         %Broadcast{topic: "installation:" <> _} = msg, socket ->
-          {:noreply, new_socket} = handle_installation_update_message(msg, socket)
-          {:halt, new_socket}
+          {:halt, handle_installation_update_message(msg, socket)}
 
         %Broadcast{topic: "network:" <> _, payload: %{data: %Network{} = updated}}, socket ->
           {:halt, assign_run_state(socket, updated)}
@@ -485,28 +370,14 @@ defmodule PanicWeb.WatcherSubscriber do
         fetch_network(network_id, assigns)
 
       %{"id" => installation_id} ->
-        # This is an installation route - fetch network via installation
         fetch_network_from_installation(installation_id, assigns)
 
-      # NOTE: We no longer derive display mode at `on_mount` time, as the LiveView
-      # will explicitly call `configure_invocation_stream/3` once it knows which
-      # display variant it wants.
       _ ->
         {:error, :no_network_context}
     end
   end
 
-  defp fetch_network(id, assigns) do
-    # ---------------------------------------------------------------------------
-    # DOM helpers
-    # ---------------------------------------------------------------------------
-    actor = Map.get(assigns, :current_user)
-
-    case Panic.Engine.get_network(id, actor: actor) do
-      {:ok, _} = ok -> ok
-      {:error, _} = err -> err
-    end
-  end
+  defp fetch_network(id, assigns), do: Panic.Engine.get_network(id, actor: assigns[:current_user])
 
   defp fetch_network_from_installation(installation_id, assigns) do
     actor = Map.get(assigns, :current_user)
@@ -528,10 +399,6 @@ defmodule PanicWeb.WatcherSubscriber do
   defp dom_id(%Invocation{sequence_number: seq}, {:single, offset, stride, _show_invoking}, _span) do
     if rem(seq, stride) == offset, do: "slot-#{offset}"
   end
-
-  # ---------------------------------------------------------------------------
-  # Genesis invocation handling
-  # ---------------------------------------------------------------------------
 
   # Broadcasts from one transaction can arrive in any order (a completed
   # invocation and the next one it created), so the current invocation is the
@@ -561,20 +428,13 @@ defmodule PanicWeb.WatcherSubscriber do
     end
   end
 
-  defp current_genesis(%Network{current_run_number: nil}), do: nil
+  # a run's number is its genesis invocation's id
+  defp genesis(nil), do: nil
 
-  defp current_genesis(%Network{current_run_number: run_number}) do
+  defp genesis(run_number) do
     case Panic.Engine.get_invocation(run_number, authorize?: false) do
       {:ok, genesis} -> genesis
       {:error, _} -> nil
-    end
-  end
-
-  defp fetch_genesis_invocation(%Invocation{run_number: run_number}, _network) do
-    # note: run_number is the id of the genesis invocation
-    case Panic.Engine.get_invocation(run_number, authorize?: false) do
-      {:ok, genesis} -> {:ok, genesis}
-      {:error, _} = error -> error
     end
   end
 
@@ -615,7 +475,6 @@ defmodule PanicWeb.WatcherSubscriber do
   defp track_latest(socket, _invocation), do: socket
 
   defp maybe_reset_stream_for_network_change(socket) do
-    # Reset the invocation stream if it's configured
     if stream_configured?(socket) do
       socket
       |> LiveView.stream(:invocations, [], reset: true)

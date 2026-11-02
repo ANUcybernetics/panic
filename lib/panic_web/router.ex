@@ -81,7 +81,7 @@ defmodule PanicWeb.Router do
     ash_authentication_live_session :authentication_required_with_watcher,
       on_mount: [
         {PanicWeb.LiveUserAuth, :live_user_required},
-        {PanicWeb.WatcherSubscriber, :auto}
+        PanicWeb.WatcherSubscriber
       ] do
       scope "/networks" do
         live "/", NetworkLive.Index, :index
@@ -105,7 +105,7 @@ defmodule PanicWeb.Router do
     ash_authentication_live_session :authentication_optional_with_watcher,
       on_mount: [
         {PanicWeb.LiveUserAuth, :live_user_optional},
-        {PanicWeb.WatcherSubscriber, :auto}
+        PanicWeb.WatcherSubscriber
       ] do
       scope "/networks" do
         live "/:network_id/info", NetworkLive.Info, :info
