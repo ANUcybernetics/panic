@@ -74,7 +74,14 @@ until someone visits the site again.
 
 ## Other notes
 
-- a model that refuses a prompt (safety filters) or hangs is retried, so a run
-  can pause for up to a minute or so before carrying on
+- a model that fails (a refusal, a hang, an outage) has a stand-in model take
+  its turn, or failing that its last output reused, so a run can pause for a few
+  minutes but carries on (see `Panic.Engine.Changes.InvokeModel`)
+- TVs 2 and 3 won't take 3840×2160 at 60 Hz (probably an HDMI input setting on
+  those TVs), and left alone their Pis pick 4096×2160 at 24 Hz, which is wider
+  than 16:9. So those two Pis pin 3840×2160 at 30 Hz in
+  `~/.config/kanshi/config`; TVs 1 and 4 run at 60 Hz with no config. kanshi
+  only applies the profile at boot, so to change the mode on a running Pi, also
+  run `wlr-randr --output HDMI-A-1 --mode <mode>` in its Wayland session
 - the Vestaboards sometimes get "behind" the TVs. You don't need to do anything;
   they'll catch back up
