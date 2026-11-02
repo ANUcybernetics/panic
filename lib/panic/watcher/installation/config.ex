@@ -97,8 +97,9 @@ defmodule Panic.Watcher.Installation.Config do
       where: attribute_equals(:type, :grid),
       message: "show_invoking can only be set for single and vestaboard types"
 
-    # Ensure offset is less than stride for single and vestaboard types
-    validate Panic.Watcher.Validations.OffsetLessThanStride
+    validate compare(:offset, less_than: :stride),
+      where: attribute_in(:type, [:single, :vestaboard]),
+      message: "offset must be less than stride"
   end
 
   attributes do

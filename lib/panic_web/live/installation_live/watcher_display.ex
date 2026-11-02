@@ -178,7 +178,6 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
 
   defp caption_models(_display, _network), do: nil
 
-  # Convert watcher struct to display tuple format expected by WatcherSubscriber
   defp watcher_to_display_tuple(%{type: :grid, rows: rows, columns: columns}) do
     {:grid, rows, columns}
   end
@@ -187,9 +186,8 @@ defmodule PanicWeb.InstallationLive.WatcherDisplay do
     {:single, offset, stride, show_invoking}
   end
 
+  # a Vestaboard's page previews it as a single screen
   defp watcher_to_display_tuple(%{type: :vestaboard, offset: offset, stride: stride, show_invoking: show_invoking}) do
-    # For now, treat vestaboard as single display
-    # TODO: Implement vestaboard-specific handling later
     {:single, offset, stride, show_invoking}
   end
 
