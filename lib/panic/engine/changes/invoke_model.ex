@@ -195,9 +195,14 @@ defmodule Panic.Engine.Changes.InvokeModel do
     current == invocation.run_number
   end
 
+  # The image is priv/static/images/technical-difficulties.webp, a wombat's
+  # take on The Simpsons' "technical difficulties" card; the text describes it.
   @safe_inputs %{
-    text: "a wombat holding a sign that says 'whoops!'",
-    image: "https://fly.storage.tigris.dev/panic-invocation-outputs/nsfw-placeholder.webp",
+    text:
+      "A sheepish wombat sits in a tangle of chewed-through TV cables, a sparking wire " <>
+        "in its mouth, in front of a retro test card under the words " <>
+        "'TECHNICAL DIFFICULTIES, PLEASE STAND BY'",
+    image: "https://fly.storage.tigris.dev/panic-invocation-outputs/technical-difficulties.webp",
     audio: "https://fly.storage.tigris.dev/panic-invocation-outputs/test-audio.ogg"
   }
 
