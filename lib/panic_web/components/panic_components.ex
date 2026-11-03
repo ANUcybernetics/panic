@@ -171,9 +171,9 @@ defmodule PanicWeb.PanicComponents do
   @doc """
   Says, in the bottom left of an invocation, which model made it and from
   what: the initial prompt, or the previous model's output (quoted when it's
-  text, so a viewer can read the prompt an image was made from). It's for
-  someone at an installation with no other context, so it shares the run
-  HUD's frosted glass (see `terminal_qr/1`) and stays small.
+  text, so a viewer can read the prompt an image was made from), and when it
+  was made. It's for someone at an installation with no other context, so it
+  shares the run HUD's frosted glass (see `terminal_qr/1`) and stays small.
   """
   attr :id, :string, required: true
   attr :invocation, :any, required: true, doc: "Panic.Engine.Invocation struct"
@@ -191,6 +191,10 @@ defmodule PanicWeb.PanicComponents do
       <p>
         {if @invocation.state == :completed, do: "#{@model.output_type} by", else: "now running"}
         <span id={"#{@id}-caption-model"} class="text-zinc-100">{@model.name}</span>
+        <span :if={@invocation.state == :completed}>
+          at
+          <.local_time id={"#{@id}-caption-time"} at={@invocation.updated_at} class="text-zinc-100" />
+        </span>
       </p>
       <p class="mt-[0.6vmin]">
         <%= case @source do %>
@@ -501,6 +505,43 @@ defmodule PanicWeb.PanicComponents do
     """
   end
 
+  ## local time
+
+  attr :id, :string, required: true
+  attr :at, DateTime, required: true
+  attr :class, :any, default: nil
+
+  @doc """
+  A time of day in the browser's time zone, like `10:42 am` (so a kiosk shows
+  its own time zone, which it takes from its OS). It's rendered in UTC until
+  the hook runs.
+  """
+  def local_time(assigns) do
+    ~H"""
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".LocalTime">
+      export default {
+        mounted() {
+          this.render();
+        },
+
+        updated() {
+          this.render();
+        },
+
+        render() {
+          this.el.textContent = new Date(this.el.dateTime).toLocaleTimeString([], {
+            hour: "numeric",
+            minute: "2-digit",
+          });
+        },
+      };
+    </script>
+    <time id={@id} phx-hook=".LocalTime" datetime={DateTime.to_iso8601(@at)} class={@class}>
+      {Calendar.strftime(@at, "%H:%M UTC")}
+    </time>
+    """
+  end
+
   ## countdown
 
   attr :id, :string, required: true
@@ -707,6 +748,7 @@ defmodule PanicWeb.PanicComponents do
         :if={@summary}
         summary={@summary}
         model?={false}
+        next?
         class="flex flex-wrap justify-end gap-x-[1em] gap-y-[0.15em] [&_dd]:inline [&_dd]:text-zinc-100 [&_dt]:inline [&_dt]:after:content-['_']"
       />
     </div>
@@ -737,15 +779,45 @@ defmodule PanicWeb.PanicComponents do
   @doc """
   A run's vital signs (see `PanicWeb.NetworkLive.RunSummary`) as a list of
   terms, laid out and styled by `class`. Cost is only for signed-in viewers.
+  With `next?`, it counts down to the next invocation, so a viewer knows how
+  long until the next output.
   """
   attr :id, :string, default: nil
   attr :summary, :any, required: true
   attr :show_cost?, :boolean, default: false
   attr :model?, :boolean, default: true
+  attr :next?, :boolean, default: false
   attr :class, :any, default: nil
 
   def run_stats(assigns) do
     ~H"""
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".Elapsed">
+      // Keeps the time since the run started up to date in the browser. The
+      // server renders it only when the start changes, so between runs it would
+      // stay at whatever it was when the page loaded.
+      import { formatElapsed } from "@/js/duration";
+
+      export default {
+        mounted() {
+          this.render();
+          this.timer = setInterval(() => this.render(), 10_000);
+        },
+
+        updated() {
+          this.render();
+        },
+
+        destroyed() {
+          clearInterval(this.timer);
+        },
+
+        render() {
+          const startedAt = new Date(this.el.dataset.startedAt);
+          const seconds = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+          this.el.textContent = formatElapsed(seconds);
+        },
+      };
+    </script>
     <dl id={@id} class={@class}>
       <div>
         <dt>invocation</dt>
@@ -753,7 +825,20 @@ defmodule PanicWeb.PanicComponents do
       </div>
       <div>
         <dt>running</dt>
-        <dd id="run-stats-elapsed">{PanicWeb.RunFormat.elapsed(@summary.started_at)}</dd>
+        <dd
+          id="run-stats-elapsed"
+          phx-hook=".Elapsed"
+          data-started-at={DateTime.to_iso8601(@summary.started_at)}
+        >
+          {PanicWeb.RunFormat.elapsed(@summary.started_at)}
+        </dd>
+      </div>
+      <div :if={@next?}>
+        <dt>next</dt>
+        <dd :if={@summary.next_at}>
+          in <.countdown id="run-stats-next" target={@summary.next_at} />
+        </dd>
+        <dd :if={!@summary.next_at} id="run-stats-next-now">now</dd>
       </div>
       <div :if={@model?} class="truncate">
         <dt>now</dt>

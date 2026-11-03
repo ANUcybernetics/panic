@@ -16,8 +16,8 @@ defmodule PanicWeb.RunFormat do
   @kettle_wh 100
 
   @doc """
-  The time since `started_at`, to the minute (it's rendered on the server, so
-  seconds would sit frozen between updates).
+  The time since `started_at`, to the minute, for the first render (the
+  browser keeps it current with `formatElapsed` from `assets/js/duration.js`).
   """
   def elapsed(started_at, now \\ DateTime.utc_now()) do
     case DateTime.diff(now, started_at, :second) do

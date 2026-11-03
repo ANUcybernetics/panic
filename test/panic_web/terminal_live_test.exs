@@ -161,6 +161,7 @@ defmodule PanicWeb.TerminalLiveTest do
       assert has_element?(view, "#run-stats-cost", "US$0.06")
       assert has_element?(view, "#run-stats-model", "Dummy Text-to-Image")
       assert has_element?(view, "#run-stats-elapsed", "under a minute")
+      assert has_element?(view, ~s(#run-stats-elapsed[phx-hook][data-started-at]))
     end
 
     test "keeps up as the run goes", %{signed_in: conn, user: user, network: network} do
@@ -380,6 +381,7 @@ defmodule PanicWeb.TerminalLiveTest do
       assert has_element?(wall, "#run-hud-models [aria-current]", Panic.Model.by_id(current).name)
       assert has_element?(wall, "#run-hud #run-stats-sequence", "1")
       assert has_element?(wall, "#run-hud #run-stats-energy")
+      assert has_element?(wall, "#run-hud #run-stats-next[data-target-time]")
       refute has_element?(wall, "#run-stats-cost")
       refute has_element?(spotlight, "#run-hud")
 

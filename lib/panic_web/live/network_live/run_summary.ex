@@ -1,8 +1,9 @@
 defmodule PanicWeb.NetworkLive.RunSummary do
   @moduledoc """
   What terminals and an installation's first screen show of a run: its prompt,
-  when it started, how far it's got and which model is at work, and its
-  estimated cost and energy so far (see `Panic.Engine.Footprint`).
+  when it started, how far it's got, which model is at work (or when the next
+  one starts, while it waits), and its estimated cost and energy so far (see
+  `Panic.Engine.Footprint`).
   """
   alias Panic.Engine.Invocation
 
@@ -12,6 +13,7 @@ defmodule PanicWeb.NetworkLive.RunSummary do
     :started_at,
     :sequence_number,
     :model,
+    :next_at,
     cost_usd: 0.0,
     energy_wh: 0.0
   ]
@@ -22,6 +24,7 @@ defmodule PanicWeb.NetworkLive.RunSummary do
           started_at: DateTime.t(),
           sequence_number: non_neg_integer(),
           model: String.t(),
+          next_at: DateTime.t() | nil,
           cost_usd: float(),
           energy_wh: float()
         }
@@ -52,6 +55,7 @@ defmodule PanicWeb.NetworkLive.RunSummary do
       started_at: genesis.inserted_at,
       sequence_number: head.sequence_number,
       model: model_name(head),
+      next_at: next_at(head),
       cost_usd: footprint.cost_usd || 0.0,
       energy_wh: footprint.energy_wh || 0.0
     }
@@ -68,11 +72,20 @@ defmodule PanicWeb.NetworkLive.RunSummary do
   def update(%__MODULE__{run_number: run} = summary, %Invocation{run_number: run, state: state} = invocation)
       when state != :completed do
     if invocation.sequence_number >= summary.sequence_number,
-      do: %{summary | sequence_number: invocation.sequence_number, model: model_name(invocation)},
+      do: %{
+        summary
+        | sequence_number: invocation.sequence_number,
+          model: model_name(invocation),
+          next_at: next_at(invocation)
+      },
       else: summary
   end
 
   def update(_summary, %Invocation{run_number: run_number}), do: load(run_number)
+
+  # when the run's latest invocation is due, or nil once it's under way
+  defp next_at(%Invocation{state: :ready, invoke_after: invoke_after}), do: invoke_after
+  defp next_at(_invocation), do: nil
 
   defp model_name(%Invocation{model: id}) do
     case Panic.Model.by_id(id) do

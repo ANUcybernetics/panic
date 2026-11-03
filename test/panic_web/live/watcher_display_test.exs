@@ -56,12 +56,13 @@ defmodule PanicWeb.WatcherDisplayTest do
     {:ok, conn: conn, user: user, network: network, installation: installation, views: views}
   end
 
-  defp outputs(network) do
+  defp outputs(network), do: network |> completed() |> Map.new(fn {seq, inv} -> {seq, inv.output} end)
+
+  defp completed(network) do
     Invocation
     |> Ash.Query.filter(network_id == ^network.id and state == :completed)
-    |> Ash.Query.sort(sequence_number: :asc)
     |> Ash.read!(authorize?: false)
-    |> Map.new(&{&1.sequence_number, &1.output})
+    |> Map.new(&{&1.sequence_number, &1})
   end
 
   defp shows?(view, slot, text), do: has_element?(view, "#slot-#{slot}", text)
@@ -142,9 +143,12 @@ defmodule PanicWeb.WatcherDisplayTest do
   } do
     Engine.start_run!(network, "caption me", actor: user)
     assert has_element?(views["even"], "#slot-0-caption", "now running")
+    refute has_element?(views["even"], "#slot-0-caption-time")
 
     run_next_invocation()
     assert has_element?(views["even"], "#slot-0-caption", "text by")
+    made_at = DateTime.to_iso8601(completed(network)[0].updated_at)
+    assert has_element?(views["even"], ~s(#slot-0-caption-time[datetime="#{made_at}"]))
     assert has_element?(views["even"], "#slot-0-caption-model", "Dummy Text-to-Text")
     assert has_element?(views["even"], "#slot-0-caption", "from the initial prompt")
     assert has_element?(views["even"], "#slot-0-caption-input", "caption me")
