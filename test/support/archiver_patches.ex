@@ -19,5 +19,9 @@ defmodule Panic.Test.ArchiverPatches do
     Repatch.patch(Archiver, :upload_to_s3, fn _file_path ->
       {:ok, "https://dummy-s3-url.com/test-file.webp"}
     end)
+
+    Repatch.patch(Archiver, :placeholder, fn _file_path ->
+      "data:image/webp;base64,UklGRg=="
+    end)
   end
 end

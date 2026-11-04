@@ -209,6 +209,8 @@ defmodule Panic.Engine.ArchiverTest do
         {:ok, %{status: 200}}
       end)
 
+      Repatch.patch(Archiver, :placeholder, fn _file_path -> nil end)
+
       %{invocation: %Invocation{id: 1, output: url}, next_invocation: %Invocation{id: 2}}
     end
 
@@ -237,7 +239,55 @@ defmodule Panic.Engine.ArchiverTest do
     end
   end
 
+  describe "placeholder/1" do
+    test "shrinks a WebP image to a data URI of a few hundred bytes" do
+      image =
+        Path.join(System.tmp_dir(), "placeholder_#{System.unique_integer([:positive])}.webp")
+
+      {_, 0} = System.cmd("convert", ["-size", "1376x768", "plasma:", image])
+
+      try do
+        assert "data:image/webp;base64," <> encoded = Archiver.placeholder(image)
+        assert <<"RIFF", _size::binary-size(4), "WEBP", _rest::binary>> = Base.decode64!(encoded)
+        assert byte_size(encoded) < 1000
+        refute File.exists?(Path.rootname(image) <> "-placeholder.webp")
+      after
+        File.rm(image)
+      end
+    end
+
+    test "is nil for audio" do
+      assert Archiver.placeholder("/tmp/output.mp3") == nil
+    end
+  end
+
   describe "upload_to_s3/1" do
+    test "sends a content type, and lets browsers cache the file for good" do
+      file =
+        Path.join(
+          System.tmp_dir(),
+          "invocation-#{System.unique_integer([:positive])}-output.webp"
+        )
+
+      File.write!(file, "fake webp content")
+
+      Repatch.patch(Req, :put, fn _req, opts ->
+        send(self(), {:headers, Keyword.fetch!(opts, :headers)})
+        {:ok, %{status: 200}}
+      end)
+
+      try do
+        assert {:ok, "https://fly.storage.tigris.dev/panic-invocation-outputs/" <> _key} =
+                 Archiver.upload_to_s3(file)
+
+        assert_received {:headers, headers}
+        assert headers[:content_type] == "image/webp"
+        assert headers[:cache_control] == "public, max-age=31536000, immutable"
+      after
+        File.rm(file)
+      end
+    end
+
     test "returns error for non-existent file" do
       non_existent_file = "/tmp/does_not_exist_#{System.unique_integer()}"
 

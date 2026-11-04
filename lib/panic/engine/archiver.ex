@@ -69,7 +69,7 @@ defmodule Panic.Engine.Archiver do
   defp upload_and_record(filename, invocation, next_invocation) do
     case upload_to_s3(filename) do
       {:ok, s3_url} ->
-        record_archived_url(invocation, next_invocation, s3_url)
+        record_archived_url(invocation, next_invocation, s3_url, placeholder(filename))
 
       {:error, reason} ->
         Logger.error("Failed to upload to S3: #{inspect(reason)}")
@@ -78,8 +78,8 @@ defmodule Panic.Engine.Archiver do
   end
 
   # both invocations point at the same file: current.output and next.input
-  defp record_archived_url(invocation, next_invocation, s3_url) do
-    Panic.Engine.update_output!(invocation, s3_url, authorize?: false)
+  defp record_archived_url(invocation, next_invocation, s3_url, placeholder) do
+    Panic.Engine.update_output!(invocation, s3_url, %{placeholder: placeholder}, authorize?: false)
 
     if next_invocation do
       Panic.Engine.update_input!(next_invocation, s3_url, authorize?: false)
@@ -194,6 +194,35 @@ defmodule Panic.Engine.Archiver do
   end
 
   @doc """
+  A 32px-wide copy of an archived (WebP) image as a data URI, a few hundred
+  bytes, for a page to show blurred while the image itself loads. Returns nil
+  for anything else, or if ImageMagick can't shrink it: the placeholder is
+  cosmetic, so it never fails the archiving.
+  """
+  def placeholder(filename) do
+    if String.downcase(Path.extname(filename)) == ".webp" do
+      output_filename = Path.rootname(filename) <> "-placeholder.webp"
+
+      try do
+        case System.cmd(
+               "convert",
+               [filename, "-resize", "32x", "-strip", "-quality", "50", output_filename],
+               stderr_to_stdout: true
+             ) do
+          {_, 0} ->
+            "data:image/webp;base64," <> Base.encode64(File.read!(output_filename))
+
+          {error, _} ->
+            Logger.warning("Failed to make a placeholder for #{filename}: #{error}")
+            nil
+        end
+      after
+        File.rm(output_filename)
+      end
+    end
+  end
+
+  @doc """
   Uploads a file to S3 storage.
 
   ## Parameters
@@ -209,8 +238,15 @@ defmodule Panic.Engine.Archiver do
 
     req = ReqS3.attach(Req.new())
 
+    # an archived file is named for its invocation and never changes, so
+    # browsers can keep it for good
+    headers = [
+      content_type: MIME.from_path(file_path),
+      cache_control: "public, max-age=31536000, immutable"
+    ]
+
     # use s3:// URL format for ReqS3 plugin, not direct HTTPS URL
-    case Req.put(req, url: "s3://#{bucket}/#{key}", body: File.read!(file_path)) do
+    case Req.put(req, url: "s3://#{bucket}/#{key}", body: File.read!(file_path), headers: headers) do
       {:ok, %{status: status}} when status in 200..299 ->
         {:ok, "https://fly.storage.tigris.dev/#{bucket}/#{key}"}
 

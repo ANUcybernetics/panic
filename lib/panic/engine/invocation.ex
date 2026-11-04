@@ -91,7 +91,7 @@ defmodule Panic.Engine.Invocation do
     end
 
     update :update_output do
-      accept [:output]
+      accept [:output, :placeholder]
     end
 
     update :about_to_invoke do
@@ -204,6 +204,10 @@ defmodule Panic.Engine.Invocation do
     attribute :model, :string, allow_nil?: false, public?: true
     attribute :metadata, :map, allow_nil?: false, default: %{}, public?: true
     attribute :output, :string, public?: true
+
+    # a tiny data-URI copy of an archived image, shown blurred while the image
+    # loads (see Panic.Engine.Archiver.placeholder/1)
+    attribute :placeholder, :string, public?: true
 
     # estimated from metadata["usage"] when the invocation completes (see Panic.Engine.Footprint)
     attribute :cost_usd, :float, public?: true
