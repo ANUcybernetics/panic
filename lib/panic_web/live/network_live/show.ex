@@ -30,6 +30,13 @@ defmodule PanicWeb.NetworkLive.Show do
             QR
           </.button>
           <.button href={~p"/networks/#{@network}/terminal"}>Terminal</.button>
+          <.button
+            :if={@genesis_invocation}
+            id="network-run-images"
+            navigate={~p"/networks/#{@network}/runs/#{@genesis_invocation.run_number}"}
+          >
+            Images
+          </.button>
           <.button phx-click="stop" variant="error">Stop</.button>
         </:actions>
       </.header>

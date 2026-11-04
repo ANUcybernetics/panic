@@ -141,6 +141,21 @@ defmodule PanicWeb.RunImagesTest do
     assert {:error, {:live_redirect, %{to: "/404"}}} = live(conn, run_path(network, "nope"))
   end
 
+  test "a network's page links to its current run's images", %{conn: conn} do
+    %{conn: conn, user: owner} = PanicWeb.Helpers.create_and_sign_in_user(%{conn: conn})
+    network = Fixtures.network_with_dummy_models(owner)
+
+    session = visit(conn, ~p"/networks/#{network}")
+    refute_has(session, "#network-run-images")
+
+    genesis = Engine.start_run!(network, "a frog", actor: owner)
+
+    conn
+    |> visit(~p"/networks/#{network}")
+    |> click_link("#network-run-images", "Images")
+    |> assert_path(run_path(network, genesis.run_number))
+  end
+
   test "an anonymous terminal links to its run's images", %{conn: conn, network: network} do
     conn
     |> visit(~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
