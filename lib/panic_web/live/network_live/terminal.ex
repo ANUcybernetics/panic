@@ -4,16 +4,17 @@ defmodule PanicWeb.NetworkLive.Terminal do
   anyone else needs a token from the QR code on an installation's first screen
   (see `PanicWeb.TerminalAuth`), and the terminal closes when it expires.
 
-  It also shows the run's latest output, as a single screen would, a link to
-  all the run's images (`PanicWeb.NetworkLive.RunImages`), and its stats (see
+  Below the prompt it shows the current run's prompt and stats (see
   `PanicWeb.NetworkLive.RunSummary`): its estimated energy for everyone, and
-  its estimated cost only for signed-in users.
+  its estimated cost only for signed-in users. Its outputs aren't shown, so
+  they don't compete with the prompt; a link opens the run's images
+  (`PanicWeb.NetworkLive.RunImages`) instead.
   """
   @behaviour PanicWeb.WatcherSubscriber
 
   use PanicWeb, :live_view
 
-  import PanicWeb.PanicComponents, only: [countdown: 1, invocation: 1, run_stats: 1]
+  import PanicWeb.PanicComponents, only: [countdown: 1, run_stats: 1]
 
   alias PanicWeb.NetworkLive.NetworkHelpers
   alias PanicWeb.NetworkLive.RunSummary
@@ -52,16 +53,13 @@ defmodule PanicWeb.NetworkLive.Terminal do
             <span class="text-base-content/60">Current run:</span>
             <span :if={@genesis_invocation}>{@genesis_invocation.input}</span>
           </p>
-          <div class="mt-4 grid items-start gap-4 sm:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-            <.latest_output invocations={@streams.invocations} />
-            <.run_stats
-              :if={@run_summary}
-              id="run-summary"
-              summary={@run_summary}
-              show_cost?={!!@current_user}
-              class="flex flex-wrap gap-x-6 gap-y-1 text-sm text-base-content/60 [&_dd]:inline [&_dd]:text-base-content [&_dt]:inline [&_dt]:after:content-['_']"
-            />
-          </div>
+          <.run_stats
+            :if={@run_summary}
+            id="run-summary"
+            summary={@run_summary}
+            show_cost?={!!@current_user}
+            class="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-base-content/60 [&_dd]:inline [&_dd]:text-base-content [&_dt]:inline [&_dt]:after:content-['_']"
+          />
           <%!-- new tabs, so following them doesn't close an anonymous terminal --%>
           <p class="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm sm:mt-8">
             <.link
@@ -101,6 +99,8 @@ defmodule PanicWeb.NetworkLive.Terminal do
            |> assign(:network_user, network.user)
            |> assign(:run_summary, RunSummary.load(network.current_run_number))
            |> WatcherSubscriber.watch(network)
+           # the stream isn't shown, but it keeps the run's genesis current and
+           # counts the terminal among the network's viewers
            |> WatcherSubscriber.configure_invocation_stream(network, {:single, 0, 1, false})}
 
         {:error, missing_ids} ->
@@ -127,44 +127,6 @@ defmodule PanicWeb.NetworkLive.Terminal do
 
   def handle_info(:expired, socket) do
     {:noreply, push_navigate(socket, to: ~p"/networks/#{socket.assigns.network}/terminal/expired")}
-  end
-
-  # One output at a time, captioned with the model that made it: shown together,
-  # an image and a caption don't say which was made from which.
-  attr :invocations, :any, required: true
-
-  defp latest_output(assigns) do
-    ~H"""
-    <div id="latest-output" phx-update="stream">
-      <figure :for={{id, invocation} <- @invocations} id={id}>
-        <div class="overflow-hidden rounded">
-          <.invocation
-            id={"#{id}-output"}
-            invocation={invocation}
-            model={NetworkHelpers.get_model_or_placeholder(invocation.model)}
-            fit_text={0.0}
-          />
-        </div>
-        <.output_caption
-          invocation={invocation}
-          model={NetworkHelpers.get_model_or_placeholder(invocation.model)}
-        />
-      </figure>
-    </div>
-    """
-  end
-
-  attr :invocation, :any, required: true
-  attr :model, :any, required: true
-
-  defp output_caption(assigns) do
-    ~H"""
-    <figcaption class="mt-2 text-sm text-base-content/60">
-      {if @invocation.state == :completed, do: "#{@model.output_type} by", else: "now running"}
-      <span id="latest-output-model" class="text-base-content">{@model.name}</span>
-      · invocation <span id="latest-output-sequence">{@invocation.sequence_number}</span>
-    </figcaption>
-    """
   end
 
   defp authorize(%{assigns: %{current_user: %{}}} = socket, _network), do: {:ok, socket}
