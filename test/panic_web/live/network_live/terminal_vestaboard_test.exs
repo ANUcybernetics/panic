@@ -69,7 +69,7 @@ defmodule PanicWeb.NetworkLive.TerminalVestaboardTest do
       conn
       |> visit("/networks/#{network.id}/terminal?token=#{token}")
       |> assert_has("[phx-submit=\"start-run\"]")
-      |> fill_in("Prompt", with: "Hello Vestaboard")
+      |> fill_in("Start a new run", with: "Hello Vestaboard")
       |> submit()
 
       invocations = Ash.read!(Panic.Engine.Invocation, actor: user)

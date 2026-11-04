@@ -198,7 +198,9 @@ defmodule PanicWeb.NetworkLiveTest do
       # Submit a new prompt through the terminal while another run is active
       conn
       |> visit(~p"/networks/#{network}")
-      |> fill_in("Prompt", with: "new prompt from terminal")
+      # its owner needn't be told what a run is
+      |> refute_has("#terminal-explanation")
+      |> fill_in("Start a new run", with: "new prompt from terminal")
       |> submit()
       |> refute_has("p[role=alert]")
     end

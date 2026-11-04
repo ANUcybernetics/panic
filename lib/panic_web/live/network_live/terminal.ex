@@ -43,6 +43,7 @@ defmodule PanicWeb.NetworkLive.Terminal do
             genesis_invocation={@genesis_invocation}
             current_user={@network_user}
             expires_at={@expires_at}
+            explain?
             id={@network.id}
           />
           <p :if={@expires_at} id="terminal-expiry" class="mt-2 text-sm text-base-content/60">

@@ -15,15 +15,19 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
         phx-change="validate"
         phx-submit="start-run"
       >
+        <label for={@form[:input].id} class="fieldset-legend text-base">Start a new run</label>
+        <p :if={assigns[:explain?]} id="terminal-explanation" class="text-sm text-base-content/60">
+          Type anything. Each model turns the last one's output into something new, and you'll see it live on the display.
+        </p>
         <.input
           field={@form[:input]}
           type="textarea"
-          label="Prompt"
-          placeholder="Ready for new input"
+          placeholder={ready_placeholder()}
           rows="1"
           class="textarea textarea-lg w-full min-h-0 max-h-[8lh] resize-none [field-sizing:content]"
           phx-hook=".TerminalLockoutTimer"
           data-ready-at={lockout_ready_at(@genesis_invocation, @network)}
+          data-ready-placeholder={ready_placeholder()}
         />
       </.form>
       <script :type={Phoenix.LiveView.ColocatedHook} name=".TerminalLockoutTimer">
@@ -63,18 +67,19 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
 
           updateDisplay() {
             const readyAt = this.el.dataset.readyAt;
+            const ready = this.el.dataset.readyPlaceholder;
             if (!readyAt) {
-              this.el.placeholder = "Ready for new input";
+              this.el.placeholder = ready;
               this.el.disabled = false;
               return;
             }
             const timeLeft = Math.max(0, Math.ceil((new Date(readyAt) - new Date()) / 1000));
             if (timeLeft > 0) {
-              this.el.placeholder = `${formatDuration(timeLeft)} until ready for new input`;
+              this.el.placeholder = `You can start a new run in ${formatDuration(timeLeft)}`;
               this.el.disabled = true;
               this.el.value = "";
             } else {
-              this.el.placeholder = "Ready for new input";
+              this.el.placeholder = ready;
               if (this.el.disabled) {
                 this.el.disabled = false;
                 this.el.focus();
@@ -158,6 +163,9 @@ defmodule PanicWeb.NetworkLive.TerminalComponent do
 
     assign(socket, form: to_form(form))
   end
+
+  # an example, so a first-time visitor sees the kind of thing to type
+  defp ready_placeholder, do: "a cat on a mat"
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 

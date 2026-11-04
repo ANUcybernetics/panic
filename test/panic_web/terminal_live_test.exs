@@ -48,7 +48,8 @@ defmodule PanicWeb.TerminalLiveTest do
 
       conn
       |> visit(~p"/networks/#{network}/terminal")
-      |> fill_in("Prompt", with: "a sheep on the grass")
+      |> assert_has("#terminal-explanation", text: "live on the display")
+      |> fill_in("Start a new run", with: "a sheep on the grass")
       |> submit()
       |> assert_has("span", text: "a sheep on the grass")
       |> refute_has("#terminal-expiry")
@@ -74,7 +75,7 @@ defmodule PanicWeb.TerminalLiveTest do
     test "can start a run, which acts as the network's owner", %{conn: conn, network: network} do
       conn
       |> visit(~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
-      |> fill_in("Prompt", with: "a cat on a mat")
+      |> fill_in("Start a new run", with: "a cat on a mat")
       |> submit()
       |> assert_has("span", text: "a cat on a mat")
 
@@ -88,7 +89,7 @@ defmodule PanicWeb.TerminalLiveTest do
 
       conn
       |> visit(~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
-      |> fill_in("Prompt", with: "too soon")
+      |> fill_in("Start a new run", with: "too soon")
       |> submit()
       |> assert_has("[role=alert]", text: "Please wait before starting a new run")
     end

@@ -160,7 +160,7 @@ defmodule PanicWeb.RunImagesTest do
     conn
     |> visit(~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
     |> refute_has("#terminal-run-images")
-    |> fill_in("Prompt", with: "a fish")
+    |> fill_in("Start a new run", with: "a fish")
     |> submit()
     |> assert_has("#terminal-run-images[target='_blank']",
       text: "Swipe back through this run's images"

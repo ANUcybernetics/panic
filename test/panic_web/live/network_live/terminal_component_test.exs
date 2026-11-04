@@ -15,7 +15,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponentTest do
       conn
       |> visit("/networks/#{network.id}/terminal?token=#{auth_token}")
       |> assert_has("span", text: "Current run:")
-      |> fill_in("Prompt", with: "test prompt")
+      |> fill_in("Start a new run", with: "test prompt")
       |> submit()
       |> assert_has("span", text: "Current run:")
     end
@@ -28,7 +28,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponentTest do
 
       conn
       |> visit("/networks/#{network.id}/terminal?token=#{auth_token}")
-      |> fill_in("Prompt", with: "test prompt")
+      |> fill_in("Start a new run", with: "test prompt")
       |> submit()
       |> assert_has("[role=alert]", text: "No models in network")
     end
@@ -41,9 +41,9 @@ defmodule PanicWeb.NetworkLive.TerminalComponentTest do
 
       conn
       |> visit("/networks/#{network.id}/terminal?token=#{auth_token}")
-      |> fill_in("Prompt", with: "first prompt")
+      |> fill_in("Start a new run", with: "first prompt")
       |> submit()
-      |> fill_in("Prompt", with: "second prompt")
+      |> fill_in("Start a new run", with: "second prompt")
       |> submit()
       |> assert_has("[role=alert]", text: "Please wait before starting a new run")
     end
@@ -73,7 +73,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponentTest do
       conn
       |> visit("/networks/#{network.id}/terminal?token=#{auth_token}")
       |> assert_has("span", text: "Current run:")
-      |> fill_in("Prompt", with: "test prompt")
+      |> fill_in("Start a new run", with: "test prompt")
       |> submit()
       |> assert_has("span", text: "Current run:")
       |> assert_has("[role=alert]", text: "No API key set for OpenAI")
@@ -88,7 +88,7 @@ defmodule PanicWeb.NetworkLive.TerminalComponentTest do
 
       conn
       |> visit("/networks/#{network.id}/terminal?token=#{auth_token}")
-      |> fill_in("Prompt", with: "test")
+      |> fill_in("Start a new run", with: "test")
       |> submit()
       |> refute_has("body", text: "error occurred")
       |> assert_has("span", text: "Current run:")
