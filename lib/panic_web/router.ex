@@ -99,6 +99,9 @@ defmodule PanicWeb.Router do
 
       # a helper for when you have to type URLs using a TV remote :/
       live "/r/:redirect", RedirectLive, :index
+
+      # public, so a link from an anonymous terminal outlives its token
+      live "/networks/:network_id/runs/:run_number", NetworkLive.RunImages, :images
     end
 
     # Routes that need WatcherSubscriber (optional auth)

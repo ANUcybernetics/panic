@@ -4,9 +4,10 @@ defmodule PanicWeb.NetworkLive.Terminal do
   anyone else needs a token from the QR code on an installation's first screen
   (see `PanicWeb.TerminalAuth`), and the terminal closes when it expires.
 
-  It also shows the run's latest output, as a single screen would, and its
-  stats (see `PanicWeb.NetworkLive.RunSummary`): its estimated energy for
-  everyone, and its estimated cost only for signed-in users.
+  It also shows the run's latest output, as a single screen would, a link to
+  all the run's images (`PanicWeb.NetworkLive.RunImages`), and its stats (see
+  `PanicWeb.NetworkLive.RunSummary`): its estimated energy for everyone, and
+  its estimated cost only for signed-in users.
   """
   @behaviour PanicWeb.WatcherSubscriber
 
@@ -61,8 +62,17 @@ defmodule PanicWeb.NetworkLive.Terminal do
               class="flex flex-wrap gap-x-6 gap-y-1 text-sm text-base-content/60 [&_dd]:inline [&_dd]:text-base-content [&_dt]:inline [&_dt]:after:content-['_']"
             />
           </div>
-          <%!-- a new tab, so reading it doesn't close an anonymous terminal --%>
-          <p class="mt-6 text-sm sm:mt-8">
+          <%!-- new tabs, so following them doesn't close an anonymous terminal --%>
+          <p class="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm sm:mt-8">
+            <.link
+              :if={@genesis_invocation}
+              id="terminal-run-images"
+              href={~p"/networks/#{@network}/runs/#{@genesis_invocation.run_number}"}
+              target="_blank"
+              class="link"
+            >
+              Swipe back through this run's images
+            </.link>
             <.link id="terminal-about" href={~p"/about"} target="_blank" class="link">
               What is PANIC!?
             </.link>
