@@ -98,18 +98,18 @@ defmodule PanicWeb.TerminalLiveTest do
       conn: conn,
       network: network
     } do
-      {:ok, view, _html} =
-        live(conn, ~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
-
-      assert has_element?(view, ~s(#terminal-about[href="/about"][target="_blank"]))
+      conn
+      |> visit(~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
+      |> assert_has(~s(#terminal-about[href="/about"][target="_blank"]))
     end
 
     test "see when the terminal closes", %{conn: conn, network: network} do
       token = TerminalAuth.token(network.id, minutes_ago(4))
-      {:ok, view, _html} = live(conn, ~p"/networks/#{network}/terminal?token=#{token}")
-
       expires_at = (minutes_ago(4) + 10 * 60) |> DateTime.from_unix!() |> DateTime.to_iso8601()
-      assert has_element?(view, ~s(#terminal-expiry-countdown[data-target-time="#{expires_at}"]))
+
+      conn
+      |> visit(~p"/networks/#{network}/terminal?token=#{token}")
+      |> assert_has(~s(#terminal-expiry-countdown[data-target-time="#{expires_at}"]))
     end
 
     test "are sent to the expired page when the terminal closes", %{conn: conn, network: network} do
@@ -151,14 +151,14 @@ defmodule PanicWeb.TerminalLiveTest do
     } do
       start_and_run(network, user, 2)
 
-      {:ok, view, _html} = live(conn, ~p"/networks/#{network}/terminal")
-
-      assert has_element?(view, "#run-stats-sequence", "2")
-      assert has_element?(view, "#run-stats-energy", "2.0 Wh")
-      assert has_element?(view, "#run-stats-cost", "US$0.06")
-      assert has_element?(view, "#run-stats-model", "Dummy Text-to-Image")
-      assert has_element?(view, "#run-stats-elapsed", "under a minute")
-      assert has_element?(view, ~s(#run-stats-elapsed[phx-hook][data-started-at]))
+      conn
+      |> visit(~p"/networks/#{network}/terminal")
+      |> assert_has("#run-stats-sequence", text: "2")
+      |> assert_has("#run-stats-energy", text: "2.0 Wh")
+      |> assert_has("#run-stats-cost", text: "US$0.06")
+      |> assert_has("#run-stats-model", text: "Dummy Text-to-Image")
+      |> assert_has("#run-stats-elapsed", text: "under a minute")
+      |> assert_has(~s(#run-stats-elapsed[phx-hook][data-started-at]))
     end
 
     test "keeps up as the run goes", %{signed_in: conn, user: user, network: network} do
@@ -181,11 +181,10 @@ defmodule PanicWeb.TerminalLiveTest do
     } do
       start_and_run(network, user, 2)
 
-      {:ok, view, _html} =
-        live(conn, ~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
-
-      assert has_element?(view, "#run-stats-energy", "2.0 Wh")
-      refute has_element?(view, "#run-stats-cost")
+      conn
+      |> visit(~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
+      |> assert_has("#run-stats-energy", text: "2.0 Wh")
+      |> refute_has("#run-stats-cost")
     end
 
     test "appears when a run starts", %{conn: conn, network: network} do
@@ -202,10 +201,9 @@ defmodule PanicWeb.TerminalLiveTest do
     end
 
     test "isn't shown while the network is idle", %{conn: conn, network: network} do
-      {:ok, view, _html} =
-        live(conn, ~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
-
-      refute has_element?(view, "#run-summary")
+      conn
+      |> visit(~p"/networks/#{network}/terminal?token=#{TerminalAuth.token(network.id)}")
+      |> refute_has("#run-summary")
     end
   end
 
@@ -215,46 +213,36 @@ defmodule PanicWeb.TerminalLiveTest do
     end
 
     test "without a token", %{conn: conn, network: network} do
-      assert {:error, {:live_redirect, %{to: path}}} =
-               live(conn, ~p"/networks/#{network}/terminal")
-
-      assert path == expired_path(network)
+      assert conn |> get(~p"/networks/#{network}/terminal") |> redirected_to() ==
+               expired_path(network)
     end
 
     test "with an expired token", %{conn: conn, network: network} do
       token = TerminalAuth.token(network.id, minutes_ago(11))
 
-      assert {:error, {:live_redirect, %{to: path}}} =
-               live(conn, ~p"/networks/#{network}/terminal?token=#{token}")
-
-      assert path == expired_path(network)
+      assert conn |> get(~p"/networks/#{network}/terminal?token=#{token}") |> redirected_to() ==
+               expired_path(network)
     end
 
     test "with a malformed token", %{conn: conn, network: network} do
-      assert {:error, {:live_redirect, %{to: path}}} =
-               live(conn, ~p"/networks/#{network}/terminal?token=nonsense")
-
-      assert path == expired_path(network)
+      assert conn |> get(~p"/networks/#{network}/terminal?token=nonsense") |> redirected_to() ==
+               expired_path(network)
     end
 
     test "with another network's token", %{conn: conn, network: network} do
       other = anon_network(Fixtures.user())
       token = TerminalAuth.token(other.id)
 
-      assert {:error, {:live_redirect, %{to: path}}} =
-               live(conn, ~p"/networks/#{network}/terminal?token=#{token}")
-
-      assert path == expired_path(network)
+      assert conn |> get(~p"/networks/#{network}/terminal?token=#{token}") |> redirected_to() ==
+               expired_path(network)
     end
 
     test "when the network's anonymous terminal is off", %{conn: conn, network: network} do
       token = TerminalAuth.token(network.id)
       Engine.update_network!(network, %{anon_terminal_minutes: nil}, authorize?: false)
 
-      assert {:error, {:live_redirect, %{to: path}}} =
-               live(conn, ~p"/networks/#{network}/terminal?token=#{token}")
-
-      assert path == expired_path(network)
+      assert conn |> get(~p"/networks/#{network}/terminal?token=#{token}") |> redirected_to() ==
+               expired_path(network)
     end
   end
 

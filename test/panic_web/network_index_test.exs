@@ -4,8 +4,6 @@ defmodule PanicWeb.NetworkIndexTest do
   """
   use PanicWeb.ConnCase, async: false
 
-  import Phoenix.LiveViewTest
-
   alias Panic.Watcher.Installation
 
   describe "user IS logged in" do
@@ -65,9 +63,10 @@ defmodule PanicWeb.NetworkIndexTest do
         )
         |> Ash.create!()
 
-      {:ok, view, _html} = live(conn, ~p"/networks")
-      render_click(view, "delete", %{"id" => network.id})
-      refute render(view) =~ network.name
+      conn
+      |> visit(~p"/networks")
+      |> click_button("Delete")
+      |> refute_has("#networks", text: network.name)
 
       assert {:error, _} = Ash.get(Panic.Engine.Network, network.id, actor: user)
       assert {:error, _} = Ash.get(Installation, installation.id, actor: user)

@@ -64,24 +64,18 @@ defmodule PanicWeb.RunImagesTest do
 
     assert [newest, older] = images(network, genesis.run_number)
 
-    {:ok, view, _html} = live(conn, run_path(network, genesis.run_number))
-
-    assert has_element?(view, "header", "a cat")
-    assert slide_count(view) == 2
-    assert has_element?(view, "#run-images-slides > li#{slide(newest)}:first-child")
-    assert has_element?(view, "#{slide(older)} + #run-images-empty")
-
+    conn
+    |> visit(run_path(network, genesis.run_number))
+    |> assert_has("header", text: "a cat")
+    |> assert_has("li.slide", count: 2)
+    |> assert_has("#run-images-slides > li#{slide(newest)}:first-child")
+    |> assert_has("#{slide(older)} + #run-images-empty")
     # the hook loads the rest as the viewer swipes back to them
-    assert has_element?(
-             view,
-             "#{slide(newest)} img[src='#{newest.output}'][data-src='#{newest.output}']"
-           )
-
-    assert has_element?(view, "#{slide(older)} img[data-src='#{older.output}']")
-    refute has_element?(view, "#{slide(older)} img[src]")
-
+    |> assert_has("#{slide(newest)} img[src='#{newest.output}'][data-src='#{newest.output}']")
+    |> assert_has("#{slide(older)} img[data-src='#{older.output}']")
+    |> refute_has("#{slide(older)} img[src]")
     # an image made from a text prompt is described by it
-    assert has_element?(view, "#{slide(older)} img[alt='#{older.input}']")
+    |> assert_has("#{slide(older)} img[alt='#{older.input}']")
   end
 
   test "new images arrive as the run goes, and archiving gives them a placeholder", %{
@@ -132,13 +126,12 @@ defmodule PanicWeb.RunImagesTest do
     run_next_invocation()
     other = Fixtures.network_with_dummy_models(user)
 
-    assert {:error, {:live_redirect, %{to: "/404"}}} =
-             live(conn, run_path(other, genesis.run_number))
+    assert conn |> get(run_path(other, genesis.run_number)) |> redirected_to() == "/404"
 
     # nor is an invocation that isn't a run's genesis
     caption = Engine.get_invocation_in_run!(genesis.run_number, 1, authorize?: false)
-    assert {:error, {:live_redirect, %{to: "/404"}}} = live(conn, run_path(network, caption.id))
-    assert {:error, {:live_redirect, %{to: "/404"}}} = live(conn, run_path(network, "nope"))
+    assert conn |> get(run_path(network, caption.id)) |> redirected_to() == "/404"
+    assert conn |> get(run_path(network, "nope")) |> redirected_to() == "/404"
   end
 
   test "a network's page links to its current run's images", %{conn: conn} do
