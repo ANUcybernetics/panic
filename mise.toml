@@ -1,8 +1,6 @@
 [tools]
 elixir = "1.20.5-otp-29"
-# hex.pm build for weddle's OS, so CI's ubuntu-latest runner installs the same
-# build and finds its URL in mise.lock
-erlang = { version = "29.1.2", precompiled_os = "ubuntu-24.04" }
+erlang = "29.1.2"
 node = "26"
 sqlite = "3.54.1"
 
@@ -13,3 +11,8 @@ AWS_REGION = "auto"
 # Secrets (REPLICATE_API_TOKEN, OPENAI_API_KEY, GOOGLE_AI_STUDIO_TOKEN,
 # AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) come from the untracked [env]
 # block in ~/.config/mise/config.local.toml.
+
+# Use hex.pm's Ubuntu 24.04 Erlang build on every Linux machine: mise doesn't
+# detect CI's Ubuntu 26.04 runner, so it would compile there, which --locked rejects
+[settings.erlang]
+precompiled_os = "ubuntu-24.04"
