@@ -1,6 +1,8 @@
 [tools]
 elixir = "1.20.5-otp-29"
-erlang = "29.1.2"
+# hex.pm build for weddle's OS, so CI's ubuntu-latest runner installs the same
+# build and finds its URL in mise.lock
+erlang = { version = "29.1.2", precompiled_os = "ubuntu-24.04" }
 node = "26"
 sqlite = "3.54.1"
 
