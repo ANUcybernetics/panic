@@ -88,11 +88,11 @@ defmodule Panic.MixProject do
     ]
   end
 
-  # `mix usage_rules.sync` (part of `mix setup`) writes these into CLAUDE.md and
+  # `mix usage_rules.sync` (part of `mix setup`) writes these into AGENTS.md and
   # .claude/skills, which is gitignored
   defp usage_rules do
     [
-      file: "CLAUDE.md",
+      file: "AGENTS.md",
       usage_rules: [{:usage_rules, sub_rules: []}],
       skills: [
         location: ".claude/skills",
