@@ -48,7 +48,6 @@ defmodule Panic.MixProject do
       {:sourceror, "~> 1.8", only: [:dev, :test]},
       {:repatch, "~> 1.0"},
       {:usage_rules, "~> 1.2", only: [:dev, :test]},
-      {:tidewave, "~> 0.1", only: [:dev]},
       {:igniter, "~> 0.5", only: [:dev, :test]},
       {:phoenix_test, "~> 0.3", only: :test},
       {:phoenix, "~> 1.8"},

@@ -64,8 +64,6 @@ transactions (`Panic.Repo.write_transactions?/0`).
 
 ## Development
 
-- the dev server (`mix phx.server`, port 4010) hosts tidewave; start it in the
-  background if it isn't running, and leave it running if you didn't start it
 - every environment but test needs `PANIC_CLOAK_KEY` (see `config/runtime.exs`);
   in dev it lives in the untracked `mise.local.toml`, so run mix through
   `mise exec --`
