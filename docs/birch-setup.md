@@ -1,8 +1,8 @@
 # PANIC! Birch setup
 
-The Birch Level 3 installation is four TCL 4K TVs, each driven by a Dell Wyse
-5070 thin client on ethernet, plus four Vestaboards. Whatever network is showing
-there, it runs through an installation with eight watchers:
+The Birch Level 3 installation is four TCL 4K TVs, each driven by a Raspberry Pi
+attached to it, plus four Vestaboards. Whatever network is showing there, it
+runs through an installation with eight watchers:
 
 | display     | watcher            | shows                                        |
 | ----------- | ------------------ | -------------------------------------------- |
@@ -18,28 +18,28 @@ characters.
 
 ## Choosing what the TVs show
 
-The Birch setup is one installation, "Birch Level 3", and each TV's kiosk boots
-into its watcher's URL (in the kiosk's `/etc/kiosk-url.txt`; see
+The Birch setup is one installation, "Birch Level 3", and each Pi's kiosk boots
+into its watcher's URL (in the Pi's `kiosk-url.txt`; see
 [`kiosk/README.md`](../kiosk/README.md)). To show another network, pick it on
 the installation's edit page: the TVs switch to it straight away, and the
-Vestaboards show its runs, with nothing to change on the kiosks. Don't make a
+Vestaboards show its runs, with nothing to change on the Pis. Don't make a
 second installation for the new network: every installation with Vestaboard
 watchers drives the same four boards, so two of them running at once would fight
 over the boards.
 
 ## Waking the installation up
 
-The TVs need turning on at the wall. The kiosks boot straight into their watcher
-URL, so there is nothing to type on the TVs. If the screens are blank, the
-kiosks are stopped; bring them back with
+The TVs need turning on at the wall. The Pis boot straight into their kiosk URL,
+so there is nothing to type on the TVs. If the screens are blank, the kiosks are
+stopped; bring them back with
 
 ```bash
 ./kiosk/kiosk.sh start
 ```
 
-from a machine on the tailnet. `./kiosk/kiosk.sh status` shows what each kiosk
-is doing and which URL it's on. They stay on the tailnet whether or not their
-browsers are running, and rejoin by themselves after a power cycle.
+from a machine on the tailnet. `./kiosk/kiosk.sh status` shows what each Pi is
+doing and which URL it's on. The Pis stay on the tailnet whether or not the
+kiosks are running, and rejoin by themselves after a power cycle.
 
 ## Starting a run
 
@@ -80,9 +80,10 @@ until someone visits the site again.
   its turn, or failing that its last output reused, so a run can pause for a few
   minutes but carries on (see `Panic.Engine.Changes.InvokeModel`)
 - TVs 2 and 3 won't take 3840×2160 at 60 Hz (probably an HDMI input setting on
-  those TVs), and left alone a kiosk picks 4096×2160 at 24 Hz, which is wider
-  than 16:9. So their kiosks are built with `--output-mode 3840x2160@30Hz`; TVs
-  1 and 4 run at 60 Hz with no setting. To change it on a running kiosk, edit
-  `/etc/kiosk-output-mode.txt` and restart `chromium-kiosk.service`
+  those TVs), and left alone their Pis pick 4096×2160 at 24 Hz, which is wider
+  than 16:9. So those two Pis pin 3840×2160 at 30 Hz in
+  `~/.config/kanshi/config`; TVs 1 and 4 run at 60 Hz with no config. kanshi
+  only applies the profile at boot, so to change the mode on a running Pi, also
+  run `wlr-randr --output HDMI-A-1 --mode <mode>` in its Wayland session
 - the Vestaboards sometimes get "behind" the TVs. You don't need to do anything;
   they'll catch back up

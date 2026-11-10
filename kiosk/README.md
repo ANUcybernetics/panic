@@ -1,19 +1,20 @@
 # Kiosks
 
 The PANIC! displays are web kiosks that boot straight into fullscreen Chromium
-showing a watcher URL and join the tailnet on first boot. They're built with
-`kiosk` from Ben's dotfiles (`~/.dotfiles/bin/kiosk`), the same as every other
-School kiosk; its header comment and `kiosk --help` cover the targets, wifi,
-Tailscale, the watchdog and changing the URL later.
+showing a watcher URL and join the tailnet on first boot. New ones are built
+with `kiosk` from Ben's dotfiles (`~/.dotfiles/bin/kiosk`), the same as every
+other School kiosk; its header comment and `kiosk --help` cover the targets,
+wifi, Tailscale, the watchdog and changing the URL later. The four Birch Pis
+predate it: they log in as `panic`, not `kiosk`, and are tagged
+`tag:panic-raspi`.
 
-Name every PANIC! kiosk `panic-*`, which is how `kiosk.sh` finds them. The Birch
-TVs are Dell Wyse 5070s on ethernet, each installed over the network from a
-machine it's cabled to:
+Name every PANIC! kiosk `panic-*`, which is how `kiosk.sh` finds them:
 
 ```bash
-kiosk --target wyse --interface eno1 --hostname panic-tv1 \
-  --url https://panic.fly.dev/i/<installation>/tv1 \
-  --tailscale-tag tag:signage --ssh-key ~/.ssh/id_ed25519.pub
+kiosk --target pi --hostname panic-grid \
+  --url https://panic.fly.dev/i/<installation>/<watcher> \
+  --tailscale-tag tag:signage --ssh-key ~/.ssh/id_ed25519.pub \
+  --wifi-ssid ANU-Secure ...
 ```
 
 Add `--output-mode 3840x2160@30Hz` for a TV that won't take its preferred mode

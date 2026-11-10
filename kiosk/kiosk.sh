@@ -7,11 +7,12 @@
 #   ./kiosk/kiosk.sh start    # bring the installation back up
 #
 # Every tailnet host named panic-* is a PANIC! kiosk, built by `kiosk` from
-# Ben's dotfiles (see kiosk/README.md). They stay on the tailnet either way:
-# this only controls whether Chromium is up. That matters for the hosting bill
-# as much as the displays --- each kiosk holds a LiveView websocket open, which
-# counts as traffic to Fly, so while any of them is running the machine can
-# never autostop.
+# Ben's dotfiles (see kiosk/README.md) with user `kiosk`. The Birch Pis predate
+# it: they're tagged tag:panic-raspi and log in as `panic`. All of them stay on
+# the tailnet either way: this only controls whether Chromium is up. That
+# matters for the hosting bill as much as the displays --- each kiosk holds a
+# LiveView websocket open, which counts as traffic to Fly, so while any of them
+# is running the machine can never autostop.
 #
 # "Stopped" has to survive a reboot and the kiosk's nightly
 # chromium-restart.timer, and the unit can't be masked (it lives in
@@ -22,22 +23,22 @@
 
 set -euo pipefail
 
-readonly KIOSK_USER="kiosk"
 readonly FLAG=".panic-kiosk-dormant"
 readonly UNIT="chromium-kiosk.service"
 
-hosts() {
-    if [[ -n "${PANIC_KIOSK_HOSTS:-}" ]]; then
-        echo "$PANIC_KIOSK_HOSTS"
-    else
-        tailscale status | awk '$2 ~ /^panic-/ { print $2 }'
-    fi
+# One "user@host" per online panic-* kiosk.
+targets() {
+    tailscale status --json | jq -r '
+        .Peer[]
+        | select(.Online and (.HostName | startswith("panic-")))
+        | (if (.Tags // []) | index("tag:panic-raspi") then "panic" else "kiosk" end)
+            + "@" + .HostName'
 }
 
 on_kiosk() {
-    local host="$1"
+    local target="$1"
     shift
-    tailscale ssh "${KIOSK_USER}@${host}" "$@"
+    tailscale ssh "$target" "$@"
 }
 
 ensure_dropin() {
@@ -81,9 +82,9 @@ main() {
     esac
 
     local failed=0
-    for host in $(hosts); do
-        printf '%-12s ' "$host"
-        if ! "cmd_${verb}" "$host"; then
+    for target in $(targets); do
+        printf '%-12s ' "${target#*@}"
+        if ! "cmd_${verb}" "$target"; then
             echo "FAILED"
             failed=1
         fi
