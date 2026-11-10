@@ -75,8 +75,8 @@ transactions (`Panic.Repo.write_transactions?/0`).
 - pushing `main` deploys to Fly (`.github/workflows/fly-deploy.yml`), so set any
   new secret (`fly secrets set`) before pushing code that needs it
 
-`rpi/` holds the Raspberry Pi kiosk scripts for physical displays (see
-`rpi/README.md`).
+`kiosk/` holds the start/stop script for the physical displays' kiosks (see
+`kiosk/README.md`).
 
 <!-- usage-rules-start -->
 <!-- usage_rules-start -->
