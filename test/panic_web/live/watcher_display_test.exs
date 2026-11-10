@@ -112,8 +112,10 @@ defmodule PanicWeb.WatcherDisplayTest do
     for _ <- 1..4, do: run_next_invocation()
     outputs = outputs(network)
 
-    # a 2x2 grid with its last cell kept back rotates through three slots
+    # a 2x2 grid with its last cell kept back rotates through three slots; its
+    # rows are fixed, so that cell stays bottom right however many are filled
     assert has_element?(views["wall"], "#reserved-cell #run-hud")
+    assert has_element?(views["wall"], ~s|#current-inovocations[style*="repeat(2, 1fr)"]|)
     assert shows?(views["wall"], 0, outputs[3])
     assert slot_count(views["wall"]) == 3
   end

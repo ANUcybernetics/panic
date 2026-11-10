@@ -118,7 +118,7 @@ defmodule PanicWeb.InvocationWatcherTest do
       Engine.start_run!(network, "dimming test", actor: user)
       for _ <- 1..3, do: Panic.EngineHelpers.run_next_invocation()
 
-      assert has_element?(view, ~s(.invocation-grid[style="--latest-sequence: 2"]))
+      assert has_element?(view, ~s(.invocation-grid[style*="--latest-sequence: 2"]))
       assert has_element?(view, ~s(.invocation-grid .invocation-cell[style="--sequence: 0"]))
       assert has_element?(view, ~s(.invocation-grid .invocation-cell[style="--sequence: 2"]))
     end

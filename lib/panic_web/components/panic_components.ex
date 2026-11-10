@@ -48,7 +48,7 @@ defmodule PanicWeb.PanicComponents do
     <div
       id="current-inovocations"
       class={["grid gap-4 grid-cols-#{num_cols(@display)}", grid?(@display) && "invocation-grid"]}
-      style={@latest_sequence && "--latest-sequence: #{@latest_sequence}"}
+      style={grid_style(@display, @latest_sequence)}
       phx-update="stream"
     >
       <div id="display-info" class="p-4 text-2xl text-purple-300/50">
@@ -90,6 +90,18 @@ defmodule PanicWeb.PanicComponents do
   defp num_cols({:single, _, _, _}), do: 1
 
   defp grid?(display), do: elem(display, 0) == :grid
+
+  # A grid's rows are all 1fr, which (the grid having no fixed height) makes
+  # every row as tall as its tallest, so empty rows keep a cell's height and the
+  # reserved cell stays in the bottom row while the grid fills up.
+  defp grid_style(display, latest_sequence) do
+    [
+      grid?(display) && "grid-template-rows: repeat(#{elem(display, 1)}, 1fr)",
+      latest_sequence && "--latest-sequence: #{latest_sequence}"
+    ]
+    |> Enum.filter(& &1)
+    |> Enum.join("; ")
+  end
 
   # individual components
 
