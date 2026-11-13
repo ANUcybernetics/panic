@@ -92,7 +92,6 @@ defmodule Panic.MixProject do
   defp usage_rules do
     [
       file: "AGENTS.md",
-      usage_rules: [{:usage_rules, sub_rules: []}],
       skills: [
         location: ".claude/skills",
         build: [
@@ -105,9 +104,13 @@ defmodule Panic.MixProject do
             description:
               "Load before changing or debugging anything in lib/panic_web/: LiveViews, function components, HEEx templates, the router, controllers or PubSub broadcasts.",
             usage_rules: [:phoenix]
+          ],
+          "use-mdex": [
+            description:
+              "Load before rendering or parsing Markdown with MDEx: MDEx.to_html, to_heex or the ~MD sigil, syntax highlighting, sanitising or extensions.",
+            usage_rules: [:mdex]
           ]
-        ],
-        deps: [:mdex]
+        ]
       ]
     ]
   end
